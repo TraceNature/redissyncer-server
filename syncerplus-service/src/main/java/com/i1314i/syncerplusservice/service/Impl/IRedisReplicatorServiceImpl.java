@@ -1,8 +1,14 @@
 package com.i1314i.syncerplusservice.service.Impl;
 
+import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
+import com.i1314i.syncerplusservice.constant.TaskMsgConstant;
+import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
+import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.task.BackUPRdbTask;
 import com.i1314i.syncerplusservice.task.SyncTask;
+import com.i1314i.syncerplusservice.util.RedisUrlUtils;
+import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.moilioncircle.redis.replicator.RedisReplicator;
 import com.moilioncircle.redis.replicator.Replicator;
 import com.moilioncircle.redis.replicator.cmd.Command;
@@ -17,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -122,18 +129,60 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
      * @param redis://127.0.0.1:6380?authPassword=yourPassword
      */
     @Override
-    public void sync(String sourceUri, String targetUri) {
+    public void sync(String sourceUri, String targetUri) throws TaskMsgException {
+        checkRedisUrl(sourceUri,"sourceUri");
+        checkRedisUrl(targetUri,"targetUri");
+        String threadName= TemplateUtils.uuid();
+        if(TaskMonitorUtils.containsKeyAliveMap(threadName)){
+            throw new TaskMsgException(TaskMsgConstant.Task_MSG_PARSE_ERROR_CODE);
+        }
         threadPoolTaskExecutor.execute(new SyncTask(sourceUri,targetUri));
     }
 
+    /**
+     * 单机redis数据迁移
+     * @param redis://127.0.0.1:6379?authPassword=yourPassword
+     * @param redis://127.0.0.1:6380?authPassword=yourPassword
+     * @param 任务名称
+     */
     @Override
-    public void sync(String sourceUri, String targetUri, String threadName) {
+    public void sync(String sourceUri, String targetUri, String threadName) throws TaskMsgException {
+
+        checkRedisUrl(sourceUri,"sourceUri");
+        checkRedisUrl(targetUri,"targetUri");
+        if(TaskMonitorUtils.containsKeyAliveMap(threadName)){
+            throw new TaskMsgException(TaskMsgConstant.Task_MSG_PARSE_ERROR_CODE);
+        }
         threadPoolTaskExecutor.execute(new SyncTask(sourceUri,targetUri,threadName));
+    }
+
+    @Override
+    public void sync(RedisSyncDataDto syncDataDto) throws TaskMsgException {
+        checkRedisUrl(syncDataDto.getSourceUri(),"sourceUri");
+        checkRedisUrl(syncDataDto.getTargetUri(),"targetUri");
+        if(TaskMonitorUtils.containsKeyAliveMap(syncDataDto.getThreadName())){
+            throw new TaskMsgException(TaskMsgConstant.Task_MSG_PARSE_ERROR_CODE);
+        }
+        threadPoolTaskExecutor.execute(new SyncTask(syncDataDto));
     }
 
 
     public static void main(String[] args) throws Exception {
         IRedisReplicatorService redisReplicatorService = new IRedisReplicatorServiceImpl();
         redisReplicatorService.backUPRdb("redis://114.67.81.232:6340?authPassword=redistest0102", "D:\\tests");
+    }
+
+    void checkRedisUrl(String url,String name) throws TaskMsgException {
+
+        try {
+            if(!RedisUrlUtils.checkRedisUrl(url)){
+                throw new TaskMsgException("scheme must be [redis].");
+            }
+            if(!RedisUrlUtils.getRedisClientConnectState(url,name)){
+                throw new TaskMsgException(name+" :连接redis失败");
+            }
+        } catch (URISyntaxException e) {
+            throw new TaskMsgException(e.getMessage());
+        }
     }
 }

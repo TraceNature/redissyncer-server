@@ -97,4 +97,14 @@ public class TaskMonitorUtils {
         aliveThreadHashMap.remove(threadName);
     }
 
+
+
+    public static boolean containsKeyAliveMap(String key){
+        return aliveThreadHashMap.containsKey(key);
+    }
+
+
+    public static boolean containsKeyDeadMap(String key){
+        return deadThreadHashMap.containsKey(key);
+    }
 }

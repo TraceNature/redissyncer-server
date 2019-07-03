@@ -2,6 +2,7 @@ package com.i1314i.syncerplusservice.task;
 
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
+import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.Impl.ConnectionPoolImpl;
 import com.i1314i.syncerplusservice.pool.RedisClient;
@@ -52,6 +53,15 @@ public class SyncTask implements Runnable {
         this.sourceUri = sourceUri;
         this.targetUri = targetUri;
         this.threadName=Thread.currentThread().getName();
+        if(status){
+            this.status=false;
+        }
+    }
+
+    public SyncTask(RedisSyncDataDto syncDataDto) {
+        this.sourceUri = syncDataDto.getSourceUri();
+        this.targetUri = syncDataDto.getTargetUri();
+        this.threadName=syncDataDto.getThreadName();
         if(status){
             this.status=false;
         }
