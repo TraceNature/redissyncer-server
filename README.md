@@ -21,7 +21,7 @@
  - 依赖 syncerplus-common模块
  - 单机redis数据迁移同步
 
-![大体流程图](http://git.jd.com/csddevelop/redissyncer-service/blob/master/doc/img/01.png)
+![大体流程图](http://git.jd.com/csddevelop/redissyncer-service/raw/master/doc/img/01.png)
 
 
 
