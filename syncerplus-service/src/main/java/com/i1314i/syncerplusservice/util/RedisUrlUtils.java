@@ -25,6 +25,7 @@ public class RedisUrlUtils {
         RedisClient target = null;
         try {
             turi = new RedisURI(url);
+
              target = new RedisClient(turi.getHost(), turi.getPort());
             Configuration tconfig = Configuration.valueOf(turi);
 
@@ -32,6 +33,8 @@ public class RedisUrlUtils {
             if (tconfig.getAuthPassword() != null) {
                 Object auth = target.send(AUTH, tconfig.getAuthPassword().getBytes());
             }
+
+
 
             try {
                 target.send("GET".getBytes(),"TEST".getBytes());

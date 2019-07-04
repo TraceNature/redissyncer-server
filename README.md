@@ -53,6 +53,8 @@
     
     启动同步任务：
     /sync/startSync?sourceUri=${sourceRedisUri}&targetUri=${targetRedisUri}&threadName=${threadName}
+    
+
  
     参数：
     
@@ -64,6 +66,29 @@
         
         任务名称
         ${threadName}：AtoB
+        
+## 
+    |  参数   | 含义  |     
+    |  ----  | ----  |
+    | sourceUri  | 源redis连接地址 |
+    | targetRedisUri  | 单元格 |
+    | sourceUri  | 源redis连接地址 |
+    | threadName  | 任务名称 |
+    | sourceUri  | 源redis连接地址 |
+    | minPoolSize  | redis池最小大小 |
+    | maxPoolSize  | redis池最大小 |
+    | maxWaitTime  | 超时时间 |
+    | idleTimeRunsMillis  | 回收空闲未使用时间连接 |
+    
+##
+    |  参数   | 缺省  |     
+    |  ----  | ----  |
+    | minPoolSize  | 可缺省 |
+    | maxPoolSize  | 可缺省 |
+    | maxWaitTime  | 可缺省 |
+    | idleTimeRunsMillis  | 可缺省 |
+
+缺省时为默认配置
     
     正在运行同步任务线程列表   
     /sync/listAlive

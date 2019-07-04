@@ -2,6 +2,7 @@ package com.i1314i.syncerplusservice.entity.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.validation.constraints.NotBlank;
 
@@ -15,9 +16,23 @@ public class RedisSyncDataDto {
     @NotBlank(message = "任务名称不能为空")
     private String threadName;
 
+    private int minPoolSize;
+    private int maxPoolSize;
+    private long maxWaitTime;
+    private long timeBetweenEvictionRunsMillis;
+    private long idleTimeRunsMillis;
+
+
+
     public RedisSyncDataDto(String sourceUri, String targetUri, String threadName) {
         this.sourceUri = sourceUri;
         this.targetUri = targetUri;
         this.threadName = threadName;
     }
+
+
+
+
+
+
 }

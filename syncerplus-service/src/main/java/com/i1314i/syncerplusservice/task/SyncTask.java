@@ -48,6 +48,7 @@ public class SyncTask implements Runnable {
     private  int threadCount = 30;  //写线程数
     private boolean status=true;
     private String threadName; //线程名称
+    private RedisSyncDataDto syncDataDto;
 
     public SyncTask(String sourceUri, String targetUri) {
         this.sourceUri = sourceUri;
@@ -59,6 +60,7 @@ public class SyncTask implements Runnable {
     }
 
     public SyncTask(RedisSyncDataDto syncDataDto) {
+        this.syncDataDto=syncDataDto;
         this.sourceUri = syncDataDto.getSourceUri();
         this.targetUri = syncDataDto.getTargetUri();
         this.threadName=syncDataDto.getThreadName();
@@ -125,7 +127,8 @@ public class SyncTask implements Runnable {
             /**
              * 初始化连接池
              */
-            pool.init(10, 2000L,turi);
+//            pool.init(syncDataDto.getMaxPoolSize(), syncDataDto.getMaxWaitTime(),turi);
+            pool.init(syncDataDto.getMinPoolSize(), syncDataDto.getMaxPoolSize(),syncDataDto.getMaxWaitTime(),turi,syncDataDto.getTimeBetweenEvictionRunsMillis(),syncDataDto.getIdleTimeRunsMillis());
 
             Configuration tconfig = Configuration.valueOf(turi);
 

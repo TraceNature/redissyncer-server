@@ -1,7 +1,11 @@
 package com.i1314i.syncerplusservice.pool;
 
+import lombok.Getter;
+import lombok.Setter;
 import redis.clients.jedis.Client;
 import redis.clients.jedis.Protocol;
+
+import java.util.Date;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static redis.clients.jedis.Protocol.Command.RESTORE;
@@ -12,9 +16,18 @@ import static redis.clients.jedis.Protocol.toByteArray;
  * RedisClient
  */
 public class RedisClient extends Client {
+    @Setter@Getter
+    private Date createTime;
+    @Setter@Getter
+    private Date lastTime;
+    @Setter@Getter
+    private boolean aliveStatus;
 
     public RedisClient(final String host, final int port) {
         super(host, port);
+        this.createTime=new Date();
+        this.lastTime=new Date();
+        this.aliveStatus=true;
     }
 
     public Object send(Protocol.Command cmd, final byte[]... args) {

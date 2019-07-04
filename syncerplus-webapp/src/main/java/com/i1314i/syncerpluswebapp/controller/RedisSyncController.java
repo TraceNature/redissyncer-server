@@ -6,6 +6,8 @@ import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -23,6 +25,8 @@ public class RedisSyncController {
     @Autowired
     IRedisReplicatorService redisReplicatorService;
 
+    @Autowired
+    private Environment env;
     /**
      * 开启redis数据同步
      * @param syncDataDto
@@ -31,8 +35,25 @@ public class RedisSyncController {
      */
     @RequestMapping(value = "/startSync",method = {RequestMethod.GET,RequestMethod.POST})
     public String StartSync(@Validated RedisSyncDataDto syncDataDto) throws TaskMsgException {
+
+        if(syncDataDto.getIdleTimeRunsMillis()==0){
+            syncDataDto.setIdleTimeRunsMillis(Long.parseLong(env.getProperty("syncerplus.redispool.idleTimeRunsMillis")));
+        }
+        if(syncDataDto.getMaxWaitTime()==0){
+            syncDataDto.setMaxWaitTime(Long.parseLong(env.getProperty("syncerplus.redispool.maxWaitTime")));
+        }
+        if(syncDataDto.getMaxPoolSize()==0){
+            syncDataDto.setMaxPoolSize(Integer.parseInt(env.getProperty("syncerplus.redispool.maxPoolSize")));
+        }
+        if(syncDataDto.getMinPoolSize()==0){
+            syncDataDto.setMinPoolSize(Integer.parseInt(env.getProperty("syncerplus.redispool.minPoolSize")));
+        }
+
+        syncDataDto.setTimeBetweenEvictionRunsMillis(Long.parseLong(env.getProperty("syncerplus.redispool.timeBetweenEvictionRunsMillis")));
+
+
         redisReplicatorService.sync(syncDataDto);
-        return "success";
+        return JSON.toJSONString(syncDataDto);
     }
 
     /**
@@ -50,7 +71,7 @@ public class RedisSyncController {
      * alive线程列表
      * @return
      */
-    @RequestMapping(value = "/listAlive",method = {RequestMethod.GET})
+    @RequestMapping(value = "/listAlive",method = {RequestMethod.GET,RequestMethod.POST})
     public String ListAlive(){
         return JSON.toJSONString(TaskMonitorUtils.getAliveThreadHashMap());
     }
@@ -59,7 +80,7 @@ public class RedisSyncController {
      * dead线程列表
      * @return
      */
-    @RequestMapping(value = "/listDead",method = {RequestMethod.GET})
+    @RequestMapping(value = "/listDead",method = {RequestMethod.GET,RequestMethod.POST})
     public String ListDead(){
         return JSON.toJSONString(TaskMonitorUtils.getDeadThreadHashMap());
     }

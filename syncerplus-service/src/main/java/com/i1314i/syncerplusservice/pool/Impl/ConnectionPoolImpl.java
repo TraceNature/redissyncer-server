@@ -6,7 +6,12 @@ import com.moilioncircle.redis.replicator.Configuration;
 import com.moilioncircle.redis.replicator.RedisURI;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,14 +19,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static redis.clients.jedis.Protocol.Command.AUTH;
 
+
+/**
+ * Redis连接池
+ */
+
 public class ConnectionPoolImpl implements ConnectionPool {
     //是否关闭
     AtomicBoolean isClosed = new AtomicBoolean(false);
 
     //队列实现连接 对象存储
-    LinkedBlockingQueue<RedisClient> idle; //空闲队列
+    volatile LinkedBlockingQueue<RedisClient> idle; //空闲队列
 
-    LinkedBlockingQueue<RedisClient> busy; //繁忙队列
+    volatile LinkedBlockingQueue<RedisClient> busy; //繁忙队列
 
     //大小控制连接数量
     AtomicInteger activeSize = new AtomicInteger(0);
@@ -31,37 +41,34 @@ public class ConnectionPoolImpl implements ConnectionPool {
 
     @Getter@Setter
     RedisURI redisURI;//redis链接
+    int minActive;
     int maxActive;
     long maxWait;
+    long timeBetweenEvictionRunsMillis;
+    long idleTimeRunsMillis;
+    boolean status=true;
 
 
     /**
-     * 初始化连接池
-     * @param maxActive
-     * @param maxWait
-     */
-    public void init(int maxActive, long maxWait) {
-        this.maxActive = maxActive;
-        this.maxWait = maxWait;
-        idle = new LinkedBlockingQueue<RedisClient>();
-        busy = new LinkedBlockingQueue<RedisClient>();
-    }
-
-
-
-    /**
-     * 初始化连接池
+     * 初始化线程池
+     * @param minActive 最小连接数
      * @param maxActive 最大连接数
-     * @param maxWait  最大等待数
-     * @param redisURI  redisUrl
+     * @param maxWait   超时时间
+     * @param redisURI  uri
+     * @param timeBetweenEvictionRunsMillis
+     * @param idleTimeRunsMillis
      */
     @Override
-    public void init(int maxActive, long maxWait, RedisURI redisURI) {
+    public void init(int minActive, int maxActive, long maxWait, RedisURI redisURI, long timeBetweenEvictionRunsMillis,long idleTimeRunsMillis) {
+        this.minActive = minActive;
         this.maxActive = maxActive;
         this.maxWait = maxWait;
+        this.idleTimeRunsMillis=idleTimeRunsMillis;
         idle = new LinkedBlockingQueue<RedisClient>();
         busy = new LinkedBlockingQueue<RedisClient>();
         this.redisURI=redisURI;
+        this.timeBetweenEvictionRunsMillis=timeBetweenEvictionRunsMillis;
+        freeResourceMonitor();
     }
 
 
@@ -71,11 +78,11 @@ public class ConnectionPoolImpl implements ConnectionPool {
         while(null == redisClient){
             //从空闲队列中获取一个
             redisClient = idle.poll();
-
             if(null != redisClient){
+                redisClient.setLastTime(new Date());
                 //如果空闲队列里有连接,直接是被复用，再将此连接移动到busy （繁忙）队列中
                 busy.offer(redisClient);
-                System.out.println("从空闲队列里拿到连接");
+//                System.out.println("从空闲队列里拿到连接");
                 return redisClient;
             }
 
@@ -122,6 +129,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
                 }
             }else{
                 //存入busy队列
+                redisClient.setLastTime(new Date());
                 busy.offer(redisClient);
             }
 
@@ -155,6 +163,61 @@ public class ConnectionPoolImpl implements ConnectionPool {
                 }
             }
         }
+    }
+
+
+    /**
+     * 空闲资源释放监控
+     */
+    void freeResourceMonitor(){
+        if(status){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+
+                    if(isClosed.get()){
+                        Thread.currentThread().isInterrupted();
+                    }
+                    /**
+                     * 判断线程池是否关闭
+                     */
+                    while (!isClosed.get()){
+
+                        int count=0;
+                        /**
+                         * 每次遍历空闲列表
+                         */
+
+                        if(activeSize.get()>minActive+1){
+                            while (count<idle.size()){
+                                count++;
+                                //从空闲队列中获取一个
+                                RedisClient redisClient= idle.poll();
+                                if(null != redisClient){
+                                    Date nowTime=new Date();
+
+                                    //超时
+                                    if((nowTime.getTime()-redisClient.getLastTime().getTime())>timeBetweenEvictionRunsMillis){
+                                        redisClient.close();
+                                        activeSize.decrementAndGet();
+                                    }else {
+                                        idle.offer(redisClient);
+                                    }
+                                }
+                            }
+                        }
+                        try {
+                            Thread.sleep(timeBetweenEvictionRunsMillis);
+                        } catch (InterruptedException e) {
+                            System.out.println("----------InterruptedException ");
+                        }
+                    }
+                }
+            }).start();
+        }else {
+            this.status=false;
+        }
+
     }
 
 

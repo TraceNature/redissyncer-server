@@ -8,20 +8,19 @@ import com.moilioncircle.redis.replicator.RedisURI;
  */
 public interface ConnectionPool {
 
-    /**
-     * 初始化线程池
-     * max 最大连接数
-     * maxWait 最大等待时间
-     * */
-    void init(int maxActive, long maxWait);
 
     /**
      * 初始化线程池
-     * @param maxActive 最大连接数
-     * @param maxWait  最大等待数
-     * @param redisURI  redisUrl
+     * @param minActive
+     * @param maxActive
+     * @param maxWait
+     * @param redisURI
+     * @param timeBetweenEvictionRunsMillis
+     * @param idleTimeRunsMillis
      */
-    void init(int maxActive, long maxWait, RedisURI redisURI);
+    void init(int minActive,int maxActive, long maxWait, RedisURI redisURI, long timeBetweenEvictionRunsMillis,long idleTimeRunsMillis);
+
+
 
 
     /**
@@ -43,5 +42,8 @@ public interface ConnectionPool {
      * 清空所有连接 关闭
      */
     void close();
+
+
+
 
 }
