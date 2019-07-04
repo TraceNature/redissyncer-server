@@ -67,7 +67,7 @@
         任务名称
         ${threadName}：AtoB
         
-## 
+
     |  参数   | 含义  |     
     |  ----  | ----  |
     | sourceUri  | 源redis连接地址 |
@@ -80,7 +80,7 @@
     | maxWaitTime  | 超时时间 |
     | idleTimeRunsMillis  | 回收空闲未使用时间连接 |
     
-##
+
     |  参数   | 缺省  |     
     |  ----  | ----  |
     | minPoolSize  | 可缺省 |

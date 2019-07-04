@@ -29,6 +29,18 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+<!--            <exclusions>-->
+<!--                &lt;!&ndash; 这一部分是Springboot启动不使用tomcat应用服务器，和本次log4j2的配置无关 &ndash;&gt;-->
+<!--&lt;!&ndash;                <exclusion>&ndash;&gt;-->
+<!--&lt;!&ndash;                    <groupId>org.springframework.boot</groupId>&ndash;&gt;-->
+<!--&lt;!&ndash;                    <artifactId>spring-boot-starter-tomcat</artifactId>&ndash;&gt;-->
+<!--&lt;!&ndash;                </exclusion>&ndash;&gt;-->
+<!--                &lt;!&ndash; 移除Springboot默认的日志框架 &ndash;&gt;-->
+<!--                <exclusion>-->
+<!--                    <groupId>org.springframework.boot</groupId>-->
+<!--                    <artifactId>spring-boot-starter-logging</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
         </dependency>
 
 
