@@ -45,59 +45,70 @@
     或
     java -jar syncerplus-webapp-1.0.jar
 
-/sync/startSync?sourceUri=redis://114.67.81.232?authPassword=redistest0102&targetUri=redis://114.67.81.232?authPassword=redistest0102&threadName=threadName01
+
 
 ### 三、使用方法
 
 
     
-    启动同步任务：
-    /sync/startSync?sourceUri=${sourceRedisUri}&targetUri=${targetRedisUri}&threadName=${threadName}
+    
+    启动新同步任务请求(POST)：JSON格式 
+    Content-Type:application/json;charset=utf-8;
+
+    {
+        "sourceUri": "redis://127.0.0.1:6379?authPassword=123456",
+    	"targetUri": "redis://127.0.0.1:6380?authPassword=123456",
+    	"threadName": "test01"
+    }
+    或
+    {
+        "sourceUri": "redis://127.0.0.1:6379?authPassword=123456",
+    	"targetUri": "redis://127.0.0.1:6380?authPassword=123456",
+    	"threadName": "test01",
+    	"idleTimeRunsMillis": 300000,
+    	"maxPoolSize": 20,
+    	"maxWaitTime": 10000,
+    	"minPoolSize": 1
+    }
     
 
- 
-    参数：
+        
+## 
+|  参数   | 含义  |     
+|  ----  | ----  |
+| sourceUri  | 源redis连接地址 |
+| targetRedisUri  | 单元格 |
+| sourceUri  | 源redis连接地址 |
+| threadName  | 任务名称 |
+| sourceUri  | 源redis连接地址 |
+| minPoolSize  | redis池最小大小 |
+| maxPoolSize  | redis池最大小 |
+| maxWaitTime  | 超时时间 |
+| idleTimeRunsMillis  | 回收空闲未使用时间连接 |
     
-        源redis连接地址
-        ${sourceRedisUri}：redis://127.0.0.1:6319?authPassword=123456
-        
-        目标redis链接地址 
-        ${targetRedisUri}  ： redis://127.0.0.1:6480?authPassword=123456
-        
-        任务名称
-        ${threadName}：AtoB
-        
-
-    |  参数   | 含义  |     
-    |  ----  | ----  |
-    | sourceUri  | 源redis连接地址 |
-    | targetRedisUri  | 单元格 |
-    | sourceUri  | 源redis连接地址 |
-    | threadName  | 任务名称 |
-    | sourceUri  | 源redis连接地址 |
-    | minPoolSize  | redis池最小大小 |
-    | maxPoolSize  | redis池最大小 |
-    | maxWaitTime  | 超时时间 |
-    | idleTimeRunsMillis  | 回收空闲未使用时间连接 |
-    
-
-    |  参数   | 缺省  |     
-    |  ----  | ----  |
-    | minPoolSize  | 可缺省 |
-    | maxPoolSize  | 可缺省 |
-    | maxWaitTime  | 可缺省 |
-    | idleTimeRunsMillis  | 可缺省 |
+##
+|  参数   | 缺省  |     
+|  ----  | ----  |
+| minPoolSize  | 可缺省 |
+| maxPoolSize  | 可缺省 |
+| maxWaitTime  | 可缺省 |
+| idleTimeRunsMillis  | 可缺省 |
 
 缺省时为默认配置
+
+
     
-    正在运行同步任务线程列表   
+    正在运行同步任务线程列表(GET请求)
     /sync/listAlive
     
-    已结束同步任务线程列表
+    已结束同步任务线程列表(GET请求)
     /sync/listDead
     
     根据任务名称关闭同步任务
-    /sync/closeSync?name=${threadName}
+    请求接口(DELETE请求)：
+    /sync/closeSync/${threadName}
     参数：
         任务名称
         ${threadName}  ： AtoB
+        
+         /sync/closeSync/AtoB
