@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,6 +45,12 @@ public class ExceptionAdvice {
                 .msg(e.getMessage());
     }
 
+
+    @ExceptionHandler(SocketTimeoutException.class)
+    public ResultMap SocketTimeoutException(SocketTimeoutException e){
+        return ResultMap.builder().code(CodeConstant.HTTP_ERROR_CODE)
+                .msg(e.getMessage());
+    }
 
 
     /**
