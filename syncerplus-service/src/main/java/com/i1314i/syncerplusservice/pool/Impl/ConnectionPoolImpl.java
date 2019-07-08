@@ -6,6 +6,7 @@ import com.moilioncircle.redis.replicator.Configuration;
 import com.moilioncircle.redis.replicator.RedisURI;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
@@ -23,7 +24,7 @@ import static redis.clients.jedis.Protocol.Command.AUTH;
 /**
  * Redis连接池
  */
-
+@Slf4j
 public class ConnectionPoolImpl implements ConnectionPool {
     //是否关闭
     AtomicBoolean isClosed = new AtomicBoolean(false);
@@ -98,10 +99,12 @@ public class ConnectionPoolImpl implements ConnectionPool {
                     //获取password
                     if (tconfig.getAuthPassword() != null) {
                         Object auth = redisClient.send(AUTH, tconfig.getAuthPassword().getBytes());
-                         System.out.println("AUTH:" + auth);
+                        log.info("AUTH:" + auth);
                     }
 
-                    System.out.println("连接被创建的次数：" +createCounter.incrementAndGet());
+                    createCounter.incrementAndGet();
+
+//                    System.out.println("连接被创建的次数：" +createCounter.incrementAndGet());
                     //存入busy队列
                     busy.offer(redisClient);
                     return redisClient;
@@ -137,17 +140,17 @@ public class ConnectionPoolImpl implements ConnectionPool {
         return redisClient;
     }
 
-    public void release(RedisClient jedis) throws Exception {
-        if(null == jedis ) {
-            System.out.println("释放 的jedis为空");
+    public void release(RedisClient client) throws Exception {
+        if(null == client ) {
+            log.info("释放的redisClient为空");
             return;
         }
-        if(busy.remove(jedis)){
-            idle.offer(jedis);
+        if(busy.remove(client)){
+            idle.offer(client);
         }else{
             //如果释放不成功,则减去一个连接，在创建的时候可以自动补充
             activeSize.decrementAndGet();
-            throw new Exception("释放jedis异常");
+            throw new Exception("释放redisClient异常");
         }
     }
 
@@ -209,7 +212,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
                         try {
                             Thread.sleep(timeBetweenEvictionRunsMillis);
                         } catch (InterruptedException e) {
-                            System.out.println("----------InterruptedException ");
+                            log.info("----------InterruptedException ");
                         }
                     }
                 }

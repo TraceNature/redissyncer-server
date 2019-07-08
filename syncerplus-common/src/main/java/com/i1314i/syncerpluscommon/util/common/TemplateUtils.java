@@ -81,7 +81,7 @@ public class TemplateUtils {
      * @return
      * @throws IOException
      */
-    public synchronized static String getPropertiesdata(String resourcepath,String name) {
+    public synchronized static String getPropertiesdata(String resourcepath, String name) {
         String value=null;
         try {
             prop = new Properties();

@@ -2,7 +2,6 @@ package com.i1314i.syncerplusservice.entity.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
 
 import javax.validation.constraints.NotBlank;
 
@@ -23,6 +22,8 @@ public class RedisSyncDataDto {
     private long idleTimeRunsMillis;
 
 
+    public RedisSyncDataDto() {
+    }
 
     public RedisSyncDataDto(String sourceUri, String targetUri, String threadName) {
         this.sourceUri = sourceUri;

@@ -1,11 +1,16 @@
 package com.i1314i.syncerpluswebapp.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
+import com.i1314i.syncerplusservice.entity.RedisPoolProps;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.env.Environment;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,7 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController
+
 public class TestController {
+    @Autowired
+    RedisPoolProps redisPoolProps;
+
+    @Autowired
+    private Environment env;
     @Autowired
     IRedisReplicatorService redisReplicatorService;
     public static void main(String[] args) {
@@ -47,6 +58,6 @@ public class TestController {
 
     @RequestMapping(value = "/test4")
     public String success4(){
-        return JSON.toJSONString( TaskMonitorUtils.getDeadThreadHashMap());
+        return JSON.toJSONString(TemplateUtils.getPropertiesdata("other.properties","test"));
     }
 }

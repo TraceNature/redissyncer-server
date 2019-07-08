@@ -1,9 +1,11 @@
 package com.i1314i.syncerplusservice.task;
 
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
+import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
+import com.i1314i.syncerplusservice.pool.Impl.CommonPoolConnectionPoolImpl;
 import com.i1314i.syncerplusservice.pool.Impl.ConnectionPoolImpl;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
@@ -121,8 +123,16 @@ public class SyncTask implements Runnable {
             suri = new RedisURI(sourceUri);
 
             RedisURI turi = new RedisURI(targetUri);
+            ConnectionPool pools =null;
 
-             final ConnectionPool pool = new ConnectionPoolImpl();
+            if(StringUtils.isEmpty(TemplateUtils.getPropertiesdata("other.properties","redispool.type"))||TemplateUtils.getPropertiesdata("other.properties","redispool.type").trim().equals("commonpool")){
+                pools=new CommonPoolConnectionPoolImpl();
+            }else if(TemplateUtils.getPropertiesdata("other.properties","redispool.type").trim().equals("selefpool")){
+                pools=new ConnectionPoolImpl();
+            }
+
+              final ConnectionPool pool =pools;
+
 
             /**
              * 初始化连接池
@@ -285,4 +295,5 @@ public class SyncTask implements Runnable {
         }
 
     }
+
 }

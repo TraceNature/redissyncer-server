@@ -1,5 +1,6 @@
 package com.i1314i.syncerplusservice.pool;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import redis.clients.jedis.Client;
@@ -15,6 +16,7 @@ import static redis.clients.jedis.Protocol.toByteArray;
 /**
  * RedisClient
  */
+@EqualsAndHashCode
 public class RedisClient extends Client {
     @Setter@Getter
     private Date createTime;
@@ -51,4 +53,6 @@ public class RedisClient extends Client {
             return send(RESTORE, key, toByteArray(expired), dumped, "REPLACE".getBytes());
         }
     }
+
+
 }

@@ -1,13 +1,12 @@
 package com.i1314i.syncerpluswebapp.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.entity.ResultMap;
+import com.i1314i.syncerplusservice.entity.RedisPoolProps;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,12 +21,15 @@ import javax.validation.constraints.NotBlank;
 public class RedisSyncController {
     @Autowired
     IRedisReplicatorService redisReplicatorService;
-
     @Autowired
-    private Environment env;
+    RedisPoolProps redisPoolProps;
+//    @Autowired
+//    private Environment env;
     /**
      * 开启redis数据同步
      * @param syncDataDto
+     * 先加载前端传过来的配置文件，如果没有则加载application.yml或.properties中参数
+     * springboot中配置文件加载顺序是 .properties->.yml
      * @return
      * @throws TaskMsgException
      */
@@ -35,18 +37,19 @@ public class RedisSyncController {
     public ResultMap StartSync(@RequestBody @Validated RedisSyncDataDto syncDataDto) throws TaskMsgException {
 
         if(syncDataDto.getIdleTimeRunsMillis()==0){
-            syncDataDto.setIdleTimeRunsMillis(Long.parseLong(env.getProperty("syncerplus.redispool.idleTimeRunsMillis")));
+            syncDataDto.setIdleTimeRunsMillis(redisPoolProps.getIdleTimeRunsMillis());
         }
         if(syncDataDto.getMaxWaitTime()==0){
-            syncDataDto.setMaxWaitTime(Long.parseLong(env.getProperty("syncerplus.redispool.maxWaitTime")));
+            syncDataDto.setMaxWaitTime(redisPoolProps.getMaxWaitTime());
         }
         if(syncDataDto.getMaxPoolSize()==0){
-            syncDataDto.setMaxPoolSize(Integer.parseInt(env.getProperty("syncerplus.redispool.maxPoolSize")));
+            syncDataDto.setMaxPoolSize(redisPoolProps.getMaxPoolSize());
         }
         if(syncDataDto.getMinPoolSize()==0){
-            syncDataDto.setMinPoolSize(Integer.parseInt(env.getProperty("syncerplus.redispool.minPoolSize")));
+            syncDataDto.setMinPoolSize(redisPoolProps.getMinPoolSize());
         }
-        syncDataDto.setTimeBetweenEvictionRunsMillis(Long.parseLong(env.getProperty("syncerplus.redispool.timeBetweenEvictionRunsMillis")));
+
+        syncDataDto.setTimeBetweenEvictionRunsMillis(redisPoolProps.getTimeBetweenEvictionRunsMillis());
         redisReplicatorService.sync(syncDataDto);
         return ResultMap.builder().code("200").msg("success");
     }
