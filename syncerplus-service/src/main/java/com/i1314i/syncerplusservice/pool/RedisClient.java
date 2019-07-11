@@ -34,12 +34,27 @@ public class RedisClient extends Client {
 
     public Object send(Protocol.Command cmd, final byte[]... args) {
         sendCommand(cmd, args);
-        Object r = getOne();
+        Object r=null;
+        try{
+             r = getOne();
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+
+
+
         if (r instanceof byte[]) {
             return new String((byte[]) r, UTF_8);
         } else {
             return r;
         }
+    }
+
+    public static boolean isNull(byte[] bs){
+        if(bs.length==0||bs==null){//根据byte数组长度为0判断
+            return true;
+        }
+        return false;
     }
 
     public Object send(final byte[] cmd, final byte[]... args) {

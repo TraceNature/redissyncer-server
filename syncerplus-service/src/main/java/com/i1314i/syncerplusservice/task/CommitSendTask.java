@@ -29,13 +29,17 @@ public class CommitSendTask implements Callable<Object> {
         this.info = info;
     }
 
+    /**
+     * 缺少校验
+     * @return
+     * @throws Exception
+     */
     @Override
     public Object call() throws Exception {
         Object r = redisClient.send(command.getCommand(), command.getArgs());
         pool.release(redisClient);
         info.append(new String(command.getCommand()));
         info.append(":");
-
         for (byte[] arg : command.getArgs()) {
             info.append("[");
             info.append(new String(arg));

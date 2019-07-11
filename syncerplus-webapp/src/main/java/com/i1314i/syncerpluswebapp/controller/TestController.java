@@ -1,6 +1,7 @@
 package com.i1314i.syncerpluswebapp.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.i1314i.syncerpluscommon.entity.PoolConfig;
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
 import com.i1314i.syncerplusservice.entity.RedisPoolProps;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
     @Autowired
     RedisPoolProps redisPoolProps;
+    @Autowired
+    private PoolConfig poolConfig;
 
     @Autowired
     private Environment env;
@@ -58,6 +61,6 @@ public class TestController {
 
     @RequestMapping(value = "/test4")
     public String success4(){
-        return JSON.toJSONString(TemplateUtils.getPropertiesdata("other.properties","test"));
+        return JSON.toJSONString(poolConfig);
     }
 }

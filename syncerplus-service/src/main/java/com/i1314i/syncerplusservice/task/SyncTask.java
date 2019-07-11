@@ -166,7 +166,7 @@ public class SyncTask implements Runnable {
                     try {
                          redisClient=pool.borrowResource();
                     } catch (Exception e) {
-                        log.info("从池中获取RedisClient失败%s",e.getMessage());
+                        log.info("从池中获取RedisClient失败："+e.getMessage());
 
                     }
                     if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
@@ -176,7 +176,7 @@ public class SyncTask implements Runnable {
                         try {
                             pool.borrowResource().send(SELECT, toByteArray(index));
                         } catch (Exception e) {
-                            log.info("从池中获取链接失败");
+                            log.info("从池中获取链接失败: "+e.getMessage());
                         }
                         dbnum.set(index);
                         info.append("SELECT:");
@@ -227,7 +227,7 @@ public class SyncTask implements Runnable {
                     try {
                         redisClient=pool.borrowResource();
                     } catch (Exception e) {
-                        log.info("从池中获取RedisClient失败%s",e.getMessage());
+                        log.info("从池中获取RedisClient失败:"+e.getMessage());
 
                     }
                     StringBuffer info = new StringBuffer();
