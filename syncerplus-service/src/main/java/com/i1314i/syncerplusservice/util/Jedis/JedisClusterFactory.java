@@ -1,4 +1,4 @@
-package com.i1314i.syncerpluscommon.util.redis.factory;
+package com.i1314i.syncerplusservice.util.Jedis;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.FactoryBean;
@@ -76,7 +76,7 @@ public class JedisClusterFactory implements FactoryBean<JedisCluster> {
             haps.add(new HostAndPort(arr[0],Integer.valueOf(arr[1])));
         }
 
-        if(passWord.trim().equals("")){
+        if(passWord.trim().equals("")||passWord==null){
             jedisCluster = new JedisCluster(haps, connectionTimeout, soTimeout, maxRedirections,genericObjectPoolConfig);
         }else {
                     jedisCluster = new JedisCluster(haps, connectionTimeout, soTimeout, maxRedirections, passWord,genericObjectPoolConfig);

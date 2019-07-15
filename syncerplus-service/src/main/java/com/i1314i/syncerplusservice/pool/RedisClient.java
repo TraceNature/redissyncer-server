@@ -1,10 +1,13 @@
 package com.i1314i.syncerplusservice.pool;
 
+import com.i1314i.syncerplusservice.service.exception.TaskRestoreException;
+import com.i1314i.syncerplusservice.util.Jedis.IJedisClient;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import redis.clients.jedis.Client;
 import redis.clients.jedis.Protocol;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.Date;
 
@@ -32,13 +35,15 @@ public class RedisClient extends Client {
         this.aliveStatus=true;
     }
 
-    public Object send(Protocol.Command cmd, final byte[]... args) {
+    public Object send(Protocol.Command cmd, final byte[]... args) throws TaskRestoreException {
         sendCommand(cmd, args);
         Object r=null;
         try{
              r = getOne();
         }catch (Exception e){
-            System.out.println(e.getMessage());
+            if(e instanceof  JedisDataException)
+                throw  new TaskRestoreException(e.getMessage());
+
         }
 
 
@@ -50,6 +55,9 @@ public class RedisClient extends Client {
         }
     }
 
+
+
+
     public static boolean isNull(byte[] bs){
         if(bs.length==0||bs==null){//根据byte数组长度为0判断
             return true;
@@ -57,11 +65,19 @@ public class RedisClient extends Client {
         return false;
     }
 
-    public Object send(final byte[] cmd, final byte[]... args) {
+    public Object send(final byte[] cmd, final byte[]... args) throws TaskRestoreException {
         return send(Protocol.Command.valueOf(new String(cmd, UTF_8).toUpperCase()), args);
     }
 
-    public Object restore(byte[] key, long expired, byte[] dumped, boolean replace) {
+    public Object restore(byte[] key, long expired, byte[] dumped, boolean replace) throws TaskRestoreException {
+        if (!replace) {
+            return send(RESTORE, key, toByteArray(expired), dumped);
+        } else {
+            return send(RESTORE, key, toByteArray(expired), dumped, "REPLACE".getBytes());
+        }
+    }
+
+    public Object restore(byte[] key, long expired, byte[] dumped, boolean replace, IJedisClient jedisClientPool) throws TaskRestoreException {
         if (!replace) {
             return send(RESTORE, key, toByteArray(expired), dumped);
         } else {

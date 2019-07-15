@@ -20,7 +20,7 @@
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
         <java.version>1.8</java.version>
-        <jedis.version>2.9.0</jedis.version>
+<!--        <jedis.version>2.9.0</jedis.version>-->
         <pool.version>1.6</pool.version>
         <druid.version>1.1.10</druid.version>
 
@@ -72,17 +72,17 @@
             <version>1.9.2</version>
         </dependency>
 
-        <!--jedis所需jar-->
-        <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-            <version>${jedis.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-pool</groupId>
-            <artifactId>commons-pool</artifactId>
-            <version>${pool.version}</version>
-        </dependency>
+<!--        &lt;!&ndash;jedis所需jar&ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>redis.clients</groupId>-->
+<!--            <artifactId>jedis</artifactId>-->
+<!--            <version>${jedis.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>commons-pool</groupId>-->
+<!--            <artifactId>commons-pool</artifactId>-->
+<!--            <version>${pool.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.beust</groupId>
             <artifactId>jcommander</artifactId>

@@ -1,4 +1,4 @@
-package com.i1314i.syncerpluscommon.util.redis.other;
+package com.i1314i.syncerplusservice.util.Jedis;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

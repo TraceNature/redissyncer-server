@@ -1,5 +1,6 @@
 package com.i1314i.syncerplusservice.entity.dto;
 
+import com.i1314i.syncerplusservice.constant.RedisVersion;
 import lombok.Getter;
 import lombok.Setter;
 

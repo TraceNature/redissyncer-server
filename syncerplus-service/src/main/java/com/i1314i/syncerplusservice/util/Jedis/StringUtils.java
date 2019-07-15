@@ -1,4 +1,4 @@
-package com.i1314i.syncerpluscommon.util.redis.other;
+package com.i1314i.syncerplusservice.util.Jedis;
 
 import com.beust.jcommander.internal.Lists;
 import org.apache.commons.lang3.StringEscapeUtils;

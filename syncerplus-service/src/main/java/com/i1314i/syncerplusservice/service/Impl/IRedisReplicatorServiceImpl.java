@@ -1,12 +1,12 @@
 package com.i1314i.syncerplusservice.service.Impl;
 
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
+import com.i1314i.syncerplusservice.constant.RedisVersion;
 import com.i1314i.syncerplusservice.constant.TaskMsgConstant;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
-import com.i1314i.syncerplusservice.task.BackUPRdbTask;
-import com.i1314i.syncerplusservice.task.SyncTask;
+import com.i1314i.syncerplusservice.task.*;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.moilioncircle.redis.replicator.RedisReplicator;
@@ -160,10 +160,30 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
     public void sync(RedisSyncDataDto syncDataDto) throws TaskMsgException {
         checkRedisUrl(syncDataDto.getSourceUri(),"sourceUri");
         checkRedisUrl(syncDataDto.getTargetUri(),"targetUri");
+        RedisVersion redisVersion=null;
+        try {
+             redisVersion=RedisUrlUtils.selectSyncerVersion(syncDataDto.getSourceUri(),syncDataDto.getTargetUri());
+        } catch (URISyntaxException e) {
+            throw new TaskMsgException(e.getMessage());
+        }
         if(TaskMonitorUtils.containsKeyAliveMap(syncDataDto.getThreadName())){
             throw new TaskMsgException(TaskMsgConstant.Task_MSG_PARSE_ERROR_CODE);
         }
-        threadPoolTaskExecutor.execute(new SyncTask(syncDataDto));
+
+        if(redisVersion.equals(RedisVersion.SAME)){
+            threadPoolTaskExecutor.execute(new SyncSameTask(syncDataDto));
+            log.info("同步同版本（>3.0）版本数据...");
+        }else if(redisVersion.equals(RedisVersion.LOWER)){
+            threadPoolTaskExecutor.execute(new SyncLowerTask(syncDataDto));
+            log.info("同步同版本（<3.0）版本数据...");
+        }else if(redisVersion.equals(RedisVersion.OTHER)){
+            threadPoolTaskExecutor.execute(new SyncDiffTask(syncDataDto));
+            log.info("同步不同版本（）版本数据...");
+        }else {
+            threadPoolTaskExecutor.execute(new SyncTask(syncDataDto));
+        }
+
+
     }
 
 

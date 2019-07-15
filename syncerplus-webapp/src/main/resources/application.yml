@@ -15,9 +15,11 @@ syncerplus:
     #核心池大小
     corePoolSize: 100
     #最大池大小
-    maxPoolSize: 900
+    maxPoolSize: 1500
     #队列最大长度
-    queueCapacity: 1000
+    queueCapacity: 1600
     #线程池维护线程所允许的空闲时间
     keepAliveSeconds: 300
 
+#logging:
+#  config: log/logback.xml

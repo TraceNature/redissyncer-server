@@ -1,17 +1,16 @@
-package com.i1314i.syncerpluscommon.util.redis;
+package com.i1314i.syncerplusservice.util.Jedis;
 
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;
 import com.beust.jcommander.internal.Sets;
-
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
-import com.i1314i.syncerpluscommon.util.redis.other.ObjectUtils;
-import com.i1314i.syncerpluscommon.util.redis.other.StringUtils;
+import com.i1314i.syncerplusservice.util.Regex.RegexUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisException;
 
 import java.util.ArrayList;
@@ -25,53 +24,65 @@ import java.util.Set;
  * @created 2018-09-17 20:19
  **/
 
-public class JedisClient implements IJedisClient {
-    private static Logger logger = LoggerFactory.getLogger(JedisClient.class);
-    private static  String host=null;
-    private static  Integer port=null;
-    private static JedisPool jedisPool = null;
-    private final static String propertiesPath= "dao.properties";
-    private final static String JEDIS_HOST="jedis.host";
-    private final static String JEDIS_PORT="jedis.port";
+public class TestJedisClient implements IJedisClient {
+    private static Logger logger = LoggerFactory.getLogger(TestJedisClient.class);
+    private String host = null;
+    private Integer port = null;
+    private JedisPool jedisPool = null;
+    private JedisPoolConfig config = null;
 
-    private final static String JEDIS_MAXTOTAL="redis.pool.maxTotal";
-    private final static String JEDIS_MaxIdle="redis.pool.maxIdle";
-    private final static String JEDIS_MinIdle="redis.pool.minIdle";
-    private final static String JEDIS_MaxWaitMillis="redis.pool.maxWaitMillis";
-    private final static String JEDIS_TimeBetweenEvictionRunsMillis="redis.pool.timeBetweenEvictionRunsMillis";
+    public TestJedisClient(String host, Integer port, JedisPoolConfig config, String password, Integer db) {
+        this.host = host;
+        this.port = port;
+        config.setMaxTotal(1000);
+        config.setMaxIdle(100);
+        config.setMinIdle(50);
+        //当池内没有返回对象时，最大等待时间
+        config.setMaxWaitMillis(10000);
 
 
+        config.setTimeBetweenEvictionRunsMillis(30000);
+        config.setTestOnReturn(true);
+        config.setTestOnBorrow(true);
+        this.config = config;
+        int timeout = 100000;
+        if (org.springframework.util.StringUtils.isEmpty(password))
+            jedisPool = new JedisPool(this.config, this.host, this.port, timeout);
+        else
+            jedisPool = new JedisPool(this.config, this.host, this.port, timeout, password, db, null);
+    }
 
     /**
      * 首次加载初始化
      */
-    static {
-        host= TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_HOST);
-        port= Integer.valueOf(TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_PORT));
-        JedisPoolConfig config=new JedisPoolConfig();
-        config.setMaxTotal(Integer.parseInt(TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_MAXTOTAL)));
-        config.setMaxIdle(Integer.parseInt(TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_MaxIdle)));
-        config.setMinIdle(Integer.parseInt(TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_MinIdle)));
-        //当池内没有返回对象时，最大等待时间
-        config.setMaxWaitMillis(Integer.parseInt(TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_MaxWaitMillis)));
-
-
-        config.setTimeBetweenEvictionRunsMillis(Integer.parseInt(TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_TimeBetweenEvictionRunsMillis)));
-        config.setTestOnReturn(true);
-        config.setTestOnBorrow(true);
-        int timeout=100000;
-        jedisPool=new JedisPool(config,host,port,timeout);
-
-
-    }
+//    static {
+//        host= TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_HOST);
+//        port= Integer.valueOf(TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_PORT));
+//        JedisPoolConfig config=new JedisPoolConfig();
+//        config.setMaxTotal(Integer.parseInt(TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_MAXTOTAL)));
+//        config.setMaxIdle(Integer.parseInt(TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_MaxIdle)));
+//        config.setMinIdle(Integer.parseInt(TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_MinIdle)));
+//        //当池内没有返回对象时，最大等待时间
+//        config.setMaxWaitMillis(Integer.parseInt(TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_MaxWaitMillis)));
+//
+//
+//        config.setTimeBetweenEvictionRunsMillis(Integer.parseInt(TemplateUtils.getPropertiesdata(propertiesPath,JEDIS_TimeBetweenEvictionRunsMillis)));
+//        config.setTestOnReturn(true);
+//        config.setTestOnBorrow(true);
+//        int timeout=100000;
+//        jedisPool=new JedisPool(config,host,port,timeout);
+//
+//
+//    }
 
 
     /**
      * 获取资源
+     *
      * @return
      * @throws JedisException
      */
-    public    Jedis getResource() throws JedisException {
+    public Jedis getResource() throws JedisException {
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
@@ -83,63 +94,104 @@ public class JedisClient implements IJedisClient {
         return jedis;
     }
 
+    public Jedis getResource(Integer index) throws JedisException {
+        Jedis jedis = null;
+        try {
+            jedis = jedisPool.getResource();
+            jedis.select(index);
+        } catch (JedisException e) {
+            logger.warn("getResource.", e);
+            returnBrokenResource(jedis);
+            throw e;
+        }
+        return jedis;
+    }
+
+    public Jedis selectDb(Integer index, Jedis jedis) throws JedisException {
+
+        if (jedis == null)
+            return null;
+
+        try {
+            jedis.select(index);
+        } catch (JedisException e) {
+            logger.warn("selectDb.", e);
+            returnBrokenResource(jedis);
+            throw e;
+        }
+        return jedis;
+    }
+
+
     /**
      * 归还资源
+     *
      * @param jedis
      * @param
      */
-    public  void returnBrokenResource(Jedis jedis) {
+    public void returnBrokenResource(Jedis jedis) {
         if (jedis != null) {
-            jedisPool.returnBrokenResource(jedis);
+            jedis.close();
+        }
+    }
+
+
+    public static void returnStaticBrokenResource(Jedis jedis) {
+        if (jedis != null) {
+            jedis.close();
         }
     }
 
     /**
      * 释放资源
+     *
      * @param jedis
      * @param
      */
-    public  void returnResource(Jedis jedis) {
-        if (jedis != null && jedisPool !=null) {
-            jedisPool.returnResource(jedis);
+    public void returnResource(Jedis jedis) {
+        if (jedis != null && jedisPool != null) {
+            jedis.close();
         }
     }
 
     /**
      * 获取byte[]类型Key
+     *
      * @param
      * @return
      */
-    public static byte[] getBytesKey(Object object){
-        if(object instanceof String){
-            return StringUtils.getBytes((String)object);
-        }else{
+    public static byte[] getBytesKey(Object object) {
+        if (object instanceof String) {
+            return StringUtils.getBytes((String) object);
+        } else {
             return ObjectUtils.serialize(object);
         }
     }
 
     /**
      * Object转换byte[]类型
+     *
      * @param object
      * @return
      */
-    public static byte[] toBytes(Object object){
+    public static byte[] toBytes(Object object) {
         return ObjectUtils.serialize(object);
     }
 
     /**
      * byte[]型转换Object
+     *
      * @param bytes
      * @return
      */
-    public static Object toObject(byte[] bytes){
+    public static Object toObject(byte[] bytes) {
         return ObjectUtils.unserialize(bytes);
     }
 
 
-
     /**
      * 获取缓存
+     *
      * @param key 键
      * @return
      */
@@ -164,6 +216,7 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 获取缓存对象
+     *
      * @param key 键
      * @return
      */
@@ -187,8 +240,9 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 设置缓存
-     * @param key 键
-     * @param value 值
+     *
+     * @param key          键
+     * @param value        值
      * @param cacheSeconds 超时时间，0为不超时
      * @return
      */
@@ -213,19 +267,20 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 查看key列表
+     *
      * @param key
      * @return
      */
     @Override
     public List<String> keys(String key) {
-        List<String>  result = null;
+        List<String> result = null;
         Jedis jedis = null;
         try {
             jedis = getResource();
-            Set<String>keyList=jedis.keys(key);
-            result=new ArrayList<>(keyList);
+            Set<String> keyList = jedis.keys(key);
+            result = new ArrayList<>(keyList);
         } catch (Exception e) {
-            logger.info("select keys {} success",key);
+            logger.info("select keys {} success", key);
         } finally {
             returnResource(jedis);
         }
@@ -234,8 +289,9 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 设置缓存
-     * @param key 键
-     * @param value 值
+     *
+     * @param key          键
+     * @param value        值
      * @param cacheSeconds 超时时间，0为不超时
      * @return
      */
@@ -258,8 +314,104 @@ public class JedisClient implements IJedisClient {
         return result;
     }
 
+    @Override
+    public String setbyteObject(byte[] key, byte[] value, Integer cacheSeconds) {
+        String result = null;
+        Jedis jedis = null;
+        try {
+            jedis = getResource();
+            result = jedis.set(key, value);
+
+            if (cacheSeconds != null && cacheSeconds != 0) {
+                jedis.expire(key, cacheSeconds);
+            }
+            logger.debug("setObject {} = {}", key, value);
+        } catch (Exception e) {
+            logger.warn("setObject {} = {}", key, value, e);
+        } finally {
+            returnResource(jedis);
+        }
+        return result;
+    }
+
+
+    public String selectDb(Integer db) {
+        String result = null;
+        Jedis jedis = null;
+        try {
+            jedis = getResource();
+            if (db == null) {
+                db = 0;
+            }
+
+            jedis.select(db);
+            logger.debug("selectDb  = {}", db);
+        } catch (Exception e) {
+            logger.warn("selectDb {} = {}", db, e);
+        } finally {
+            returnResource(jedis);
+        }
+        return result;
+    }
+
+
+    public String restorebyteObject(String key, byte[] value, Integer cacheSeconds) {
+        String result = null;
+        Jedis jedis = null;
+        try {
+            jedis = getResource();
+            if (cacheSeconds == null) {
+                cacheSeconds = 0;
+            }
+            if (jedis.exists(key)) {
+                jedis.del(key);
+            }
+            result = jedis.restore(key, cacheSeconds, value);
+
+
+            logger.debug("restorebyteObject {} = {}", key, value);
+        } catch (Exception e) {
+            logger.warn("restorebyteObject {} = {}", key, value, e);
+        } finally {
+            returnResource(jedis);
+        }
+        return result;
+    }
+
+
+    public static String restorebyteObject(byte[] key, byte[] value, Integer cacheSeconds, Jedis jedis, boolean status) {
+        String result = null;
+        if (jedis == null)
+            return "error: jedis is null";
+        try {
+            if (cacheSeconds == null) {
+                cacheSeconds = 0;
+            }
+
+            if (!status) {
+                result = jedis.restore(key, cacheSeconds, value);
+            } else {
+                if (jedis.del(key) >= 0) {
+                    result = jedis.restore(key, cacheSeconds, value);
+                }
+
+
+            }
+
+
+            logger.debug("restorebyteObject {} = {}", key, value);
+        } catch (JedisDataException e) {
+            throw e;
+        } finally {
+            returnStaticBrokenResource(jedis);
+        }
+        return result;
+    }
+
+
     /**
      * 获取List缓存
+     *
      * @param key 键
      * @return 值
      */
@@ -283,6 +435,7 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 获取List缓存
+     *
      * @param key 键
      * @return 值
      */
@@ -295,7 +448,7 @@ public class JedisClient implements IJedisClient {
             if (jedis.exists(getBytesKey(key))) {
                 List<byte[]> list = jedis.lrange(getBytesKey(key), 0, -1);
                 value = Lists.newArrayList();
-                for (byte[] bs : list){
+                for (byte[] bs : list) {
                     value.add(toObject(bs));
                 }
                 logger.debug("getObjectList {} = {}", key, value);
@@ -310,8 +463,9 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 设置List缓存
-     * @param key 键
-     * @param value 值
+     *
+     * @param key          键
+     * @param value        值
      * @param cacheSeconds 超时时间，0为不超时
      * @return
      */
@@ -324,7 +478,7 @@ public class JedisClient implements IJedisClient {
             if (jedis.exists(key)) {
                 jedis.del(key);
             }
-            result = jedis.rpush(key, (String[])value.toArray());
+            result = jedis.rpush(key, (String[]) value.toArray());
             if (cacheSeconds != 0) {
                 jedis.expire(key, cacheSeconds);
             }
@@ -339,8 +493,9 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 设置List缓存
-     * @param key 键
-     * @param value 值
+     *
+     * @param key          键
+     * @param value        值
      * @param cacheSeconds 超时时间，0为不超时
      * @return
      */
@@ -354,10 +509,10 @@ public class JedisClient implements IJedisClient {
                 jedis.del(key);
             }
             List<byte[]> list = Lists.newArrayList();
-            for (Object o : value){
+            for (Object o : value) {
                 list.add(toBytes(o));
             }
-            result = jedis.rpush(getBytesKey(key), (byte[][])list.toArray());
+            result = jedis.rpush(getBytesKey(key), (byte[][]) list.toArray());
             if (cacheSeconds != 0) {
                 jedis.expire(key, cacheSeconds);
             }
@@ -372,7 +527,8 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 向List缓存中添加值
-     * @param key 键
+     *
+     * @param key   键
      * @param value 值
      * @return
      */
@@ -391,9 +547,11 @@ public class JedisClient implements IJedisClient {
         }
         return result;
     }
+
     /**
      * 向List缓存中添加值
-     * @param key 键
+     *
+     * @param key   键
      * @param value 值
      * @return
      */
@@ -404,10 +562,10 @@ public class JedisClient implements IJedisClient {
         try {
             jedis = getResource();
             List<byte[]> list = Lists.newArrayList();
-            for (Object o : value){
+            for (Object o : value) {
                 list.add(toBytes(o));
             }
-            result = jedis.rpush(getBytesKey(key), (byte[][])list.toArray());
+            result = jedis.rpush(getBytesKey(key), (byte[][]) list.toArray());
             logger.debug("listObjectAdd {} = {}", key, value);
         } catch (Exception e) {
             logger.warn("listObjectAdd {} = {}", key, value, e);
@@ -419,6 +577,7 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 获取缓存
+     *
      * @param key 键
      * @return 值
      */
@@ -450,7 +609,7 @@ public class JedisClient implements IJedisClient {
             if (jedis.exists(getBytesKey(key))) {
                 value = Sets.newHashSet();
                 Set<byte[]> set = jedis.smembers(getBytesKey(key));
-                for (byte[] bs : set){
+                for (byte[] bs : set) {
                     value.add(toObject(bs));
                 }
                 logger.debug("getObjectSet {} = {}", key, value);
@@ -472,7 +631,7 @@ public class JedisClient implements IJedisClient {
             if (jedis.exists(key)) {
                 jedis.del(key);
             }
-            result = jedis.sadd(key, (String[])value.toArray());
+            result = jedis.sadd(key, (String[]) value.toArray());
             if (cacheSeconds != 0) {
                 jedis.expire(key, cacheSeconds);
             }
@@ -495,10 +654,10 @@ public class JedisClient implements IJedisClient {
                 jedis.del(key);
             }
             Set<byte[]> set = Sets.newHashSet();
-            for (Object o : value){
+            for (Object o : value) {
                 set.add(toBytes(o));
             }
-            result = jedis.sadd(getBytesKey(key), (byte[][])set.toArray());
+            result = jedis.sadd(getBytesKey(key), (byte[][]) set.toArray());
             if (cacheSeconds != 0) {
                 jedis.expire(key, cacheSeconds);
             }
@@ -534,10 +693,10 @@ public class JedisClient implements IJedisClient {
         try {
             jedis = getResource();
             Set<byte[]> set = Sets.newHashSet();
-            for (Object o : value){
+            for (Object o : value) {
                 set.add(toBytes(o));
             }
-            result = jedis.rpush(getBytesKey(key), (byte[][])set.toArray());
+            result = jedis.rpush(getBytesKey(key), (byte[][]) set.toArray());
             logger.debug("setSetObjectAdd {} = {}", key, value);
         } catch (Exception e) {
             logger.warn("setSetObjectAdd {} = {}", key, value, e);
@@ -574,7 +733,7 @@ public class JedisClient implements IJedisClient {
             if (jedis.exists(getBytesKey(key))) {
                 value = Maps.newHashMap();
                 Map<byte[], byte[]> map = jedis.hgetAll(getBytesKey(key));
-                for (Map.Entry<byte[], byte[]> e : map.entrySet()){
+                for (Map.Entry<byte[], byte[]> e : map.entrySet()) {
                     value.put(StringUtils.toString(e.getKey()), toObject(e.getValue()));
                 }
                 logger.debug("getObjectMap {} = {}", key, value);
@@ -619,10 +778,10 @@ public class JedisClient implements IJedisClient {
                 jedis.del(key);
             }
             Map<byte[], byte[]> map = Maps.newHashMap();
-            for (Map.Entry<String, Object> e : value.entrySet()){
+            for (Map.Entry<String, Object> e : value.entrySet()) {
                 map.put(getBytesKey(e.getKey()), toBytes(e.getValue()));
             }
-            result = jedis.hmset(getBytesKey(key), (Map<byte[], byte[]>)map);
+            result = jedis.hmset(getBytesKey(key), (Map<byte[], byte[]>) map);
             if (cacheSeconds != 0) {
                 jedis.expire(key, cacheSeconds);
             }
@@ -658,10 +817,10 @@ public class JedisClient implements IJedisClient {
         try {
             jedis = getResource();
             Map<byte[], byte[]> map = Maps.newHashMap();
-            for (Map.Entry<String, Object> e : value.entrySet()){
+            for (Map.Entry<String, Object> e : value.entrySet()) {
                 map.put(getBytesKey(e.getKey()), toBytes(e.getValue()));
             }
-            result = jedis.hmset(getBytesKey(key), (Map<byte[], byte[]>)map);
+            result = jedis.hmset(getBytesKey(key), (Map<byte[], byte[]>) map);
             logger.debug("mapObjectPut {} = {}", key, value);
         } catch (Exception e) {
             logger.warn("mapObjectPut {} = {}", key, value, e);
@@ -673,11 +832,12 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 移除Map缓存中的值
-     * @param key 键
+     *
+     * @param key   键
      * @param value 值
      * @return
      */
-    public  long mapRemove(String key, String mapKey) {
+    public long mapRemove(String key, String mapKey) {
         long result = 0;
         Jedis jedis = null;
         try {
@@ -694,11 +854,12 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 移除Map缓存中的值
-     * @param key 键
+     *
+     * @param key   键
      * @param value 值
      * @return
      */
-    public  long mapObjectRemove(String key, String mapKey) {
+    public long mapObjectRemove(String key, String mapKey) {
         long result = 0;
         Jedis jedis = null;
         try {
@@ -715,11 +876,12 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 判断Map缓存中的Key是否存在
-     * @param key 键
+     *
+     * @param key   键
      * @param value 值
      * @return
      */
-    public  boolean mapExists(String key, String mapKey) {
+    public boolean mapExists(String key, String mapKey) {
         boolean result = false;
         Jedis jedis = null;
         try {
@@ -736,11 +898,12 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 判断Map缓存中的Key是否存在
-     * @param key 键
+     *
+     * @param key   键
      * @param value 值
      * @return
      */
-    public  boolean mapObjectExists(String key, String mapKey) {
+    public boolean mapObjectExists(String key, String mapKey) {
         boolean result = false;
         Jedis jedis = null;
         try {
@@ -757,18 +920,19 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 删除缓存
+     *
      * @param key 键
      * @return
      */
-    public  long del(String key) {
+    public long del(String key) {
         long result = 0;
         Jedis jedis = null;
         try {
             jedis = getResource();
-            if (jedis.exists(key)){
+            if (jedis.exists(key)) {
                 result = jedis.del(key);
                 logger.debug("del {}", key);
-            }else{
+            } else {
                 logger.debug("del {} not exists", key);
             }
         } catch (Exception e) {
@@ -781,18 +945,19 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 删除缓存
+     *
      * @param key 键
      * @return
      */
-    public  long delObject(String key) {
+    public long delObject(String key) {
         long result = 0;
         Jedis jedis = null;
         try {
             jedis = getResource();
-            if (jedis.exists(getBytesKey(key))){
+            if (jedis.exists(getBytesKey(key))) {
                 result = jedis.del(getBytesKey(key));
                 logger.debug("delObject {}", key);
-            }else{
+            } else {
                 logger.debug("delObject {} not exists", key);
             }
         } catch (Exception e) {
@@ -805,10 +970,11 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 缓存是否存在
+     *
      * @param key 键
      * @return
      */
-    public  boolean exists(String key) {
+    public boolean exists(String key) {
         boolean result = false;
         Jedis jedis = null;
         try {
@@ -825,10 +991,11 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 缓存是否存在
+     *
      * @param key 键
      * @return
      */
-    public  boolean existsObject(String key) {
+    public boolean existsObject(String key) {
         boolean result = false;
         Jedis jedis = null;
         try {
@@ -846,81 +1013,84 @@ public class JedisClient implements IJedisClient {
     @Override
     public void flushlikekey(String key) {
         Jedis jedis = null;
-        try{
-            jedis=getResource();
-            Set<String>keysList= jedis.keys(key+ "*");
+        try {
+            jedis = getResource();
+            Set<String> keysList = jedis.keys(key + "*");
             System.out.println(keysList);
 
-            if(keysList.size()>0){
-                String[] keys= new String[keysList.size()];
+            if (keysList.size() > 0) {
+                String[] keys = new String[keysList.size()];
                 keysList.toArray(keys);
 
-               jedis.del(keys);
-            }else {
-                logger.info("flush like key with {} is fail beacuse list is empty",key);
+                jedis.del(keys);
+            } else {
+                logger.info("flush like key with {} is fail beacuse list is empty", key);
             }
 
-        }catch (Exception e){
-            logger.info("flush like key with {} is fail",key);
-        }finally {
+        } catch (Exception e) {
+            logger.info("flush like key with {} is fail", key);
+        } finally {
             returnResource(jedis);
         }
     }
 
     /**
      * 模糊清空缓存
+     *
      * @param keys
      */
     @Override
     public void flushlikekey(String... keys) {
         Jedis jedis = null;
-        try{
-            if (keys.length>0){
-                jedis=getResource();
+        try {
+            if (keys.length > 0) {
+                jedis = getResource();
                 jedis.del(keys);
-            }else {
+            } else {
                 logger.info("flush like key with keys is fail beacuse keys is empty");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
 
-        }finally {
+        } finally {
             returnResource(jedis);
         }
     }
 
     /**
      * 循环清空缓存
+     *
      * @param key
      */
     @Override
     public void flushlikekey_foreach(String key) {
         Jedis jedis = null;
-        try{
-            jedis=getResource();
-            Set<String>keysList= jedis.keys(key+ "*");
-            for (String onekey:keysList
-                 ) {
+        try {
+            jedis = getResource();
+            Set<String> keysList = jedis.keys(key + "*");
+            for (String onekey : keysList
+            ) {
                 jedis.del(onekey);
             }
-        }catch (Exception e){
-            logger.info("flush like key with {} is fail",key);
-        }finally {
+        } catch (Exception e) {
+            logger.info("flush like key with {} is fail", key);
+        } finally {
             returnResource(jedis);
         }
     }
 
     /**
      * 返回剩余时间 毫秒
+     *
      * @param key
      * @return
      */
     @Override
     public long pttl(String key) {
         Jedis jedis = null;
-        long time=-1;
+        long time = -1;
         try {
             jedis = jedisPool.getResource();
-            time=jedis.pttl(key);
+            time = jedis.pttl(key);
         } catch (JedisException e) {
             logger.warn("getResource.", e);
             returnBrokenResource(jedis);
@@ -931,16 +1101,17 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 返回剩余时间 秒
+     *
      * @param key
      * @return
      */
     @Override
     public long ttl(String key) {
         Jedis jedis = null;
-        long time=-1;
+        long time = -1;
         try {
             jedis = jedisPool.getResource();
-            time=jedis.ttl(key);
+            time = jedis.ttl(key);
         } catch (JedisException e) {
             logger.warn("getResource.", e);
             returnBrokenResource(jedis);
@@ -952,16 +1123,17 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 设置生存时间 秒
+     *
      * @param key
      * @return
      */
     @Override
-    public long expire(String key,int seconds) {
+    public long expire(String key, int seconds) {
         Jedis jedis = null;
-        long status=0;
+        long status = 0;
         try {
             jedis = jedisPool.getResource();
-           status= jedis.expire(key,seconds);
+            status = jedis.expire(key, seconds);
         } catch (JedisException e) {
             logger.warn("getResource.", e);
             returnBrokenResource(jedis);
@@ -972,16 +1144,17 @@ public class JedisClient implements IJedisClient {
 
     /**
      * 设置生存时间 毫秒
+     *
      * @param key
      * @return
      */
     @Override
-    public long pexpire(String key,long milliseconds) {
+    public long pexpire(String key, long milliseconds) {
         Jedis jedis = null;
-        long status=0;
+        long status = 0;
         try {
             jedis = jedisPool.getResource();
-            status= jedis.pexpire(key,milliseconds);
+            status = jedis.pexpire(key, milliseconds);
         } catch (JedisException e) {
             logger.warn("getResource.", e);
             returnBrokenResource(jedis);
@@ -989,4 +1162,79 @@ public class JedisClient implements IJedisClient {
         }
         return status;
     }
+
+    @Override
+    public Set<String> allkeys(String redisKeyStartWith) {
+        Jedis jedis = null;
+        Set<String> set = null;
+        try {
+            jedis = jedisPool.getResource();
+            set = JeUtil.getScanSet(jedis, redisKeyStartWith);
+        } catch (Exception e) {
+            logger.warn("getResource.", e);
+        } finally {
+            returnBrokenResource(jedis);
+        }
+        return set;
+    }
+
+    @Override
+    public void deleteRedisKeyStartWith(String redisKeyStartWith) {
+        Jedis jedis = null;
+        try {
+            jedis = jedisPool.getResource();
+
+            Set<String> allKeys = allkeys(redisKeyStartWith);
+
+            String[] allkeys = allKeys.toArray(new String[allKeys.size()]);
+
+            for (String str : allkeys) {
+
+                System.out.println(str);
+
+            }
+
+            if (allKeys.size() > 0) {
+                jedis.del(allkeys);
+            }
+//            String[] allkeys= (String[]) allKeys.toArray();
+
+        } catch (Exception e) {
+            logger.warn("getResource.", e);
+        } finally {
+            returnResource(jedis);
+        }
+    }
+
+
+    public double getRedisVersion() {
+        Jedis jedis = null;
+        double version = 0.0;
+        try {
+            jedis = jedisPool.getResource();
+            String rgex = "redis_version:(.*?)\r\n";
+            version = Double.parseDouble(RegexUtil.getSubUtilSimple(jedis.info(), rgex).substring(0, 3));
+        } catch (Exception e) {
+            logger.warn("getRedisVersion.", e);
+        } finally {
+            returnBrokenResource(jedis);
+        }
+        return version;
+
+    }
+
+    public static double getRedisVersion(Jedis jedisClient) {
+        double version = 0.0;
+        try {
+            String rgex = "redis_version:(.*?)\r\n";
+            version = Double.parseDouble(RegexUtil.getSubUtilSimple(jedisClient.info(), rgex).substring(0, 3));
+        } catch (Exception e) {
+            logger.warn("getRedisVersion.", e);
+        } finally {
+           jedisClient.close();
+        }
+        return version;
+
+    }
 }
+

@@ -46,6 +46,8 @@
     java -jar syncerplus-webapp-1.0.jar
 
 
+    配置文件以及日志外置启动
+    nohup java -jar syncerplus-webapp-1.0.jar  --logging.config=/usr/local/jdks/config/logback.xml  &
 
 ### 三、使用方法
 
