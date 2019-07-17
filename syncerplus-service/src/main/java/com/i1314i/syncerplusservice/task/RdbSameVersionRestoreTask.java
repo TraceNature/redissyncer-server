@@ -57,9 +57,15 @@ public class RdbSameVersionRestoreTask implements Callable<Object> {
 
             }
 
+
+            if(i!=-1){
+                log.warn("key : " + mkv.getKey() +"not copy");
+            }
+
+
         } catch (Exception e) {
 
-            log.info("restore error: " + e.getMessage());
+            log.warn("restore error: " + e.getMessage());
         } finally {
 
             if (redisClient != null) {

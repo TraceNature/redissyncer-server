@@ -94,30 +94,6 @@ public class SyncTask implements Runnable {
         }
     }
 
-    public SyncTask(String sourceUri, String targetUri, int threadCount) {
-        this.sourceUri = sourceUri;
-        this.targetUri = targetUri;
-        this.threadCount = threadCount;
-        this.threadName=Thread.currentThread().getName();
-        if(status){
-            this.status=false;
-        }
-    }
-
-    public SyncTask(String sourceUri, String targetUri, int threadCount,String threadName) {
-        this.sourceUri = sourceUri;
-        this.targetUri = targetUri;
-        this.threadCount = threadCount;
-        if(StringUtils.isEmpty(threadName)){
-            this.threadName=Thread.currentThread().getName();
-        }else {
-            this.threadName=threadName;
-        }
-
-        if(status){
-            this.status=false;
-        }
-    }
 
     @Override
     public void run() {
@@ -131,16 +107,11 @@ public class SyncTask implements Runnable {
         try {
             suri = new RedisURI(sourceUri);
 
+            ConnectionPool pools =RedisUrlUtils.getConnectionPool();
+            final ConnectionPool pool =pools;
             RedisURI turi = new RedisURI(targetUri);
-            ConnectionPool pools =null;
 
-            if(StringUtils.isEmpty(TemplateUtils.getPropertiesdata("other.properties","redispool.type"))||TemplateUtils.getPropertiesdata("other.properties","redispool.type").trim().equals("commonpool")){
-                pools=new CommonPoolConnectionPoolImpl();
-            }else if(TemplateUtils.getPropertiesdata("other.properties","redispool.type").trim().equals("selefpool")){
-                pools=new ConnectionPoolImpl();
-            }
 
-              final ConnectionPool pool =pools;
 
 
             /**
@@ -149,7 +120,6 @@ public class SyncTask implements Runnable {
 //            pool.init(syncDataDto.getMaxPoolSize(), syncDataDto.getMaxWaitTime(),turi);
             pool.init(syncDataDto.getMinPoolSize(), syncDataDto.getMaxPoolSize(),syncDataDto.getMaxWaitTime(),turi,syncDataDto.getTimeBetweenEvictionRunsMillis(),syncDataDto.getIdleTimeRunsMillis());
 
-            Configuration tconfig = Configuration.valueOf(turi);
 
             final AtomicInteger dbnum = new AtomicInteger(-1);
             Replicator r = RedisMigrator.dress(new RedisReplicator(suri));
@@ -171,7 +141,10 @@ public class SyncTask implements Runnable {
                 @Override
                 public void handle(Replicator replicator, KeyValuePair<?> kv) {
 
-                    RedisUrlUtils.doCheckTask(r);
+                    RedisUrlUtils.doCheckTask(r,Thread.currentThread());
+
+                    if(RedisUrlUtils.doThreadisCloseCheckTask())
+                        return;
 
                     StringBuffer info = new StringBuffer();
                     if (!(kv instanceof DumpKeyValuePair)) return;
@@ -234,13 +207,13 @@ public class SyncTask implements Runnable {
              * 命令复制
              */
 
+//            threadPoolTaskExecutor.submit( new SyncerCommandListener(r,pool,threadPoolTaskExecutor,RedisUrlUtils.getNewName(syncDataDto.getThreadName())));
             new SyncerCommandListener(r,pool,threadPoolTaskExecutor).run();
-
 
 //            r.addCommandListener(new CommandListener() {
 //                @Override
 //                public void handle(Replicator replicator, Command command) {
-//                    RedisUrlUtils.doCheckTask(r);
+//                    RedisUrlUtils.doCheckTask(r,Thread.currentThread());
 //                    if (!(command instanceof DefaultCommand)) return;
 //
 //                    RedisClient redisClient = null;

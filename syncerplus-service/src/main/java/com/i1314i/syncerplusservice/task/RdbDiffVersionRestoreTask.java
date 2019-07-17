@@ -5,6 +5,7 @@ import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.moilioncircle.redis.replicator.rdb.dump.datatype.DumpKeyValuePair;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.params.SetParams;
 
 import java.util.concurrent.Callable;
@@ -45,9 +46,19 @@ public class RdbDiffVersionRestoreTask implements Callable<Object> {
 
                 byte[] data = sourceJedis.get(mkv.getRawKey());
                 if (mkv.getExpiredMs() == null) {
+                    //管道
+//                    Pipeline pipelined = sourceJedis.pipelined();
+//                    pipelined.set(mkv.getRawKey(), data);
+//                    pipelined.sync();//执行管道中的命令
                     r = targetJedis.set(mkv.getRawKey(), data);
                 } else {
-                    r = targetJedis.set(mkv.getRawKey(), data, new SetParams().px(mkv.getExpiredMs()));
+                    long ms = mkv.getExpiredMs() - System.currentTimeMillis();
+                    if (ms <= 0) {
+                        log.warn(mkv.getKey()+"： 已过期");
+                    }else {
+                        r = targetJedis.set(mkv.getRawKey(), data, new SetParams().px(ms));
+                    }
+
                 }
                 if (r.equals("OK")) {
                     i = -1;
@@ -60,6 +71,10 @@ public class RdbDiffVersionRestoreTask implements Callable<Object> {
                     i--;
                 }
 
+            }
+
+            if(i!=-1){
+                log.warn("key : " + mkv.getKey() +"not copy");
             }
         } catch (Exception epx) {
             log.info(epx.getMessage() + ": " + i + ":" + mkv.getKey() + ": " + mkv.getExpiredMs());

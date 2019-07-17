@@ -1236,5 +1236,12 @@ public class TestJedisClient implements IJedisClient {
         return version;
 
     }
+
+
+    public  void closePool() {
+        if(jedisPool!=null)
+            jedisPool.close();
+
+    }
 }
 

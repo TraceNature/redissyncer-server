@@ -57,14 +57,6 @@ public class SyncLowerTask implements Runnable {
     private String threadName; //线程名称
     private RedisSyncDataDto syncDataDto;
 
-    public SyncLowerTask(String sourceUri, String targetUri) {
-        this.sourceUri = sourceUri;
-        this.targetUri = targetUri;
-        this.threadName = Thread.currentThread().getName();
-        if (status) {
-            this.status = false;
-        }
-    }
 
     public SyncLowerTask(RedisSyncDataDto syncDataDto) {
         this.syncDataDto = syncDataDto;
@@ -76,43 +68,7 @@ public class SyncLowerTask implements Runnable {
         }
     }
 
-    public SyncLowerTask(String sourceUri, String targetUri, String threadName) {
-        this.sourceUri = sourceUri;
-        this.targetUri = targetUri;
-        if (StringUtils.isEmpty(threadName)) {
-            this.threadName = Thread.currentThread().getName();
-        } else {
-            this.threadName = threadName;
-        }
-        if (status) {
-            this.status = false;
-        }
-    }
 
-    public SyncLowerTask(String sourceUri, String targetUri, int threadCount) {
-        this.sourceUri = sourceUri;
-        this.targetUri = targetUri;
-        this.threadCount = threadCount;
-        this.threadName = Thread.currentThread().getName();
-        if (status) {
-            this.status = false;
-        }
-    }
-
-    public SyncLowerTask(String sourceUri, String targetUri, int threadCount, String threadName) {
-        this.sourceUri = sourceUri;
-        this.targetUri = targetUri;
-        this.threadCount = threadCount;
-        if (StringUtils.isEmpty(threadName)) {
-            this.threadName = Thread.currentThread().getName();
-        } else {
-            this.threadName = threadName;
-        }
-
-        if (status) {
-            this.status = false;
-        }
-    }
 
     @Override
     public void run() {
@@ -129,13 +85,14 @@ public class SyncLowerTask implements Runnable {
             ConnectionPool pools = RedisUrlUtils.getConnectionPool();
             final ConnectionPool pool = pools;
 
+            final AtomicInteger dbnum = new AtomicInteger(-1);
 
             /**
              * 初始化连接池
              */
 //            pool.init(syncDataDto.getMaxPoolSize(), syncDataDto.getMaxWaitTime(),turi);
             pool.init(syncDataDto.getMinPoolSize(), syncDataDto.getMaxPoolSize(), syncDataDto.getMaxWaitTime(), turi, syncDataDto.getTimeBetweenEvictionRunsMillis(), syncDataDto.getIdleTimeRunsMillis());
-            final AtomicInteger dbnum = new AtomicInteger(-1);
+
             Replicator r = RedisMigrator.dress(new RedisReplicator(suri));
             TestJedisClient targetJedisClientPool = RedisUrlUtils.getJedisClient(syncDataDto, turi);
 
@@ -148,15 +105,20 @@ public class SyncLowerTask implements Runnable {
                 @Override
                 public void handle(Replicator replicator, KeyValuePair<?> kv) {
 
-                    RedisUrlUtils.doCheckTask(r);
+                    RedisUrlUtils.doCheckTask(r,Thread.currentThread());
+
+                    if(RedisUrlUtils.doThreadisCloseCheckTask())
+                        return;
+
+                    RedisClient redisClient = null;
+                    Jedis targetJedisplus = null;
 
                     StringBuffer info = new StringBuffer();
                     if (!(kv instanceof DumpKeyValuePair)) return;
                     // Step1: select db
                     DB db = kv.getDb();
                     int index;
-                    RedisClient redisClient = null;
-                    Jedis targetJedisplus = null;
+
                     try {
                         redisClient = pool.borrowResource();
                         targetJedisplus = targetJedisClientPool.getResource();
@@ -186,15 +148,10 @@ public class SyncLowerTask implements Runnable {
 
                     if (mkv.getExpiredMs() == null) {
                         threadPoolTaskExecutor.submit(new RdbVersionLowerRestoreTask(mkv, 0L, redisClient, pool, true, info, targetJedisplus));
-//                          if(syncDataDto.getRedisVersion().equals(RedisVersion.SAME)){
-//                              threadPoolTaskExecutor.submit(new RdbSameVersionRestoreTask(mkv, 0L,redisClient,pool ,true,info));
-//                          }
+
                     } else {
                         long ms = mkv.getExpiredMs() - System.currentTimeMillis();
                         if (ms <= 0) return;
-
-                        //     Object r = redisClient.restore(mkv.getRawKey(), ms, mkv.getValue(), true);
-//                        Object r =threadPoolTaskExecutor.submit(new RdbRestoreTask(mkv, ms, redisClient,pool, true,info));
                         threadPoolTaskExecutor.submit(new RdbVersionLowerRestoreTask(mkv, ms, redisClient, pool, true, info, targetJedisplus));
 
                     }
@@ -202,10 +159,7 @@ public class SyncLowerTask implements Runnable {
 
                 }
             });
-
-
-            new SyncerCommandListener(r, pool, threadPoolTaskExecutor).run();
-
+            new SyncerCommandListener(r,pool,threadPoolTaskExecutor).run();
 
         } catch (URISyntaxException e) {
             log.info("redis address is error:%s ", e.getMessage());

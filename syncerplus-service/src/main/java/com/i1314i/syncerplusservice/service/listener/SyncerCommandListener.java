@@ -4,19 +4,22 @@ import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.task.CommitSendTask;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
+import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.moilioncircle.redis.replicator.CloseListener;
 import com.moilioncircle.redis.replicator.Replicator;
 import com.moilioncircle.redis.replicator.cmd.Command;
 import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import sun.awt.windows.ThemeReader;
 
 import java.io.IOException;
+
 @Slf4j
 /**
  * 命令复制
  */
-public class SyncerCommandListener {
+public class SyncerCommandListener  {
     private Replicator r;
     private ConnectionPool pool;
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -27,35 +30,46 @@ public class SyncerCommandListener {
         this.threadPoolTaskExecutor = threadPoolTaskExecutor;
     }
 
-    public void run() throws IOException {
-        r.addCommandListener(new com.moilioncircle.redis.replicator.cmd.CommandListener() {
-            @Override
-            public void handle(Replicator replicator, Command command) {
-                RedisUrlUtils.doCheckTask(r);
-                if (!(command instanceof DefaultCommand)) return;
+    public void run() {
 
-                RedisClient redisClient = null;
-                try {
-                    redisClient=pool.borrowResource();
-                } catch (Exception e) {
-                    log.info("命令复制:从池中获取RedisClient失败:"+e.getMessage());
+
+        try {
+
+            r.addCommandListener(new com.moilioncircle.redis.replicator.cmd.CommandListener() {
+                @Override
+                public void handle(Replicator replicator, Command command) {
+                    RedisUrlUtils.doCommandCheckTask(r);
+                    if (RedisUrlUtils.doThreadisCloseCheckTask()) {
+                        return;
+                    }
+                    if (!(command instanceof DefaultCommand)) return;
+
+                    RedisClient redisClient = null;
+                    try {
+                        redisClient = pool.borrowResource();
+                    } catch (Exception e) {
+                        log.info("命令复制:从池中获取RedisClient失败:" + e.getMessage());
+
+                    }
+                    StringBuffer info = new StringBuffer();
+                    // Step3: sync aof command
+                    DefaultCommand dc = (DefaultCommand) command;
+
+                    threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info));
 
                 }
-                StringBuffer info = new StringBuffer();
-                // Step3: sync aof command
-                DefaultCommand dc = (DefaultCommand) command;
-
-                threadPoolTaskExecutor.submit(new CommitSendTask(dc,redisClient,pool,info));
-
-            }
-        });
-        r.addCloseListener(new CloseListener() {
-            @Override
-            public void handle(Replicator replicator) {
+            });
+            r.addCloseListener(new CloseListener() {
+                @Override
+                public void handle(Replicator replicator) {
 //                    if(null!=pool)
 //                    pool.close();
-            }
-        });
-        r.open();
+                }
+            });
+
+            r.open();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

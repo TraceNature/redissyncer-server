@@ -61,14 +61,7 @@ public class SyncSameTask implements Runnable {
     private String threadName; //线程名称
     private RedisSyncDataDto syncDataDto;
 
-    public SyncSameTask(String sourceUri, String targetUri) {
-        this.sourceUri = sourceUri;
-        this.targetUri = targetUri;
-        this.threadName=Thread.currentThread().getName();
-        if(status){
-            this.status=false;
-        }
-    }
+
 
     public SyncSameTask(RedisSyncDataDto syncDataDto) {
         this.syncDataDto=syncDataDto;
@@ -80,43 +73,7 @@ public class SyncSameTask implements Runnable {
         }
     }
 
-    public SyncSameTask(String sourceUri, String targetUri, String threadName) {
-        this.sourceUri = sourceUri;
-        this.targetUri = targetUri;
-        if(StringUtils.isEmpty(threadName)){
-            this.threadName=Thread.currentThread().getName();
-        }else {
-            this.threadName=threadName;
-        }
-        if(status){
-            this.status=false;
-        }
-    }
 
-    public SyncSameTask(String sourceUri, String targetUri, int threadCount) {
-        this.sourceUri = sourceUri;
-        this.targetUri = targetUri;
-        this.threadCount = threadCount;
-        this.threadName=Thread.currentThread().getName();
-        if(status){
-            this.status=false;
-        }
-    }
-
-    public SyncSameTask(String sourceUri, String targetUri, int threadCount, String threadName) {
-        this.sourceUri = sourceUri;
-        this.targetUri = targetUri;
-        this.threadCount = threadCount;
-        if(StringUtils.isEmpty(threadName)){
-            this.threadName=Thread.currentThread().getName();
-        }else {
-            this.threadName=threadName;
-        }
-
-        if(status){
-            this.status=false;
-        }
-    }
 
     @Override
     public void run() {
@@ -131,7 +88,7 @@ public class SyncSameTask implements Runnable {
 
             RedisURI turi = new RedisURI(targetUri);
             ConnectionPool pools =RedisUrlUtils.getConnectionPool();
-              final ConnectionPool pool =pools;
+            final ConnectionPool pool =pools;
 
             /**
              * 初始化连接池
@@ -149,7 +106,12 @@ public class SyncSameTask implements Runnable {
                 @Override
                 public void handle(Replicator replicator, KeyValuePair<?> kv) {
 
-                    RedisUrlUtils.doCheckTask(r);
+
+                    RedisUrlUtils.doCheckTask(r,Thread.currentThread());
+
+                    if(RedisUrlUtils.doThreadisCloseCheckTask())
+                        return;
+
                     StringBuffer info = new StringBuffer();
                     if (!(kv instanceof DumpKeyValuePair)) return;
                     // Step1: select db
