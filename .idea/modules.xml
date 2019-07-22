@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/redis-syncerplus.iml" filepath="$PROJECT_DIR$/redis-syncerplus.iml" />
+      <module fileurl="file://$PROJECT_DIR$/syncerplus-common/syncerplus-common.iml" filepath="$PROJECT_DIR$/syncerplus-common/syncerplus-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/syncerplus-service/syncerplus-service.iml" filepath="$PROJECT_DIR$/syncerplus-service/syncerplus-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/syncerplus-webapp/syncerplus-webapp.iml" filepath="$PROJECT_DIR$/syncerplus-webapp/syncerplus-webapp.iml" />
+    </modules>
+  </component>
+</project>
