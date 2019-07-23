@@ -1,5 +1,6 @@
 package com.i1314i.syncerplusservice.service;
 
+import com.i1314i.syncerplusservice.entity.dto.RedisJDClousterClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import org.springframework.stereotype.Service;
@@ -23,5 +24,5 @@ public interface IRedisReplicatorService {
     void sync(String sourceUri, String targetUri) throws TaskMsgException;
     void sync(String sourceUri, String targetUri,String threadName) throws TaskMsgException;
     void sync(RedisSyncDataDto syncDataDto) throws TaskMsgException;
-
+    void syncToJDCloud(RedisJDClousterClusterDto jdClousterClusterDto) throws TaskMsgException;
 }

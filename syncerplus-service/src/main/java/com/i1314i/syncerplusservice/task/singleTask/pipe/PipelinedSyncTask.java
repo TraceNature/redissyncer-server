@@ -1,4 +1,4 @@
-package com.i1314i.syncerplusservice.task;
+package com.i1314i.syncerplusservice.task.singleTask.pipe;
 
 import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -24,9 +24,11 @@ public class PipelinedSyncTask implements Callable<Object> {
         while (pipelined!=null){
             Thread.sleep(30000);
 
-            pipelined.sync();
-            log.info("将管道中超过 "+taskEntity.getSyncNums()+"个值提交");
-            taskEntity.clear();
+            if(taskEntity.getSyncNums()>0){
+                pipelined.sync();
+                log.info("将管道中超过 {}个值提交",taskEntity.getSyncNums());
+                taskEntity.clear();
+            }
 
         }
         return null;

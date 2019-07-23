@@ -3,30 +3,32 @@ package com.i1314i.syncerplusservice.service.Impl;
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
 import com.i1314i.syncerplusservice.constant.RedisVersion;
 import com.i1314i.syncerplusservice.constant.TaskMsgConstant;
+import com.i1314i.syncerplusservice.entity.dto.RedisJDClousterClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.task.*;
+import com.i1314i.syncerplusservice.task.singleTask.defaultVersion.SyncTask;
+import com.i1314i.syncerplusservice.task.singleTask.diffVersion.SyncDiffTask;
+import com.i1314i.syncerplusservice.task.singleTask.lowerVersion.SyncLowerTask;
+import com.i1314i.syncerplusservice.task.singleTask.sameVersion.SyncSameTask;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
-import com.moilioncircle.redis.replicator.RedisReplicator;
-import com.moilioncircle.redis.replicator.Replicator;
-import com.moilioncircle.redis.replicator.cmd.Command;
-import com.moilioncircle.redis.replicator.cmd.CommandListener;
-import com.moilioncircle.redis.replicator.io.RawByteListener;
-import com.moilioncircle.redis.replicator.rdb.RdbListener;
-import com.moilioncircle.redis.replicator.rdb.datatype.KeyValuePair;
+
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 
-import java.io.*;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 @Service("redisReplicatorService")
@@ -44,6 +46,7 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
      */
     @Override
     public void backupAof(String redisPath, String aofPath) {
+        /**
         File file = new File(aofPath);
         if (!file.exists()) {
             try {
@@ -100,6 +103,7 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
             log.info("[backupAof run error and reason is {%s}]", e.getMessage());
         }
 
+         **/
     }
 
 
@@ -187,9 +191,65 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
     }
 
 
+    /**
+     * redisCluster同步数据到 JDcloud redis集群
+     * @param jdClousterClusterDto
+     * @throws TaskMsgException
+     */
+
+    @Override
+    public void syncToJDCloud(RedisJDClousterClusterDto jdClousterClusterDto) throws TaskMsgException {
+        List<String>sourcrList=clusterNodeSettings(jdClousterClusterDto.getJedisAddress(),jdClousterClusterDto.getPassword());
+        RedisSyncDataDto syncDataDto=new RedisSyncDataDto(
+                "",
+                jdClousterClusterDto.getTargetUri(),
+                jdClousterClusterDto.getThreadName(),
+                jdClousterClusterDto.getMinPoolSize(),
+                jdClousterClusterDto.getMaxPoolSize(),
+                jdClousterClusterDto.getMaxWaitTime(),
+                jdClousterClusterDto.getTimeBetweenEvictionRunsMillis(),
+                jdClousterClusterDto.getIdleTimeRunsMillis());
+
+
+        for(int i=0;i<sourcrList.size();i++){
+            RedisSyncDataDto redisSyncDataDto=new RedisSyncDataDto();
+
+            BeanUtils.copyProperties(syncDataDto, redisSyncDataDto);
+            redisSyncDataDto.setSourceUri(sourcrList.get(i));
+
+            threadPoolTaskExecutor.execute(new SyncDiffTask(redisSyncDataDto));
+        }
+    }
+
+
+
+
     public static void main(String[] args) throws Exception {
-        IRedisReplicatorService redisReplicatorService = new IRedisReplicatorServiceImpl();
-        redisReplicatorService.backUPRdb("redis://114.67.81.232:6340?authPassword=redistest0102", "D:\\tests");
+        String s="47.100.111.210:6380,47.100.111.210:6379,123.206.71.25:6379,115.159.205.140:6380,115.159.205.140:6381,123.207.166.108:6379";
+
+
+//        IRedisReplicatorService redisReplicatorService = new IRedisReplicatorServiceImpl();
+//        redisReplicatorService.backUPRdb("redis://114.67.81.232:6340?authPassword=redistest0102", "D:\\tests");
+    }
+
+
+
+   synchronized static List<String>clusterNodeSettings(String sourceList,String password){
+
+       List<String>sourceUriList= Arrays.asList(sourceList.split(","));
+        List<String> newNodes=new ArrayList<>();
+        String psw="";
+        if(!StringUtils.isEmpty(password)){
+            psw="?authPassword="+password;
+        }
+        for (String source:sourceUriList) {
+            if(!StringUtils.isEmpty(source)){
+                String newSource="redis://"+source+psw;
+                newNodes.add(newSource);
+            }
+
+        }
+        return newNodes;
     }
 
     void checkRedisUrl(String url,String name) throws TaskMsgException {

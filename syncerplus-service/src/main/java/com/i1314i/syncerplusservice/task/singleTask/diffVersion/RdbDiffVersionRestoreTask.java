@@ -1,4 +1,4 @@
-package com.i1314i.syncerplusservice.task;
+package com.i1314i.syncerplusservice.task.singleTask.diffVersion;
 
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
@@ -44,19 +44,19 @@ public class RdbDiffVersionRestoreTask implements Callable<Object> {
             while (i > 0) {
 
 
-                byte[] data = sourceJedis.get(mkv.getRawKey());
+                byte[] data = sourceJedis.get(mkv.getKey());
                 if (mkv.getExpiredMs() == null) {
                     //管道
 //                    Pipeline pipelined = sourceJedis.pipelined();
 //                    pipelined.set(mkv.getRawKey(), data);
 //                    pipelined.sync();//执行管道中的命令
-                    r = targetJedis.set(mkv.getRawKey(), data);
+                    r = targetJedis.set(mkv.getKey(), data);
                 } else {
                     long ms = mkv.getExpiredMs() - System.currentTimeMillis();
                     if (ms <= 0) {
-                        log.warn(mkv.getKey()+"： 已过期");
+                        log.warn("{} ： 已过期",mkv.getKey());
                     }else {
-                        r = targetJedis.set(mkv.getRawKey(), data, new SetParams().px(ms));
+                        r = targetJedis.set(mkv.getKey(), data, new SetParams().px(ms));
                     }
 
                 }
@@ -74,10 +74,10 @@ public class RdbDiffVersionRestoreTask implements Callable<Object> {
             }
 
             if(i!=-1){
-                log.warn("key : " + mkv.getKey() +"not copy");
+                log.warn("key : {} not copy", mkv.getKey());
             }
         } catch (Exception epx) {
-            log.info(epx.getMessage() + ": " + i + ":" + mkv.getKey() + ": " + mkv.getExpiredMs());
+            log.info( "{} : {} ：{}:{} " ,epx.getMessage() ,i, mkv.getKey(), mkv.getExpiredMs());
         } finally {
             if (redisClient != null) {
                 pool.release(redisClient);

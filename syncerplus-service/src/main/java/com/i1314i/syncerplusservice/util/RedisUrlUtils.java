@@ -9,18 +9,11 @@ import com.i1314i.syncerplusservice.pool.Impl.ConnectionPoolImpl;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.service.exception.TaskRestoreException;
-import com.i1314i.syncerplusservice.task.CommitSendTask;
 import com.i1314i.syncerplusservice.util.Jedis.TestJedisClient;
-import com.moilioncircle.redis.replicator.CloseListener;
 import com.moilioncircle.redis.replicator.Configuration;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Replicator;
-import com.moilioncircle.redis.replicator.cmd.Command;
-import com.moilioncircle.redis.replicator.cmd.CommandListener;
-import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.cache.CacheProperties;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.StringUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPoolConfig;
@@ -189,7 +182,6 @@ public class RedisUrlUtils {
         /**
          * 当aliveMap中不存在此线程时关闭
          */
-        System.out.println(Thread.currentThread().getName());
         if (!TaskMonitorUtils.getAliveThreadHashMap().containsKey(Thread.currentThread().getName())) {
             try {
                 System.out.println("线程正准备关闭....");

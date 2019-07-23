@@ -1227,7 +1227,12 @@ public class TestJedisClient implements IJedisClient {
         double version = 0.0;
         try {
             String rgex = "redis_version:(.*?)\r\n";
-            version = Double.parseDouble(RegexUtil.getSubUtilSimple(jedisClient.info(), rgex).substring(0, 3));
+            if(RegexUtil.getSubUtilSimple(jedisClient.info(), rgex).length()>=3){
+                version = Double.parseDouble(RegexUtil.getSubUtilSimple(jedisClient.info(), rgex).substring(0, 3));
+            }else {
+                version=0.0;
+            }
+
         } catch (Exception e) {
             logger.warn("getRedisVersion.", e);
         } finally {

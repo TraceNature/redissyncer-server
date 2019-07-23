@@ -1,4 +1,4 @@
-package com.i1314i.syncerplusservice.task;
+package com.i1314i.syncerplusservice.task.singleTask.defaultVersion;
 
 import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
@@ -14,6 +14,10 @@ import redis.clients.jedis.params.SetParams;
 
 import java.util.concurrent.Callable;
 
+
+/***
+ * 当service层设置的版本条件都不符合时执行本同步线程
+ */
 @Slf4j
 public class RdbRestoreTask implements Callable<Object> {
     private DumpKeyValuePair mkv;
@@ -59,12 +63,12 @@ public class RdbRestoreTask implements Callable<Object> {
 
         Object r = null;
         try {
-            r = redisClient.restore(mkv.getRawKey(), ms, mkv.getValue(), status);
+            r = redisClient.restore(mkv.getKey(), ms, mkv.getValue(), status);
         } catch (TaskRestoreException e) {
 
             if(e.getMessage().trim().indexOf("ERR wrong number of arguments for 'restore' command")>=0){
                 try {
-                    r=TestJedisClient.restorebyteObject(mkv.getRawKey(),mkv.getValue(),mkv.getExpiredSeconds(),targetJedis,status);
+                    r=TestJedisClient.restorebyteObject(mkv.getKey(),mkv.getValue(),mkv.getExpiredSeconds(),targetJedis,status);
                     info.append(mkv.getKey());
                     info.append("->");
                     info.append(r.toString());
@@ -75,11 +79,11 @@ public class RdbRestoreTask implements Callable<Object> {
                         int i=3;
                         while (i>0){
                             try {
-                                byte[]data=sourceJedis.get(mkv.getRawKey());
+                                byte[]data=sourceJedis.get(mkv.getKey());
                                 if(mkv.getExpiredMs()==null){
-                                    r=targetJedis.set(mkv.getRawKey(),data);
+                                    r=targetJedis.set(mkv.getKey(),data);
                                 }else {
-                                    r=targetJedis.set(mkv.getRawKey(),data,new SetParams().px(mkv.getExpiredMs()));
+                                    r=targetJedis.set(mkv.getKey(),data,new SetParams().px(mkv.getExpiredMs()));
                                 }
 
 

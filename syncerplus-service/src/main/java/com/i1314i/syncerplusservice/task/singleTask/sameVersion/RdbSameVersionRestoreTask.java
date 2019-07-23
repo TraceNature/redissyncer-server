@@ -1,4 +1,4 @@
-package com.i1314i.syncerplusservice.task;
+package com.i1314i.syncerplusservice.task.singleTask.sameVersion;
 
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
@@ -43,7 +43,7 @@ public class RdbSameVersionRestoreTask implements Callable<Object> {
         try {
             while (i > 0) {
 
-                r = redisClient.restore(mkv.getRawKey(), ms, mkv.getValue(), status);
+                r = redisClient.restore(mkv.getKey(), ms, mkv.getValue(), status);
                 if (r.equals("OK")) {
                     i = -1;
                     info.append(mkv.getKey());
@@ -59,13 +59,13 @@ public class RdbSameVersionRestoreTask implements Callable<Object> {
 
 
             if(i!=-1){
-                log.warn("key : " + mkv.getKey() +"not copy");
+                log.warn("key : {} not copy",mkv.getKey());
             }
 
 
         } catch (Exception e) {
 
-            log.warn("restore error: " + e.getMessage());
+            log.warn("restore error: {}" , e.getMessage());
         } finally {
 
             if (redisClient != null) {

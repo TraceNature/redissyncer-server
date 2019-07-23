@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 /**
  * 统一异常捕获处理
  **/
-@RestControllerAdvice
+//@RestControllerAdvice
 public class ExceptionAdvice {
     /**
      * 500错误请求 信息解析错误

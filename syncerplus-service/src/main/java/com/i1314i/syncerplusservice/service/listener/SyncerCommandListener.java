@@ -32,6 +32,7 @@ public class SyncerCommandListener  {
 
     public void run() {
 
+        /**
 
         try {
 
@@ -71,5 +72,8 @@ public class SyncerCommandListener  {
         } catch (IOException e) {
             e.printStackTrace();
         }
+         **/
     }
+
+
 }

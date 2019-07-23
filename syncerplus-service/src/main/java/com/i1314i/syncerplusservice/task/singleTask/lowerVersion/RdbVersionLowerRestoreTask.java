@@ -1,4 +1,4 @@
-package com.i1314i.syncerplusservice.task;
+package com.i1314i.syncerplusservice.task.singleTask.lowerVersion;
 
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
@@ -42,7 +42,7 @@ public class RdbVersionLowerRestoreTask implements Callable<Object> {
         try {
             while (i > 0) {
 
-                r = TestJedisClient.restorebyteObject(mkv.getRawKey(), mkv.getValue(), mkv.getExpiredSeconds(), targetJedis, status);
+                r = TestJedisClient.restorebyteObject(mkv.getKey(), mkv.getValue(), mkv.getExpiredSeconds(), targetJedis, status);
                 if (r.equals("OK")) {
                     info.append(mkv.getKey());
                     info.append("->");
@@ -57,7 +57,7 @@ public class RdbVersionLowerRestoreTask implements Callable<Object> {
             }
 
             if(i!=-1){
-                log.warn("key : " + mkv.getKey() +"not copy");
+                log.warn("key :{} not copy",  mkv.getKey());
             }
 
         } catch (Exception e) {
