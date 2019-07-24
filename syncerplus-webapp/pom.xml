@@ -10,7 +10,7 @@
 
     <groupId>com.i1314i</groupId>
     <artifactId>syncerplus-webapp</artifactId>
-    <version>1.0</version>
+    <version>0.7</version>
     <name>syncerplus-webapp</name>
     <description>Demo project for Spring Boot</description>
 
