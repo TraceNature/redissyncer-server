@@ -7,6 +7,7 @@ import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
+import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.service.command.SuperCommand;
 import com.i1314i.syncerplusservice.task.CommitSendTask;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSumSyncTask;
@@ -18,9 +19,11 @@ import com.moilioncircle.redis.replicator.*;
 import com.moilioncircle.redis.replicator.cmd.Command;
 import com.moilioncircle.redis.replicator.cmd.CommandName;
 import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
+import com.moilioncircle.redis.replicator.cmd.impl.PFAddCommand;
 import com.moilioncircle.redis.replicator.cmd.impl.SelectCommand;
 import com.moilioncircle.redis.replicator.cmd.impl.SetCommand;
 import com.moilioncircle.redis.replicator.cmd.parser.DefaultCommandParser;
+import com.moilioncircle.redis.replicator.cmd.parser.PFAddParser;
 import com.moilioncircle.redis.replicator.event.Event;
 import com.moilioncircle.redis.replicator.event.EventListener;
 
@@ -104,7 +107,7 @@ public class SyncDiffTask implements Runnable {
             AtomicInteger sendNum = new AtomicInteger(-1);
             final AtomicInteger dbnum = new AtomicInteger(-1);
 //            Replicator r = RedisMigrator.dress(new RedisReplicator(suri));
-            Replicator r = new RedisReplicator(suri);
+            Replicator r = RedisMigrator.commandDress(new RedisReplicator(suri));
 
             TestJedisClient targetJedisClientPool = RedisUrlUtils.getJedisClient(syncDataDto, turi);
             TestJedisClient sourceJedisClientPool = RedisUrlUtils.getJedisClient(syncDataDto, suri);
@@ -127,7 +130,7 @@ public class SyncDiffTask implements Runnable {
              * RDB复制
              */
 
-            r.addCommandParser(CommandName.name("APPEND"),new DefaultCommandParser());
+
             r.addEventListener(new EventListener() {
                 @Override
                 public void onEvent(Replicator replicator, Event event) {
@@ -178,12 +181,14 @@ public class SyncDiffTask implements Runnable {
                             taskEntity.add();
                             //                        commandNum++;
                             if (kv.getExpiredMs() == null) {
+
                                 KeyStringValueString valueString = (KeyStringValueString) event;
+
                                 pipelined.set(valueString.getKey(), valueString.getValue());
                             } else {
                                 long ms = kv.getExpiredMs() - System.currentTimeMillis();
                                 if (ms <= 0) {
-                                    log.warn("key: {}", kv.getKey());
+                                    log.warn("key: {}", new String(kv.getKey()));
                                 } else {
                                         KeyStringValueString valueString = (KeyStringValueString) event;
                                         pipelined.set(valueString.getKey(), valueString.getValue(), new SetParams().px(ms));
@@ -236,7 +241,7 @@ public class SyncDiffTask implements Runnable {
                         } else {
                             long ms = kv.getExpiredMs() - System.currentTimeMillis();
                             if (ms <= 0) {
-                                log.warn("key: {}", kv.getKey());
+                                log.warn("key: {}", new String(kv.getKey()));
                             } else {
                                     KeyStringValueList valueList = (KeyStringValueList) event;
                                     List<byte[]> datas = valueList.getValue();
@@ -280,7 +285,7 @@ public class SyncDiffTask implements Runnable {
 
                         info.setLength(0);
                         taskEntity.add();
-                        //                        commandNum++;
+
                         if (kv.getExpiredMs() == null) {
                             KeyStringValueSet valueSet = (KeyStringValueSet) event;
                             Set<byte[]> datas = valueSet.getValue();
@@ -290,7 +295,7 @@ public class SyncDiffTask implements Runnable {
                         } else {
                             long ms = kv.getExpiredMs() - System.currentTimeMillis();
                             if (ms <= 0) {
-                                log.warn("key: {}", kv.getKey());
+                                log.warn("key: {}", new String(kv.getKey()));
                             } else {
                                 KeyStringValueSet valueSet = (KeyStringValueSet) event;
                                 Set<byte[]> datas = valueSet.getValue();
@@ -345,7 +350,7 @@ public class SyncDiffTask implements Runnable {
                         } else {
                             long ms = kv.getExpiredMs() - System.currentTimeMillis();
                             if (ms <= 0) {
-                                log.warn("key: {}", kv.getKey());
+                                log.warn("key: {}", new String(kv.getKey()));
                             } else {
                                 KeyStringValueZSet valueZSet = (KeyStringValueZSet) event;
                                 Set<ZSetEntry> datas = valueZSet.getValue();
@@ -399,7 +404,7 @@ public class SyncDiffTask implements Runnable {
                         } else {
                             long ms = kv.getExpiredMs() - System.currentTimeMillis();
                             if (ms <= 0) {
-                                log.warn("key: {}", kv.getKey());
+                                log.warn("key: {}", new String(kv.getKey()));
                             } else {
                                 KeyStringValueHash valueHash = (KeyStringValueHash) event;
                                 pipelined.hmset(valueHash.getKey(), valueHash.getValue());
@@ -431,6 +436,7 @@ public class SyncDiffTask implements Runnable {
 //                      threadPoolTaskExecutor.submit(new RdbDiffVersionRestoreTask(mkv, ms, redisClient,pool, info,targetJedisplus,sourceJedisplus));
 //                    }
 
+//                    targetJedisplus.pfadd()
 
 
                     /**
@@ -450,13 +456,12 @@ public class SyncDiffTask implements Runnable {
                             return;
                         }
 
-                        System.out.println(JSON.toJSONString(event));
 
                         RedisClient redisClient = null;
                         try {
                             redisClient = pool.borrowResource();
                         } catch (Exception e) {
-                            log.info("命令复制:从池中获取RedisClient失败:" + e.getMessage());
+                            log.info("命令复制:从池中获取RedisClient失败:{}" , e.getMessage());
 
                         }
                         StringBuffer info = new StringBuffer();
@@ -467,6 +472,13 @@ public class SyncDiffTask implements Runnable {
 
                         threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info));
                     }
+
+//                    else if(event instanceof PFAddCommand){
+//                        PFAddCommand pfAddCommand= (PFAddCommand) event;
+//                        pipelined.pfadd(pfAddCommand.getKey(),pfAddCommand.getElements());
+//                        pipelined.sync();
+//                        log.info("[{}]->[{}]",new String(pfAddCommand.getKey()));
+//                    }
                 }
             });
 

@@ -72,7 +72,6 @@ public class ConnectionPoolImpl implements ConnectionPool {
         freeResourceMonitor();
     }
 
-
     public RedisClient borrowResource() throws Exception {
         RedisClient redisClient = null;
         long now = System.currentTimeMillis();//获取连接的开始时间

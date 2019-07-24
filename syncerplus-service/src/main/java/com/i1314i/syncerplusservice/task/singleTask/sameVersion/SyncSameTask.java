@@ -115,7 +115,7 @@ public class SyncSameTask implements Runnable {
                         try {
                             redisClient = pool.borrowResource();
                         } catch (Exception e) {
-                            log.info("RDB复制：从池中获取RedisClient失败：" + e.getMessage());
+                            log.info("RDB复制：从池中获取RedisClient失败：{}" , e.getMessage());
 
                         }
                         if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
@@ -124,7 +124,7 @@ public class SyncSameTask implements Runnable {
                             try {
                                 redisClient.send(SELECT, toByteArray(index));
                             } catch (Exception e) {
-                                log.info("RDB复制： 从池中获取链接失败: " + e.getMessage());
+                                log.info("RDB复制： 从池中获取链接失败: {}" ,e.getMessage());
                             }
                             dbnum.set(index);
                             info.append("SELECT:");
@@ -166,7 +166,7 @@ public class SyncSameTask implements Runnable {
                         try {
                             redisClient = pool.borrowResource();
                         } catch (Exception e) {
-                            log.info("命令复制:从池中获取RedisClient失败:" + e.getMessage());
+                            log.info("命令复制:从池中获取RedisClient失败:{}" , e.getMessage());
 
                         }
                         StringBuffer info = new StringBuffer();

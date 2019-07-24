@@ -44,7 +44,7 @@ public class RdbVersionLowerRestoreTask implements Callable<Object> {
 
                 r = TestJedisClient.restorebyteObject(mkv.getKey(), mkv.getValue(), mkv.getExpiredSeconds(), targetJedis, status);
                 if (r.equals("OK")) {
-                    info.append(mkv.getKey());
+                    info.append(new String(mkv.getKey()));
                     info.append("->");
                     info.append(r.toString());
                     log.info(info.toString());
@@ -57,12 +57,12 @@ public class RdbVersionLowerRestoreTask implements Callable<Object> {
             }
 
             if(i!=-1){
-                log.warn("key :{} not copy",  mkv.getKey());
+                log.warn("key :{} not copy", new String(mkv.getKey()));
             }
 
         } catch (Exception e) {
 
-            log.warn("restore error: " + e.getMessage());
+            log.warn("restore error: {}" , e.getMessage());
 
         } finally {
 

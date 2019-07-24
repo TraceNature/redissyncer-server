@@ -110,7 +110,7 @@ public class SyncLowerTask implements Runnable {
                         Jedis targetJedisplus = null;
 
                         StringBuffer info = new StringBuffer();
-                        if (!(kv instanceof DumpKeyValuePair)) return;
+
                         // Step1: select db
                         DB db = kv.getDb();
                         int index;
@@ -170,7 +170,7 @@ public class SyncLowerTask implements Runnable {
                         try {
                             redisClient = pool.borrowResource();
                         } catch (Exception e) {
-                            log.info("命令复制:从池中获取RedisClient失败:" + e.getMessage());
+                            log.info("命令复制:从池中获取RedisClient失败:{}" , e.getMessage());
 
                         }
                         StringBuffer info = new StringBuffer();

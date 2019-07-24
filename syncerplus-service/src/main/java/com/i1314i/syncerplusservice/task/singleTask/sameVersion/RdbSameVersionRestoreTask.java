@@ -46,7 +46,7 @@ public class RdbSameVersionRestoreTask implements Callable<Object> {
                 r = redisClient.restore(mkv.getKey(), ms, mkv.getValue(), status);
                 if (r.equals("OK")) {
                     i = -1;
-                    info.append(mkv.getKey());
+                    info.append(new String(mkv.getKey()));
                     info.append("->");
                     info.append(r.toString());
                     log.info(info.toString());
@@ -59,7 +59,7 @@ public class RdbSameVersionRestoreTask implements Callable<Object> {
 
 
             if(i!=-1){
-                log.warn("key : {} not copy",mkv.getKey());
+                log.warn("key : {} not copy",new String(mkv.getKey()));
             }
 
 

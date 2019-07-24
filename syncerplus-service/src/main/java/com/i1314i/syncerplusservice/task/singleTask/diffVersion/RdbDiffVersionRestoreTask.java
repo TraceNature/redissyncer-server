@@ -54,7 +54,7 @@ public class RdbDiffVersionRestoreTask implements Callable<Object> {
                 } else {
                     long ms = mkv.getExpiredMs() - System.currentTimeMillis();
                     if (ms <= 0) {
-                        log.warn("{} ： 已过期",mkv.getKey());
+                        log.warn("{} ： 已过期",new String(mkv.getKey()));
                     }else {
                         r = targetJedis.set(mkv.getKey(), data, new SetParams().px(ms));
                     }
@@ -62,7 +62,7 @@ public class RdbDiffVersionRestoreTask implements Callable<Object> {
                 }
                 if (r.equals("OK")) {
                     i = -1;
-                    info.append(mkv.getKey());
+                    info.append(new String(mkv.getKey()));
                     info.append("->");
                     info.append(r.toString());
                     log.info(info.toString());
@@ -74,10 +74,10 @@ public class RdbDiffVersionRestoreTask implements Callable<Object> {
             }
 
             if(i!=-1){
-                log.warn("key : {} not copy", mkv.getKey());
+                log.warn("key : {} not copy",new String(mkv.getKey()));
             }
         } catch (Exception epx) {
-            log.info( "{} : {} ：{}:{} " ,epx.getMessage() ,i, mkv.getKey(), mkv.getExpiredMs());
+            log.info( "{} : {} ：{}:{} " ,epx.getMessage() ,i, new String(mkv.getKey()), mkv.getExpiredMs());
         } finally {
             if (redisClient != null) {
                 pool.release(redisClient);

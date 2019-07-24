@@ -21,7 +21,7 @@ public class RedisSyncDataDto {
     private long maxWaitTime;
     private long timeBetweenEvictionRunsMillis;
     private long idleTimeRunsMillis;
-
+    private int diffVersion;
 
     public RedisSyncDataDto() {
     }

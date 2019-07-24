@@ -1,19 +1,11 @@
 package com.i1314i.syncerplusservice.service.listener;
 
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
-import com.i1314i.syncerplusservice.pool.RedisClient;
-import com.i1314i.syncerplusservice.task.CommitSendTask;
-import com.i1314i.syncerplusservice.util.RedisUrlUtils;
-import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
-import com.moilioncircle.redis.replicator.CloseListener;
 import com.moilioncircle.redis.replicator.Replicator;
-import com.moilioncircle.redis.replicator.cmd.Command;
-import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import sun.awt.windows.ThemeReader;
 
-import java.io.IOException;
 
 @Slf4j
 /**

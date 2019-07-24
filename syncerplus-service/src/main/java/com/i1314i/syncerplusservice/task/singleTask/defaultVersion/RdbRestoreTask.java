@@ -69,7 +69,7 @@ public class RdbRestoreTask implements Callable<Object> {
             if(e.getMessage().trim().indexOf("ERR wrong number of arguments for 'restore' command")>=0){
                 try {
                     r=TestJedisClient.restorebyteObject(mkv.getKey(),mkv.getValue(),mkv.getExpiredSeconds(),targetJedis,status);
-                    info.append(mkv.getKey());
+                    info.append(new String(mkv.getKey()));
                     info.append("->");
                     info.append(r.toString());
                     log.info(info.toString());
@@ -88,7 +88,7 @@ public class RdbRestoreTask implements Callable<Object> {
 
 
 
-                                info.append(mkv.getKey());
+                                info.append(new String(mkv.getKey()));
                                 info.append("->");
                                 info.append(r.toString());
                                 log.info(info.toString());
@@ -122,7 +122,7 @@ public class RdbRestoreTask implements Callable<Object> {
             }
         }
         pool.release(redisClient);
-        info.append(mkv.getKey());
+        info.append(new String(mkv.getKey()));
         info.append("->");
         info.append(r.toString());
         log.info(info.toString());
