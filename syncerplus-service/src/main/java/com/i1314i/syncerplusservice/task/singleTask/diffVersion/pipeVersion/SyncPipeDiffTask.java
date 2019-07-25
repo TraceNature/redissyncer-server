@@ -1,6 +1,7 @@
 package com.i1314i.syncerplusservice.task.singleTask.diffVersion.pipeVersion;
 
 
+import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
 import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
@@ -9,6 +10,8 @@ import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.task.CommitSendTask;
+import com.i1314i.syncerplusservice.task.singleTask.pipe.LockPipe;
+import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSumSyncTask;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSyncTask;
 import com.i1314i.syncerplusservice.util.Jedis.TestJedisClient;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
@@ -63,7 +66,7 @@ public class SyncPipeDiffTask implements Runnable {
     int commandNum = 0;
     Pipeline pipelined = null;
     private SyncTaskEntity taskEntity = new SyncTaskEntity();
-
+    private LockPipe lockPipe=new LockPipe();
 
     public SyncPipeDiffTask(RedisSyncDataDto syncDataDto) {
         this.syncDataDto = syncDataDto;
@@ -120,7 +123,7 @@ public class SyncPipeDiffTask implements Runnable {
              * 管道的形式
              */
             if (syncStatus) {
-                threadPoolTaskExecutor.submit(new PipelinedSyncTask(pipelined, taskEntity));
+                threadPoolTaskExecutor.submit(new PipelinedSyncTask(pipelined, taskEntity,lockPipe));
 //                threadPoolTaskExecutor.submit(new PipelinedSumSyncTask(pipelined, taskEntity));
                 syncStatus = false;
             }
@@ -133,6 +136,10 @@ public class SyncPipeDiffTask implements Runnable {
             r.addEventListener(new EventListener() {
                 @Override
                 public void onEvent(Replicator replicator, Event event) {
+                    lockPipe.syncpipe(pipelined,taskEntity,1000,true);
+
+//                    System.out.println(JSON.toJSONString(event));
+
 
                     if(event instanceof KeyStringValueString) {
                         RedisUrlUtils.doCheckTask(r, Thread.currentThread());

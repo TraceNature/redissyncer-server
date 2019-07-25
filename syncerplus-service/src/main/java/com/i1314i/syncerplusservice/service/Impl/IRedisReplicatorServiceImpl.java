@@ -11,6 +11,7 @@ import com.i1314i.syncerplusservice.task.*;
 import com.i1314i.syncerplusservice.task.singleTask.defaultVersion.SyncTask;
 import com.i1314i.syncerplusservice.task.singleTask.diffVersion.SyncDiffTask;
 import com.i1314i.syncerplusservice.task.singleTask.diffVersion.moreVersion.SyncDiffPlusTask;
+import com.i1314i.syncerplusservice.task.singleTask.diffVersion.pipeVersion.SyncPipeDiffTask;
 import com.i1314i.syncerplusservice.task.singleTask.lowerVersion.SyncLowerTask;
 import com.i1314i.syncerplusservice.task.singleTask.sameVersion.SyncSameTask;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
@@ -182,14 +183,14 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
             threadPoolTaskExecutor.execute(new SyncLowerTask(syncDataDto));
             log.info("同步同版本（<3.0）版本数据...");
         }else if(redisVersion.equals(RedisVersion.OTHER)){
-//            if(syncDataDto.getDiffVersion()==0){
+            if(syncDataDto.getPipeline()!=null&&syncDataDto.getPipeline().toLowerCase().equals("off")){
                 threadPoolTaskExecutor.execute(new SyncDiffTask(syncDataDto));
-//            log.info("同步不同版本（）版本数据...(仅支持五大类型版本)");
-                log.info("同步不同版本（）版本数据...");
-//            }else {
-//                threadPoolTaskExecutor.execute(new SyncDiffPlusTask(syncDataDto));
-//                log.info("同步不同版本（）版本数据...(多类型版本)");
-//            }
+             log.info("同步不同版本（）版本数据...(非管道)");
+//                log.info("同步不同版本（）版本数据...");
+           }else {
+                threadPoolTaskExecutor.execute(new SyncPipeDiffTask(syncDataDto));
+                log.info("同步不同版本（）版本数据...(开启管道)");
+            }
 
         }else {
             threadPoolTaskExecutor.execute(new SyncTask(syncDataDto));

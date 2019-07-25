@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
-import redis.clients.jedis.exceptions.JedisConnectionException;
+
 
 
 import java.io.IOException;

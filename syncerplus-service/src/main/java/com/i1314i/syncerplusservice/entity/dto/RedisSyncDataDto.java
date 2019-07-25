@@ -22,7 +22,7 @@ public class RedisSyncDataDto {
     private long timeBetweenEvictionRunsMillis;
     private long idleTimeRunsMillis;
     private int diffVersion;
-
+    private String pipeline;
     public RedisSyncDataDto() {
     }
 

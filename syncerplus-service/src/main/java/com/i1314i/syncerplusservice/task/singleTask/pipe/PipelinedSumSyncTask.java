@@ -4,6 +4,7 @@ import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Pipeline;
 
+import java.util.Date;
 import java.util.concurrent.Callable;
 
 /**
@@ -17,13 +18,15 @@ public class PipelinedSumSyncTask implements Callable<Object> {
     public PipelinedSumSyncTask(Pipeline pipelined, SyncTaskEntity taskEntity) {
         this.pipelined = pipelined;
         this.taskEntity = taskEntity;
+
+
     }
 
     @Override
     public Object call() throws Exception {
         while (pipelined!=null){
 
-            if(taskEntity.getSyncNums()>=100){
+            if(taskEntity.getSyncNums()>=1000){
                 System.out.println("-----clean------------");
                 pipelined.sync();
                 log.info("将管道中超过 {}个值提交",taskEntity.getSyncNums());

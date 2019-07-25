@@ -13,23 +13,21 @@ import java.util.concurrent.Callable;
 public class PipelinedSyncTask implements Callable<Object> {
     private Pipeline pipelined;
     private SyncTaskEntity taskEntity;
-
-    public PipelinedSyncTask(Pipeline pipelined, SyncTaskEntity taskEntity) {
+    private LockPipe lockPipe;
+    public PipelinedSyncTask(Pipeline pipelined, SyncTaskEntity taskEntity,LockPipe lockPipe) {
         this.pipelined = pipelined;
         this.taskEntity = taskEntity;
+        this.lockPipe=lockPipe;
     }
 
     @Override
     public Object call() throws Exception {
         while (pipelined!=null){
-            Thread.sleep(200);
 
-            if(taskEntity.getSyncNums()>0){
-                pipelined.sync();
-                log.info("将管道中超过 {}个值提交",taskEntity.getSyncNums());
-                taskEntity.clear();
-            }
 
+            lockPipe.syncpipe(pipelined,taskEntity,1,false);
+
+            Thread.sleep(3000);
         }
         return null;
     }
