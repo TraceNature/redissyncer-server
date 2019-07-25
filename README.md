@@ -87,7 +87,7 @@
 | maxPoolSize  | redis池最大小 |
 | maxWaitTime  | 超时时间 |
 | idleTimeRunsMillis  | 回收空闲未使用时间连接 |
-    
+ | pipeline  | 跨版本同步是否开启通道 |
 
 |  参数   | 缺省  |     
 |  ----  | ----  |
@@ -95,6 +95,7 @@
 | maxPoolSize  | 可缺省 |
 | maxWaitTime  | 可缺省 |
 | idleTimeRunsMillis  | 可缺省 |
+| pipeline  | 可缺省（默认为开启） |
 
 缺省时为默认配置
 
