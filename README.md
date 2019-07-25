@@ -87,7 +87,7 @@
 | maxPoolSize  | redis池最大小 |
 | maxWaitTime  | 超时时间 |
 | idleTimeRunsMillis  | 回收空闲未使用时间连接 |
- | pipeline  | 跨版本同步是否开启通道 |
+| pipeline  | 跨版本同步是否开启通道 |
 
 |  参数   | 缺省  |     
 |  ----  | ----  |
