@@ -1,29 +1,22 @@
 package com.i1314i.syncerplusservice.task.singleTask.diffVersion;
 
-import com.alibaba.fastjson.JSON;
+
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
+import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
 import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
-import com.i1314i.syncerplusservice.service.command.SuperCommand;
 import com.i1314i.syncerplusservice.task.CommitSendTask;
-import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSumSyncTask;
-import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSyncTask;
 import com.i1314i.syncerplusservice.util.Jedis.TestJedisClient;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.moilioncircle.redis.replicator.*;
-import com.moilioncircle.redis.replicator.cmd.Command;
-import com.moilioncircle.redis.replicator.cmd.CommandName;
+
 import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
-import com.moilioncircle.redis.replicator.cmd.impl.PFAddCommand;
-import com.moilioncircle.redis.replicator.cmd.impl.SelectCommand;
-import com.moilioncircle.redis.replicator.cmd.impl.SetCommand;
-import com.moilioncircle.redis.replicator.cmd.parser.DefaultCommandParser;
-import com.moilioncircle.redis.replicator.cmd.parser.PFAddParser;
+
 import com.moilioncircle.redis.replicator.event.Event;
 import com.moilioncircle.redis.replicator.event.EventListener;
 
@@ -35,15 +28,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
-import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.exceptions.JedisConnectionException;
+
+
 import java.io.IOException;
+
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
+
 /**
- * 同步不同版本之间的数据
+ * 同步不同版本之间的数据(多线程写入每一条数据)
  */
 @Getter
 @Setter
@@ -85,7 +82,7 @@ public class SyncDiffTask implements Runnable {
     @Override
     public void run() {
 
-        System.out.println(threadName);
+
         //设线程名称
         Thread.currentThread().setName(threadName);
         TaskMonitorUtils.addAliveThread(Thread.currentThread().getName(), Thread.currentThread());
@@ -96,35 +93,17 @@ public class SyncDiffTask implements Runnable {
 
             RedisURI turi = new RedisURI(targetUri);
             ConnectionPool pools = RedisUrlUtils.getConnectionPool();
-            ;
             final ConnectionPool pool = pools;
 
             /**
              * 初始化连接池
              */
             pool.init(syncDataDto.getMinPoolSize(), syncDataDto.getMaxPoolSize(), syncDataDto.getMaxWaitTime(), turi, syncDataDto.getTimeBetweenEvictionRunsMillis(), syncDataDto.getIdleTimeRunsMillis());
-//            Configuration tconfig = Configuration.valueOf(turi);
             AtomicInteger sendNum = new AtomicInteger(-1);
             final AtomicInteger dbnum = new AtomicInteger(-1);
-//            Replicator r = RedisMigrator.dress(new RedisReplicator(suri));
             Replicator r = RedisMigrator.commandDress(new RedisReplicator(suri));
 
             TestJedisClient targetJedisClientPool = RedisUrlUtils.getJedisClient(syncDataDto, turi);
-            TestJedisClient sourceJedisClientPool = RedisUrlUtils.getJedisClient(syncDataDto, suri);
-            RedisClient redisClient = null;
-            final Jedis targetJedisplus  = targetJedisClientPool.getResource();
-            if (pipelined == null) {
-                pipelined = targetJedisplus.pipelined();
-            }
-
-            /**
-             * 管道的形式
-             */
-            if (syncStatus) {
-                threadPoolTaskExecutor.submit(new PipelinedSyncTask(pipelined, taskEntity));
-                threadPoolTaskExecutor.submit(new PipelinedSumSyncTask(pipelined, taskEntity));
-                syncStatus = false;
-            }
 
             /**
              * RDB复制
@@ -140,34 +119,34 @@ public class SyncDiffTask implements Runnable {
                         if (RedisUrlUtils.doThreadisCloseCheckTask())
                             return;
                         KeyStringValueString kv = (KeyStringValueString) event;
-
                         if (kv.getDb() == null)
                             return;
                         DB db = kv.getDb();
                         StringBuffer info = new StringBuffer();
                         int index;
+                        Jedis targetJedisplus = null;
                         try {
-//                         redisClient=pool.borrowResource();
-//                        targetJedisplus=targetJedisClientPool.getResource();
-//                            sourceJedisplus = sourceJedisClientPool.getResource();
-                            if (pipelined == null) {
-                                pipelined = targetJedisplus.pipelined();
-                            }
+                            targetJedisplus = targetJedisClientPool.getResource();
                         } catch (Exception e) {
-                            log.info("RDB复制：从池中获取RedisClient失败：{}", e.getMessage());
+                            log.warn("RDB复制：从池中获取RedisClient失败（准备重试）：" + e.getMessage());
+                            try {
+                                targetJedisplus = targetJedisClientPool.getResource();
+                            }catch (Exception ex){
+                                log.warn("RDB复制：从池中获取RedisClient失败（重试依旧失败）：" + ex.getMessage());
+                            }
+
                         }
 
-
                         if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
-                            status = true;
-
                             try {
-//                            redisClient.send(SELECT, toByteArray(index));
-//                            targetJedisplus=targetJedisClientPool.selectDb(index,targetJedisplus);
-//                                sourceJedisplus = sourceJedisClientPool.selectDb(index, sourceJedisplus);
-                                pipelined.select(index);
+                                targetJedisplus = targetJedisClientPool.selectDb(index, targetJedisplus);
                             } catch (Exception e) {
-                                log.info("RDB复制： 从池中获取链接 失败: {}", e.getMessage());
+                                log.warn("RDB复制： 从池中获取链接 失败(重试): {}" , e.getMessage());
+                                try {
+                                    targetJedisplus = targetJedisClientPool.selectDb(index, targetJedisplus);
+                                }catch (Exception exx){
+                                    log.warn("RDB复制： 从池中获取链接 失败(重试失败): {}" , exx.getMessage());
+                                }
                             }
                             dbnum.set(index);
                             info.append("SELECT:");
@@ -175,26 +154,9 @@ public class SyncDiffTask implements Runnable {
                             log.info(info.toString());
                         }
 
-                        info.setLength(0);
 
+                        threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, kv.getExpiredMs(),new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.STRING));
 
-                            taskEntity.add();
-                            //                        commandNum++;
-                            if (kv.getExpiredMs() == null) {
-
-                                KeyStringValueString valueString = (KeyStringValueString) event;
-
-                                pipelined.set(valueString.getKey(), valueString.getValue());
-                            } else {
-                                long ms = kv.getExpiredMs() - System.currentTimeMillis();
-                                if (ms <= 0) {
-                                    log.warn("key: {}", new String(kv.getKey()));
-                                } else {
-                                        KeyStringValueString valueString = (KeyStringValueString) event;
-                                        pipelined.set(valueString.getKey(), valueString.getValue(), new SetParams().px(ms));
-                                }
-
-                            }
 
                     } else if (event instanceof KeyStringValueList) {
                         RedisUrlUtils.doCheckTask(r, Thread.currentThread());
@@ -206,20 +168,29 @@ public class SyncDiffTask implements Runnable {
                         DB db = kv.getDb();
                         StringBuffer info = new StringBuffer();
                         int index;
+                        Jedis targetJedisplus = null;
                         try {
-                            if (pipelined == null) {
-                                pipelined = targetJedisplus.pipelined();
-                            }
+                            targetJedisplus = targetJedisClientPool.getResource();
                         } catch (Exception e) {
-                            log.info("RDB复制：从池中获取RedisClient失败：{}", e.getMessage());
+                            log.warn("RDB复制：从池中获取RedisClient失败（准备重试）：" + e.getMessage());
+                            try {
+                                targetJedisplus = targetJedisClientPool.getResource();
+                            }catch (Exception ex){
+                                log.warn("RDB复制：从池中获取RedisClient失败（重试依旧失败）：" + ex.getMessage());
+                            }
+
                         }
 
                         if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
-                            status = true;
                             try {
-                                pipelined.select(index);
+                                targetJedisplus = targetJedisClientPool.selectDb(index, targetJedisplus);
                             } catch (Exception e) {
-                                log.info("RDB复制： 从池中获取链接 失败: {}", e.getMessage());
+                                log.warn("RDB复制： 从池中获取链接 失败(重试): {}" , e.getMessage());
+                                try {
+                                    targetJedisplus = targetJedisClientPool.selectDb(index, targetJedisplus);
+                                }catch (Exception exx){
+                                    log.warn("RDB复制： 从池中获取链接 失败(重试失败): {}" , exx.getMessage());
+                                }
                             }
                             dbnum.set(index);
                             info.append("SELECT:");
@@ -227,31 +198,10 @@ public class SyncDiffTask implements Runnable {
                             log.info(info.toString());
                         }
 
-                        info.setLength(0);
+
+                        threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, kv.getExpiredMs(),new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.LIST));
 
 
-                        taskEntity.add();
-                        //                        commandNum++;
-                        if (kv.getExpiredMs() == null) {
-                            KeyStringValueList valueList = (KeyStringValueList) event;
-                            List<byte[]> datas = valueList.getValue();
-                            byte[][] array = new byte[datas.size()][];
-                            datas.toArray(array);
-                            pipelined.lpush(valueList.getKey(), array);
-                        } else {
-                            long ms = kv.getExpiredMs() - System.currentTimeMillis();
-                            if (ms <= 0) {
-                                log.warn("key: {}", new String(kv.getKey()));
-                            } else {
-                                    KeyStringValueList valueList = (KeyStringValueList) event;
-                                    List<byte[]> datas = valueList.getValue();
-                                    byte[][] array = new byte[datas.size()][];
-                                    datas.toArray(array);
-                                    pipelined.lpush(valueList.getKey(), array);
-                                    pipelined.pexpire(valueList.getKey(), ms);
-                            }
-
-                        }
                     } else if (event instanceof KeyStringValueSet) {
                         RedisUrlUtils.doCheckTask(r, Thread.currentThread());
                         if (RedisUrlUtils.doThreadisCloseCheckTask())
@@ -262,20 +212,30 @@ public class SyncDiffTask implements Runnable {
                         DB db = kv.getDb();
                         StringBuffer info = new StringBuffer();
                         int index;
+                        Jedis targetJedisplus = null;
                         try {
-                            if (pipelined == null) {
-                                pipelined = targetJedisplus.pipelined();
-                            }
+                            targetJedisplus = targetJedisClientPool.getResource();
                         } catch (Exception e) {
-                            log.info("RDB复制：从池中获取RedisClient失败：{}", e.getMessage());
+                            log.warn("RDB复制：从池中获取RedisClient失败（准备重试）：" + e.getMessage());
+                            try {
+                                targetJedisplus = targetJedisClientPool.getResource();
+                            }catch (Exception ex){
+                                log.warn("RDB复制：从池中获取RedisClient失败（重试依旧失败）：" + ex.getMessage());
+                            }
+
                         }
 
+
                         if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
-                            status = true;
                             try {
-                                pipelined.select(index);
+                                targetJedisplus = targetJedisClientPool.selectDb(index, targetJedisplus);
                             } catch (Exception e) {
-                                log.info("RDB复制： 从池中获取链接 失败: {}", e.getMessage());
+                                log.warn("RDB复制： 从池中获取链接 失败(重试): {}" , e.getMessage());
+                                try {
+                                    targetJedisplus = targetJedisClientPool.selectDb(index, targetJedisplus);
+                                }catch (Exception exx){
+                                    log.warn("RDB复制： 从池中获取链接 失败(重试失败): {}" , exx.getMessage());
+                                }
                             }
                             dbnum.set(index);
                             info.append("SELECT:");
@@ -283,29 +243,11 @@ public class SyncDiffTask implements Runnable {
                             log.info(info.toString());
                         }
 
-                        info.setLength(0);
-                        taskEntity.add();
 
-                        if (kv.getExpiredMs() == null) {
-                            KeyStringValueSet valueSet = (KeyStringValueSet) event;
-                            Set<byte[]> datas = valueSet.getValue();
-                            byte[][] array = new byte[datas.size()][];
-                            datas.toArray(array);
-                            pipelined.sadd(valueSet.getKey(), array);
-                        } else {
-                            long ms = kv.getExpiredMs() - System.currentTimeMillis();
-                            if (ms <= 0) {
-                                log.warn("key: {}", new String(kv.getKey()));
-                            } else {
-                                KeyStringValueSet valueSet = (KeyStringValueSet) event;
-                                Set<byte[]> datas = valueSet.getValue();
-                                byte[][] array = new byte[datas.size()][];
-                                datas.toArray(array);
-                                pipelined.sadd(valueSet.getKey(), array);
-                                pipelined.pexpire(valueSet.getKey(), ms);
-                            }
+                        threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, kv.getExpiredMs(),new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.SET));
 
-                        }
+
+
                     }else if (event instanceof KeyStringValueZSet) {
                         RedisUrlUtils.doCheckTask(r, Thread.currentThread());
                         if (RedisUrlUtils.doThreadisCloseCheckTask())
@@ -316,20 +258,30 @@ public class SyncDiffTask implements Runnable {
                         DB db = kv.getDb();
                         StringBuffer info = new StringBuffer();
                         int index;
+                        Jedis targetJedisplus = null;
                         try {
-                            if (pipelined == null) {
-                                pipelined = targetJedisplus.pipelined();
-                            }
+                            targetJedisplus = targetJedisClientPool.getResource();
                         } catch (Exception e) {
-                            log.info("RDB复制：从池中获取RedisClient失败：{}", e.getMessage());
+                            log.warn("RDB复制：从池中获取RedisClient失败（准备重试）：" + e.getMessage());
+                            try {
+                                targetJedisplus = targetJedisClientPool.getResource();
+                            }catch (Exception ex){
+                                log.warn("RDB复制：从池中获取RedisClient失败（重试依旧失败）：" + ex.getMessage());
+                            }
+
                         }
 
                         if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
-                            status = true;
+
                             try {
-                                pipelined.select(index);
+                                targetJedisplus = targetJedisClientPool.selectDb(index, targetJedisplus);
                             } catch (Exception e) {
-                                log.info("RDB复制： 从池中获取链接 失败: {}", e.getMessage());
+                                log.warn("RDB复制： 从池中获取链接 失败(重试): {}" , e.getMessage());
+                                try {
+                                    targetJedisplus = targetJedisClientPool.selectDb(index, targetJedisplus);
+                                }catch (Exception exx){
+                                    log.warn("RDB复制： 从池中获取链接 失败(重试失败): {}" , exx.getMessage());
+                                }
                             }
                             dbnum.set(index);
                             info.append("SELECT:");
@@ -337,33 +289,11 @@ public class SyncDiffTask implements Runnable {
                             log.info(info.toString());
                         }
 
-                        info.setLength(0);
-                        taskEntity.add();
-                        if (kv.getExpiredMs() == null) {
-                            KeyStringValueZSet valueZSet = (KeyStringValueZSet) event;
-                            Set<ZSetEntry> datas = valueZSet.getValue();
-                            Map<byte[], Double> map = new HashMap<>();
-                            datas.forEach(zset -> {
-                                map.put(zset.getElement(), zset.getScore());
-                            });
-                            pipelined.zadd(valueZSet.getKey(), map);
-                        } else {
-                            long ms = kv.getExpiredMs() - System.currentTimeMillis();
-                            if (ms <= 0) {
-                                log.warn("key: {}", new String(kv.getKey()));
-                            } else {
-                                KeyStringValueZSet valueZSet = (KeyStringValueZSet) event;
-                                Set<ZSetEntry> datas = valueZSet.getValue();
-                                Map<byte[], Double> map = new HashMap<>();
-                                datas.forEach(zset -> {
-                                    map.put(zset.getElement(), zset.getScore());
-                                });
 
-                                pipelined.zadd(valueZSet.getKey(), map);
-                                pipelined.pexpire(valueZSet.getKey(), ms);
-                            }
+                        threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, kv.getExpiredMs(),new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.ZSET));
 
-                        }
+
+
                     }else if (event instanceof KeyStringValueHash) {
 
                         RedisUrlUtils.doCheckTask(r, Thread.currentThread());
@@ -375,20 +305,30 @@ public class SyncDiffTask implements Runnable {
                         DB db = kv.getDb();
                         StringBuffer info = new StringBuffer();
                         int index;
+                        Jedis targetJedisplus = null;
                         try {
-                            if (pipelined == null) {
-                                pipelined = targetJedisplus.pipelined();
-                            }
+                            targetJedisplus = targetJedisClientPool.getResource();
                         } catch (Exception e) {
-                            log.info("RDB复制：从池中获取RedisClient失败：{}", e.getMessage());
+                            log.warn("RDB复制：从池中获取RedisClient失败（准备重试）：" + e.getMessage());
+                            try {
+                                targetJedisplus = targetJedisClientPool.getResource();
+                            }catch (Exception ex){
+                                log.warn("RDB复制：从池中获取RedisClient失败（重试依旧失败）：" + ex.getMessage());
+                            }
+
                         }
 
+
                         if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
-                            status = true;
                             try {
-                                pipelined.select(index);
+                                targetJedisplus = targetJedisClientPool.selectDb(index, targetJedisplus);
                             } catch (Exception e) {
-                                log.info("RDB复制： 从池中获取链接 失败: {}", e.getMessage());
+                                log.warn("RDB复制： 从池中获取链接 失败(重试): {}" , e.getMessage());
+                                try {
+                                    targetJedisplus = targetJedisClientPool.selectDb(index, targetJedisplus);
+                                }catch (Exception exx){
+                                    log.warn("RDB复制： 从池中获取链接 失败(重试失败): {}" , exx.getMessage());
+                                }
                             }
                             dbnum.set(index);
                             info.append("SELECT:");
@@ -396,22 +336,10 @@ public class SyncDiffTask implements Runnable {
                             log.info(info.toString());
                         }
 
-                        info.setLength(0);
-                        taskEntity.add();
-                        if (kv.getExpiredMs() == null) {
-                            KeyStringValueHash valueHash = (KeyStringValueHash) event;
-                            pipelined.hmset(valueHash.getKey(), valueHash.getValue());
-                        } else {
-                            long ms = kv.getExpiredMs() - System.currentTimeMillis();
-                            if (ms <= 0) {
-                                log.warn("key: {}", new String(kv.getKey()));
-                            } else {
-                                KeyStringValueHash valueHash = (KeyStringValueHash) event;
-                                pipelined.hmset(valueHash.getKey(), valueHash.getValue());
-                                pipelined.pexpire(valueHash.getKey(), ms);
-                            }
 
-                        }
+                        threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, kv.getExpiredMs(),new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.HASH));
+
+
 
 
                     } else if (event instanceof KeyStringValueModule) {
@@ -423,27 +351,6 @@ public class SyncDiffTask implements Runnable {
 
 
 
-
-
-                        /**
-                         * 多线程方式
-                         */
-//                    if (mkv.getExpiredMs() == null) {
-//                          threadPoolTaskExecutor.submit(new RdbDiffVersionRestoreTask(mkv, 0L,redisClient,pool ,info,targetJedisplus,sourceJedisplus));
-//                    } else {
-//                        long ms = mkv.getExpiredMs() - System.currentTimeMillis();
-//                        if (ms <= 0) return;
-//                      threadPoolTaskExecutor.submit(new RdbDiffVersionRestoreTask(mkv, ms, redisClient,pool, info,targetJedisplus,sourceJedisplus));
-//                    }
-
-//                    targetJedisplus.pfadd()
-
-
-                    /**
-                     * 命令同步
-                     */
-
-//            new SyncerCommandListener(r,pool,threadPoolTaskExecutor).run();
 
 
                     /**
@@ -473,12 +380,7 @@ public class SyncDiffTask implements Runnable {
                         threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info));
                     }
 
-//                    else if(event instanceof PFAddCommand){
-//                        PFAddCommand pfAddCommand= (PFAddCommand) event;
-//                        pipelined.pfadd(pfAddCommand.getKey(),pfAddCommand.getElements());
-//                        pipelined.sync();
-//                        log.info("[{}]->[{}]",new String(pfAddCommand.getKey()));
-//                    }
+
                 }
             });
 
@@ -489,13 +391,8 @@ public class SyncDiffTask implements Runnable {
                     if (targetJedisClientPool != null) {
                         targetJedisClientPool.closePool();
                     }
-                    if (sourceJedisClientPool != null) {
-                        sourceJedisClientPool.closePool();
-                    }
 
-                    if (targetJedisClientPool != null) {
-                        targetJedisClientPool.closePool();
-                    }
+
 
                     if (pool != null) {
                         pool.close();
@@ -509,6 +406,8 @@ public class SyncDiffTask implements Runnable {
             log.info("redis address is error:{%s} ", e.getMessage());
         } catch (IOException e) {
             log.info("redis address is error:{%s} ", e.getMessage());
+        }catch (Exception e){
+            log.info(e.getMessage());
         }
     }
 

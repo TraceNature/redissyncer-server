@@ -22,12 +22,14 @@ public class PipelinedSumSyncTask implements Callable<Object> {
     @Override
     public Object call() throws Exception {
         while (pipelined!=null){
-            if(taskEntity.getSyncNums()>=1000){
+
+            if(taskEntity.getSyncNums()>=100){
+                System.out.println("-----clean------------");
                 pipelined.sync();
                 log.info("将管道中超过 {}个值提交",taskEntity.getSyncNums());
                 taskEntity.clear();
             }
-            Thread.sleep(100);
+//            Thread.sleep(100);
         }
         return null;
     }

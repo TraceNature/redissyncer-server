@@ -1,4 +1,4 @@
-package com.i1314i.syncerplusservice.task.singleTask.diffVersion;
+package com.i1314i.syncerplusservice.task.singleTask.diffVersion.pipeVersion;
 
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;

@@ -34,18 +34,19 @@ public class TestJedisClient implements IJedisClient {
     public TestJedisClient(String host, Integer port, JedisPoolConfig config, String password, Integer db) {
         this.host = host;
         this.port = port;
-        config.setMaxTotal(1000);
-        config.setMaxIdle(100);
-        config.setMinIdle(50);
+//        config.setMaxTotal(1000);
+//        config.setMaxIdle(100);
+//        config.setMinIdle(50);
         //当池内没有返回对象时，最大等待时间
-        config.setMaxWaitMillis(10000);
+//        config.setMaxWaitMillis(10000);
 
 
-        config.setTimeBetweenEvictionRunsMillis(30000);
+//        config.setTimeBetweenEvictionRunsMillis(30000);
         config.setTestOnReturn(true);
         config.setTestOnBorrow(true);
         this.config = config;
-        int timeout = 100000;
+        int timeout = 50000;
+
         if (org.springframework.util.StringUtils.isEmpty(password))
             jedisPool = new JedisPool(this.config, this.host, this.port, timeout);
         else

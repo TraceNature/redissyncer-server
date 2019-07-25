@@ -1,9 +1,9 @@
 syncerplus:
   redispool:
     #池中空闲链接回收线程执行间隔时间  例：每隔1000毫秒执行一次回收函数
-    timeBetweenEvictionRunsMillis: 300000
+    timeBetweenEvictionRunsMillis: 200
     #池中空闲连接回收未使用的时间  例：1800000毫秒未使用则回收  默认值是30分钟。1800000
-    idleTimeRunsMillis: 600000
+    idleTimeRunsMillis: 3000
     #最小池大小
     minPoolSize: 1
     #最大池大小

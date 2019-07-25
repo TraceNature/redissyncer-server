@@ -56,6 +56,26 @@ public class RedisClient extends Client {
     }
 
 
+    public Object send(Protocol.Command cmd) throws TaskRestoreException {
+        sendCommand(cmd);
+        Object r=null;
+        try{
+            r = getOne();
+        }catch (Exception e){
+            if(e instanceof  JedisDataException)
+                throw  new TaskRestoreException(e.getMessage());
+
+        }
+
+
+
+        if (r instanceof byte[]) {
+            return new String((byte[]) r, UTF_8);
+        } else {
+            return r;
+        }
+    }
+
 
 
     public static boolean isNull(byte[] bs){
@@ -68,6 +88,11 @@ public class RedisClient extends Client {
     public Object send(final byte[] cmd, final byte[]... args) throws TaskRestoreException {
         return send(Protocol.Command.valueOf(new String(cmd, UTF_8).toUpperCase()), args);
     }
+
+    public Object send(final byte[] cmd) throws TaskRestoreException {
+        return send(Protocol.Command.valueOf(new String(cmd, UTF_8).toUpperCase()));
+    }
+
 
     public Object restore(byte[] key, long expired, byte[] dumped, boolean replace) throws TaskRestoreException {
         if (!replace) {

@@ -22,7 +22,7 @@ public class PipelinedSyncTask implements Callable<Object> {
     @Override
     public Object call() throws Exception {
         while (pipelined!=null){
-            Thread.sleep(30000);
+            Thread.sleep(200);
 
             if(taskEntity.getSyncNums()>0){
                 pipelined.sync();

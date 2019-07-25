@@ -20,11 +20,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-thymeleaf</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.i1314i</groupId>
             <artifactId>syncerplus-common</artifactId>
             <version>1.0</version>
@@ -67,12 +62,40 @@
                     <target>${java.version}</target>
                 </configuration>
 
-
-
-
-
             </plugin>
 
+
+
+
+            <!-- 指定到相对路径下-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <artifactItems>
+
+                        <artifactItem>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>${project.artifactId}</artifactId>
+                            <version>${project.version}</version>
+                            <type>${project.packaging}</type>
+                            <overWrite>true</overWrite>
+                            <outputDirectory>${project.parent.build.directory}</outputDirectory>
+                            <destFileName>${project.artifactId}-${project.version}.jar</destFileName>
+                        </artifactItem>
+                    </artifactItems>
+                </configuration>
+            </plugin>
         </plugins>
 
 

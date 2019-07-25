@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.io.IOException;
@@ -42,17 +43,28 @@ public class RedisUrlUtils {
             turi = new RedisURI(url);
 
             target = new RedisClient(turi.getHost(), turi.getPort());
+
             Configuration tconfig = Configuration.valueOf(turi);
             //获取password
             if (tconfig.getAuthPassword() != null) {
                 Object auth = target.send(AUTH, tconfig.getAuthPassword().getBytes());
             }
-            try {
-                target.send("GET".getBytes(), "TEST".getBytes());
-                return true;
-            } catch (Exception e) {
-                return false;
+            int i=3;
+            while (i>0){
+                try {
+                    String png= (String) target.send("PING".getBytes());
+                    if(png.equals("PONG")){
+                        return true;
+                    }
+                    i--;
+                }catch (Exception e){
+                    return false;
+                }
+
             }
+
+
+            throw new TaskMsgException("无法连接该reids");
 
         } catch (URISyntaxException e) {
             throw new TaskMsgException(name + ":连接链接不正确");
@@ -60,7 +72,9 @@ public class RedisUrlUtils {
             throw new TaskMsgException(name + ":" + e.getMessage());
         } catch (TaskRestoreException e) {
             throw new TaskMsgException(name + ":error:" + e.getMessage());
-        } finally {
+        } catch (Exception e) {
+            throw new TaskMsgException(name + ":error:" + e.getMessage());
+        }finally {
             if (null != target) {
                 target.close();
             }

@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class SyncTaskEntity {
-    private int syncNums=0;
+    private volatile int syncNums=0;
 
     public void add(){
         syncNums++;
