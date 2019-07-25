@@ -70,7 +70,8 @@
     	"idleTimeRunsMillis": 300000,
     	"maxPoolSize": 20,
     	"maxWaitTime": 10000,
-    	"minPoolSize": 1
+    	"minPoolSize": 1，
+    	"pipeline":"off"
     }
     
 
