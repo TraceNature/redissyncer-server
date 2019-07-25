@@ -71,7 +71,7 @@
     	"maxPoolSize": 20,
     	"maxWaitTime": 10000,
     	"minPoolSize": 1，
-    	"pipeline":"off"
+    	"pipeline":"on"
     }
     
 
@@ -96,7 +96,7 @@
 | maxPoolSize  | 可缺省 |
 | maxWaitTime  | 可缺省 |
 | idleTimeRunsMillis  | 可缺省 |
-| pipeline  | 可缺省（默认为开启） |
+| pipeline  | 可缺省（默认为关闭） |
 
 缺省时为默认配置
 

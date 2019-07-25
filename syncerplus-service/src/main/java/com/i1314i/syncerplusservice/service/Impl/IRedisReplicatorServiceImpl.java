@@ -183,13 +183,13 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
             threadPoolTaskExecutor.execute(new SyncLowerTask(syncDataDto));
             log.info("同步同版本（<3.0）版本数据...");
         }else if(redisVersion.equals(RedisVersion.OTHER)){
-            if(syncDataDto.getPipeline()!=null&&syncDataDto.getPipeline().toLowerCase().equals("off")){
-                threadPoolTaskExecutor.execute(new SyncDiffTask(syncDataDto));
-             log.info("同步不同版本（）版本数据...(非管道)");
+            if(syncDataDto.getPipeline()!=null&&syncDataDto.getPipeline().toLowerCase().equals("on")){
+                threadPoolTaskExecutor.execute(new SyncPipeDiffTask(syncDataDto));
+             log.info("同步不同版本（）版本数据...(开启管道)");
 //                log.info("同步不同版本（）版本数据...");
            }else {
-                threadPoolTaskExecutor.execute(new SyncPipeDiffTask(syncDataDto));
-                log.info("同步不同版本（）版本数据...(开启管道)");
+                threadPoolTaskExecutor.execute(new SyncDiffTask(syncDataDto));
+                log.info("同步不同版本（）版本数据...(非管道)");
             }
 
         }else {
