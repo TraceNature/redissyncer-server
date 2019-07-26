@@ -6,6 +6,7 @@ import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerpluswebapp.constant.CodeConstant;
 import com.i1314i.syncerpluswebapp.constant.HttpMsgConstant;
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
  * 统一异常捕获处理
  **/
 @RestControllerAdvice
-@Log
+@Slf4j
 public class ExceptionAdvice {
     /**
      * 500错误请求 信息解析错误
@@ -39,13 +40,13 @@ public class ExceptionAdvice {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResultMap IllegalArgumentException(IllegalArgumentException e){
-        log.warning(e.getMessage());
+        log.warn(e.getMessage());
         return ResultMap.builder().code(CodeConstant.HTTP_ERROR_CODE)
                 .msg(e.getMessage());
     }
     @ExceptionHandler(AssertionError.class)
     public ResultMap IllegalArgumentException(AssertionError e){
-        log.warning(e.getMessage());
+        log.warn(e.getMessage());
         return ResultMap.builder().code(CodeConstant.HTTP_ERROR_CODE)
                 .msg(e.getMessage());
     }
@@ -53,14 +54,14 @@ public class ExceptionAdvice {
 
     @ExceptionHandler(SocketTimeoutException.class)
     public ResultMap SocketTimeoutException(SocketTimeoutException e){
-        log.warning(e.getMessage());
+        log.warn(e.getMessage());
         return ResultMap.builder().code(CodeConstant.HTTP_ERROR_CODE)
                 .msg(e.getMessage());
     }
 
     @ExceptionHandler(ConnectException.class)
     public ResultMap ConnectException(ConnectException e){
-        log.warning(e.getMessage());
+        log.warn(e.getMessage());
         return ResultMap.builder().code(CodeConstant.HTTP_ERROR_CODE)
                 .msg(e.getMessage());
     }
@@ -118,7 +119,7 @@ public class ExceptionAdvice {
 
     @ExceptionHandler(TaskMsgException.class)
     public ResultMap TaskMsgException(TaskMsgException e){
-        log.warning(e.getMessage());
+        log.warn(e.getMessage());
         return ResultMap.builder().code(CodeConstant.VALITOR_ERROR_CODE)
                 .msg(e.getMessage());
     }

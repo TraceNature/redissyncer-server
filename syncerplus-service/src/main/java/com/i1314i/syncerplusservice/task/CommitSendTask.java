@@ -35,17 +35,31 @@ public class CommitSendTask implements Callable<Object> {
     @Override
     public Object call() throws Exception {
         Object r=null;
-        if(!StringUtils.isEmpty(dbIndex)){
-            Object ir = redisClient.send("SELECT".getBytes(), dbIndex.getBytes());
-            if(ir.equals("OK"))
-                r= redisClient.send(command.getCommand(), command.getArgs());
-            else {
-                ir = redisClient.send("SELECT".getBytes(), dbIndex.getBytes());
-                r= redisClient.send(command.getCommand(), command.getArgs());
+
+        int i=3;
+        while (i>0){
+            if(!StringUtils.isEmpty(dbIndex)){
+                Object ir = redisClient.send("SELECT".getBytes(), dbIndex.getBytes());
+                if(ir.equals("OK"))
+                    r= redisClient.send(command.getCommand(), command.getArgs());
+                else {
+                    ir = redisClient.send("SELECT".getBytes(), dbIndex.getBytes());
+                    r= redisClient.send(command.getCommand(), command.getArgs());
+                }
+            }else {
+                r = redisClient.send(command.getCommand(), command.getArgs());
             }
-        }else {
-            r = redisClient.send(command.getCommand(), command.getArgs());
+
+            if(r.equals("OK")){
+                i=-10;
+                break;
+            }
+            i--;
         }
+
+
+
+
 
         pool.release(redisClient);
         info.append(new String(command.getCommand()));
@@ -56,9 +70,19 @@ public class CommitSendTask implements Callable<Object> {
             info.append("]");
         }
 
+
         info.append("->");
-        info.append(r);
-        log.info(info.toString());
+
+        if(i!=-10){
+            info.append("error");
+            log.warn(info.toString());
+        }else {
+            info.append(r);
+            log.info(info.toString());
+        }
+
+
+
         return r;
     }
 }
