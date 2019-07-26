@@ -93,37 +93,31 @@ public class SyncPipeDiffTask implements Runnable {
 
             RedisURI turi = new RedisURI(targetUri);
             ConnectionPool pools = RedisUrlUtils.getConnectionPool();
-            ;
+
             final ConnectionPool pool = pools;
 
             /**
              * 初始化连接池
              */
             pool.init(syncDataDto.getMinPoolSize(), syncDataDto.getMaxPoolSize(), syncDataDto.getMaxWaitTime(), turi, syncDataDto.getTimeBetweenEvictionRunsMillis(), syncDataDto.getIdleTimeRunsMillis());
-//            Configuration tconfig = Configuration.valueOf(turi);
-            AtomicInteger sendNum = new AtomicInteger(-1);
             final AtomicInteger dbnum = new AtomicInteger(-1);
-//            Replicator r = RedisMigrator.dress(new RedisReplicator(suri));
+
             Replicator r = RedisMigrator.commandDress(new RedisReplicator(suri));
 
             TestJedisClient targetJedisClientPool = RedisUrlUtils.getJedisClient(syncDataDto, turi);
-            TestJedisClient sourceJedisClientPool = RedisUrlUtils.getJedisClient(syncDataDto, suri);
-            RedisClient redisClient = null;
-            final Jedis targetStringJedisplus  = null;
-            final Jedis targetListJedisplus  =null;
-            final Jedis targetSetJedisplus  = null;
-            final Jedis targetZSetJedisplus  = null;
-            final Jedis targetHashJedisplus  = null;
             final Jedis targetJedisplus  = targetJedisClientPool.getResource();
             if (pipelined == null) {
                 pipelined = targetJedisplus.pipelined();
             }
+
+
 
             /**
              * 管道的形式
              */
             if (syncStatus) {
                 threadPoolTaskExecutor.submit(new PipelinedSyncTask(pipelined, taskEntity,lockPipe));
+//                threadPoolTaskExecutor.execute(new PingTask(targetJedisplus));
 //                threadPoolTaskExecutor.submit(new PipelinedSumSyncTask(pipelined, taskEntity));
                 syncStatus = false;
             }
@@ -502,9 +496,7 @@ public class SyncPipeDiffTask implements Runnable {
                     if (targetJedisClientPool != null) {
                         targetJedisClientPool.closePool();
                     }
-                    if (sourceJedisClientPool != null) {
-                        sourceJedisClientPool.closePool();
-                    }
+
 
                     if (targetJedisClientPool != null) {
                         targetJedisClientPool.closePool();

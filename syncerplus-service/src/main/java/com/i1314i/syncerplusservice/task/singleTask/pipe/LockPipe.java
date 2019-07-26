@@ -1,9 +1,11 @@
 package com.i1314i.syncerplusservice.task.singleTask.pipe;
 
+import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
 
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Response;
 
 import java.util.Date;
 
@@ -29,6 +31,15 @@ public class LockPipe {
                     log.info("将管道中超过 {} 个值提交",taskEntity.getSyncNums());
                     taskEntity.clear();
                     date=new Date();
+                }else if(taskEntity.getSyncNums()==0&&time>4000){
+                    Response<String>r= pipelined.ping();
+                    pipelined.sync();
+                    taskEntity.clear();
+                    log.info("ping->{}", r.get());
+                } else if(taskEntity.getSyncNums()==0&&time>180000){
+                    pipelined.close();
+                    log.info("pipelined is close}");
+
                 }
             }
 
