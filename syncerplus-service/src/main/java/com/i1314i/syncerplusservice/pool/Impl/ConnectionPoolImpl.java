@@ -136,6 +136,12 @@ public class ConnectionPoolImpl implements ConnectionPool {
             }
 
         }
+
+        while (!redisClient.isConnected()){
+            log.info("获取redisClient不可用重新获取");
+            closeRedisClient(redisClient);
+            redisClient=borrowResource();
+        }
         return redisClient;
     }
 
@@ -165,6 +171,13 @@ public class ConnectionPoolImpl implements ConnectionPool {
                 }
             }
         }
+    }
+
+    void closeRedisClient(RedisClient redisClient){
+        busy.remove(redisClient);
+        redisClient.close();
+        activeSize.decrementAndGet();
+
     }
 
 
@@ -202,7 +215,12 @@ public class ConnectionPoolImpl implements ConnectionPool {
                                     if((nowTime.getTime()-redisClient.getLastTime().getTime())>timeBetweenEvictionRunsMillis){
                                         redisClient.close();
                                         activeSize.decrementAndGet();
-                                    }else {
+                                    }else if(!redisClient.isConnected()){
+                                        //连接已断开
+                                        redisClient.close();
+                                        activeSize.decrementAndGet();
+                                    } else {
+                                        redisClient.ping();
                                         idle.offer(redisClient);
                                     }
                                 }
