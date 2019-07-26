@@ -396,7 +396,13 @@ public class SyncDiffTask implements Runnable {
 
                         DefaultCommand dc = (DefaultCommand) event;
                         if(new String(dc.getCommand()).trim().toUpperCase().equals("SELECT")){
-                            selectIndex(dc.getArgs()[0]);
+                            try {
+                                if(dc.getArgs().length>0){
+                                    selectIndex(dc.getArgs()[0]);
+                                }
+                            }catch (Exception e){
+
+                            }
                         }else {
                             if(getIndex().equals("-1")){
                                 threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info,"0"));
