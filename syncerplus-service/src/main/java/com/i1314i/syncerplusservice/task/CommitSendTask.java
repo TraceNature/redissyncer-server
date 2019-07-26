@@ -4,6 +4,7 @@ import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 
 import java.util.concurrent.Callable;
 
@@ -14,19 +15,16 @@ public class CommitSendTask implements Callable<Object> {
     private RedisClient redisClient;
     private ConnectionPool pool;
     private StringBuffer info;
+    private String dbIndex;
 
-    public CommitSendTask(DefaultCommand command, RedisClient redisClient, ConnectionPool pool) {
-        this.command = command;
-        this.redisClient = redisClient;
-        this.pool = pool;
-        this.info=new StringBuffer();
-    }
 
-    public CommitSendTask(DefaultCommand command, RedisClient redisClient, ConnectionPool pool, StringBuffer info) {
+
+    public CommitSendTask(DefaultCommand command, RedisClient redisClient, ConnectionPool pool, StringBuffer info,String dbIndex) {
         this.command = command;
         this.redisClient = redisClient;
         this.pool = pool;
         this.info = info;
+        this.dbIndex=dbIndex;
     }
 
     /**
@@ -36,7 +34,19 @@ public class CommitSendTask implements Callable<Object> {
      */
     @Override
     public Object call() throws Exception {
-        Object r = redisClient.send(command.getCommand(), command.getArgs());
+        Object r=null;
+        if(!StringUtils.isEmpty(dbIndex)){
+            Object ir = redisClient.send("SELECT".getBytes(), dbIndex.getBytes());
+            if(ir.equals("OK"))
+                r= redisClient.send(command.getCommand(), command.getArgs());
+            else {
+                ir = redisClient.send("SELECT".getBytes(), dbIndex.getBytes());
+                r= redisClient.send(command.getCommand(), command.getArgs());
+            }
+        }else {
+            r = redisClient.send(command.getCommand(), command.getArgs());
+        }
+
         pool.release(redisClient);
         info.append(new String(command.getCommand()));
         info.append(":");

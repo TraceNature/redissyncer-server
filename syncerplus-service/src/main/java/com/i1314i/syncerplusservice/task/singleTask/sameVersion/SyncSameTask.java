@@ -7,6 +7,7 @@ import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.task.CommitSendTask;
+import com.i1314i.syncerplusservice.task.singleTask.pipe.LockPipe;
 import com.i1314i.syncerplusservice.task.singleTask.sameVersion.RdbSameVersionRestoreTask;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
@@ -26,6 +27,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static redis.clients.jedis.Protocol.Command.SELECT;
 import static redis.clients.jedis.Protocol.toByteArray;
@@ -54,7 +57,8 @@ public class SyncSameTask implements Runnable {
     private boolean status = true;
     private String threadName; //线程名称
     private RedisSyncDataDto syncDataDto;
-
+    private String dbindex="-1";
+    private Lock lock = new ReentrantLock();
 
     public SyncSameTask(RedisSyncDataDto syncDataDto) {
         this.syncDataDto = syncDataDto;
@@ -65,7 +69,20 @@ public class SyncSameTask implements Runnable {
             this.status = false;
         }
     }
+    void selectIndex(byte[]index){
+        lock.lock();
+        try {
+            dbindex=new String(index);
+        } catch (Exception e) {
 
+        }finally {
+            lock.unlock(); //释放锁
+        }
+    }
+
+    String getIndex(){
+        return dbindex;
+    }
 
     @Override
     public void run() {
@@ -107,7 +124,6 @@ public class SyncSameTask implements Runnable {
                             return;
 
                         StringBuffer info = new StringBuffer();
-
                         // Step1: select db
                         DB db = kv.getDb();
                         int index;
@@ -173,7 +189,17 @@ public class SyncSameTask implements Runnable {
                         // Step3: sync aof command
                         DefaultCommand dc = (DefaultCommand) event;
 
-                        threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info));
+                        if(new String(dc.getCommand()).trim().toUpperCase().equals("SELECT")){
+                            selectIndex(dc.getArgs()[0]);
+                        }else {
+                            if(getDbindex().equals("-1")){
+                                threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info,"0"));
+                            }else {
+
+                                threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info,getIndex()));
+                            }
+
+                        }
                     }
                 }
             });

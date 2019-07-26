@@ -36,7 +36,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -66,8 +67,8 @@ public class SyncDiffTask implements Runnable {
     int commandNum = 0;
     Pipeline pipelined = null;
     private SyncTaskEntity taskEntity = new SyncTaskEntity();
-
-
+    private String dbindex="-1";
+    private Lock lock = new ReentrantLock();
     public SyncDiffTask(RedisSyncDataDto syncDataDto) {
         this.syncDataDto = syncDataDto;
         this.sourceUri = syncDataDto.getSourceUri();
@@ -77,6 +78,23 @@ public class SyncDiffTask implements Runnable {
             this.status = false;
         }
     }
+
+    void selectIndex(byte[]index){
+        lock.lock();
+        try {
+            dbindex=new String(index);
+        } catch (Exception e) {
+
+        }finally {
+            lock.unlock(); //释放锁
+        }
+    }
+
+    String getIndex(){
+        return dbindex;
+    }
+
+
 
 
     @Override
@@ -375,9 +393,22 @@ public class SyncDiffTask implements Runnable {
 
 //                        SuperCommand superCommand= (SuperCommand) event;
                         // Step3: sync aof command
-                        DefaultCommand dc = (DefaultCommand) event;
 
-                        threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info));
+                        DefaultCommand dc = (DefaultCommand) event;
+                        if(new String(dc.getCommand()).trim().toUpperCase().equals("SELECT")){
+                            selectIndex(dc.getArgs()[0]);
+                        }else {
+                            if(getIndex().equals("-1")){
+                                threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info,"0"));
+                            }else {
+
+                                threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info,getIndex()));
+
+
+                            }
+
+                        }
+
                     }
 
 

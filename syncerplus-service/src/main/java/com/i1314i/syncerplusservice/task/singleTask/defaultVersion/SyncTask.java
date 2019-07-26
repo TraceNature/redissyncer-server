@@ -28,6 +28,8 @@ import redis.clients.jedis.Jedis;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static redis.clients.jedis.Protocol.Command.SELECT;
 import static redis.clients.jedis.Protocol.toByteArray;
@@ -55,6 +57,8 @@ public class SyncTask implements Runnable {
     private boolean status = true;
     private String threadName; //线程名称
     private RedisSyncDataDto syncDataDto;
+    private String dbindex="-1";
+    private Lock lock = new ReentrantLock();
 
     public SyncTask(String sourceUri, String targetUri) {
         this.sourceUri = sourceUri;
@@ -64,7 +68,20 @@ public class SyncTask implements Runnable {
             this.status = false;
         }
     }
+    void selectIndex(byte[]index){
+        lock.lock();
+        try {
+            dbindex=new String(index);
+        } catch (Exception e) {
 
+        }finally {
+            lock.unlock(); //释放锁
+        }
+    }
+
+    String getIndex(){
+        return dbindex;
+    }
     public SyncTask(RedisSyncDataDto syncDataDto) {
         this.syncDataDto = syncDataDto;
         this.sourceUri = syncDataDto.getSourceUri();
@@ -213,7 +230,16 @@ public class SyncTask implements Runnable {
                         // Step3: sync aof command
                         DefaultCommand dc = (DefaultCommand) event;
 
-                        threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info));
+                        if(new String(dc.getCommand()).trim().toUpperCase().equals("SELECT")){
+                            selectIndex(dc.getArgs()[0]);
+                        }else {
+                            if(getDbindex().equals("-1")){
+                                threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info,"0"));
+                            }else {
+                                threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info,getIndex()));
+                            }
+
+                        }
                     }
                 }
             });
