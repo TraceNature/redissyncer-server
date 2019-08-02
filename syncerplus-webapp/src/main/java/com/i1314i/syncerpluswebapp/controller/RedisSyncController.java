@@ -6,6 +6,7 @@ import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
+import com.i1314i.syncerpluswebapp.util.DtoCheckUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -36,20 +37,7 @@ public class RedisSyncController {
     @RequestMapping(value = "/startSync",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap StartSync(@RequestBody @Validated RedisSyncDataDto syncDataDto) throws TaskMsgException {
 
-        if(syncDataDto.getIdleTimeRunsMillis()==0){
-            syncDataDto.setIdleTimeRunsMillis(redisPoolProps.getIdleTimeRunsMillis());
-        }
-        if(syncDataDto.getMaxWaitTime()==0){
-            syncDataDto.setMaxWaitTime(redisPoolProps.getMaxWaitTime());
-        }
-        if(syncDataDto.getMaxPoolSize()==0){
-            syncDataDto.setMaxPoolSize(redisPoolProps.getMaxPoolSize());
-        }
-        if(syncDataDto.getMinPoolSize()==0){
-            syncDataDto.setMinPoolSize(redisPoolProps.getMinPoolSize());
-        }
-
-        syncDataDto.setTimeBetweenEvictionRunsMillis(redisPoolProps.getTimeBetweenEvictionRunsMillis());
+        syncDataDto= (RedisSyncDataDto) DtoCheckUtils.ckeckRedisClusterDto(syncDataDto,redisPoolProps);
         redisReplicatorService.sync(syncDataDto);
         return ResultMap.builder().code("200").msg("success");
     }

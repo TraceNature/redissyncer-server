@@ -1,4 +1,4 @@
-package com.i1314i.syncerplusservice.task.singleTask.lowerVersion;
+package com.i1314i.syncerplusservice.task.singleTask.lowerVersion.defaultVersion;
 
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;

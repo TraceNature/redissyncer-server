@@ -1,14 +1,15 @@
 package com.i1314i.syncerplusservice.entity.dto;
 
-import com.i1314i.syncerplusservice.constant.RedisVersion;
+import com.i1314i.syncerplusservice.entity.dto.common.SyncDataDto;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
+import java.util.HashMap;
 
 @Getter
 @Setter
-public class RedisSyncDataDto {
+public class RedisSyncDataDto extends SyncDataDto {
     @NotBlank(message = "源redis路径地址不能为空")
     private String sourceUri;
     @NotBlank(message = "目标redis路径不能为空")
@@ -16,31 +17,15 @@ public class RedisSyncDataDto {
     @NotBlank(message = "任务名称不能为空")
     private String threadName;
 
-    private int minPoolSize;
-    private int maxPoolSize;
-    private long maxWaitTime;
-    private long timeBetweenEvictionRunsMillis;
-    private long idleTimeRunsMillis;
-    private int diffVersion;
-    private String pipeline;
+
     public RedisSyncDataDto() {
+        super(1, 100, 3000, 15000, 15000, 1, "off",new HashMap<>());
     }
-
-    public RedisSyncDataDto(String sourceUri, String targetUri, String threadName) {
-        this.sourceUri = sourceUri;
-        this.targetUri = targetUri;
-        this.threadName = threadName;
-    }
-
 
     public RedisSyncDataDto(@NotBlank(message = "源redis路径地址不能为空") String sourceUri, @NotBlank(message = "目标redis路径不能为空") String targetUri, @NotBlank(message = "任务名称不能为空") String threadName, int minPoolSize, int maxPoolSize, long maxWaitTime, long timeBetweenEvictionRunsMillis, long idleTimeRunsMillis) {
+        super(minPoolSize,maxPoolSize,maxWaitTime,timeBetweenEvictionRunsMillis,idleTimeRunsMillis);
         this.sourceUri = sourceUri;
         this.targetUri = targetUri;
         this.threadName = threadName;
-        this.minPoolSize = minPoolSize;
-        this.maxPoolSize = maxPoolSize;
-        this.maxWaitTime = maxWaitTime;
-        this.timeBetweenEvictionRunsMillis = timeBetweenEvictionRunsMillis;
-        this.idleTimeRunsMillis = idleTimeRunsMillis;
     }
 }

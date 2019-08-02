@@ -47,7 +47,7 @@ import static java.lang.Long.parseLong;
  */
 public class DefaultRdbPlusVisitor extends RdbVisitor {
 
-    protected static final Logger logger = LoggerFactory.getLogger(com.moilioncircle.redis.replicator.rdb.DefaultRdbVisitor.class);
+    protected static final Logger logger = LoggerFactory.getLogger(DefaultRdbPlusVisitor.class);
 
     protected final Replicator replicator;
     protected final RdbValueVisitor valueVisitor;

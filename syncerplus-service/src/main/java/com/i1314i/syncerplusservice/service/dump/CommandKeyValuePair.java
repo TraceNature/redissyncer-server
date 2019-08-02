@@ -27,61 +27,9 @@ public class CommandKeyValuePair<T> extends SelectCommand implements Command {
     protected T value;
 //    protected int index;
     private Long ex;
-    public int getValueRdbType() {
-        return valueRdbType;
-    }
 
-    public void setValueRdbType(int valueRdbType) {
-        this.valueRdbType = valueRdbType;
-    }
 
-    public ExpiredType getExpiredType() {
-        return expiredType;
-    }
 
-    public void setExpiredType(ExpiredType expiredType) {
-        this.expiredType = expiredType;
-    }
-
-    public Long getExpiredValue() {
-        return expiredValue;
-    }
-
-    public void setExpiredValue(Long expiredValue) {
-        this.expiredValue = expiredValue;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public T getValue() {
-        return value;
-    }
-
-    public void setValue(T value) {
-        this.value = value;
-    }
-
-    public DB getDb() {
-        return db;
-    }
-
-    public void setDb(DB db) {
-        this.db = db;
-    }
-
-    public byte[] getRawKey() {
-        return rawKey;
-    }
-
-    public void setRawKey(byte[] rawKey) {
-        this.rawKey = rawKey;
-    }
 
     /**
      * @return expiredValue as Integer

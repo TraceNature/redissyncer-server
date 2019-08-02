@@ -6,6 +6,7 @@ import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
+import com.i1314i.syncerplusservice.service.command.SendDefaultCommand;
 import com.i1314i.syncerplusservice.task.CommitSendTask;
 import com.i1314i.syncerplusservice.util.Jedis.TestJedisClient;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
@@ -59,7 +60,7 @@ public class SyncTask implements Runnable {
     private RedisSyncDataDto syncDataDto;
     private String dbindex="-1";
     private Lock lock = new ReentrantLock();
-
+    private SendDefaultCommand sendDefaultCommand=new SendDefaultCommand();
     public SyncTask(String sourceUri, String targetUri) {
         this.sourceUri = sourceUri;
         this.targetUri = targetUri;
@@ -212,41 +213,7 @@ public class SyncTask implements Runnable {
                     /**
                      * 命令同步
                      */
-                    if (event instanceof DefaultCommand) {
-                        // Step3: sync aof command
-                        RedisUrlUtils.doCommandCheckTask(r);
-                        if (RedisUrlUtils.doThreadisCloseCheckTask()) {
-                            return;
-                        }
-
-                        RedisClient redisClient = null;
-                        try {
-                            redisClient = pool.borrowResource();
-                        } catch (Exception e) {
-                            log.info("命令复制:从池中获取RedisClient失败:" + e.getMessage());
-
-                        }
-                        StringBuffer info = new StringBuffer();
-                        // Step3: sync aof command
-                        DefaultCommand dc = (DefaultCommand) event;
-
-                        if(new String(dc.getCommand()).trim().toUpperCase().equals("SELECT")){
-                            try {
-                                if(dc.getArgs().length>0){
-                                    selectIndex(dc.getArgs()[0]);
-                                }
-                            }catch (Exception e){
-
-                            }
-                        }else {
-                            if(getDbindex().equals("-1")){
-                                threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info,"0"));
-                            }else {
-                                threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info,getIndex()));
-                            }
-
-                        }
-                    }
+                    sendDefaultCommand.sendDefaultCommand(event,r,pool,threadPoolTaskExecutor);
                 }
             });
 

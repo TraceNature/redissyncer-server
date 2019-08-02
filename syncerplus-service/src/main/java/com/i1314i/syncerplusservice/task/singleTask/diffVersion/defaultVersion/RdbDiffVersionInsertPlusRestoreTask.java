@@ -1,4 +1,4 @@
-package com.i1314i.syncerplusservice.task.singleTask.diffVersion;
+package com.i1314i.syncerplusservice.task.singleTask.diffVersion.defaultVersion;
 
 import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;

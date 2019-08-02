@@ -3,17 +3,17 @@ package com.i1314i.syncerplusservice.service.Impl;
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
 import com.i1314i.syncerplusservice.constant.RedisVersion;
 import com.i1314i.syncerplusservice.constant.TaskMsgConstant;
+import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisJDClousterClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.task.*;
 import com.i1314i.syncerplusservice.task.singleTask.defaultVersion.SyncTask;
-import com.i1314i.syncerplusservice.task.singleTask.diffVersion.SyncDiffTask;
-import com.i1314i.syncerplusservice.task.singleTask.diffVersion.moreVersion.SyncDiffPlusTask;
+import com.i1314i.syncerplusservice.task.singleTask.diffVersion.defaultVersion.SyncDiffTask;
 import com.i1314i.syncerplusservice.task.singleTask.diffVersion.pipeVersion.SyncPipeDiffTask;
-import com.i1314i.syncerplusservice.task.singleTask.lowerVersion.SyncLowerTask;
-import com.i1314i.syncerplusservice.task.singleTask.sameVersion.SyncSameTask;
+import com.i1314i.syncerplusservice.task.singleTask.lowerVersion.defaultVersion.SyncLowerTask;
+import com.i1314i.syncerplusservice.task.singleTask.sameVersion.defaultVersion.SyncSameTask;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 
@@ -29,6 +29,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -198,6 +199,71 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
 
 
     }
+
+
+    /**
+     * 新版接口
+     * 若集群则A
+     * 若单机则B
+     * @param clusterDto
+     * @throws TaskMsgException
+     */
+    @Override
+    public void sync(RedisClusterDto clusterDto) throws TaskMsgException {
+        Set<String> sourceRedisUris=clusterDto.getSourceUris();
+        Set<String>targetRedisUris=clusterDto.getTargetUris();
+
+        for (String sourceUri:sourceRedisUris){
+            checkRedisUrl(sourceUri,"sourceUri: "+sourceUri);
+        }
+
+        for (String targetUri:targetRedisUris){
+            checkRedisUrl(targetUri,"sourceUri: "+targetUri);
+        }
+
+        if(clusterDto.getTargetUris().size()==1){
+            //单机 间或者往京东云集群迁移
+            syncToSingle(clusterDto);
+        }else if(clusterDto.getSourceUris().size()==1&&clusterDto.getTargetUris().size()>1) {
+            //单机往cluster迁移
+            syncSingleToCluster(clusterDto);
+        }else {
+            //cluster
+            syncToCluster(clusterDto);
+        }
+
+
+
+
+    }
+
+    /**
+     * 目标为单机节点时
+     * @param clusterDto
+     */
+    void syncToSingle(RedisClusterDto clusterDto){
+
+        System.out.println("--------目标节点为单极-------");
+    }
+
+
+
+    /**
+     * 目标为集群节点时
+     * @param clusterDto
+     */
+    void syncToCluster(RedisClusterDto clusterDto){
+        System.out.println("--------目标节点为集群-------");
+    }
+
+    /**
+     * 单机到集群
+     * @param clusterDto
+     */
+    void syncSingleToCluster(RedisClusterDto clusterDto){
+        System.out.println("--------单机到集群-------");
+    }
+
 
 
     /**

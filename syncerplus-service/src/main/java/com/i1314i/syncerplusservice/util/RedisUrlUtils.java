@@ -23,6 +23,8 @@ import redis.clients.jedis.exceptions.JedisDataException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static redis.clients.jedis.Protocol.Command.AUTH;
 
@@ -49,15 +51,15 @@ public class RedisUrlUtils {
             if (tconfig.getAuthPassword() != null) {
                 Object auth = target.send(AUTH, tconfig.getAuthPassword().getBytes());
             }
-            int i=3;
-            while (i>0){
+            int i = 3;
+            while (i > 0) {
                 try {
-                    String png= (String) target.send("PING".getBytes());
-                    if(png.equals("PONG")){
+                    String png = (String) target.send("PING".getBytes());
+                    if (png.equals("PONG")) {
                         return true;
                     }
                     i--;
-                }catch (Exception e){
+                } catch (Exception e) {
                     return false;
                 }
 
@@ -74,7 +76,7 @@ public class RedisUrlUtils {
             throw new TaskMsgException(name + ":error:" + e.getMessage());
         } catch (Exception e) {
             throw new TaskMsgException(name + ":error:" + e.getMessage());
-        }finally {
+        } finally {
             if (null != target) {
                 target.close();
             }
@@ -166,13 +168,13 @@ public class RedisUrlUtils {
      *
      * @param r
      */
-    public static synchronized void doCheckTask(Replicator r,Thread thread) {
+    public static synchronized void doCheckTask(Replicator r, Thread thread) {
         /**
          * 当aliveMap中不存在此线程时关闭
          */
         if (!TaskMonitorUtils.getAliveThreadHashMap().containsKey(thread.getName())) {
             try {
-                System.out.println("线程正准备关闭...."+thread.getName());
+                System.out.println("线程正准备关闭...." + thread.getName());
                 if (!Thread.currentThread().isInterrupted()) {
                     Thread.currentThread().interrupt();
                 }
@@ -228,22 +230,22 @@ public class RedisUrlUtils {
         return false;
     }
 
-    public void clearPool(ConnectionPool pools,TestJedisClient targetJedisClientPool,TestJedisClient sourceJedisClientPool){
-       if(pools!=null){
-           pools.close();
-       }
+    public void clearPool(ConnectionPool pools, TestJedisClient targetJedisClientPool, TestJedisClient sourceJedisClientPool) {
+        if (pools != null) {
+            pools.close();
+        }
 
-       if(targetJedisClientPool!=null){
-           targetJedisClientPool.closePool();
-       }
+        if (targetJedisClientPool != null) {
+            targetJedisClientPool.closePool();
+        }
 
-        if(sourceJedisClientPool!=null){
+        if (sourceJedisClientPool != null) {
             sourceJedisClientPool.closePool();
         }
     }
 
     public static synchronized boolean doThreadisCloseCheckTask(String name) {
-        name=getOldName(name);
+        name = getOldName(name);
         /**
          * 当aliveMap中不存在此线程时关闭
          */
@@ -266,14 +268,19 @@ public class RedisUrlUtils {
     }
 
 
-    public synchronized static String getNewName(String name){
-        return name+"SyncerO";
+    public synchronized static String getNewName(String name) {
+        return name + "SyncerO";
     }
 
-    public synchronized static String getOldName(String name){
-        if(name.endsWith("SyncerO"))
-          return name.substring(0,name.length()-7);
+    public synchronized static String getOldName(String name) {
+        if (name.endsWith("SyncerO"))
+            return name.substring(0, name.length() - 7);
         return name;
     }
+
+
+
+
+
 
 }
