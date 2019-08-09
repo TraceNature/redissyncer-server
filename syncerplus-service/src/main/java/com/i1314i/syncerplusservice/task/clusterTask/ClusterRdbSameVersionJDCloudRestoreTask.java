@@ -99,14 +99,8 @@ public class ClusterRdbSameVersionJDCloudRestoreTask implements Callable<Integer
 
 
 
-//        System.out.println(clusterClient.jedisCluster().get("A"));
-//        clusterClient.builder(clusterClient);
-//        byte[][]bytes=new byte[0][2];
 
 
-
-
-                System.out.println(redisClient.get("plush"));
 
 
             /**

@@ -7,6 +7,7 @@
         <module>syncerplus-common</module>
         <module>syncerplus-service</module>
         <module>syncerplus-webapp</module>
+        <module>awd</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -45,11 +46,7 @@
 
 
 
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -67,6 +64,7 @@
             <artifactId>fastjson</artifactId>
             <version>${fastjson.version}</version>
         </dependency>
+
 
     </dependencies>
 

@@ -37,25 +37,9 @@ public class SendClusterDefaultCommand {
             DefaultCommand dc = (DefaultCommand) event;
 
             if(!new String(dc.getCommand()).trim().toUpperCase().equals("SELECT")){
-//                ClusterProtocolCommand protocolCommand=new ClusterProtocolCommand(dc.getCommand());
-//                res= redisClient.sendCommand(dc.getArgs()[0], Protocol.Command.SET, dc.getArgs());
-//
-//                info.append(new String(dc.getCommand()));
-//                info.append(":");
-//                for (byte[] arg : dc.getArgs()) {
-//                    info.append(" [ ");
-//                    info.append(new String(arg));
-//                    info.append("]");
-//                }
-//
-                System.out.println(new String(dc.getCommand()));
-//
-//                info.append("->");
-//                info.append(new String((byte[]) res));
-//                log.info(info.toString());
-        threadPoolTaskExecutor.submit(new CommitClusterSendTask(dc, redisClient, info));
-//                Thread thread=new Thread(new ARun());
-//                thread.start();
+
+                threadPoolTaskExecutor.submit(new CommitClusterSendTask(dc, redisClient, info));
+
             }
         }
     }

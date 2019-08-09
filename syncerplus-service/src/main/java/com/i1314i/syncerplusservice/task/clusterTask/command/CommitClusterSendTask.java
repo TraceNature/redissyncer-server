@@ -42,7 +42,7 @@ public class CommitClusterSendTask implements Callable<Object> {
 
 
             ClusterProtocolCommand protocolCommand=new ClusterProtocolCommand(command.getCommand());
-            System.out.println(new String(command.getArgs()[0]));
+
 
             r= redisClient.sendCommand(command.getArgs()[0], protocolCommand, command.getArgs());
 

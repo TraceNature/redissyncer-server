@@ -1,6 +1,6 @@
 package com.i1314i;
 
-import com.i1314i.syncerplusservice.monitor.MinerMonitorThread;
+import com.i1314i.syncerplusservice.monitor.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;

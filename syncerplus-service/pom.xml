@@ -8,9 +8,11 @@
         <version>1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.i1314i</groupId>
+
+
+
     <artifactId>syncerplus-service</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <name>syncerplus-service</name>
     <!-- FIXME change it to the project's website -->
     <url>http://www.example.com</url>
@@ -73,23 +75,20 @@
         <dependency>
             <groupId>com.i1314i</groupId>
             <artifactId>syncerplus-common</artifactId>
-            <version>1.0</version>
+            <version>1.0.3</version>
             <scope>compile</scope>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.moilioncircle</groupId>-->
-<!--            <artifactId>redis-replicator</artifactId>-->
-<!--            <version>3.3.0</version>-->
-<!--        </dependency>-->
+
+
     </dependencies>
 
-    <repositories>
-        <repository>
-            <id>snapshots-repo</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </repository>
-    </repositories>
+<!--    <repositories>-->
+<!--        <repository>-->
+<!--            <id>snapshots-repo</id>-->
+<!--            <url>https://oss.sonatype.org/content/repositories/snapshots</url>-->
+<!--        </repository>-->
+<!--    </repositories>-->
     <build>
         <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
             <plugins>
