@@ -62,19 +62,34 @@ public class CommitSendTask implements Callable<Object> {
 //        System.out.println(r+":"+i);
 
         pool.release(redisClient);
+
         info.append(new String(command.getCommand()));
         info.append(":");
         for (byte[] arg : command.getArgs()) {
-            info.append("[");
+            info.append(" [");
             info.append(new String(arg));
             info.append("]");
         }
 
+        info.append(" -> ");
+        if(r instanceof Long ){
+            info.append( r);
+        }else if(r instanceof Integer){
+            info.append(r);
+        }else if (r instanceof byte[]){
+            info.append(new String((byte[]) r));
+        }else if(r instanceof String){
+            
+            info.append(r);
+        }else {
+            info.append(r);
+        }
 
-        info.append("->");
-        info.append(r);
-        log.info(info.toString());
+
 //        if(i!=-10){
+
+
+
 //            info.append("error");
 //            log.warn(info.toString());
 //        }else {

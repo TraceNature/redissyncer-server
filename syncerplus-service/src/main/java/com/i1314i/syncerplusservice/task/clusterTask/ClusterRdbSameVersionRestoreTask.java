@@ -3,6 +3,7 @@ package com.i1314i.syncerplusservice.task.clusterTask;
 import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
 import com.i1314i.syncerplusservice.util.Jedis.StringUtils;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
+import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 import com.moilioncircle.redis.replicator.RedisReplicator;
 import com.moilioncircle.redis.replicator.Replicator;
 import lombok.extern.slf4j.Slf4j;
@@ -32,15 +33,7 @@ public class ClusterRdbSameVersionRestoreTask implements Callable<Integer> {
 
 
 
-    public static void main(String[] args) throws ParseException, IOException, URISyntaxException {
-        SyncJedisClusterClient clusterClient=new SyncJedisClusterClient("114.67.100.240:8002,114.67.100.239:8002,114.67.100.238:8002,114.67.100.240:8003,114.67.100.239:8003,114.67.100.238:8003","",10,1,1500,10000);
-        JedisCluster jedisCluster=clusterClient.jedisCluster();
-        System.out.println(jedisCluster.get("key:000005594226"));
 
-
-        final Replicator replicator = new RedisReplicator("redis://114.67.81.232:6379?authPassword=redistest0102");
-
-    }
 
     @Override
     public Integer call() throws Exception {

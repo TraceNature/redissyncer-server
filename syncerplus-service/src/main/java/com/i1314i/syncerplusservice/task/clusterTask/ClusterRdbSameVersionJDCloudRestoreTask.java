@@ -1,23 +1,40 @@
 package com.i1314i.syncerplusservice.task.clusterTask;
 
+import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
+import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
+import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
+import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
+import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
+import com.i1314i.syncerplusservice.service.command.SendClusterDefaultCommand;
+import com.i1314i.syncerplusservice.task.clusterTask.cluster.SendClusterDumpKeySameVersionCommand;
+import com.i1314i.syncerplusservice.task.clusterTask.command.ClusterProtocolCommand;
 import com.i1314i.syncerplusservice.util.Jedis.IJedisClient;
 import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
 import com.i1314i.syncerplusservice.util.Jedis.StringUtils;
+import com.i1314i.syncerplusservice.util.Jedis.cluster.JedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
+import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
+import com.i1314i.syncerplusservice.util.RedisUrlUtils;
+import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.moilioncircle.redis.replicator.CloseListener;
 import com.moilioncircle.redis.replicator.RedisReplicator;
+import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Replicator;
 import com.moilioncircle.redis.replicator.cmd.Command;
 
 import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
 
+import com.moilioncircle.redis.replicator.event.Event;
+import com.moilioncircle.redis.replicator.event.EventListener;
 import com.moilioncircle.redis.replicator.rdb.datatype.DB;
 import com.moilioncircle.redis.replicator.rdb.datatype.KeyValuePair;
 import com.moilioncircle.redis.replicator.rdb.datatype.Module;
 import com.moilioncircle.redis.replicator.rdb.dump.datatype.DumpKeyValuePair;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.Protocol;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -39,32 +56,110 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class ClusterRdbSameVersionJDCloudRestoreTask implements Callable<Integer> {
 
-    private String sourceUri;  //源redis地址
-    private String targetUri;  //目标redis地址
+    static ThreadPoolConfig threadPoolConfig;
+    static ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-
-    private IJedisClient jedisClient;
-
-    public ClusterRdbSameVersionJDCloudRestoreTask(IJedisClient jedisClient) {
-        this.jedisClient = jedisClient;
+    static {
+        threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
+        threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
     }
 
-    public static void main(String[] args) throws ParseException, IOException, URISyntaxException {
-//        SyncJedisClusterClient clusterClient=new SyncJedisClusterClient("114.67.100.240:8002,114.67.100.239:8002,114.67.100.238:8002,114.67.100.240:8003,114.67.100.239:8003,114.67.100.238:8003","",10,1,1500,10000);
-//        JedisCluster jedisCluster=clusterClient.jedisCluster();
-//        System.out.println(jedisCluster.get("key:000005594226"));
-//
-//
-//        final Replicator replicator = new RedisReplicator("redis://114.67.81.232:6379?authPassword=redistest0102");
+    private boolean status = true;
+    private String threadName; //线程名称
 
-
+    private RedisClusterDto syncDataDto;
+    private JedisClusterPlus redisClient;
+    private SendClusterDumpKeySameVersionCommand sendDumpKeySameVersionCommand=new SendClusterDumpKeySameVersionCommand();
+    private SendClusterDefaultCommand sendDefaultCommand=new SendClusterDefaultCommand();
+    public ClusterRdbSameVersionJDCloudRestoreTask(RedisClusterDto syncDataDto) {
+        this.syncDataDto = syncDataDto;
+        this.threadName = syncDataDto.getThreadName();
+        if (status) {
+            this.status = false;
+        }
     }
+
 
     @Override
     public Integer call() throws Exception {
 
-        final AtomicInteger dbnum = new AtomicInteger(-1);
-        Replicator r =  RedisMigrator.dress((new RedisReplicator("redis://127.0.0.1:6480")));
+
+
+        //设线程名称
+        Thread.currentThread().setName(threadName);
+        TaskMonitorUtils.addAliveThread(Thread.currentThread().getName(), Thread.currentThread());
+        RedisURI suri = null;
+        try {
+            suri = new RedisURI(String.valueOf(syncDataDto.getSourceUris().toArray()[0]));
+
+            System.out.println(syncDataDto.getTargetRedisAddress());
+            SyncJedisClusterClient pool=RedisUrlUtils.getConnectionClusterPool(syncDataDto);
+
+            redisClient=pool.jedisCluster();
+
+
+
+//        System.out.println(clusterClient.jedisCluster().get("A"));
+//        clusterClient.builder(clusterClient);
+//        byte[][]bytes=new byte[0][2];
+
+
+
+
+                System.out.println(redisClient.get("plush"));
+
+
+            /**
+             * 初始化连接池
+             */
+            Replicator r = RedisMigrator.dress(new RedisReplicator(suri));
+
+            /**
+             * RDB复制
+             */
+            r.addEventListener(new EventListener() {
+                @Override
+                public void onEvent(Replicator replicator, Event event) {
+                    /**
+                     * 全量同步
+                     */
+
+                    sendDumpKeySameVersionCommand.sendRestoreDumpData(event,r,redisClient,threadPoolTaskExecutor,threadName);
+
+                    /**
+                     * 命令同步
+                     */
+                    sendDefaultCommand.sendDefaultCommand(event,r,redisClient,threadPoolTaskExecutor);
+                }
+            });
+
+
+            r.addCloseListener(new CloseListener() {
+                @Override
+                public void handle(Replicator replicator) {
+
+
+                }
+            });
+
+
+            try {
+                r.open();
+            }catch (Exception e){
+                System.out.println("---------------异常"+e.getMessage());
+            }
+
+
+
+
+        } catch (URISyntaxException e) {
+            log.info("redis address is error:{%s} ", e.getMessage());
+        } catch (IOException e) {
+            log.info("redis address is error:{%s} ", e.getMessage());
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("-------------------异常"+e.getMessage());
+        }
 
         return null;
 

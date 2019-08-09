@@ -1,15 +1,14 @@
 package com.i1314i.syncerplusservice.util.Jedis.cluster;
 
+
 import com.i1314i.syncerplusservice.util.Jedis.IJedisClient;
+import com.i1314i.syncerplusservice.util.Jedis.JeUtil;
 import com.i1314i.syncerplusservice.util.Jedis.JedisClusterFactory;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 import org.springframework.util.StringUtils;
-import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.text.ParseException;
 import java.util.HashSet;
@@ -17,10 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@Slf4j
 public class SyncJedisClusterClient implements IJedisClient {
     private JedisClusterFactory jedisClusterFactory=null;
-    private GenericObjectPoolConfig config=null;
+    private JedisPoolConfig config=null;
     private Set<String> jedisClusterNodes=null;
 
     private  String jedisaddress;
@@ -30,45 +28,88 @@ public class SyncJedisClusterClient implements IJedisClient {
     private long timeOut;
     private long connectTimeout;
 
-    private JedisCluster jedisCluster=null;
+    private JedisClusterPlus jedisCluster=null;
 
-    public SyncJedisClusterClient(String jedisaddress, String password, Integer maxTotal, Integer minIdle, long timeOut, long connectTimeout) {
+    public SyncJedisClusterClient(String jedisaddress, String password, Integer maxTotal, Integer minIdle, long timeOut, int connectTimeout) throws ParseException {
         this.jedisaddress = jedisaddress;
         this.password = password;
         this.maxTotal = maxTotal;
         this.minIdle = minIdle;
         this.timeOut = timeOut;
         this.connectTimeout = connectTimeout;
-    }
 
-    //    @Bean
-    public JedisCluster jedisCluster() throws ParseException {
         jedisClusterFactory=new JedisClusterFactory();
-        config=new GenericObjectPoolConfig();
-        config.setMaxTotal(100);
+        config=new JedisPoolConfig();
+        config.setMaxTotal(maxTotal);
         config.setMinIdle(10);
         jedisClusterFactory.setSoTimeout(100000);
-        jedisClusterFactory.setConnectionTimeout(100000);
+
+        jedisClusterFactory.setConnectionTimeout(connectTimeout);
         if(!StringUtils.isEmpty(password)){
             jedisClusterFactory.setPassWord(password);
         }
         jedisClusterNodes=new HashSet<>();
-        String[]jedisClusterAddress=jedisaddress.split(",");
+        String[]jedisClusterAddress=jedisaddress.split(";");
         for (String address:
                 jedisClusterAddress) {
-            log.info("NodeAddress:[{}]",address);
+
             jedisClusterNodes.add(address);
+
         }
 
         jedisClusterFactory.setJedisClusterNodes(jedisClusterNodes);
-        jedisClusterFactory.setGenericObjectPoolConfig(config);
-        return jedisClusterFactory.getJedisCluster();
+        jedisClusterFactory.setJedisPoolConfig(config);
+        jedisCluster=jedisClusterFactory.getJedisCluster();
+    }
+
+    //    @Bean
+    public JedisClusterPlus jedisCluster() throws ParseException {
+        if(jedisClusterFactory!=null){
+            return jedisClusterFactory.getJedisCluster();
+        }
+
+        return null;
     }
 
 
+    @Override
+    public  Set<String>  allkeys(String redisKeyStartWith) {
+        Set<String>allkey=new HashSet<>();
+        try {
+            Map<String, JedisPool> clusterNodes = jedisCluster.getClusterNodes();
 
 
-    public JedisCluster getJedisCluster(){
+
+            for (Map.Entry<String, JedisPool> entry : clusterNodes.entrySet()) {
+
+//                if(!set.contains(entry.getKey())){
+//                    continue;
+//                }
+
+
+                Jedis jedis = entry.getValue().getResource();
+
+                //         判断非从节点(因为若主从复制，从节点会跟随主节点的变化而变化)
+                if (!jedis.info("replication").contains("role:slave")) {
+                    Set<String> keys = JeUtil.getScanSet(jedis,redisKeyStartWith);
+                    //旧版 keys 会堵塞主线程
+//                    Set<String> keys = jedis.keys(redisKeyStartWith);
+                    if (keys.size() > 0) {
+
+                        allkey.addAll(keys);
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+        }
+
+        return allkey;
+    }
+
+    public JedisClusterPlus getJedisCluster(){
         if(jedisCluster!=null){
             return jedisCluster;
         }
@@ -80,7 +121,7 @@ public class SyncJedisClusterClient implements IJedisClient {
             try {
                 jedisCluster=client.jedisCluster();
             } catch (ParseException e) {
-                log.info("jedisCluster is error:【{}】",e.getMessage());
+
             }
         }
     }
@@ -295,10 +336,7 @@ public class SyncJedisClusterClient implements IJedisClient {
         return 0;
     }
 
-    @Override
-    public Set<String> allkeys(String redisKeyStartWith) {
-        return null;
-    }
+
 
     @Override
     public void deleteRedisKeyStartWith(String redisKeyStartWith) {

@@ -9,6 +9,7 @@ import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.task.*;
+import com.i1314i.syncerplusservice.task.clusterTask.ClusterRdbSameVersionJDCloudRestoreTask;
 import com.i1314i.syncerplusservice.task.singleTask.defaultVersion.SyncTask;
 import com.i1314i.syncerplusservice.task.singleTask.diffVersion.defaultVersion.SyncDiffTask;
 import com.i1314i.syncerplusservice.task.singleTask.diffVersion.pipeVersion.SyncPipeDiffTask;
@@ -225,6 +226,15 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
             //单机 间或者往京东云集群迁移
             syncToSingle(clusterDto);
         }else if(clusterDto.getSourceUris().size()==1&&clusterDto.getTargetUris().size()>1) {
+
+            for (String sourceUri:sourceRedisUris){
+                checkRedisUrl(sourceUri,"sourceUri: "+sourceUri);
+            }
+
+            for (String targetUri:targetRedisUris){
+                checkRedisUrl(targetUri,"sourceUri: "+targetUri);
+            }
+
             //单机往cluster迁移
             syncSingleToCluster(clusterDto);
         }else {
@@ -241,18 +251,51 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
      * 目标为单机节点时
      * @param clusterDto
      */
-    void syncToSingle(RedisClusterDto clusterDto){
 
-        System.out.println("--------目标节点为单极-------");
+    void syncToSingle(RedisClusterDto clusterDto) throws TaskMsgException {
+        //获取所有的源地址（可能为集群可能为单个处理后是set集合）
+        Set<String> sourceRedisUris = clusterDto.getSourceUris();
+        //获得目标的地址 ---------疑问 获得目标地址时是一个我是直接获取targetRedisAddress ？
+        // 还是需要遍历？ set集合时是否进行字符处理过？
+        Set<String> targetRedisUris = clusterDto.getTargetUris();
+        int i=0;
+        for (String source:sourceRedisUris
+             ) {
+            RedisSyncDataDto syncDataDto = new RedisSyncDataDto();
+            BeanUtils.copyProperties(clusterDto, syncDataDto);
+            //set进去数据 copy完后线程池的信息都有 ----------疑问密码如何赋值？？？？？
+            syncDataDto.setSourceUri(source);
+            syncDataDto.setTargetUri(String.valueOf(targetRedisUris.toArray()[0]));
+            //进行数据同步
+            try {
+                if(i==0){
+                    syncTask(syncDataDto,source,String.valueOf(targetRedisUris.toArray()[0]),true);
+                }else {
+                    syncTask(syncDataDto,source,String.valueOf(targetRedisUris.toArray()[0]),false);
+                }
+                i++;
+            } catch (TaskMsgException e) {
+                e.printStackTrace();
+            }
+        }
     }
-
 
 
     /**
      * 目标为集群节点时
      * @param clusterDto
      */
-    void syncToCluster(RedisClusterDto clusterDto){
+    void syncToCluster(RedisClusterDto clusterDto) throws TaskMsgException {
+        Set<String> sourceRedisUris=clusterDto.getSourceUris();
+        Set<String>targetRedisUris=clusterDto.getTargetUris();
+
+        for (String sourceUri:sourceRedisUris){
+            checkRedisUrl(sourceUri,"sourceUri: "+sourceUri);
+        }
+
+        for (String targetUri:targetRedisUris){
+            checkRedisUrl(targetUri,"sourceUri: "+targetUri);
+        }
         System.out.println("--------目标节点为集群-------");
     }
 
@@ -260,8 +303,20 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
      * 单机到集群
      * @param clusterDto
      */
-    void syncSingleToCluster(RedisClusterDto clusterDto){
-        System.out.println("--------单机到集群-------");
+    void syncSingleToCluster(RedisClusterDto clusterDto) throws TaskMsgException {
+        Set<String> sourceRedisUris=clusterDto.getSourceUris();
+        Set<String>targetRedisUris=clusterDto.getTargetUris();
+
+        for (String sourceUri:sourceRedisUris){
+            checkRedisUrl(sourceUri,"sourceUri: "+sourceUri);
+        }
+
+        for (String targetUri:targetRedisUris){
+            checkRedisUrl(targetUri,"sourceUri: "+targetUri);
+        }
+
+        threadPoolTaskExecutor.submit(new ClusterRdbSameVersionJDCloudRestoreTask(clusterDto));
+        log.info("--------单机到集群-------");
     }
 
 
@@ -297,6 +352,44 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
     }
 
 
+    /*
+     * zzj add 提出判断连接的部分
+     * */
+    public void syncTask(RedisSyncDataDto syncDataDto,String sourceUri,String targetUri,boolean status) throws TaskMsgException {
+        RedisVersion redisVersion = null;
+        try {
+            redisVersion =RedisUrlUtils.selectSyncerVersion(sourceUri,targetUri);
+        } catch (URISyntaxException e) {
+            throw new TaskMsgException(e.getMessage());
+        }
+
+        if(status){
+            if(TaskMonitorUtils.containsKeyAliveMap(syncDataDto.getThreadName())){
+                throw new TaskMsgException(TaskMsgConstant.Task_MSG_PARSE_ERROR_CODE);
+            }
+        }
+
+        if(redisVersion.equals(RedisVersion.SAME)){
+            threadPoolTaskExecutor.execute(new SyncSameTask(syncDataDto));
+            log.info("同步同版本（>3.0）版本数据...");
+        }else if(redisVersion.equals(RedisVersion.LOWER)){
+            threadPoolTaskExecutor.execute(new SyncLowerTask(syncDataDto));
+            log.info("同步同版本（<3.0）版本数据...");
+        }else if(redisVersion.equals(RedisVersion.OTHER)){
+            if(syncDataDto.getPipeline()!=null&&syncDataDto.getPipeline().toLowerCase().equals("on")){
+                threadPoolTaskExecutor.execute(new SyncPipeDiffTask(syncDataDto));
+                log.info("同步不同版本（）版本数据...(开启管道)");
+//                log.info("同步不同版本（）版本数据...");
+            }else {
+                threadPoolTaskExecutor.execute(new SyncDiffTask(syncDataDto));
+                log.info("同步不同版本（）版本数据...(非管道)");
+            }
+        }else {
+            log.info("-----其他版本");
+            threadPoolTaskExecutor.execute(new SyncTask(syncDataDto));
+        }
+
+    }
 
 
     public static void main(String[] args) throws Exception {

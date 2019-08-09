@@ -100,16 +100,52 @@ public class RdbDiffVersionInsertPlusRestoreTask implements Callable<Object> {
 
 
                 }
-                if (r.equals("OK")) {
-                    i = -1;
-                    info.append(key);
-                    info.append("->");
-                    info.append(r.toString());
-                    log.info(info.toString());
-                    break;
-                } else {
-                    i--;
+                if(r instanceof String){
+                    if (r.equals("OK")) {
+                        i = -1;
+                        info.append(key);
+                        info.append("->");
+                        info.append(r.toString());
+                        log.info(info.toString());
+                        break;
+                    } else {
+                        i--;
+                    }
+                }else if(r instanceof Integer){
+                    if ((Integer)r>=0) {
+                        i = -1;
+                        info.append(key);
+                        info.append("->");
+                        info.append(r.toString());
+                        log.info(info.toString());
+                        break;
+                    } else {
+                        i--;
+                    }
+                }else if(r instanceof Long){
+                    if ((Integer)r>=0) {
+                        i = -1;
+                        info.append(key);
+                        info.append(" ->");
+                        info.append(r.toString());
+                        log.info(info.toString());
+                        break;
+                    } else {
+                        i--;
+                    }
+                }else {
+                    if (r.equals("OK")) {
+                        i = -1;
+                        info.append(key);
+                        info.append(" ->");
+                        info.append(r.toString());
+                        log.info(info.toString());
+                        break;
+                    } else {
+                        i--;
+                    }
                 }
+
 
             }
         } catch (Exception epx) {

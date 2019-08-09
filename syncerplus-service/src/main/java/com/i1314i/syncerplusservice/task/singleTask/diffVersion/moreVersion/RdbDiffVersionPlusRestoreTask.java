@@ -42,7 +42,7 @@ public class RdbDiffVersionPlusRestoreTask implements Callable<Object> {
         try {
             while (i > 0) {
 
-                System.out.println(sourceJedis.type(mkv.getKey()));
+
 
 //                byte[] data = sourceJedis.get(mkv.getKey());
                 if (mkv.getExpiredMs() == null) {

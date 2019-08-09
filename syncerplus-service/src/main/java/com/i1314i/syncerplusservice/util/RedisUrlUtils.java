@@ -1,7 +1,9 @@
 package com.i1314i.syncerplusservice.util;
 
+import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
 import com.i1314i.syncerplusservice.constant.RedisVersion;
+import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.Impl.CommonPoolConnectionPoolImpl;
@@ -10,6 +12,8 @@ import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.service.exception.TaskRestoreException;
 import com.i1314i.syncerplusservice.util.Jedis.TestJedisClient;
+import com.i1314i.syncerplusservice.util.Jedis.cluster.JedisClusterClient;
+import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
 import com.moilioncircle.redis.replicator.Configuration;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Replicator;
@@ -23,6 +27,7 @@ import redis.clients.jedis.exceptions.JedisDataException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,10 +90,6 @@ public class RedisUrlUtils {
     }
 
 
-    public static void main(String[] args) throws TaskMsgException, URISyntaxException, TaskRestoreException {
-//        getRedisClientConnectState("redis://114.67.81.232:6340?authPassword=redistest010","redis");
-        selectSyncerVersion("redis://114.67.81.232:6379?authPassword=redistest0102", "redis://127.0.0.1:6379?authPassword=redistest0102S");
-    }
 
 
     public static RedisVersion selectSyncerVersion(String sourceUri, String targetUri) throws URISyntaxException {
@@ -129,7 +130,7 @@ public class RedisUrlUtils {
             if (target != null)
                 target.close();
         }
-
+        System.out.println(sourceVersion+": "+targetVersion);
         if (sourceVersion == targetVersion && targetVersion >= 3.0)
             return RedisVersion.SAME;
         else if (sourceVersion == targetVersion && targetVersion < 3.0) {
@@ -266,6 +267,32 @@ public class RedisUrlUtils {
         }
         return pools;
     }
+
+    public static synchronized SyncJedisClusterClient getConnectionClusterPool(RedisClusterDto syncDataDto) throws ParseException {
+//        JedisClusterClient pools = new JedisClusterClient(syncDataDto.getTargetRedisAddress(),syncDataDto.getTargetPassword(),
+//                syncDataDto.getMaxPoolSize(),
+//               3000,
+//                syncDataDto.getTimeBetweenEvictionRunsMillis(),15000);
+
+        SyncJedisClusterClient pools=new SyncJedisClusterClient( syncDataDto.getTargetRedisAddress(),syncDataDto.getTargetPassword(),syncDataDto.getMaxPoolSize(),syncDataDto.getTargetUris().size(),syncDataDto.getMaxWaitTime(),10000);
+
+        return pools;
+    }
+
+
+    public static void main(String[] args) throws TaskMsgException, URISyntaxException, TaskRestoreException, ParseException {
+        SyncJedisClusterClient pools = new SyncJedisClusterClient("114.67.100.239:8003;114.67.100.239:8002;114.67.100.238:8002;114.67.100.238:8003;114.67.100.240:8002;114.67.100.240:8003"
+                ,"",
+               100,
+                2,
+              10000,15000);
+
+        System.out.println(JSON.toJSONString(  pools.jedisCluster().set("a".getBytes(),"a".getBytes())));
+        System.out.println(pools.jedisCluster().get("a"));
+    }
+
+
+
 
 
     public synchronized static String getNewName(String name) {

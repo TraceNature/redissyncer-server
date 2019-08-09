@@ -1,29 +1,35 @@
 package com.i1314i.syncerplusservice.util.Jedis;
 
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+
+import com.i1314i.syncerplusservice.task.clusterTask.command.ClusterNodesUtil;
+import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 import org.springframework.beans.factory.FactoryBean;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * @author 平行时空
  * @created 2018-06-14 22:15
  **/
-public class JedisClusterFactory implements FactoryBean<JedisCluster> {
+public class JedisClusterFactory implements FactoryBean<JedisClusterPlus> {
 
     //连接池参数 spring 注入
-    private GenericObjectPoolConfig genericObjectPoolConfig=null;
+
+    private JedisPoolConfig jedisPoolConfig = null;
     //
-    private JedisCluster jedisCluster=null;
+    private JedisClusterPlus jedisCluster=null;
     private int connectionTimeout = 2000;
     private int soTimeout = 3000;
     private String passWord="";
 
-    private int maxRedirections = 5;
+    private int maxRedirections = 10;
     //redis结点列表 spring注入
     private Set<String> jedisClusterNodes;
 
@@ -36,7 +42,7 @@ public class JedisClusterFactory implements FactoryBean<JedisCluster> {
     }
 
     @Override
-    public JedisCluster getObject() throws Exception {
+    public JedisClusterPlus getObject() throws Exception {
         return jedisCluster;
     }
 
@@ -52,16 +58,15 @@ public class JedisClusterFactory implements FactoryBean<JedisCluster> {
         return true;
     }
 
-    public GenericObjectPoolConfig getGenericObjectPoolConfig() {
-        return genericObjectPoolConfig;
+    public JedisPoolConfig getJedisPoolConfig() {
+        return jedisPoolConfig;
     }
 
-    public void setGenericObjectPoolConfig(
-            GenericObjectPoolConfig genericObjectPoolConfig) {
-        this.genericObjectPoolConfig = genericObjectPoolConfig;
+    public void setJedisPoolConfig(JedisPoolConfig jedisPoolConfig) {
+        this.jedisPoolConfig = jedisPoolConfig;
     }
 
-    public JedisCluster getJedisCluster() throws ParseException {
+    public JedisClusterPlus getJedisCluster() throws ParseException {
         //判断地址是否为空
         if(jedisClusterNodes == null || jedisClusterNodes.size() == 0){
             throw new NullPointerException("jedisClusterNodes is null.");
@@ -76,17 +81,20 @@ public class JedisClusterFactory implements FactoryBean<JedisCluster> {
             haps.add(new HostAndPort(arr[0],Integer.valueOf(arr[1])));
         }
 
-        if(passWord.trim().equals("")||passWord==null){
-            jedisCluster = new JedisCluster(haps, connectionTimeout, soTimeout, maxRedirections,genericObjectPoolConfig);
+        Map<String,String>nodesMap=new HashMap<>();
+        ClusterNodesUtil.builderMap(nodesMap,haps,passWord);
+
+        if(passWord==null||passWord.trim().equals("")){
+            jedisCluster = new JedisClusterPlus(haps, connectionTimeout, soTimeout, maxRedirections,jedisPoolConfig,nodesMap);
         }else {
-                    jedisCluster = new JedisCluster(haps, connectionTimeout, soTimeout, maxRedirections, passWord,genericObjectPoolConfig);
+            jedisCluster = new JedisClusterPlus(haps, connectionTimeout, soTimeout, maxRedirections, passWord,jedisPoolConfig,nodesMap);
         }
 
 
         return jedisCluster;
     }
 
-    public void setJedisCluster(JedisCluster jedisCluster) {
+    public void setJedisCluster(JedisClusterPlus jedisCluster) {
         this.jedisCluster = jedisCluster;
     }
 
