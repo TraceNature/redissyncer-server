@@ -46,7 +46,7 @@ public class RedisSyncController {
      * 根据任务名称关闭相关任务线程
      * @return
      */
-    @RequestMapping(value = "/closeSync/{name}",method = {RequestMethod.DELETE})
+    @RequestMapping(value = "/closeSync/{name}",method = {RequestMethod.POST,RequestMethod.GET})
     public ResultMap CloseSync( @PathVariable("name") @NotBlank(message="任务名不能为空") String name){
         if(!TaskMonitorUtils.containsKeyAliveMap(name)){
             return ResultMap.builder().code("101").msg("任务不存在");
@@ -60,7 +60,7 @@ public class RedisSyncController {
      * alive线程列表
      * @return
      */
-    @RequestMapping(value = "/listAlive",method = {RequestMethod.GET})
+    @RequestMapping(value = "/listAlive",method = {RequestMethod.POST,RequestMethod.GET})
     public ResultMap ListAlive(){
         return ResultMap.builder().code("200").msg("success").data(TaskMonitorUtils.getAliveThreadHashMap().keySet());
     }
@@ -69,7 +69,7 @@ public class RedisSyncController {
      * dead线程列表
      * @return
      */
-    @RequestMapping(value = "/listDead",method = {RequestMethod.GET})
+    @RequestMapping(value = "/listDead",method = {RequestMethod.POST,RequestMethod.DELETE})
     public ResultMap ListDead(){
         return ResultMap.builder().code("200").msg("success").data(TaskMonitorUtils.getDeadThreadHashMap().keySet());
     }
