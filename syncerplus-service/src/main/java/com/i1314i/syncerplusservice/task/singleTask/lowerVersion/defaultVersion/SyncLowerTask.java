@@ -115,7 +115,7 @@ public class SyncLowerTask implements Runnable {
                     /**
                      * 全量同步
                      */
-                    sendDumpKeyLowerVersionCommand.sendRestoreDumpData(event,r,pool,threadPoolTaskExecutor,targetJedisClientPool,threadName);
+                    sendDumpKeyLowerVersionCommand.sendRestoreDumpData(event,r,pool,threadPoolTaskExecutor,targetJedisClientPool,threadName,syncDataDto);
 
                     /**
                      * 命令同步

@@ -1,4 +1,6 @@
 package com.i1314i.syncerplusservice.service.rdb;
+import com.alibaba.fastjson.JSON;
+import com.i1314i.syncerplusservice.entity.dto.common.SyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.task.singleTask.sameVersion.defaultVersion.RdbSameVersionRestoreTask;
@@ -26,7 +28,7 @@ public class SendDumpKeySameVersionCommand {
         }
     }
 
-    public void sendRestoreDumpData(Event event, Replicator r, ConnectionPool pool, ThreadPoolTaskExecutor threadPoolTaskExecutor,String threadName){
+    public void sendRestoreDumpData(Event event, Replicator r, ConnectionPool pool, ThreadPoolTaskExecutor threadPoolTaskExecutor, String threadName, SyncDataDto syncDataDto){
 
         if(event instanceof PreRdbSyncEvent){
             log.info("{} :全量同步启动",threadName);
@@ -50,6 +52,19 @@ public class SendDumpKeySameVersionCommand {
 
             // Step1: select db
             DB db = kv.getDb();
+
+
+            int dbbnum= (int) db.getDbNumber();
+
+            if(null!=syncDataDto.getDbNum()&&syncDataDto.getDbNum().size()>0){
+                if(syncDataDto.getDbNum().containsKey((int)db.getDbNumber())){
+                    dbbnum=syncDataDto.getDbNum().get((int)db.getDbNumber());
+                }else {
+                    return;
+                }
+            }
+
+
             RedisClient redisClient = null;
             int index;
             try {
@@ -57,11 +72,12 @@ public class SendDumpKeySameVersionCommand {
             } catch (Exception e) {
                 log.info("RDB复制：从池中获取RedisClient失败 ：{}" , e.getMessage());
             }
-            if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
+            if (db != null && (index = dbbnum) !=(int)redisClient.getDbNum()) {
                 status = true;
 
                 try {
-                    redisClient.send(SELECT, toByteArray(index));
+//                    redisClient.send(SELECT, toByteArray(index));
+                    redisClient.selectDB(index);
                 } catch (Exception e) {
                     log.info("RDB复制： 从池中获取链接失败 : {}" ,e.getMessage());
                 }

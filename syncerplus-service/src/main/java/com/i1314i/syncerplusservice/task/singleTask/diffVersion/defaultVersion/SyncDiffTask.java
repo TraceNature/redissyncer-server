@@ -15,6 +15,7 @@ import com.i1314i.syncerplusservice.service.rdb.SendDumpKeyLowerVersionCommand;
 import com.i1314i.syncerplusservice.task.CommitSendTask;
 import com.i1314i.syncerplusservice.task.singleTask.diffVersion.defaultVersion.RdbDiffVersionInsertPlusRestoreTask;
 import com.i1314i.syncerplusservice.util.Jedis.TestJedisClient;
+import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.moilioncircle.redis.replicator.*;
@@ -112,7 +113,9 @@ public class SyncDiffTask implements Runnable {
             final AtomicInteger dbnum = new AtomicInteger(-1);
             Replicator r = RedisMigrator.commandDress(new RedisReplicator(suri));
 
-            TestJedisClient targetJedisClientPool = RedisUrlUtils.getJedisClient(syncDataDto, turi);
+//            TestJedisClient targetJedisClientPool = RedisUrlUtils.getJedisClient(syncDataDto, turi);
+
+            JDJedisClientPool targetJedisClientPool = RedisUrlUtils.getJDJedisClient(syncDataDto, turi);
 
             /**
              * RDB复制
@@ -128,7 +131,7 @@ public class SyncDiffTask implements Runnable {
                      * 全量同步
                      */
 
-                    sendDumpKeyDiffVersionCommand.sendRestoreDumpData(event,r,pool,threadPoolTaskExecutor,targetJedisClientPool,threadName);
+                    sendDumpKeyDiffVersionCommand.sendRestoreDumpData(event,r,threadPoolTaskExecutor,targetJedisClientPool,threadName,syncDataDto.getDbNum());
 
 
 

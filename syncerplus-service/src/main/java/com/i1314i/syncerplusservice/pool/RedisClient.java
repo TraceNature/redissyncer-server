@@ -13,6 +13,7 @@ import java.util.Date;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static redis.clients.jedis.Protocol.Command.RESTORE;
+import static redis.clients.jedis.Protocol.Command.SELECT;
 import static redis.clients.jedis.Protocol.toByteArray;
 
 
@@ -27,6 +28,8 @@ public class RedisClient extends Client {
     private Date lastTime;
     @Setter@Getter
     private boolean aliveStatus;
+    @Setter@Getter
+    private long dbNum;
 
     public RedisClient(final String host, final int port) {
         super(host, port);
@@ -74,6 +77,13 @@ public class RedisClient extends Client {
         } else {
             return r;
         }
+    }
+
+
+
+    public Object selectDB(int index) throws TaskRestoreException {
+        this.dbNum= Long.valueOf(index);
+        return  send(SELECT, toByteArray(index));
     }
 
 

@@ -14,6 +14,7 @@ import com.i1314i.syncerplusservice.service.exception.TaskRestoreException;
 import com.i1314i.syncerplusservice.util.Jedis.TestJedisClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.JedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
+import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import com.moilioncircle.redis.replicator.Configuration;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Replicator;
@@ -163,6 +164,19 @@ public class RedisUrlUtils {
         return new TestJedisClient(turi.getHost(), turi.getPort(), sourceConfig, sourceCon.getAuthPassword(), 0);
     }
 
+    public static synchronized JDJedisClientPool getJDJedisClient(RedisSyncDataDto syncDataDto, RedisURI turi) {
+        JedisPoolConfig sourceConfig = new JedisPoolConfig();
+        Configuration sourceCon = Configuration.valueOf(turi);
+        sourceConfig.setMaxTotal(syncDataDto.getMaxPoolSize());
+        sourceConfig.setMaxIdle(syncDataDto.getMinPoolSize());
+        sourceConfig.setMinIdle(syncDataDto.getMinPoolSize());
+        //当池内没有返回对象时，最大等待时间
+        sourceConfig.setMaxWaitMillis(syncDataDto.getMaxWaitTime());
+        sourceConfig.setTimeBetweenEvictionRunsMillis(syncDataDto.getTimeBetweenEvictionRunsMillis());
+        sourceConfig.setTestOnReturn(true);
+        sourceConfig.setTestOnBorrow(true);
+        return new JDJedisClientPool(turi.getHost(), turi.getPort(), sourceConfig, sourceCon.getAuthPassword(), 0);
+    }
 
     /**
      * 线程检查

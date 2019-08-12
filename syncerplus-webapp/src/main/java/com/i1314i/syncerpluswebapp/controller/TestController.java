@@ -79,7 +79,7 @@ public class TestController {
             //cluster
 
         }
-        System.out.println(dto.getDbNum().get(1));
+
         return dto;
     }
 

@@ -13,6 +13,7 @@ import com.i1314i.syncerplusservice.task.CommitSendTask;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.LockPipe;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSumSyncTask;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSyncTask;
+import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
 import com.i1314i.syncerplusservice.util.Jedis.TestJedisClient;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
@@ -154,6 +155,8 @@ public class SyncPipeDiffTask implements Runnable {
 //                    System.out.println(JSON.toJSONString(event));
 
 
+
+
                     if(event instanceof KeyStringValueString) {
                         RedisUrlUtils.doCheckTask(r, Thread.currentThread());
                         if (RedisUrlUtils.doThreadisCloseCheckTask())
@@ -163,6 +166,17 @@ public class SyncPipeDiffTask implements Runnable {
                         if (kv.getDb() == null)
                             return;
                         DB db = kv.getDb();
+
+                        int dbbnum= (int) db.getDbNumber();
+
+                        if(null!=syncDataDto.getDbNum()&&syncDataDto.getDbNum().size()>0){
+                            if(syncDataDto.getDbNum().containsKey((int)db.getDbNumber())){
+                                dbbnum=syncDataDto.getDbNum().get((int)db.getDbNumber());
+                            }else {
+                                return;
+                            }
+                        }
+
                         StringBuffer info = new StringBuffer();
                         int index;
                         try {
@@ -178,7 +192,8 @@ public class SyncPipeDiffTask implements Runnable {
                         }
 
 
-                        if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
+
+                        if (db != null && (index = dbbnum) != dbnum.get()) {
                             status = true;
 
                             try {
@@ -230,6 +245,15 @@ public class SyncPipeDiffTask implements Runnable {
                         if (kv.getDb() == null)
                             return;
                         DB db = kv.getDb();
+                        int dbbnum= (int) db.getDbNumber();
+
+                        if(null!=syncDataDto.getDbNum()&&syncDataDto.getDbNum().size()>0){
+                            if(syncDataDto.getDbNum().containsKey((int)db.getDbNumber())){
+                                dbbnum=syncDataDto.getDbNum().get((int)db.getDbNumber());
+                            }else {
+                                return;
+                            }
+                        }
                         StringBuffer info = new StringBuffer();
                         int index;
                         try {
@@ -237,15 +261,15 @@ public class SyncPipeDiffTask implements Runnable {
                                 pipelined = targetJedisplus.pipelined();
                             }
                         } catch (Exception e) {
-                            log.info("RDB复制：从池中获取RedisClient失败：{}", e.getMessage());
+                            log.info("RDB复制： 从池中获取RedisClient失败：{}", e.getMessage());
                         }
 
-                        if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
+                        if (db != null && (index = dbbnum) != dbnum.get()) {
                             status = true;
                             try {
                                 pipelined.select(index);
                             } catch (Exception e) {
-                                log.info("RDB复制： 从池中获取链接 失败: {}", e.getMessage());
+                                log.info("RDB复制 ： 从池中获取链接 失败: {}", e.getMessage());
                             }
                             dbnum.set(index);
                             info.append("SELECT:");
@@ -286,6 +310,15 @@ public class SyncPipeDiffTask implements Runnable {
                         if (kv.getDb() == null)
                             return;
                         DB db = kv.getDb();
+                        int dbbnum= (int) db.getDbNumber();
+
+                        if(null!=syncDataDto.getDbNum()&&syncDataDto.getDbNum().size()>0){
+                            if(syncDataDto.getDbNum().containsKey((int)db.getDbNumber())){
+                                dbbnum=syncDataDto.getDbNum().get((int)db.getDbNumber());
+                            }else {
+                                return;
+                            }
+                        }
                         StringBuffer info = new StringBuffer();
                         int index;
                         try {
@@ -296,7 +329,7 @@ public class SyncPipeDiffTask implements Runnable {
                             log.info("RDB复制：从池中获取RedisClient失败：{}", e.getMessage());
                         }
 
-                        if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
+                        if (db != null && (index = dbbnum) != dbnum.get()) {
                             status = true;
                             try {
                                 pipelined.select(index);
@@ -340,6 +373,15 @@ public class SyncPipeDiffTask implements Runnable {
                         if (kv.getDb() == null)
                             return;
                         DB db = kv.getDb();
+                        int dbbnum= (int) db.getDbNumber();
+
+                        if(null!=syncDataDto.getDbNum()&&syncDataDto.getDbNum().size()>0){
+                            if(syncDataDto.getDbNum().containsKey((int)db.getDbNumber())){
+                                dbbnum=syncDataDto.getDbNum().get((int)db.getDbNumber());
+                            }else {
+                                return;
+                            }
+                        }
                         StringBuffer info = new StringBuffer();
                         int index;
                         try {
@@ -350,7 +392,7 @@ public class SyncPipeDiffTask implements Runnable {
                             log.info("RDB复制：从池中获取RedisClient失败：{}", e.getMessage());
                         }
 
-                        if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
+                        if (db != null && (index =dbbnum) != dbnum.get()) {
                             status = true;
                             try {
                                 pipelined.select(index);
@@ -399,6 +441,15 @@ public class SyncPipeDiffTask implements Runnable {
                         if (kv.getDb() == null)
                             return;
                         DB db = kv.getDb();
+                        int dbbnum= (int) db.getDbNumber();
+
+                        if(null!=syncDataDto.getDbNum()&&syncDataDto.getDbNum().size()>0){
+                            if(syncDataDto.getDbNum().containsKey((int)db.getDbNumber())){
+                                dbbnum=syncDataDto.getDbNum().get((int)db.getDbNumber());
+                            }else {
+                                return;
+                            }
+                        }
                         StringBuffer info = new StringBuffer();
                         int index;
                         try {
@@ -409,7 +460,7 @@ public class SyncPipeDiffTask implements Runnable {
                             log.info("RDB复制：从池中获取RedisClient失败：{}", e.getMessage());
                         }
 
-                        if (db != null && (index = (int) db.getDbNumber()) != dbnum.get()) {
+                        if (db != null && (index = dbbnum) != dbnum.get()) {
                             status = true;
                             try {
                                 pipelined.select(index);
@@ -497,8 +548,16 @@ public class SyncPipeDiffTask implements Runnable {
                         DefaultCommand dc = (DefaultCommand) event;
 
                         if(new String(dc.getCommand()).trim().toUpperCase().equals("SELECT")){
-                            selectIndex(dc.getArgs()[0]);
+                            Long dbnum=Long.parseLong(new String(dc.getArgs()[0]));
+                            if(syncDataDto.getDbNum().containsKey(dbnum)){
+                                int newdbNum=syncDataDto.getDbNum().get(dbnum);
+                                selectIndex(ObjectUtils.getBytesKey(String.valueOf(newdbNum)));
+                            }else {
+                                selectIndex(dc.getArgs()[0]);
+                            }
+//                            selectIndex(dc.getArgs()[0]);
                         }else {
+
                             if(getDbindex().equals("-1")){
                                 threadPoolTaskExecutor.submit(new CommitSendTask(dc, redisClient, pool, info,"0"));
                             }else {
