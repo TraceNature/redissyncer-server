@@ -1,6 +1,7 @@
 package com.i1314i.syncerplusservice.service.Impl;
 
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
+import com.i1314i.syncerplusservice.constant.KeyValueEnum;
 import com.i1314i.syncerplusservice.constant.RedisVersion;
 import com.i1314i.syncerplusservice.constant.TaskMsgConstant;
 import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
@@ -10,11 +11,14 @@ import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.task.*;
 import com.i1314i.syncerplusservice.task.clusterTask.ClusterRdbSameVersionJDCloudRestoreTask;
+import com.i1314i.syncerplusservice.task.clusterTask.pipelineVersion.ClusterRdbSameVersionJDCloudPipelineRestoreTask;
 import com.i1314i.syncerplusservice.task.singleTask.defaultVersion.SyncTask;
 import com.i1314i.syncerplusservice.task.singleTask.diffVersion.defaultVersion.SyncDiffTask;
 import com.i1314i.syncerplusservice.task.singleTask.diffVersion.pipeVersion.SyncPipeDiffTask;
 import com.i1314i.syncerplusservice.task.singleTask.lowerVersion.defaultVersion.SyncLowerTask;
+import com.i1314i.syncerplusservice.task.singleTask.lowerVersion.pipeVersion.SyncPipeSameLowerTask;
 import com.i1314i.syncerplusservice.task.singleTask.sameVersion.defaultVersion.SyncSameTask;
+import com.i1314i.syncerplusservice.task.singleTask.sameVersion.pipeVersion.SyncPipeSameTask;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 
@@ -114,8 +118,8 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
     /**
      * 远程备份RDB文件
      *
-     * @param redis://127.0.0.1:6379?authPassword=yourPassword
-     * @param c://test.RDB
+     * @param redisPath redis://127.0.0.1:6379?authPassword=yourPassword
+     * @param path c://test.RDB
      * @throws Exception
      */
     @Override
@@ -133,8 +137,8 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
 
     /**
      * 单机redis数据迁移
-     * @param redis://127.0.0.1:6379?authPassword=yourPassword
-     * @param redis://127.0.0.1:6380?authPassword=yourPassword
+     * @param sourceUri  redis://127.0.0.1:6379?authPassword=yourPassword
+     * @param targetUri redis://127.0.0.1:6380?authPassword=yourPassword
      */
     @Override
     public void sync(String sourceUri, String targetUri) throws TaskMsgException {
@@ -149,9 +153,9 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
 
     /**
      * 单机redis数据迁移
-     * @param redis://127.0.0.1:6379?authPassword=yourPassword
-     * @param redis://127.0.0.1:6380?authPassword=yourPassword
-     * @param 任务名称
+     * @param sourceUri redis://127.0.0.1:6379?authPassword=yourPassword
+     * @param targetUri redis://127.0.0.1:6380?authPassword=yourPassword
+     * @param threadName 任务名称
      */
     @Override
     public void sync(String sourceUri, String targetUri, String threadName) throws TaskMsgException {
@@ -179,8 +183,17 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         }
 
         if(redisVersion.equals(RedisVersion.SAME)){
-            threadPoolTaskExecutor.execute(new SyncSameTask(syncDataDto));
-            log.info("同步同版本（>3.0）版本数据...");
+
+            if(syncDataDto.getPipeline()!=null&&syncDataDto.getPipeline().toLowerCase().equals("on")){
+                threadPoolTaskExecutor.execute(new SyncPipeSameTask(syncDataDto));
+                log.info("同步同版本（>3.0）版本数据...(开启管道)");
+//                log.info("同步不同版本（）版本数据...");
+            }else {
+                threadPoolTaskExecutor.execute(new SyncSameTask(syncDataDto));
+                log.info("同步同版本（>3.0）版本数据...(非管道)");
+            }
+
+
         }else if(redisVersion.equals(RedisVersion.LOWER)){
             threadPoolTaskExecutor.execute(new SyncLowerTask(syncDataDto));
             log.info("同步同版本（<3.0）版本数据...");
@@ -219,9 +232,21 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         }
 
         for (String targetUri:targetRedisUris){
-            checkRedisUrl(targetUri,"sourceUri: "+targetUri);
+            checkRedisUrl(targetUri," sourceUri: "+targetUri);
         }
 
+
+        try {
+            RedisUrlUtils.doCheckDbNum(sourceRedisUris,clusterDto.getDbNum(), KeyValueEnum.KEY);
+        } catch (URISyntaxException e) {
+            throw new TaskMsgException(e.getMessage());
+        }
+
+        try {
+            RedisUrlUtils.doCheckDbNum(targetRedisUris,clusterDto.getDbNum(), KeyValueEnum.VALUE);
+        } catch (URISyntaxException e) {
+            throw new TaskMsgException(e.getMessage());
+        }
         if(clusterDto.getTargetUris().size()==1){
             //单机 间或者往京东云集群迁移
             syncToSingle(clusterDto);
@@ -296,7 +321,27 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         for (String targetUri:targetRedisUris){
             checkRedisUrl(targetUri,"sourceUri: "+targetUri);
         }
-        System.out.println("--------目标节点为集群-------");
+
+
+
+        if(clusterDto.getPipeline()!=null&&clusterDto.getPipeline().toLowerCase().equals("on")){
+            for (String sourceUrl:sourceRedisUris){
+                threadPoolTaskExecutor.submit(new ClusterRdbSameVersionJDCloudPipelineRestoreTask(clusterDto, sourceUrl));
+
+            }
+            log.info("cluster版本（>3.0）版本数据...(开启管道)");
+//                log.info("同步不同版本（）版本数据...");
+        }else {
+            for (String sourceUrl:sourceRedisUris){
+                threadPoolTaskExecutor.submit(new ClusterRdbSameVersionJDCloudRestoreTask(clusterDto, sourceUrl));
+
+            }
+
+            log.info("cluster版本（>3.0）版本数据...(非管道)");
+        }
+
+        log.info("--------集群到集群-------");
+
     }
 
     /**
@@ -315,7 +360,7 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
             checkRedisUrl(targetUri,"sourceUri: "+targetUri);
         }
 
-        threadPoolTaskExecutor.submit(new ClusterRdbSameVersionJDCloudRestoreTask(clusterDto));
+        threadPoolTaskExecutor.submit(new ClusterRdbSameVersionJDCloudRestoreTask(clusterDto, String.valueOf(sourceRedisUris.toArray()[0])));
         log.info("--------单机到集群-------");
     }
 
@@ -370,11 +415,26 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         }
 
         if(redisVersion.equals(RedisVersion.SAME)){
-            threadPoolTaskExecutor.execute(new SyncSameTask(syncDataDto));
-            log.info("同步同版本（>3.0）版本数据...");
+            if(syncDataDto.getPipeline()!=null&&syncDataDto.getPipeline().toLowerCase().equals("on")){
+                threadPoolTaskExecutor.execute(new SyncPipeSameTask(syncDataDto));
+                log.info("同步同版本（>3.0）版本数据...(开启管道)");
+//                log.info("同步不同版本（）版本数据...");
+            }else {
+                threadPoolTaskExecutor.execute(new SyncSameTask(syncDataDto));
+                log.info("同步同版本（>3.0）版本数据...(非管道)");
+            }
+
         }else if(redisVersion.equals(RedisVersion.LOWER)){
-            threadPoolTaskExecutor.execute(new SyncLowerTask(syncDataDto));
-            log.info("同步同版本（<3.0）版本数据...");
+
+            if(syncDataDto.getPipeline()!=null&&syncDataDto.getPipeline().toLowerCase().equals("on")){
+                threadPoolTaskExecutor.execute(new SyncPipeSameLowerTask(syncDataDto));
+                log.info("同步同版本（<3.0）版本数据...(开启管道)");
+//                log.info("同步不同版本（）版本数据...");
+            }else {
+                threadPoolTaskExecutor.execute(new SyncLowerTask(syncDataDto));
+                log.info("同步同版本（<3.0）版本数据...(非管道)");
+            }
+
         }else if(redisVersion.equals(RedisVersion.OTHER)){
             if(syncDataDto.getPipeline()!=null&&syncDataDto.getPipeline().toLowerCase().equals("on")){
                 threadPoolTaskExecutor.execute(new SyncPipeDiffTask(syncDataDto));
@@ -401,7 +461,12 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
     }
 
 
-
+    /**
+     * 获取Node节点uri
+     * @param sourceList
+     * @param password
+     * @return
+     */
    synchronized static List<String>clusterNodeSettings(String sourceList,String password){
 
        List<String>sourceUriList= Arrays.asList(sourceList.split(","));
@@ -420,6 +485,13 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         return newNodes;
     }
 
+
+    /**
+     * 检查reids是否能够连接
+     * @param url
+     * @param name
+     * @throws TaskMsgException
+     */
     void checkRedisUrl(String url,String name) throws TaskMsgException {
 
         try {

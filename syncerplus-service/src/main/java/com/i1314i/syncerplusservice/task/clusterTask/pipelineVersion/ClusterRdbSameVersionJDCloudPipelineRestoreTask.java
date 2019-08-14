@@ -1,49 +1,41 @@
-package com.i1314i.syncerplusservice.task.clusterTask;
+package com.i1314i.syncerplusservice.task.clusterTask.pipelineVersion;
 
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
+import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
 import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
-import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
-import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.service.command.SendClusterDefaultCommand;
+import com.i1314i.syncerplusservice.task.clusterTask.cluster.RdbClusterSameVersionRestoreTask;
 import com.i1314i.syncerplusservice.task.clusterTask.cluster.SendClusterDumpKeySameVersionCommand;
-import com.i1314i.syncerplusservice.task.clusterTask.command.ClusterProtocolCommand;
-import com.i1314i.syncerplusservice.util.Jedis.IJedisClient;
-import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
-import com.i1314i.syncerplusservice.util.Jedis.StringUtils;
-import com.i1314i.syncerplusservice.util.Jedis.cluster.JedisClusterClient;
+import com.i1314i.syncerplusservice.task.singleTask.pipe.LockPipe;
+import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSyncTask;
+import com.i1314i.syncerplusservice.task.singleTask.pipe.cluster.LockPipeCluster;
+import com.i1314i.syncerplusservice.task.singleTask.pipe.cluster.PipelinedClusterSumSyncTask;
+import com.i1314i.syncerplusservice.task.singleTask.pipe.cluster.PipelinedClusterSyncTask;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
+import com.i1314i.syncerplusservice.util.Jedis.cluster.pipelineCluster.JedisClusterPipeline;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.moilioncircle.redis.replicator.CloseListener;
 import com.moilioncircle.redis.replicator.RedisReplicator;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Replicator;
-import com.moilioncircle.redis.replicator.cmd.Command;
-
-import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
-
 import com.moilioncircle.redis.replicator.event.Event;
 import com.moilioncircle.redis.replicator.event.EventListener;
+import com.moilioncircle.redis.replicator.event.PostRdbSyncEvent;
+import com.moilioncircle.redis.replicator.event.PreRdbSyncEvent;
 import com.moilioncircle.redis.replicator.rdb.datatype.DB;
-import com.moilioncircle.redis.replicator.rdb.datatype.KeyValuePair;
-import com.moilioncircle.redis.replicator.rdb.datatype.Module;
 import com.moilioncircle.redis.replicator.rdb.dump.datatype.DumpKeyValuePair;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.Protocol;
+import redis.clients.jedis.Pipeline;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.text.ParseException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.Date;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -54,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 只需考虑 跨版本和同版本迁移同步问题
  */
 @Slf4j
-public class ClusterRdbSameVersionJDCloudRestoreTask implements Callable<Integer> {
+public class ClusterRdbSameVersionJDCloudPipelineRestoreTask implements Callable<Integer> {
 
     static ThreadPoolConfig threadPoolConfig;
     static ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -70,9 +62,16 @@ public class ClusterRdbSameVersionJDCloudRestoreTask implements Callable<Integer
     private RedisClusterDto syncDataDto;
     private JedisClusterPlus redisClient;
     private String sourceUrl;
+
+    private boolean syncStatus = true;
+    JedisClusterPipeline pipelined = null;
+
+    private LockPipeCluster lockPipe=new LockPipeCluster();
+    private SyncTaskEntity taskEntity = new SyncTaskEntity();
+
     private SendClusterDumpKeySameVersionCommand sendDumpKeySameVersionCommand=new SendClusterDumpKeySameVersionCommand();
     private SendClusterDefaultCommand sendDefaultCommand=new SendClusterDefaultCommand();
-    public ClusterRdbSameVersionJDCloudRestoreTask(RedisClusterDto syncDataDto,String sourceUrl) {
+    public ClusterRdbSameVersionJDCloudPipelineRestoreTask(RedisClusterDto syncDataDto, String sourceUrl) {
         this.syncDataDto = syncDataDto;
         this.threadName = syncDataDto.getThreadName();
         this.sourceUrl=sourceUrl;
@@ -93,15 +92,29 @@ public class ClusterRdbSameVersionJDCloudRestoreTask implements Callable<Integer
         RedisURI suri = null;
         try {
             suri = new RedisURI(sourceUrl);
-//            suri = new RedisURI(String.valueOf(syncDataDto.getSourceUris().toArray()[0]));
-            System.out.println(syncDataDto.getTargetRedisAddress());
+
             SyncJedisClusterClient pool=RedisUrlUtils.getConnectionClusterPool(syncDataDto);
+
 
             redisClient=pool.jedisCluster();
 
+            if (pipelined == null) {
+                pipelined=new JedisClusterPipeline(redisClient);
+//                pipelined.refreshCluster();
+//                pipelined = redisClient.pool
+            }
 
 
 
+            /**
+             * 管道的形式
+             */
+            if (syncStatus) {
+                threadPoolTaskExecutor.submit(new PipelinedClusterSyncTask(pipelined, taskEntity,lockPipe));
+//                threadPoolTaskExecutor.submit(new PipelinedClusterSumSyncTask(pipelined, taskEntity,lockPipe));
+
+                syncStatus = false;
+            }
 
 
 
@@ -109,6 +122,8 @@ public class ClusterRdbSameVersionJDCloudRestoreTask implements Callable<Integer
              * 初始化连接池
              */
             Replicator r = RedisMigrator.dress(new RedisReplicator(suri));
+
+
 
             /**
              * RDB复制
@@ -120,7 +135,49 @@ public class ClusterRdbSameVersionJDCloudRestoreTask implements Callable<Integer
                      * 全量同步
                      */
 
-                    sendDumpKeySameVersionCommand.sendRestoreDumpData(event,r,redisClient,threadPoolTaskExecutor,threadName,syncDataDto);
+                    if(event instanceof PreRdbSyncEvent){
+                        log.info("{} :全量同步启动",threadName);
+                    }
+
+                    if(event instanceof PostRdbSyncEvent){
+                        log.info("{} :全量同步结束 ",threadName);
+                    }
+
+                    if (event instanceof DumpKeyValuePair) {
+                        DumpKeyValuePair kv = (DumpKeyValuePair) event;
+
+                        RedisUrlUtils.doCheckTask(r, Thread.currentThread());
+
+                        if (RedisUrlUtils.doThreadisCloseCheckTask())
+                            return;
+
+
+
+
+
+
+                        taskEntity.add();
+
+
+                        if (kv.getExpiredMs() == null) {
+                            pipelined.restoreReplace(kv.getKey(),0,kv.getValue());
+
+                        } else {
+                            long ms = kv.getExpiredMs() - System.currentTimeMillis();
+
+                            if (ms <= 0) return;
+
+                            int ttl= (int) (ms/1000);
+                            pipelined.restoreReplace(kv.getKey(),ttl,kv.getValue());
+
+                        }
+
+                        lockPipe.syncpipe(pipelined,taskEntity,1000,true);
+
+
+                    }
+
+
 
                     /**
                      * 命令同步

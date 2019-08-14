@@ -1,17 +1,14 @@
-package com.i1314i.syncerplusservice.task.singleTask.sameVersion.pipeVersion;
+package com.i1314i.syncerplusservice.task.singleTask.lowerVersion.pipeVersion;
 
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
 import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
-import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.service.command.SendDefaultCommand;
-import com.i1314i.syncerplusservice.task.CommitSendTask;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.LockPipe;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSyncTask;
-import com.i1314i.syncerplusservice.task.singleTask.sameVersion.defaultVersion.RdbSameVersionRestoreTask;
 import com.i1314i.syncerplusservice.util.Jedis.TestJedisClient;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
@@ -19,7 +16,6 @@ import com.moilioncircle.redis.replicator.CloseListener;
 import com.moilioncircle.redis.replicator.RedisReplicator;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Replicator;
-import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
 import com.moilioncircle.redis.replicator.event.Event;
 import com.moilioncircle.redis.replicator.event.EventListener;
 import com.moilioncircle.redis.replicator.rdb.datatype.DB;
@@ -34,11 +30,6 @@ import redis.clients.jedis.Pipeline;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import static redis.clients.jedis.Protocol.Command.SELECT;
-import static redis.clients.jedis.Protocol.toByteArray;
 
 
 /**
@@ -48,7 +39,7 @@ import static redis.clients.jedis.Protocol.toByteArray;
 @Getter
 @Setter
 @Slf4j
-public class SyncPipeSameTask implements Runnable {
+public class SyncPipeSameLowerTask implements Runnable {
 
     static ThreadPoolConfig threadPoolConfig;
     static ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -72,7 +63,7 @@ public class SyncPipeSameTask implements Runnable {
     private LockPipe lockPipe=new LockPipe();
     private SyncTaskEntity taskEntity = new SyncTaskEntity();
 
-    public SyncPipeSameTask(RedisSyncDataDto syncDataDto) {
+    public SyncPipeSameLowerTask(RedisSyncDataDto syncDataDto) {
         this.syncDataDto = syncDataDto;
         this.sourceUri = syncDataDto.getSourceUri();
         this.targetUri = syncDataDto.getTargetUri();
@@ -175,12 +166,14 @@ public class SyncPipeSameTask implements Runnable {
 
 
                         if (kv.getExpiredMs() == null) {
-                            pipelined.restoreReplace(kv.getKey(),0,kv.getValue());
+                            pipelined.del(kv.getKey());
+                            pipelined.restore(kv.getKey(),0,kv.getValue());
                         } else {
                             long ms = kv.getExpiredMs() - System.currentTimeMillis();
                             int times= (int) (ms/1000);
                             if (ms <= 0) return;
-                            pipelined.restoreReplace(kv.getKey(),times,kv.getValue());
+                            pipelined.del(kv.getKey());
+                            pipelined.restore(kv.getKey(),times,kv.getValue());
 
                         }
 

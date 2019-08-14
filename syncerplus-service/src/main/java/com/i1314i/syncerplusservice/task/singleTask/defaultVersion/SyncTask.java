@@ -213,7 +213,7 @@ public class SyncTask implements Runnable {
                     /**
                      * 命令同步
                      */
-                    sendDefaultCommand.sendDefaultCommand(event,r,pool,threadPoolTaskExecutor);
+                    sendDefaultCommand.sendDefaultCommand(event,r,pool,threadPoolTaskExecutor,syncDataDto);
                 }
             });
 

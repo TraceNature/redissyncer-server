@@ -27,7 +27,6 @@ public class PipelinedSumSyncTask implements Callable<Object> {
         while (pipelined!=null){
 
             if(taskEntity.getSyncNums()>=1000){
-                System.out.println("-----clean------------");
                 pipelined.sync();
                 log.info("将管道中超过 {}个值提交",taskEntity.getSyncNums());
                 taskEntity.clear();

@@ -18,7 +18,8 @@ public class RdbClusterSameVersionRestoreTask implements Callable<Object> {
     private StringBuffer info;
 
 
-    public RdbClusterSameVersionRestoreTask(DumpKeyValuePair mkv, long ms, JedisClusterPlus redisClient, boolean status, StringBuffer info) {
+    public
+    RdbClusterSameVersionRestoreTask(DumpKeyValuePair mkv, long ms, JedisClusterPlus redisClient, boolean status, StringBuffer info) {
         this.mkv = mkv;
         this.ms = ms;
         this.redisClient = redisClient;
@@ -38,6 +39,7 @@ public class RdbClusterSameVersionRestoreTask implements Callable<Object> {
                 int ttl= (int) (ms/1000);
                 if(redisClient.del(mkv.getKey())>=0){
                     r = redisClient.restore(mkv.getKey(), ttl, mkv.getValue());
+
                 }
 
 

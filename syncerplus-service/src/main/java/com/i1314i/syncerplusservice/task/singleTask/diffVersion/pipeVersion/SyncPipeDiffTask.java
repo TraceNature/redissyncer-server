@@ -334,7 +334,7 @@ public class SyncPipeDiffTask implements Runnable {
                             try {
                                 pipelined.select(index);
                             } catch (Exception e) {
-                                log.info("RDB复制： 从池中获取链接 失败: {}", e.getMessage());
+                                log.info("RDB复制： 从池中获取链接 失败: {} ", e.getMessage());
                             }
                             dbnum.set(index);
                             info.append("SELECT:");
