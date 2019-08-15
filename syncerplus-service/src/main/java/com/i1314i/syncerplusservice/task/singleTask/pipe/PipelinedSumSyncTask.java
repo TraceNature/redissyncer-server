@@ -32,6 +32,7 @@ public class PipelinedSumSyncTask implements Callable<Object> {
                 taskEntity.clear();
             }
 //            Thread.sleep(100);
+
         }
         return null;
     }

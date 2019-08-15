@@ -188,7 +188,7 @@ public class SyncPipeDiffTask implements Runnable {
                                 pipelined = targetJedisplus.pipelined();
                             }
                         } catch (Exception e) {
-                            log.info("RDB复制：从池中获取RedisClient失败：{}", e.getMessage());
+                            log.info("RDB复制：从池中获取RedisClient 失败：{}", e.getMessage());
                         }
 
 
@@ -202,10 +202,10 @@ public class SyncPipeDiffTask implements Runnable {
 //                                sourceJedisplus = sourceJedisClientPool.selectDb(index, sourceJedisplus);
                                 pipelined.select(index);
                             } catch (Exception e) {
-                                log.info("RDB复制： 从池中获取链接 失败: {}", e.getMessage());
+                                log.info("RDB复制：从池中获取链接 失败: {}", e.getMessage());
                             }
                             dbnum.set(index);
-                            info.append("SELECT:");
+                            info.append("SELECT :");
                             info.append(index);
                             log.info(info.toString());
                         }
@@ -400,7 +400,7 @@ public class SyncPipeDiffTask implements Runnable {
                                 log.info("RDB复制： 从池中获取链接 失败: {}", e.getMessage());
                             }
                             dbnum.set(index);
-                            info.append("SELECT:");
+                            info.append("SELECT: ");
                             info.append(index);
                             log.info(info.toString());
                         }
