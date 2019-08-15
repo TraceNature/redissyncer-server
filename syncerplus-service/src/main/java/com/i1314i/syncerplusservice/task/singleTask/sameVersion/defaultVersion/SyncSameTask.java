@@ -1,4 +1,5 @@
 package com.i1314i.syncerplusservice.task.singleTask.sameVersion.defaultVersion;
+import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
@@ -90,13 +91,13 @@ public class SyncSameTask implements Runnable {
                     /**
                      * 全量同步
                      */
-
-                    sendDumpKeySameVersionCommand.sendRestoreDumpData(event,r,pool,threadPoolTaskExecutor,threadName);
+//                    System.out.println(JSON.toJSONString(event));
+                    sendDumpKeySameVersionCommand.sendRestoreDumpData(event,r,pool,threadPoolTaskExecutor,threadName,syncDataDto);
 
                     /**
                      * 命令同步
                      */
-                    sendDefaultCommand.sendDefaultCommand(event,r,pool,threadPoolTaskExecutor);
+                   sendDefaultCommand.sendDefaultCommand(event,r,pool,threadPoolTaskExecutor,syncDataDto);
                 }
             });
 

@@ -2,6 +2,7 @@ package com.i1314i.syncerplusservice.util;
 
 import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
+import com.i1314i.syncerplusservice.constant.KeyValueEnum;
 import com.i1314i.syncerplusservice.constant.RedisVersion;
 import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
@@ -14,6 +15,8 @@ import com.i1314i.syncerplusservice.service.exception.TaskRestoreException;
 import com.i1314i.syncerplusservice.util.Jedis.TestJedisClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.JedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
+import com.i1314i.syncerplusservice.util.Jedis.cluster.pipelineCluster.JedisClusterPipeline;
+import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import com.moilioncircle.redis.replicator.Configuration;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Replicator;
@@ -28,8 +31,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static redis.clients.jedis.Protocol.Command.AUTH;
 
@@ -92,6 +96,8 @@ public class RedisUrlUtils {
 
 
 
+
+
     public static RedisVersion selectSyncerVersion(String sourceUri, String targetUri) throws URISyntaxException {
         RedisURI sourceUriplus = new RedisURI(sourceUri);
         RedisURI targetUriplus = new RedisURI(targetUri);
@@ -120,8 +126,7 @@ public class RedisUrlUtils {
 
             sourceVersion = TestJedisClient.getRedisVersion(source);
             targetVersion = TestJedisClient.getRedisVersion(target);
-            source.close();
-            target.close();
+
         } catch (Exception e) {
 
         } finally {
@@ -141,6 +146,86 @@ public class RedisUrlUtils {
     }
 
 
+    /**
+     * 获取redis DB库的数目
+     * @param sourceUriList
+     * @param dbMap
+     * @throws URISyntaxException
+     * @throws TaskMsgException
+     */
+    public static void doCheckDbNum(Set<String> sourceUriList, Map<Integer,Integer> dbMap, KeyValueEnum type) throws URISyntaxException,TaskMsgException {
+        if(dbMap==null||dbMap.size()==0){
+            return;
+        }
+        int[]maxInt=getMapMaxInteger(dbMap);
+        for (String sourceUri:sourceUriList) {
+            RedisURI sourceUriplus = new RedisURI(sourceUri);
+            Jedis source = null;
+            try {
+                source = new Jedis(sourceUriplus.getHost(), sourceUriplus.getPort());
+                Configuration sourceConfig = Configuration.valueOf(sourceUriplus);
+                //获取password
+                if (sourceConfig.getAuthPassword() != null) {
+                    Object sourceAuth = source.auth(sourceConfig.getAuthPassword());
+                }
+
+                List<String>databases=source.configGet("databases");
+                int dbNum=256;
+                if(null!=databases&&databases.size()==2){
+                    dbNum= Integer.parseInt(databases.get(1));
+                }
+
+               if (type.equals(KeyValueEnum.KEY)){
+                   if(maxInt[0]>dbNum){
+                       throw new TaskMsgException("dbMaping中库号超出Redis库的最大大小 :["+maxInt[0]+"] : "+sourceUri);
+                   }
+               }
+
+               if(type.equals(KeyValueEnum.VALUE)){
+                   if(maxInt[1]>dbNum){
+                       throw new TaskMsgException("dbMaping中库号超出Redis库的最大大小 :["+maxInt[1]+"] : "+sourceUri);
+                   }
+               }
+
+
+            } catch (Exception e) {
+                throw new TaskMsgException("sourceUri is error :"+e.getMessage());
+            } finally {
+                if (source != null)
+                    source.close();
+            }
+        }
+    }
+
+
+    /**
+     * 获取Map<Integer,Integer> key-value的最大值
+     * @param dbMap
+     * @return
+     */
+    public static synchronized   int[] getMapMaxInteger(Map<Integer, Integer> dbMap){
+        int[]nums=new int[2];
+
+
+//        List<Integer>list= dbMap.entrySet().stream().map(e ->e.getKey()).collect(Collectors.toList());
+        nums[0] = dbMap.entrySet().stream().map(e ->e.getKey())
+                .max(Comparator.comparing(i -> i))
+                .get();
+        nums[1] = dbMap.entrySet().stream().map(e ->e.getValue())
+                .max(Comparator.comparing(i -> i))
+                .get();
+
+        return nums;
+    }
+
+    public static void main(String[] args) throws URISyntaxException, TaskMsgException {
+        Map<Integer,Integer>map=new HashMap<>();
+        map.put(1,11);
+        map.put(2,22);
+        map.put(3,33);
+//        doCheckDbNum(Stream.of("redis://114.67.100.239:6379?authPassword=redistest0102").collect(Collectors.toList()),map,KeyValueEnum.VALUE);
+//        System.out.println(JSON.toJSONString(getMapMaxInteger(map)));
+    }
     /**
      * 获取客户端
      *
@@ -163,6 +248,26 @@ public class RedisUrlUtils {
         return new TestJedisClient(turi.getHost(), turi.getPort(), sourceConfig, sourceCon.getAuthPassword(), 0);
     }
 
+
+    /**
+     *获取JDJEDISCLIENT 链接
+     * @param syncDataDto
+     * @param turi
+     * @return
+     */
+    public static synchronized JDJedisClientPool getJDJedisClient(RedisSyncDataDto syncDataDto, RedisURI turi) {
+        JedisPoolConfig sourceConfig = new JedisPoolConfig();
+        Configuration sourceCon = Configuration.valueOf(turi);
+        sourceConfig.setMaxTotal(syncDataDto.getMaxPoolSize());
+        sourceConfig.setMaxIdle(syncDataDto.getMinPoolSize());
+        sourceConfig.setMinIdle(syncDataDto.getMinPoolSize());
+        //当池内没有返回对象时，最大等待时间
+        sourceConfig.setMaxWaitMillis(syncDataDto.getMaxWaitTime());
+        sourceConfig.setTimeBetweenEvictionRunsMillis(syncDataDto.getTimeBetweenEvictionRunsMillis());
+        sourceConfig.setTestOnReturn(true);
+        sourceConfig.setTestOnBorrow(true);
+        return new JDJedisClientPool(turi.getHost(), turi.getPort(), sourceConfig, sourceCon.getAuthPassword(), 0);
+    }
 
     /**
      * 线程检查
@@ -277,18 +382,6 @@ public class RedisUrlUtils {
         SyncJedisClusterClient pools=new SyncJedisClusterClient( syncDataDto.getTargetRedisAddress(),syncDataDto.getTargetPassword(),syncDataDto.getMaxPoolSize(),syncDataDto.getTargetUris().size(),syncDataDto.getMaxWaitTime(),10000);
 
         return pools;
-    }
-
-
-    public static void main(String[] args) throws TaskMsgException, URISyntaxException, TaskRestoreException, ParseException {
-        SyncJedisClusterClient pools = new SyncJedisClusterClient("114.67.100.239:8003;114.67.100.239:8002;114.67.100.238:8002;114.67.100.238:8003;114.67.100.240:8002;114.67.100.240:8003"
-                ,"",
-               100,
-                2,
-              10000,15000);
-
-        System.out.println(JSON.toJSONString(  pools.jedisCluster().set("a".getBytes(),"a".getBytes())));
-        System.out.println(pools.jedisCluster().get("a"));
     }
 
 

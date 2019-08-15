@@ -1,9 +1,11 @@
 package com.i1314i.syncerplusservice.service.command;
 
 
+import com.i1314i.syncerplusservice.entity.dto.common.SyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.task.CommitSendTask;
+import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.moilioncircle.redis.replicator.Replicator;
 import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
@@ -26,7 +28,7 @@ public class SendDefaultCommand {
     private String dbindex="-1";
 
 
-    public void sendDefaultCommand(Event event, Replicator r, ConnectionPool pool, ThreadPoolTaskExecutor threadPoolTaskExecutor){
+    public void sendDefaultCommand(Event event, Replicator r, ConnectionPool pool, ThreadPoolTaskExecutor threadPoolTaskExecutor, SyncDataDto syncDataDto){
         /**
          * 命令同步
          */
@@ -50,7 +52,15 @@ public class SendDefaultCommand {
 
             if(new String(dc.getCommand()).trim().toUpperCase().equals("SELECT")){
                 try {
-                    if(dc.getArgs().length>0){
+//                    if(dc.getArgs().length>0){
+//                        selectIndex(dc.getArgs()[0]);
+//                    }
+
+                    Long dbnum=Long.parseLong(new String(dc.getArgs()[0]));
+                    if(syncDataDto.getDbNum().containsKey(dbnum)){
+                        int newdbNum=syncDataDto.getDbNum().get(dbnum);
+                        selectIndex(ObjectUtils.getBytesKey(String.valueOf(newdbNum)));
+                    }else {
                         selectIndex(dc.getArgs()[0]);
                     }
                 }catch (Exception e){

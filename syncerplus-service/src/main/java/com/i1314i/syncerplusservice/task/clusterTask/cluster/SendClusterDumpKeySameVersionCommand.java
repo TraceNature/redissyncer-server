@@ -1,6 +1,7 @@
 package com.i1314i.syncerplusservice.task.clusterTask.cluster;
 
 import com.alibaba.fastjson.JSON;
+import com.i1314i.syncerplusservice.entity.dto.common.SyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.task.singleTask.sameVersion.defaultVersion.RdbSameVersionRestoreTask;
@@ -32,7 +33,7 @@ public class SendClusterDumpKeySameVersionCommand {
         }
     }
 
-    public void sendRestoreDumpData(Event event, Replicator r, JedisClusterPlus redisClient, ThreadPoolTaskExecutor threadPoolTaskExecutor, String threadName){
+    public void sendRestoreDumpData(Event event, Replicator r, JedisClusterPlus redisClient, ThreadPoolTaskExecutor threadPoolTaskExecutor, String threadName, SyncDataDto syncDataDto){
 
         if(event instanceof PreRdbSyncEvent){
             log.info("{} :全量同步启动",threadName);
@@ -53,6 +54,18 @@ public class SendClusterDumpKeySameVersionCommand {
             if (RedisUrlUtils.doThreadisCloseCheckTask())
                 return;
 
+
+            DB db=kv.getDb();
+
+            int dbbnum= (int) db.getDbNumber();
+
+            if(null!=syncDataDto.getDbNum()&&syncDataDto.getDbNum().size()>0){
+                if(syncDataDto.getDbNum().containsKey((int)db.getDbNumber())){
+                    dbbnum=syncDataDto.getDbNum().get((int)db.getDbNumber());
+                }else {
+                    return;
+                }
+            }
 
             // Step1: select db
 

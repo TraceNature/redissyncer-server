@@ -1,10 +1,7 @@
 package com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisClusterHostAndPortMap;
-import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import javax.net.ssl.HostnameVerifier;
@@ -20,6 +17,7 @@ import java.util.Set;
 public abstract class JedisClusterConnectionHandlerPlus implements Closeable {
     protected final JedisClusterInfoCachePlus cache;
     private Map<String,String>nodesMap;
+
     public JedisClusterConnectionHandlerPlus(Set<HostAndPort> nodes,
                                          final GenericObjectPoolConfig poolConfig, int connectionTimeout, int soTimeout, String password,Map<String,String>nodesMap) {
         this(nodes, poolConfig, connectionTimeout, soTimeout, password, null,nodesMap);
@@ -80,7 +78,7 @@ public abstract class JedisClusterConnectionHandlerPlus implements Closeable {
     }
 
     public void renewSlotCache() {
-        cache.renewClusterSlots(null,null);
+        cache.renewClusterSlots(null,nodesMap);
     }
 
     public void renewSlotCache(Jedis jedis,Map<String,String> nodesMap) {

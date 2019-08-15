@@ -36,13 +36,17 @@ public class CommitSendTask implements Callable<Object> {
     public Object call() throws Exception {
         Object r=null;
 
+
 //        int i=3;
 //        while (i>0){
             if(!StringUtils.isEmpty(dbIndex)){
+
                 Object ir = redisClient.send("SELECT".getBytes(), dbIndex.getBytes());
-                if(ir.equals("OK"))
-                    r= redisClient.send(command.getCommand(), command.getArgs());
-                else {
+
+                if(ir.equals("OK")) {
+                    r = redisClient.send(command.getCommand(), command.getArgs());
+
+                }else {
                     ir = redisClient.send("SELECT".getBytes(), dbIndex.getBytes());
                     r= redisClient.send(command.getCommand(), command.getArgs());
 

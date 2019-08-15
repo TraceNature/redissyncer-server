@@ -1,14 +1,14 @@
-package com.i1314i.syncerplusservice.util.Jedis;
+package com.i1314i.syncerplusservice.util.Jedis.pool;
 
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;
 import com.beust.jcommander.internal.Sets;
-import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
+import com.i1314i.syncerplusservice.util.Jedis.*;
 import com.i1314i.syncerplusservice.util.Regex.RegexUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisException;
@@ -18,20 +18,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * 单机redis操作类
- * @author 平行时空
- * @created 2018-09-17 20:19
- **/
-
-public class TestJedisClient implements IJedisClient {
+public class JDJedisClientPool{
     private static Logger logger = LoggerFactory.getLogger(TestJedisClient.class);
     private String host = null;
     private Integer port = null;
-    private JedisPool jedisPool = null;
+    private JDJedisPool jedisPool = null;
     private JedisPoolConfig config = null;
 
-    public TestJedisClient(String host, Integer port, JedisPoolConfig config, String password, Integer db) {
+    public JDJedisClientPool(String host, Integer port, JedisPoolConfig config, String password, Integer db) {
         this.host = host;
         this.port = port;
 //        config.setMaxTotal(1000);
@@ -48,9 +42,9 @@ public class TestJedisClient implements IJedisClient {
         int timeout = 50000;
 
         if (org.springframework.util.StringUtils.isEmpty(password))
-            jedisPool = new JedisPool(this.config, this.host, this.port, timeout);
+            jedisPool = new JDJedisPool(this.config, this.host, this.port, timeout);
         else
-            jedisPool = new JedisPool(this.config, this.host, this.port, timeout, password, db, null);
+            jedisPool = new JDJedisPool(this.config, this.host, this.port, timeout, password, db, null);
     }
 
     /**
@@ -83,8 +77,8 @@ public class TestJedisClient implements IJedisClient {
      * @return
      * @throws JedisException
      */
-    public Jedis getResource() throws JedisException {
-        Jedis jedis = null;
+    public JDJedis getResource() throws JedisException {
+        JDJedis jedis = null;
         try {
             jedis = jedisPool.getResource();
         } catch (JedisException e) {
@@ -95,8 +89,8 @@ public class TestJedisClient implements IJedisClient {
         return jedis;
     }
 
-    public Jedis getResource(Integer index) throws JedisException {
-        Jedis jedis = null;
+    public JDJedis getResource(Integer index) throws JedisException {
+        JDJedis jedis = null;
         try {
             jedis = jedisPool.getResource();
             jedis.select(index);
@@ -108,20 +102,7 @@ public class TestJedisClient implements IJedisClient {
         return jedis;
     }
 
-    public Jedis selectDb(Integer index, Jedis jedis) throws JedisException {
 
-        if (jedis == null)
-            return null;
-
-        try {
-            jedis.select(index);
-        } catch (JedisException e) {
-            logger.warn("selectDb.", e);
-            returnBrokenResource(jedis);
-            throw e;
-        }
-        return jedis;
-    }
     public JDJedis selectDb(Integer index, JDJedis jedis) throws JedisException {
 
         if (jedis == null)
@@ -143,14 +124,14 @@ public class TestJedisClient implements IJedisClient {
      * @param jedis
      * @param
      */
-    public void returnBrokenResource(Jedis jedis) {
+    public void returnBrokenResource(JDJedis jedis) {
         if (jedis != null) {
             jedis.close();
         }
     }
 
 
-    public static void returnStaticBrokenResource(Jedis jedis) {
+    public static void returnStaticBrokenResource(JDJedis jedis) {
         if (jedis != null) {
             jedis.close();
         }
@@ -162,7 +143,7 @@ public class TestJedisClient implements IJedisClient {
      * @param jedis
      * @param
      */
-    public void returnResource(Jedis jedis) {
+    public void returnResource(JDJedis jedis) {
         if (jedis != null && jedisPool != null) {
             jedis.close();
         }
@@ -209,10 +190,10 @@ public class TestJedisClient implements IJedisClient {
      * @param key 键
      * @return
      */
-    @Override
+
     public String get(String key) {
         String value = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -221,7 +202,7 @@ public class TestJedisClient implements IJedisClient {
                 logger.debug("get {} = {}", key, value);
             }
         } catch (Exception e) {
-            logger.warn("get {} = {}", key, value, e);
+            logger.warn("get  {} = {}", key, value, e);
         } finally {
             returnResource(jedis);
         }
@@ -234,15 +215,15 @@ public class TestJedisClient implements IJedisClient {
      * @param key 键
      * @return
      */
-    @Override
+
     public Object getObject(String key) {
         Object value = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
                 value = toObject(jedis.get(getBytesKey(key)));
-                logger.debug("getObject {} = {}", key, value);
+                logger.debug("getObject{} = {}", key, value);
             }
         } catch (Exception e) {
             logger.warn("getObject {} = {}", key, value, e);
@@ -260,10 +241,9 @@ public class TestJedisClient implements IJedisClient {
      * @param cacheSeconds 超时时间，0为不超时
      * @return
      */
-    @Override
     public String set(String key, String value, int cacheSeconds) {
         String result = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.set(key, value);
@@ -285,10 +265,10 @@ public class TestJedisClient implements IJedisClient {
      * @param key
      * @return
      */
-    @Override
+
     public List<String> keys(String key) {
         List<String> result = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             Set<String> keyList = jedis.keys(key);
@@ -309,10 +289,10 @@ public class TestJedisClient implements IJedisClient {
      * @param cacheSeconds 超时时间，0为不超时
      * @return
      */
-    @Override
+
     public String setObject(String key, Object value, int cacheSeconds) {
         String result = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.set(getBytesKey(key), toBytes(value));
@@ -328,10 +308,10 @@ public class TestJedisClient implements IJedisClient {
         return result;
     }
 
-    @Override
+
     public String setbyteObject(byte[] key, byte[] value, Integer cacheSeconds) {
         String result = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.set(key, value);
@@ -339,9 +319,9 @@ public class TestJedisClient implements IJedisClient {
             if (cacheSeconds != null && cacheSeconds != 0) {
                 jedis.expire(key, cacheSeconds);
             }
-            logger.debug("setObject {} = {}", key, value);
+            logger.debug("setObject{} = {}", key, value);
         } catch (Exception e) {
-            logger.warn("setObject {} = {}", key, value, e);
+            logger.warn("setObject{} = {}", key, value, e);
         } finally {
             returnResource(jedis);
         }
@@ -351,7 +331,7 @@ public class TestJedisClient implements IJedisClient {
 
     public String selectDb(Integer db) {
         String result = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (db == null) {
@@ -359,7 +339,7 @@ public class TestJedisClient implements IJedisClient {
             }
 
             jedis.select(db);
-            logger.debug("selectDb  = {}", db);
+            logger.debug("selectDb = {}", db);
         } catch (Exception e) {
             logger.warn("selectDb {} = {}", db, e);
         } finally {
@@ -371,7 +351,7 @@ public class TestJedisClient implements IJedisClient {
 
     public String restorebyteObject(String key, byte[] value, Integer cacheSeconds) {
         String result = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (cacheSeconds == null) {
@@ -383,9 +363,9 @@ public class TestJedisClient implements IJedisClient {
             result = jedis.restore(key, cacheSeconds, value);
 
 
-            logger.debug("restorebyteObject {} = {}", key, value);
+            logger.debug(" restorebyteObject {} = {}", key, value);
         } catch (Exception e) {
-            logger.warn("restorebyteObject {} = {}", key, value, e);
+            logger.warn(" restorebyteObject {} = {}", key, value, e);
         } finally {
             returnResource(jedis);
         }
@@ -393,10 +373,10 @@ public class TestJedisClient implements IJedisClient {
     }
 
 
-    public static String restorebyteObject(byte[] key, byte[] value, Integer cacheSeconds, Jedis jedis, boolean status) {
+    public static String restorebyteObject(byte[] key, byte[] value, Integer cacheSeconds, JDJedis jedis, boolean status) {
         String result = null;
         if (jedis == null)
-            return "error: jedis is null";
+            return "error: jedis is null ";
         try {
             if (cacheSeconds == null) {
                 cacheSeconds = 0;
@@ -429,15 +409,14 @@ public class TestJedisClient implements IJedisClient {
      * @param key 键
      * @return 值
      */
-    @Override
     public List<String> getList(String key) {
         List<String> value = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
                 value = jedis.lrange(key, 0, -1);
-                logger.debug("getList {} = {}", key, value);
+                logger.debug("getList {}  = {}", key, value);
             }
         } catch (Exception e) {
             logger.warn("getList {} = {}", key, value, e);
@@ -453,10 +432,10 @@ public class TestJedisClient implements IJedisClient {
      * @param key 键
      * @return 值
      */
-    @Override
+
     public List<Object> getObjectList(String key) {
         List<Object> value = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -483,10 +462,10 @@ public class TestJedisClient implements IJedisClient {
      * @param cacheSeconds 超时时间，0为不超时
      * @return
      */
-    @Override
+
     public long setList(String key, List<String> value, int cacheSeconds) {
         long result = 0;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -513,10 +492,10 @@ public class TestJedisClient implements IJedisClient {
      * @param cacheSeconds 超时时间，0为不超时
      * @return
      */
-    @Override
+
     public long setObjectList(String key, List<Object> value, int cacheSeconds) {
         long result = 0;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -546,10 +525,9 @@ public class TestJedisClient implements IJedisClient {
      * @param value 值
      * @return
      */
-    @Override
     public long listAdd(String key, String... value) {
         long result = 0;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.rpush(key, value);
@@ -569,10 +547,10 @@ public class TestJedisClient implements IJedisClient {
      * @param value 值
      * @return
      */
-    @Override
+
     public long listObjectAdd(String key, Object... value) {
         long result = 0;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             List<byte[]> list = Lists.newArrayList();
@@ -596,10 +574,10 @@ public class TestJedisClient implements IJedisClient {
      * @return 值
      */
 
-    @Override
+
     public Set<String> getSet(String key) {
         Set<String> value = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -614,10 +592,10 @@ public class TestJedisClient implements IJedisClient {
         return value;
     }
 
-    @Override
+
     public Set<Object> getObjectSet(String key) {
         Set<Object> value = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -636,10 +614,10 @@ public class TestJedisClient implements IJedisClient {
         return value;
     }
 
-    @Override
+
     public long setSet(String key, Set<String> value, int cacheSeconds) {
         long result = 0;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -658,10 +636,10 @@ public class TestJedisClient implements IJedisClient {
         return result;
     }
 
-    @Override
+
     public long setObjectSet(String key, Set<Object> value, int cacheSeconds) {
         long result = 0;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -684,10 +662,10 @@ public class TestJedisClient implements IJedisClient {
         return result;
     }
 
-    @Override
+
     public long setSetAdd(String key, String... value) {
         long result = 0;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.sadd(key, value);
@@ -700,10 +678,10 @@ public class TestJedisClient implements IJedisClient {
         return result;
     }
 
-    @Override
+
     public long setSetObjectAdd(String key, Object... value) {
         long result = 0;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             Set<byte[]> set = Sets.newHashSet();
@@ -720,10 +698,10 @@ public class TestJedisClient implements IJedisClient {
         return result;
     }
 
-    @Override
+
     public Map<String, String> getMap(String key) {
         Map<String, String> value = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -738,10 +716,10 @@ public class TestJedisClient implements IJedisClient {
         return value;
     }
 
-    @Override
+
     public Map<String, Object> getObjectMap(String key) {
         Map<String, Object> value = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -760,10 +738,10 @@ public class TestJedisClient implements IJedisClient {
         return value;
     }
 
-    @Override
+
     public String setMap(String key, Map<String, String> value, int cacheSeconds) {
         String result = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -782,10 +760,10 @@ public class TestJedisClient implements IJedisClient {
         return result;
     }
 
-    @Override
+
     public String setObjectMap(String key, Map<String, Object> value, int cacheSeconds) {
         String result = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -799,7 +777,7 @@ public class TestJedisClient implements IJedisClient {
             if (cacheSeconds != 0) {
                 jedis.expire(key, cacheSeconds);
             }
-            logger.debug("setObjectMap {} = {}", key, value);
+            logger.debug("setObjectMap  {} = {}", key, value);
         } catch (Exception e) {
             logger.warn("setObjectMap {} = {}", key, value, e);
         } finally {
@@ -808,10 +786,10 @@ public class TestJedisClient implements IJedisClient {
         return result;
     }
 
-    @Override
+
     public String mapPut(String key, Map<String, String> value) {
         String result = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.hmset(key, value);
@@ -824,10 +802,10 @@ public class TestJedisClient implements IJedisClient {
         return result;
     }
 
-    @Override
+
     public String mapObjectPut(String key, Map<String, Object> value) {
         String result = null;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             Map<byte[], byte[]> map = Maps.newHashMap();
@@ -853,7 +831,7 @@ public class TestJedisClient implements IJedisClient {
      */
     public long mapRemove(String key, String mapKey) {
         long result = 0;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.hdel(key, mapKey);
@@ -875,7 +853,7 @@ public class TestJedisClient implements IJedisClient {
      */
     public long mapObjectRemove(String key, String mapKey) {
         long result = 0;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.hdel(getBytesKey(key), getBytesKey(mapKey));
@@ -897,7 +875,7 @@ public class TestJedisClient implements IJedisClient {
      */
     public boolean mapExists(String key, String mapKey) {
         boolean result = false;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.hexists(key, mapKey);
@@ -919,7 +897,7 @@ public class TestJedisClient implements IJedisClient {
      */
     public boolean mapObjectExists(String key, String mapKey) {
         boolean result = false;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.hexists(getBytesKey(key), getBytesKey(mapKey));
@@ -940,7 +918,7 @@ public class TestJedisClient implements IJedisClient {
      */
     public long del(String key) {
         long result = 0;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -965,7 +943,7 @@ public class TestJedisClient implements IJedisClient {
      */
     public long delObject(String key) {
         long result = 0;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -990,7 +968,7 @@ public class TestJedisClient implements IJedisClient {
      */
     public boolean exists(String key) {
         boolean result = false;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.exists(key);
@@ -1011,11 +989,11 @@ public class TestJedisClient implements IJedisClient {
      */
     public boolean existsObject(String key) {
         boolean result = false;
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.exists(getBytesKey(key));
-            logger.debug("existsObject {}", key);
+            logger.debug(" existsObject {}", key);
         } catch (Exception e) {
             logger.warn("existsObject {}", key, e);
         } finally {
@@ -1024,9 +1002,9 @@ public class TestJedisClient implements IJedisClient {
         return result;
     }
 
-    @Override
+
     public void flushlikekey(String key) {
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             Set<String> keysList = jedis.keys(key + "*");
@@ -1053,9 +1031,9 @@ public class TestJedisClient implements IJedisClient {
      *
      * @param keys
      */
-    @Override
+
     public void flushlikekey(String... keys) {
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             if (keys.length > 0) {
                 jedis = getResource();
@@ -1075,9 +1053,9 @@ public class TestJedisClient implements IJedisClient {
      *
      * @param key
      */
-    @Override
+
     public void flushlikekey_foreach(String key) {
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = getResource();
             Set<String> keysList = jedis.keys(key + "*");
@@ -1098,9 +1076,9 @@ public class TestJedisClient implements IJedisClient {
      * @param key
      * @return
      */
-    @Override
+
     public long pttl(String key) {
-        Jedis jedis = null;
+        JDJedis jedis = null;
         long time = -1;
         try {
             jedis = jedisPool.getResource();
@@ -1119,9 +1097,9 @@ public class TestJedisClient implements IJedisClient {
      * @param key
      * @return
      */
-    @Override
+
     public long ttl(String key) {
-        Jedis jedis = null;
+        JDJedis jedis = null;
         long time = -1;
         try {
             jedis = jedisPool.getResource();
@@ -1141,9 +1119,9 @@ public class TestJedisClient implements IJedisClient {
      * @param key
      * @return
      */
-    @Override
+
     public long expire(String key, int seconds) {
-        Jedis jedis = null;
+        JDJedis jedis = null;
         long status = 0;
         try {
             jedis = jedisPool.getResource();
@@ -1162,9 +1140,9 @@ public class TestJedisClient implements IJedisClient {
      * @param key
      * @return
      */
-    @Override
+
     public long pexpire(String key, long milliseconds) {
-        Jedis jedis = null;
+        JDJedis jedis = null;
         long status = 0;
         try {
             jedis = jedisPool.getResource();
@@ -1177,9 +1155,9 @@ public class TestJedisClient implements IJedisClient {
         return status;
     }
 
-    @Override
+
     public Set<String> allkeys(String redisKeyStartWith) {
-        Jedis jedis = null;
+        JDJedis jedis = null;
         Set<String> set = null;
         try {
             jedis = jedisPool.getResource();
@@ -1192,9 +1170,9 @@ public class TestJedisClient implements IJedisClient {
         return set;
     }
 
-    @Override
+
     public void deleteRedisKeyStartWith(String redisKeyStartWith) {
-        Jedis jedis = null;
+        JDJedis jedis = null;
         try {
             jedis = jedisPool.getResource();
 
@@ -1222,7 +1200,7 @@ public class TestJedisClient implements IJedisClient {
 
 
     public double getRedisVersion() {
-        Jedis jedis = null;
+        JDJedis jedis = null;
         double version = 0.0;
         try {
             jedis = jedisPool.getResource();
@@ -1250,7 +1228,7 @@ public class TestJedisClient implements IJedisClient {
         } catch (Exception e) {
             logger.warn("getRedisVersion.", e);
         } finally {
-           jedisClient.close();
+            jedisClient.close();
         }
         return version;
 
@@ -1263,4 +1241,3 @@ public class TestJedisClient implements IJedisClient {
 
     }
 }
-
