@@ -1,12 +1,10 @@
-package com.i1314i.syncerplusservice.task.singleTask.diffVersion.defaultVersion;
+package com.i1314i.syncerplusservice.task.BatchedKeyValueTask.single;
 
 import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
-import com.i1314i.syncerplusservice.pool.ConnectionPool;
-import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import com.moilioncircle.redis.replicator.event.Event;
 import com.moilioncircle.redis.replicator.rdb.datatype.*;
-import com.moilioncircle.redis.replicator.rdb.dump.datatype.DumpKeyValuePair;
+import com.moilioncircle.redis.replicator.rdb.iterable.datatype.*;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.params.SetParams;
@@ -22,7 +20,7 @@ import java.util.concurrent.Callable;
  * 不相同版本之间的数据迁移
  */
 @Slf4j
-public class RdbDiffVersionInsertPlusRestoreTask implements Callable<Object> {
+public class BatchedRestoreTask implements Callable<Object> {
     private Event event;
     private Long ms;
     private String key;
@@ -31,7 +29,7 @@ public class RdbDiffVersionInsertPlusRestoreTask implements Callable<Object> {
     private RedisCommandTypeEnum  typeEnum;
     private JDJedisClientPool targetJedisClientPool;
 
-    public RdbDiffVersionInsertPlusRestoreTask(Event event, Long ms, String key, StringBuffer info, Jedis targetJedis, RedisCommandTypeEnum  typeEnum) {
+    public BatchedRestoreTask(Event event, Long ms, String key, StringBuffer info, Jedis targetJedis, RedisCommandTypeEnum  typeEnum) {
         this.event = event;
         this.ms = ms;
         this.key = key;
@@ -51,51 +49,59 @@ public class RdbDiffVersionInsertPlusRestoreTask implements Callable<Object> {
             while (i > 0) {
                 if (ms == null) {
                     if(typeEnum.equals(RedisCommandTypeEnum.STRING)){
-                        KeyStringValueString valueString = (KeyStringValueString) event;
-                        r = targetJedis.set(valueString.getKey(), valueString.getValue());
+                        BatchedKeyStringValueString valueString = (BatchedKeyStringValueString) event;
+                        if(valueString.getBatch()==0){
+                            r = targetJedis.set(valueString.getKey(), valueString.getValue());
+                        }else {
+                            r = targetJedis.append(valueString.getKey(), valueString.getValue());
+                        }
                     }else if(typeEnum.equals(RedisCommandTypeEnum.LIST)){
-                        KeyStringValueList valueList = (KeyStringValueList) event;
+                        BatchedKeyStringValueList valueList = (BatchedKeyStringValueList) event;
                         byte[][] array = listBytes(valueList.getValue());
                         r =targetJedis.lpush(valueList.getKey(), array);
                     }else if(typeEnum.equals(RedisCommandTypeEnum.SET)){
 
-                        KeyStringValueSet valueSet = (KeyStringValueSet) event;
+                        BatchedKeyStringValueSet valueSet = (BatchedKeyStringValueSet) event;
                         byte[][] array = setBytes( valueSet.getValue());
                         r =targetJedis.sadd(valueSet.getKey(), array);
 
                     }else if(typeEnum.equals(RedisCommandTypeEnum.ZSET)){
-                        KeyStringValueZSet valueZSet = (KeyStringValueZSet) event;
+                        BatchedKeyStringValueZSet valueZSet = (BatchedKeyStringValueZSet) event;
                         Map<byte[], Double> map = zsetBytes(valueZSet.getValue());
 
                         r =targetJedis.zadd(valueZSet.getKey(), map);
 
                     }else if(typeEnum.equals(RedisCommandTypeEnum.HASH)){
-                        KeyStringValueHash valueHash = (KeyStringValueHash) event;
+                        BatchedKeyStringValueHash valueHash = (BatchedKeyStringValueHash) event;
                         r =targetJedis.hmset(valueHash.getKey(), valueHash.getValue());
                     }
 
                 } else {
                     if(typeEnum.equals(RedisCommandTypeEnum.STRING)){
-                        KeyStringValueString valueString = (KeyStringValueString) event;
-                        r = targetJedis.set(valueString.getKey(), valueString.getValue(), new SetParams().px(ms));
+                        BatchedKeyStringValueString valueString = (BatchedKeyStringValueString) event;
+                        if(valueString.getBatch()==0){
+                            r = targetJedis.set(valueString.getKey(), valueString.getValue(), new SetParams().px(ms));
+                        }else {
+                            r = targetJedis.append(valueString.getKey(), valueString.getValue());
+                        }
                     }else if(typeEnum.equals(RedisCommandTypeEnum.LIST)){
-                        KeyStringValueList valueList = (KeyStringValueList) event;
+                        BatchedKeyStringValueList valueList = (BatchedKeyStringValueList) event;
                         byte[][] array = listBytes(valueList.getValue());
                         r =targetJedis.lpush(valueList.getKey(), array);
                         targetJedis.pexpire(valueList.getKey(), ms);
                     }else if(typeEnum.equals(RedisCommandTypeEnum.SET)){
-                        KeyStringValueSet valueSet = (KeyStringValueSet) event;
+                        BatchedKeyStringValueSet valueSet = (BatchedKeyStringValueSet) event;
                         byte[][] array = setBytes( valueSet.getValue());
                         r =targetJedis.sadd(valueSet.getKey(), array);
                         targetJedis.pexpire(valueSet.getKey(), ms);
                     }else if(typeEnum.equals(RedisCommandTypeEnum.ZSET)){
-                        KeyStringValueZSet valueZSet = (KeyStringValueZSet) event;
+                        BatchedKeyStringValueZSet valueZSet = (BatchedKeyStringValueZSet) event;
                         Map<byte[], Double> map = zsetBytes(valueZSet.getValue());
                         r =targetJedis.zadd(valueZSet.getKey(), map);
                         targetJedis.pexpire(valueZSet.getKey(), ms);
 
                     }else if(typeEnum.equals(RedisCommandTypeEnum.HASH)){
-                        KeyStringValueHash valueHash = (KeyStringValueHash) event;
+                        BatchedKeyStringValueHash valueHash = (BatchedKeyStringValueHash) event;
                         r =targetJedis.hmset(valueHash.getKey(), valueHash.getValue());
                         targetJedis.pexpire(valueHash.getKey(), ms);
                     }

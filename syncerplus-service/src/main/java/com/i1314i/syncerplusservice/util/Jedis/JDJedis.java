@@ -39,4 +39,20 @@ public class JDJedis extends Jedis {
     public void setDataSource(JDJedisPoolAbstract jedisPool) {
         this.dataSource = jedisPool;
     }
+
+    @Override
+    public void close() {
+        if (dataSource != null) {
+            JDJedisPoolAbstract pool = this.dataSource;
+            this.dataSource = null;
+            if (client.isBroken()) {
+                pool.returnBrokenResource(this);
+            } else {
+                pool.returnResource(this);
+            }
+        } else {
+            super.close();
+        }
+//        super.close();
+    }
 }

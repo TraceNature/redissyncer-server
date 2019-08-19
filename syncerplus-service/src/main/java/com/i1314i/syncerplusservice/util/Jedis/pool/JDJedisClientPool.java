@@ -37,6 +37,7 @@ public class JDJedisClientPool{
 
 //        config.setTimeBetweenEvictionRunsMillis(30000);
         config.setTestOnReturn(true);
+        config.setBlockWhenExhausted(true);
         config.setTestOnBorrow(true);
         this.config = config;
         int timeout = 50000;

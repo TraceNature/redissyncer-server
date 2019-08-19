@@ -27,6 +27,6 @@ public interface IRedisReplicatorService {
     void sync(RedisSyncDataDto syncDataDto) throws TaskMsgException;
 
     void sync(RedisClusterDto clusterDto) throws TaskMsgException;
-
+    void batchedSync(RedisClusterDto clusterDto) throws TaskMsgException;
     void syncToJDCloud(RedisJDClousterClusterDto jdClousterClusterDto) throws TaskMsgException;
 }

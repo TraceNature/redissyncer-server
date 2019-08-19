@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import redis.clients.jedis.Jedis;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -107,8 +108,11 @@ public class SendDumpKeyDiffVersionCommand {
                 log.info(info.toString());
             }
 
-
-            threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, kv.getExpiredMs(),new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.STRING));
+            long newTime=0L;
+            if(kv.getExpiredMs()!=null){
+                newTime=kv.getExpiredMs()-System.currentTimeMillis();
+            }
+            threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, newTime,new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.STRING));
 
 
         } else if (event instanceof KeyStringValueList) {
@@ -163,8 +167,11 @@ public class SendDumpKeyDiffVersionCommand {
                 log.info(info.toString());
             }
 
-
-            threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, kv.getExpiredMs(),new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.LIST));
+            long newTime=0L;
+            if(kv.getExpiredMs()!=null){
+                newTime=kv.getExpiredMs()-System.currentTimeMillis();
+            }
+            threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, newTime,new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.LIST));
 
 
         } else if (event instanceof KeyStringValueSet) {
@@ -220,8 +227,11 @@ public class SendDumpKeyDiffVersionCommand {
                 log.info(info.toString());
             }
 
-
-            threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, kv.getExpiredMs(),new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.SET));
+            long newTime=0L;
+            if(kv.getExpiredMs()!=null){
+                newTime=kv.getExpiredMs()-System.currentTimeMillis();
+            }
+            threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event,newTime,new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.SET));
 
 
 
@@ -277,8 +287,11 @@ public class SendDumpKeyDiffVersionCommand {
                 log.info(info.toString());
             }
 
-
-            threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, kv.getExpiredMs(),new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.ZSET));
+            long newTime=0L;
+            if(kv.getExpiredMs()!=null){
+                newTime=kv.getExpiredMs()-System.currentTimeMillis();
+            }
+            threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, newTime,new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.ZSET));
 
 
 
@@ -335,13 +348,17 @@ public class SendDumpKeyDiffVersionCommand {
                 log.info(info.toString());
             }
 
-
-            threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, kv.getExpiredMs(),new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.HASH));
+            long newTime=0L;
+            if(kv.getExpiredMs()!=null){
+                newTime=kv.getExpiredMs()-System.currentTimeMillis();
+            }
+            threadPoolTaskExecutor.submit(new RdbDiffVersionInsertPlusRestoreTask(event, newTime,new String(kv.getKey()) ,info,targetJedisplus, RedisCommandTypeEnum.HASH));
 
 
 
 
         } else if (event instanceof KeyStringValueModule) {
+
             log.warn("暂不支持Module");
         } else if (event instanceof KeyStringValueStream) {
             log.warn("暂不支持Stream");

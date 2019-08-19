@@ -16,12 +16,12 @@ public class JDJedisPoolAbstract  extends Pool<JDJedis> {
     }
 
     @Override
-    protected void returnBrokenResource(JDJedis resource) {
+    public void returnBrokenResource(JDJedis resource) {
         super.returnBrokenResource(resource);
     }
 
     @Override
-    protected void returnResource(JDJedis resource) {
+    public void returnResource(JDJedis resource) {
         super.returnResource(resource);
     }
 }

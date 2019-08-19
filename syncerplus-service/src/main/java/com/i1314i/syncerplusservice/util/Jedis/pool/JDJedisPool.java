@@ -4,6 +4,7 @@ import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
+
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.exceptions.JedisException;
 import redis.clients.jedis.util.JedisURIHelper;
@@ -238,14 +239,14 @@ public class JDJedisPool extends JDJedisPoolAbstract {
     }
 
     @Override
-    protected void returnBrokenResource(final JDJedis resource) {
+    public void returnBrokenResource(final JDJedis resource) {
         if (resource != null) {
             returnBrokenResourceObject(resource);
         }
     }
 
     @Override
-    protected void returnResource(final JDJedis resource) {
+    public void returnResource(final JDJedis resource) {
         if (resource != null) {
             try {
                 resource.resetState();
@@ -256,4 +257,14 @@ public class JDJedisPool extends JDJedisPoolAbstract {
             }
         }
     }
+
+
+
+
+    @Override
+    protected void returnResourceObject(JDJedis resource) {
+        super.returnResourceObject(resource);
+    }
+
+
 }
