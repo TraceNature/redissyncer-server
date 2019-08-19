@@ -10,6 +10,13 @@ import com.i1314i.syncerplusservice.entity.dto.common.SyncDataDto;
 import java.util.*;
 
 public class DtoCheckUtils {
+
+    /**
+     * 补全参数
+     * @param syncDataDto
+     * @param redisPoolProps
+     * @return
+     */
     public synchronized static Object ckeckRedisClusterDto(SyncDataDto syncDataDto, RedisPoolProps redisPoolProps){
         if(syncDataDto instanceof RedisSyncDataDto){
             if(syncDataDto.getIdleTimeRunsMillis()==0){
@@ -53,14 +60,22 @@ public class DtoCheckUtils {
     }
 
 
-
+    /**
+     * 更新uri
+     * @param redisClusterDto
+     */
     public static void updateUri(RedisClusterDto redisClusterDto){
         redisClusterDto.setSourceUris(getUrlList(redisClusterDto.getSourceRedisAddress(),redisClusterDto.getSourcePassword()));
         redisClusterDto.setTargetUris(getUrlList(redisClusterDto.getTargetRedisAddress(),redisClusterDto.getTargetPassword()));
     }
 
 
-
+    /**
+     * 生成uri集合
+     * @param sourceUrls
+     * @param password
+     * @return
+     */
     public synchronized static Set<String> getUrlList(String sourceUrls, String password) {
         Set<String> urlList = new HashSet<>();
         String[] sourceUrlsList = sourceUrls.split(";");

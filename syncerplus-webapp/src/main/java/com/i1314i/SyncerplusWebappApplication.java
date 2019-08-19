@@ -1,6 +1,7 @@
 package com.i1314i;
 
 import com.i1314i.syncerplusservice.monitor.*;
+import com.i1314i.syncerplusservice.persistence.SettingPersistenceTask;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
@@ -21,6 +22,10 @@ public class SyncerplusWebappApplication {
          * 开启线程监控
          */
         new Thread(new MinerMonitorThread()).start();
+        /**
+         * 持久化任务
+         */
+        new Thread(new SettingPersistenceTask()).start();
     }
 
 
