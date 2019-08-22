@@ -1,9 +1,12 @@
 package com.i1314i.syncerplusservice.util.Jedis;
 
+import com.moilioncircle.redis.replicator.rdb.datatype.ZSetEntry;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.*;
 
 /**
  * @author 平行时空
@@ -83,4 +86,52 @@ public class ObjectUtils {
     public synchronized static Object toObject(byte[] bytes){
         return ObjectUtils.unserialize(bytes);
     }
+
+
+    public synchronized static byte[][]  listBytes(List<byte[]> datas){
+        byte[][] array = new byte[datas.size()][];
+        datas.toArray(array);
+        return array;
+    }
+
+    public synchronized static byte[][]  setBytes(Set<byte[]> datas){
+        byte[][] array = new byte[datas.size()][];
+        datas.toArray(array);
+        return array;
+    }
+
+    public synchronized static Map<byte[], Double> zsetBytes(Set<ZSetEntry> datas){
+        Map<byte[], Double> map = new HashMap<>();
+        datas.forEach(zset -> {
+            map.put(zset.getElement(), zset.getScore());
+        });
+        return map;
+    }
+
+
+    public synchronized static Map<byte[], Double> zsetByteP(Set<byte[]> datas,JDJedis source,byte[]key){
+        Map<byte[], Double> map = new HashMap<>();
+        datas.forEach(zset -> {
+            try {
+                ZSetEntry zSetEntry=new ZSetEntry(zset,source.zscore(key,zset));
+                map.put(zSetEntry.getElement(), zSetEntry.getScore());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        });
+        return map;
+    }
+
+
+    public static Object bytesToObject(byte[] bytes) throws Exception {
+
+//byte转object
+        ByteArrayInputStream in = new ByteArrayInputStream(bytes);
+        ObjectInputStream sIn = new ObjectInputStream(in);
+        return sIn.readObject();
+
+    }
+
+
 }

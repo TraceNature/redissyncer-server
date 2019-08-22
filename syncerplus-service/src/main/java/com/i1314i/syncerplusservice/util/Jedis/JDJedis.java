@@ -26,6 +26,14 @@ public class JDJedis extends Jedis {
         super(host, port, connectionTimeout, soTimeout, ssl, sslSocketFactory,sslParameters,hostnameVerifier);
     }
 
+    public JDJedis(String host, int port) {
+        super(host, port);
+    }
+
+    public JDJedis(String host, int port, int timeout) {
+        super(host, port, timeout);
+    }
+
     @Override
     public String select(final int index) {
         checkIsInMultiOrPipeline();

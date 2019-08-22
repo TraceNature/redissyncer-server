@@ -47,7 +47,7 @@ public class BatchedRestoreTask implements Callable<Object> {
         int i = 3;
         try {
             while (i > 0) {
-                if (ms == null) {
+                if (ms == null||ms == 0L) {
                     if(typeEnum.equals(RedisCommandTypeEnum.STRING)){
                         BatchedKeyStringValueString valueString = (BatchedKeyStringValueString) event;
                         if(valueString.getBatch()==0){

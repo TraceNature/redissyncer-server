@@ -49,7 +49,7 @@ public class RdbDiffVersionInsertPlusRestoreTask implements Callable<Object> {
         int i = 3;
         try {
             while (i > 0) {
-                if (ms == null) {
+                if (ms == null||ms == 0L) {
                     if(typeEnum.equals(RedisCommandTypeEnum.STRING)){
                         KeyStringValueString valueString = (KeyStringValueString) event;
                         r = targetJedis.set(valueString.getKey(), valueString.getValue());
