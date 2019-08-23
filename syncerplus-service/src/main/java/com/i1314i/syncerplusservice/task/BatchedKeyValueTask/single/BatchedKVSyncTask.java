@@ -91,7 +91,7 @@ public class BatchedKVSyncTask implements Runnable {
             /**
              * RDB复制
              */
-            r.addEventListener(new ValueIterableEventListener(200,new EventListener() {
+            r.addEventListener(new ValueIterableEventListener(1000,new EventListener() {
                 @Override
                 public void onEvent(Replicator replicator, Event event) {
                     RedisUrlUtils.doCheckTask(r, Thread.currentThread());

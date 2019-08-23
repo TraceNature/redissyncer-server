@@ -92,10 +92,25 @@
                             <version>${project.version}</version>
                             <type>${project.packaging}</type>
                             <overWrite>true</overWrite>
-                            <outputDirectory>${project.parent.build.directory}</outputDirectory>
+                            <outputDirectory>${project.basedir}</outputDirectory>
                             <destFileName>${project.artifactId}-${project.version}.jar</destFileName>
                         </artifactItem>
                     </artifactItems>
+                </configuration>
+            </plugin>
+
+            <!--Docker maven plugin-->
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <version>1.4.10</version>
+                <configuration>
+                    <repository>${project.artifactId}</repository>
+                    <contextDirectory>./</contextDirectory>
+                    <tag>${project.version}</tag>
+                    <buildArgs>
+                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+                    </buildArgs>
                 </configuration>
             </plugin>
         </plugins>

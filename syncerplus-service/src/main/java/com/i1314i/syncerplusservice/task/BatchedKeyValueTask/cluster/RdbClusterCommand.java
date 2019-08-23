@@ -53,8 +53,11 @@ public class RdbClusterCommand {
                         newTime=event1.getExpiredMs()-System.currentTimeMillis();
                     }
 
+                    if(event1.getValue()!=null){
+                        threadPoolTaskExecutor.submit(new BatchedClusterRestoreTask(event, newTime, new String((byte[]) event1.getKey()), info, redisClient, getRedisCommandTypeEnum(event1.getValueRdbType())));
+                    }
 
-                    threadPoolTaskExecutor.submit(new BatchedClusterRestoreTask(event, newTime, new String((byte[]) event1.getKey()), info, redisClient, getRedisCommandTypeEnum(event1.getValueRdbType())));
+
 
                 } catch (Exception e) {
                     //mapping映射中不存在关系，放弃当前 kv数据同步

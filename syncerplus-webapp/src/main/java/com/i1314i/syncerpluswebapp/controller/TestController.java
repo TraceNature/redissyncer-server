@@ -11,6 +11,7 @@ import com.i1314i.syncerplusservice.entity.dto.common.SyncDataDto;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
+import com.i1314i.syncerplusservice.util.file.FileUtils;
 import com.i1314i.syncerpluswebapp.util.DtoCheckUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
 
 
 @RestController
@@ -84,6 +86,8 @@ public class TestController {
     }
 
     public static void main(String[] args) {
-        System.out.println(JSON.toJSONString(ResultMap.builder().code("200").msg("msg").data("wadwa")));
+        Map<Double,Integer> maps = (Map)JSON.parse(FileUtils.getText(TemplateUtils.class.getClassLoader().getResourceAsStream(
+                "rdbsetting.json")));
+        System.out.println(maps.get(4.0) );
     }
 }

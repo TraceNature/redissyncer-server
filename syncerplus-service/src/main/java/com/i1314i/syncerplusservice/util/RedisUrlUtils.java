@@ -17,6 +17,7 @@ import com.i1314i.syncerplusservice.util.Jedis.cluster.JedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.pipelineCluster.JedisClusterPipeline;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
+import com.i1314i.syncerplusservice.util.file.FileUtils;
 import com.moilioncircle.redis.replicator.Configuration;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Replicator;
@@ -39,6 +40,7 @@ import static redis.clients.jedis.Protocol.Command.AUTH;
 
 @Slf4j
 public class RedisUrlUtils {
+    static Map<Double,Integer>rdbVersion=null;
     public static boolean checkRedisUrl(String uri) throws URISyntaxException {
         URI uriplus = new URI(uri);
         if (uriplus.getScheme() != null && uriplus.getScheme().equalsIgnoreCase("redis")) {
@@ -396,6 +398,15 @@ public class RedisUrlUtils {
         if (name.endsWith("SyncerO"))
             return name.substring(0, name.length() - 7);
         return name;
+    }
+
+
+    public static synchronized Integer getRdbVersion(double redisVersion){
+        if(rdbVersion==null){
+            rdbVersion= (Map<Double, Integer>) JSON.parse(FileUtils.getText(TemplateUtils.class.getClassLoader().getResourceAsStream(
+                    "rdbsetting.json")));
+        }
+        return rdbVersion.get(redisVersion);
     }
 
 
