@@ -2,6 +2,7 @@ package com.i1314i.syncerplusservice.task.BatchedKeyValueTask.cluster;
 
 
 import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
+import com.i1314i.syncerplusservice.rdbtask.enums.RedisCommandType;
 import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
@@ -11,6 +12,7 @@ import com.moilioncircle.redis.replicator.event.Event;
 import com.moilioncircle.redis.replicator.event.PostRdbSyncEvent;
 import com.moilioncircle.redis.replicator.event.PreRdbSyncEvent;
 import com.moilioncircle.redis.replicator.rdb.datatype.DB;
+import com.moilioncircle.redis.replicator.rdb.dump.datatype.DumpKeyValuePair;
 import com.moilioncircle.redis.replicator.rdb.iterable.datatype.BatchedKeyValuePair;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +46,21 @@ public class RdbClusterCommand {
             BatchedKeyValuePair event1 = (BatchedKeyValuePair) event;
                 if (event1.getDb() == null)
                     return;
-                StringBuffer info = new StringBuffer();
+
+
+            /**
+             * 若存在Map映射则只同步映射关系中的数据
+             */
+
+            DB db=event1.getDb();
+            if(null!=dbMap&&dbMap.size()>0){
+                if(dbMap.containsKey((int)db.getDbNumber())){
+                }else {
+                    return;
+                }
+            }
+
+            StringBuffer info = new StringBuffer();
 
                 JDJedis targetJedisplus= null;
                 try {
@@ -54,7 +70,7 @@ public class RdbClusterCommand {
                     }
 
                     if(event1.getValue()!=null){
-                        threadPoolTaskExecutor.submit(new BatchedClusterRestoreTask(event, newTime, new String((byte[]) event1.getKey()), info, redisClient, getRedisCommandTypeEnum(event1.getValueRdbType())));
+                        threadPoolTaskExecutor.submit(new BatchedClusterRestoreTask(event, newTime, new String((byte[]) event1.getKey()), info, redisClient, RedisCommandType.getRedisCommandTypeEnum(event1.getValueRdbType())));
                     }
 
 

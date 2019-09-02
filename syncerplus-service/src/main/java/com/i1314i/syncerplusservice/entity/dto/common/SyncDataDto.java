@@ -1,8 +1,10 @@
 package com.i1314i.syncerplusservice.entity.dto.common;
 
+import com.i1314i.syncerplusservice.entity.RedisInfo;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,11 +22,12 @@ public class SyncDataDto {
     private long idleTimeRunsMillis;
     private int diffVersion;
     private String pipeline;
-
     private Map<Integer,Integer>dbNum;
     private Set<String> sourceUris;
     private Set<String>targetUris;
-    public SyncDataDto(int minPoolSize, int maxPoolSize, long maxWaitTime, long timeBetweenEvictionRunsMillis, long idleTimeRunsMillis, int diffVersion, String pipeline,Map<Integer,Integer>dbNum) {
+    private Set<RedisInfo>targetUriData=new HashSet<>();
+    private double targetRedisVersion;
+    public SyncDataDto(int minPoolSize, int maxPoolSize, long maxWaitTime, long timeBetweenEvictionRunsMillis, long idleTimeRunsMillis, int diffVersion, String pipeline,Map<Integer,Integer>dbNum ) {
         this.minPoolSize = minPoolSize;
         this.maxPoolSize = maxPoolSize;
         this.maxWaitTime = maxWaitTime;
@@ -52,6 +55,7 @@ public class SyncDataDto {
         this.idleTimeRunsMillis = idleTimeRunsMillis;
         this.diffVersion = diffVersion;
         this.pipeline = pipeline;
+
     }
 
     public SyncDataDto(int minPoolSize, int maxPoolSize, long maxWaitTime, long timeBetweenEvictionRunsMillis, long idleTimeRunsMillis) {
@@ -60,5 +64,18 @@ public class SyncDataDto {
         this.maxWaitTime = maxWaitTime;
         this.timeBetweenEvictionRunsMillis = timeBetweenEvictionRunsMillis;
         this.idleTimeRunsMillis = idleTimeRunsMillis;
+
     }
+
+    public void addRedisInfo(RedisInfo info){
+        this.targetUriData.add(info);
+    }
+//    public Set<RedisInfo> getTargetUriData() {
+//        Set<RedisInfo>redisInfoSet=new HashSet<>();
+//        for (String uri:targetUris
+//             ) {
+//            redisInfoSet.add(new RedisInfo(uri));
+//        }
+//        return targetUriData;
+//    }
 }

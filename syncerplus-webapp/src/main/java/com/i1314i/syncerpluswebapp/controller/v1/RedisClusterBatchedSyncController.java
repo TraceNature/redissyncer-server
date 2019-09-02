@@ -36,14 +36,8 @@ public class RedisClusterBatchedSyncController {
      */
     @RequestMapping(value = "/startSync",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap StartSync(@RequestBody @Validated RedisClusterDto redisClusterDto) throws TaskMsgException {
-
-
         redisClusterDto= (RedisClusterDto) DtoCheckUtils.ckeckRedisClusterDto(redisClusterDto,redisPoolProps);
-
-
         redisReplicatorService.batchedSync(redisClusterDto);
-
-
 //        redisReplicatorService.syncToJDCloud(syncDataDto);
         return ResultMap.builder().code("200").msg("success");
     }

@@ -104,6 +104,12 @@ public class RedisMigrator {
         return addCommandParser(r);
     }
 
+
+    public synchronized static Replicator newBacthedCommandDress(Replicator r) {
+        r.getConfiguration();
+        return addCommandParser(r);
+    }
+
     public synchronized static Replicator addCommandParser(Replicator r) {
         r.addCommandParser(CommandName.name("PING"), new PingParser());
         r.addCommandParser(CommandName.name("REPLCONF"), new ReplConfParser());

@@ -848,7 +848,7 @@ public class TestJedisClient implements IJedisClient {
      * 移除Map缓存中的值
      *
      * @param key   键
-     * @param value 值
+     * @param mapKey 值
      * @return
      */
     public long mapRemove(String key, String mapKey) {
@@ -870,7 +870,7 @@ public class TestJedisClient implements IJedisClient {
      * 移除Map缓存中的值
      *
      * @param key   键
-     * @param value 值
+     * @param mapKey 值
      * @return
      */
     public long mapObjectRemove(String key, String mapKey) {
@@ -892,7 +892,7 @@ public class TestJedisClient implements IJedisClient {
      * 判断Map缓存中的Key是否存在
      *
      * @param key   键
-     * @param value 值
+     * @param mapKey 值
      * @return
      */
     public boolean mapExists(String key, String mapKey) {
@@ -914,7 +914,7 @@ public class TestJedisClient implements IJedisClient {
      * 判断Map缓存中的Key是否存在
      *
      * @param key   键
-     * @param value 值
+     * @param mapKey 值
      * @return
      */
     public boolean mapObjectExists(String key, String mapKey) {
@@ -1237,12 +1237,12 @@ public class TestJedisClient implements IJedisClient {
 
     }
 
-    public static double getRedisVersion(Jedis jedisClient) {
+    public static double getRedisVersion(String info) {
         double version = 0.0;
         try {
             String rgex = "redis_version:(.*?)\r\n";
-            if(RegexUtil.getSubUtilSimple(jedisClient.info(), rgex).length()>=3){
-                version = Double.parseDouble(RegexUtil.getSubUtilSimple(jedisClient.info(), rgex).substring(0, 3));
+            if(RegexUtil.getSubUtilSimple(info, rgex).length()>=3){
+                version = Double.parseDouble(RegexUtil.getSubUtilSimple(info, rgex).substring(0, 3));
             }else {
                 version=0.0;
             }
@@ -1250,7 +1250,10 @@ public class TestJedisClient implements IJedisClient {
         } catch (Exception e) {
             logger.warn("getRedisVersion.", e);
         } finally {
-           jedisClient.close();
+//            if(jedisClient!=null){
+//                jedisClient.close();
+//            }
+
         }
         return version;
 

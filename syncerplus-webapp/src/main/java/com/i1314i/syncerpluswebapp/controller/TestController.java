@@ -72,7 +72,7 @@ public class TestController {
 
 
     @RequestMapping(value = "/s")
-    public   RedisClusterDto  s(@RequestBody RedisClusterDto dto){
+    public   RedisClusterDto  s(@RequestBody RedisClusterDto dto) throws TaskMsgException {
         dto= (RedisClusterDto) DtoCheckUtils.ckeckRedisClusterDto(dto,redisPoolProps);
         if(dto.getTargetUris().size()==1){
             //单机 间或者往京东云集群迁移

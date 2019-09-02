@@ -12,6 +12,7 @@ import com.i1314i.syncerplusservice.pool.Impl.ConnectionPoolImpl;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.service.exception.TaskRestoreException;
+import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
 import com.i1314i.syncerplusservice.util.Jedis.TestJedisClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.JedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
@@ -41,6 +42,7 @@ import static redis.clients.jedis.Protocol.Command.AUTH;
 @Slf4j
 public class RedisUrlUtils {
     static Map<Double,Integer>rdbVersion=null;
+
     public static boolean checkRedisUrl(String uri) throws URISyntaxException {
         URI uriplus = new URI(uri);
         if (uriplus.getScheme() != null && uriplus.getScheme().equalsIgnoreCase("redis")) {
@@ -48,6 +50,7 @@ public class RedisUrlUtils {
         }
         return false;
     }
+
 
     public static boolean getRedisClientConnectState(String url, String name) throws TaskMsgException {
         RedisURI turi = null;
@@ -96,10 +99,50 @@ public class RedisUrlUtils {
     }
 
 
+    /**
+     * 获取redis版本号
+     * info信息中若无版本号信息则返回0L
+     * @param targetUri
+     * @return
+     * @throws URISyntaxException
+     */
+    public static double selectSyncerVersion( String targetUri) throws URISyntaxException {
+
+        RedisURI targetUriplus = new RedisURI(targetUri);
+        /**
+         * 源目标
+         */
+        Jedis target = null;
+        double targetVersion = 0.0;
+        try {
+            target = new Jedis(targetUriplus.getHost(), targetUriplus.getPort());
+            Configuration targetConfig = Configuration.valueOf(targetUriplus);
+
+            //获取password
+            if (targetConfig.getAuthPassword() != null) {
+                Object targetAuth = target.auth(targetConfig.getAuthPassword());
+            }
+            String info=target.info();
+
+            targetVersion = TestJedisClient.getRedisVersion(info);
+
+        } catch (Exception e) {
+
+        } finally {
+            if (target != null)
+                target.close();
+        }
+        return targetVersion;
+    }
 
 
-
-
+    /**
+     * 获取target和source之间的版本对应关系
+     * @param sourceUri
+     * @param targetUri
+     * @return
+     * @throws URISyntaxException
+     */
     public static RedisVersion selectSyncerVersion(String sourceUri, String targetUri) throws URISyntaxException {
         RedisURI sourceUriplus = new RedisURI(sourceUri);
         RedisURI targetUriplus = new RedisURI(targetUri);
@@ -126,8 +169,10 @@ public class RedisUrlUtils {
                 Object targetAuth = target.auth(targetConfig.getAuthPassword());
             }
 
-            sourceVersion = TestJedisClient.getRedisVersion(source);
-            targetVersion = TestJedisClient.getRedisVersion(target);
+            String sourceInfo=source.info();
+            sourceVersion = TestJedisClient.getRedisVersion(sourceInfo);
+            String targetInfo=target.info();
+            targetVersion = TestJedisClient.getRedisVersion(targetInfo);
 
         } catch (Exception e) {
 
@@ -146,6 +191,45 @@ public class RedisUrlUtils {
             return RedisVersion.OTHER;
         }
     }
+
+
+    /**
+     * 从配置文件中获取rdb版本号
+     * @param redisVersion
+     * @return
+     */
+    public static synchronized  Integer getRdbVersion(Double redisVersion){
+        Object lock=new Object();
+        //单例模式
+        if(rdbVersion==null){
+            //加锁维持多任务的线程安全
+            synchronized (lock){
+                if(rdbVersion==null){
+                    rdbVersion = (Map)JSON.parse(FileUtils.getText(TemplateUtils.class.getClassLoader().getResourceAsStream(
+                            "rdbsetting.json")));
+                }
+            }
+
+        }
+        System.out.println(JSON.toJSONString(rdbVersion));
+
+        Object rdb=rdbVersion.get(redisVersion);
+
+        if(rdb!=null){
+            return  Integer.valueOf((String) rdb);
+        }
+        if(rdb instanceof  Integer){
+            return (Integer) rdb;
+        }else {
+            System.out.println(rdb);
+            System.out.println("----------");
+
+            return 0;
+        }
+
+
+    }
+
 
 
     /**
@@ -198,6 +282,10 @@ public class RedisUrlUtils {
             }
         }
     }
+
+    /**
+     * 初始化
+     */
 
 
     /**
@@ -401,12 +489,44 @@ public class RedisUrlUtils {
     }
 
 
-    public static synchronized Integer getRdbVersion(double redisVersion){
-        if(rdbVersion==null){
-            rdbVersion= (Map<Double, Integer>) JSON.parse(FileUtils.getText(TemplateUtils.class.getClassLoader().getResourceAsStream(
-                    "rdbsetting.json")));
+//    public static synchronized Integer getRdbVersion(double redisVersion){
+//        if(rdbVersion==null){
+//            rdbVersion= (Map<Double, Integer>) JSON.parse(FileUtils.getText(TemplateUtils.class.getClassLoader().getResourceAsStream(
+//                    "rdbsetting.json")));
+//        }
+//
+//
+//        System.out.println(redisVersion);
+//        System.out.println("===: "+rdbVersion.get(redisVersion));
+////        Integer  rdbVer=rdbVersion.get(redisVersion);
+////        if(rdbVer==null)
+////            return 0;
+//
+//        return 0;
+//    }
+
+
+
+
+    /**
+     * 检查reids是否能够连接
+     *
+     * @param url
+     * @param name
+     * @throws TaskMsgException
+     */
+     public static synchronized void  checkRedisUrl(String url, String name) throws TaskMsgException {
+
+        try {
+            if (!RedisUrlUtils.checkRedisUrl(url)) {
+                throw new TaskMsgException("scheme must be [redis].");
+            }
+            if (!RedisUrlUtils.getRedisClientConnectState(url, name)) {
+                throw new TaskMsgException(name + " :连接redis失败");
+            }
+        } catch (URISyntaxException e) {
+            throw new TaskMsgException(e.getMessage());
         }
-        return rdbVersion.get(redisVersion);
     }
 
 

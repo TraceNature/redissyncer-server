@@ -16,7 +16,8 @@ public class RedisSyncDataDto extends SyncDataDto {
     private String targetUri;
     @NotBlank(message = "任务名称不能为空")
     private String threadName;
-
+    private double redisVersion;
+    private int rdbVersion;
 
     public RedisSyncDataDto() {
         super(1, 100, 3000, 15000, 15000, 1, "off",new HashMap<>());
@@ -27,5 +28,21 @@ public class RedisSyncDataDto extends SyncDataDto {
         this.sourceUri = sourceUri;
         this.targetUri = targetUri;
         this.threadName = threadName;
+    }
+
+    public double getRedisVersion() {
+        return redisVersion;
+    }
+
+    public void setRedisVersion(double redisVersion) {
+        this.redisVersion = redisVersion;
+    }
+
+    public int getRdbVersion() {
+        return rdbVersion;
+    }
+
+    public void setRdbVersion(int rdbVersion) {
+        this.rdbVersion = rdbVersion;
     }
 }

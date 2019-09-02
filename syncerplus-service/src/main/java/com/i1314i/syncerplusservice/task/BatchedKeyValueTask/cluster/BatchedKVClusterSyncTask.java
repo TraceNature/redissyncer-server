@@ -82,8 +82,7 @@ public class BatchedKVClusterSyncTask implements Runnable {
              */
 
             Replicator r = RedisMigrator.bacthedCommandDress(new RedisReplicator(suri));
-             SyncJedisClusterClient poolss=RedisUrlUtils.getConnectionClusterPool(syncDataDto);
-
+            SyncJedisClusterClient poolss=RedisUrlUtils.getConnectionClusterPool(syncDataDto);
             redisClient=poolss.jedisCluster();
 
             /**

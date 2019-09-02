@@ -139,8 +139,8 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
      */
     @Override
     public void sync(String sourceUri, String targetUri) throws TaskMsgException {
-        checkRedisUrl(sourceUri, "sourceUri");
-        checkRedisUrl(targetUri, "targetUri");
+        RedisUrlUtils.checkRedisUrl(sourceUri, "sourceUri");
+        RedisUrlUtils.checkRedisUrl(targetUri, "targetUri");
         String threadName = TemplateUtils.uuid();
         if (TaskMonitorUtils.containsKeyAliveMap(threadName)) {
             throw new TaskMsgException(TaskMsgConstant.Task_MSG_PARSE_ERROR_CODE);
@@ -158,8 +158,8 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
     @Override
     public void sync(String sourceUri, String targetUri, String threadName) throws TaskMsgException {
 
-        checkRedisUrl(sourceUri, "sourceUri");
-        checkRedisUrl(targetUri, "targetUri");
+        RedisUrlUtils.checkRedisUrl(sourceUri, "sourceUri");
+        RedisUrlUtils.checkRedisUrl(targetUri, "targetUri");
         if (TaskMonitorUtils.containsKeyAliveMap(threadName)) {
             throw new TaskMsgException(TaskMsgConstant.Task_MSG_PARSE_ERROR_CODE);
         }
@@ -168,8 +168,8 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
 
     @Override
     public void sync(RedisSyncDataDto syncDataDto) throws TaskMsgException {
-        checkRedisUrl(syncDataDto.getSourceUri(), "sourceUri");
-        checkRedisUrl(syncDataDto.getTargetUri(), "targetUri");
+        RedisUrlUtils.checkRedisUrl(syncDataDto.getSourceUri(), "sourceUri");
+        RedisUrlUtils.checkRedisUrl(syncDataDto.getTargetUri(), "targetUri");
         RedisVersion redisVersion = null;
         try {
             redisVersion = RedisUrlUtils.selectSyncerVersion(syncDataDto.getSourceUri(), syncDataDto.getTargetUri());
@@ -227,12 +227,14 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         Set<String> targetRedisUris = clusterDto.getTargetUris();
 
         for (String sourceUri : sourceRedisUris) {
-            checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
+            RedisUrlUtils.checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
         }
 
         for (String targetUri : targetRedisUris) {
-            checkRedisUrl(targetUri, " sourceUri: " + targetUri);
+            RedisUrlUtils.checkRedisUrl(targetUri, " sourceUri: " + targetUri);
         }
+
+
 
 
         try {
@@ -252,11 +254,11 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         } else if (clusterDto.getSourceUris().size() == 1 && clusterDto.getTargetUris().size() > 1) {
 
             for (String sourceUri : sourceRedisUris) {
-                checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
+                RedisUrlUtils.checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
             }
 
             for (String targetUri : targetRedisUris) {
-                checkRedisUrl(targetUri, "sourceUri: " + targetUri);
+                RedisUrlUtils.checkRedisUrl(targetUri, "sourceUri: " + targetUri);
             }
 
             //单机往cluster迁移
@@ -283,11 +285,11 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         Set<String> targetRedisUris = clusterDto.getTargetUris();
 
         for (String sourceUri : sourceRedisUris) {
-            checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
+            RedisUrlUtils.checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
         }
 
         for (String targetUri : targetRedisUris) {
-            checkRedisUrl(targetUri, "sourceUri : " + targetUri);
+            RedisUrlUtils.checkRedisUrl(targetUri, "sourceUri : " + targetUri);
         }
 
 
@@ -309,11 +311,11 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         } else if (clusterDto.getSourceUris().size() == 1 && clusterDto.getTargetUris().size() > 1) {
 
             for (String sourceUri : sourceRedisUris) {
-                checkRedisUrl(sourceUri, " sourceUri: " + sourceUri);
+                RedisUrlUtils.checkRedisUrl(sourceUri, " sourceUri: " + sourceUri);
             }
 
             for (String targetUri : targetRedisUris) {
-                checkRedisUrl(targetUri, "sourceUri: " + targetUri);
+                RedisUrlUtils.checkRedisUrl(targetUri, "sourceUri: " + targetUri);
             }
 
             //单机往cluster迁移
@@ -405,11 +407,11 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         Set<String> targetRedisUris = clusterDto.getTargetUris();
 
         for (String sourceUri : sourceRedisUris) {
-            checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
+            RedisUrlUtils.checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
         }
 
         for (String targetUri : targetRedisUris) {
-            checkRedisUrl(targetUri, "sourceUri: " + targetUri);
+            RedisUrlUtils.checkRedisUrl(targetUri, "sourceUri: " + targetUri);
         }
 
 
@@ -441,11 +443,11 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         Set<String> targetRedisUris = clusterDto.getTargetUris();
 
         for (String sourceUri : sourceRedisUris) {
-            checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
+            RedisUrlUtils.checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
         }
 
         for (String targetUri : targetRedisUris) {
-            checkRedisUrl(targetUri, "sourceUri: " + targetUri);
+            RedisUrlUtils.checkRedisUrl(targetUri, "sourceUri: " + targetUri);
         }
 
         for (String sourceUrl : sourceRedisUris) {
@@ -483,11 +485,11 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         Set<String> targetRedisUris = clusterDto.getTargetUris();
 
         for (String sourceUri : sourceRedisUris) {
-            checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
+            RedisUrlUtils.checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
         }
 
         for (String targetUri : targetRedisUris) {
-            checkRedisUrl(targetUri, "sourceUri: " + targetUri);
+            RedisUrlUtils.checkRedisUrl(targetUri, "sourceUri: " + targetUri);
         }
 
         threadPoolTaskExecutor.submit(new ClusterRdbSameVersionJDCloudRestoreTask(clusterDto, String.valueOf(sourceRedisUris.toArray()[0])));
@@ -504,11 +506,11 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         Set<String> targetRedisUris = clusterDto.getTargetUris();
 
         for (String sourceUri : sourceRedisUris) {
-            checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
+            RedisUrlUtils.checkRedisUrl(sourceUri, "sourceUri: " + sourceUri);
         }
 
         for (String targetUri : targetRedisUris) {
-            checkRedisUrl(targetUri, "sourceUri: " + targetUri);
+            RedisUrlUtils.checkRedisUrl(targetUri, "sourceUri: " + targetUri);
         }
 
         threadPoolTaskExecutor.submit(new BatchedKVClusterSyncTask(clusterDto, String.valueOf(sourceRedisUris.toArray()[0])));
@@ -655,24 +657,5 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
     }
 
 
-    /**
-     * 检查reids是否能够连接
-     *
-     * @param url
-     * @param name
-     * @throws TaskMsgException
-     */
-    void checkRedisUrl(String url, String name) throws TaskMsgException {
 
-        try {
-            if (!RedisUrlUtils.checkRedisUrl(url)) {
-                throw new TaskMsgException("scheme must be [redis].");
-            }
-            if (!RedisUrlUtils.getRedisClientConnectState(url, name)) {
-                throw new TaskMsgException(name + " :连接redis失败");
-            }
-        } catch (URISyntaxException e) {
-            throw new TaskMsgException(e.getMessage());
-        }
-    }
 }

@@ -1,62 +1,42 @@
-package com.i1314i.syncerplusservice.task.BatchedKeyValueTask.single;
+package com.i1314i.syncerplusservice.rdbtask.cluster.command;
 
 import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
-import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
+import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
+import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 import com.moilioncircle.redis.replicator.event.Event;
-import com.moilioncircle.redis.replicator.rdb.datatype.*;
+import com.moilioncircle.redis.replicator.rdb.datatype.ZSetEntry;
 import com.moilioncircle.redis.replicator.rdb.dump.datatype.DumpKeyValuePair;
 import com.moilioncircle.redis.replicator.rdb.iterable.datatype.*;
 import lombok.extern.slf4j.Slf4j;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.params.SetParams;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
 
-/**
- * 不相同版本之间的数据迁移
- */
 @Slf4j
-public class BatchedRestoreTask implements Callable<Object> {
-    private Event event;
+public class SendClusterRdbCommand implements Runnable {
     private Long ms;
-    private String key;
-    private StringBuffer info;
-    private Jedis targetJedis;
     private RedisCommandTypeEnum typeEnum;
-    private JDJedisClientPool targetJedisClientPool;
-    private double redisVersion;
+    private Event event;
+    private JedisClusterPlus targetJedis;
+    private String key;
 
-    public BatchedRestoreTask(Event event, Long ms, String key, StringBuffer info, Jedis targetJedis, RedisCommandTypeEnum typeEnum, double redisVersion) {
-        this.event = event;
-        this.ms = ms;
-        this.key = key;
-        this.info = info;
-        this.targetJedis = targetJedis;
-        this.typeEnum = typeEnum;
-        this.targetJedisClientPool = targetJedisClientPool;
-        this.redisVersion = redisVersion;
-    }
 
-    public BatchedRestoreTask(Event event, Long ms, String key, StringBuffer info, Jedis targetJedis, RedisCommandTypeEnum typeEnum) {
-        this.event = event;
+    public SendClusterRdbCommand(Long ms, RedisCommandTypeEnum typeEnum, Event event, JedisClusterPlus redisClient, String key) {
         this.ms = ms;
-        this.key = key;
-        this.info = info;
-        this.targetJedis = targetJedis;
         this.typeEnum = typeEnum;
-        this.targetJedisClientPool = targetJedisClientPool;
-        this.redisVersion = 0L;
+        this.event = event;
+        this.targetJedis = redisClient;
+        this.key = key;
     }
 
     @Override
-    public Object call() throws Exception {
-
+    public void run() {
         Object r = null;
+        StringBuilder info = new StringBuilder();
         int i = 3;
         try {
             while (i > 0) {
@@ -86,23 +66,30 @@ public class BatchedRestoreTask implements Callable<Object> {
                         r = targetJedis.zadd(valueZSet.getKey(), map);
 
                     } else if (typeEnum.equals(RedisCommandTypeEnum.HASH)) {
+
                         BatchedKeyStringValueHash valueHash = (BatchedKeyStringValueHash) event;
+
                         r = targetJedis.hmset(valueHash.getKey(), valueHash.getValue());
                     } else if (typeEnum.equals(RedisCommandTypeEnum.DUMP)) {
+
                         DumpKeyValuePair valueDump = (DumpKeyValuePair) event;
-                        if (redisVersion < 3.0) {
-                            if (targetJedis.exists(valueDump.getKey())) {
-                                if (targetJedis.del(valueDump.getKey()) >= 0) {
-                                    r = targetJedis.restore(valueDump.getKey(), 0, valueDump.getValue());
-                                }else {
-                                    r = targetJedis.restore(valueDump.getKey(), 0, valueDump.getValue());
-                                }
-                            }else{
-                                r = targetJedis.restore(valueDump.getKey(), 0, valueDump.getValue());
-                            }
-                        } else {
-                            r = targetJedis.restoreReplace(valueDump.getKey(), 0, valueDump.getValue());
+
+
+                        if(targetJedis.del(valueDump.getKey())>=0){
+                            r = targetJedis.restore(valueDump.getKey(), 0, valueDump.getValue());
+
                         }
+
+//                        if (targetJedis.exists(valueDump.getKey())) {
+//                            if (targetJedis.del(valueDump.getKey()) >= 0) {
+//                                r = targetJedis.restore(valueDump.getKey(), 0, valueDump.getValue());
+//                            } else {
+//                                r = targetJedis.restore(valueDump.getKey(), 0, valueDump.getValue());
+//                            }
+//                        } else {
+//                            r = targetJedis.restore(valueDump.getKey(), 0, valueDump.getValue());
+//                        }
+
                     }
 
                 } else {
@@ -130,26 +117,27 @@ public class BatchedRestoreTask implements Callable<Object> {
                         targetJedis.pexpire(valueZSet.getKey(), ms);
 
                     } else if (typeEnum.equals(RedisCommandTypeEnum.HASH)) {
+
                         BatchedKeyStringValueHash valueHash = (BatchedKeyStringValueHash) event;
                         r = targetJedis.hmset(valueHash.getKey(), valueHash.getValue());
                         targetJedis.pexpire(valueHash.getKey(), ms);
                     } else if (typeEnum.equals(RedisCommandTypeEnum.DUMP)) {
-                        DumpKeyValuePair valueDump = (DumpKeyValuePair) event;
-                        int ttl = (int) (ms / 1000);
 
-                        if (redisVersion < 3.0) {
-                            if (targetJedis.exists(valueDump.getKey())) {
-                                if (targetJedis.del(valueDump.getKey()) >= 0) {
-                                    r = targetJedis.restore(valueDump.getKey(), ttl, valueDump.getValue());
-                                }else {
-                                    r = targetJedis.restore(valueDump.getKey(), ttl, valueDump.getValue());
-                                }
-                            }else {
-                                r = targetJedis.restore(valueDump.getKey(), ttl, valueDump.getValue());
-                            }
-                        } else {
-                            r = targetJedis.restoreReplace(valueDump.getKey(), ttl, valueDump.getValue());
+                        DumpKeyValuePair valueDump = (DumpKeyValuePair) event;
+                        if(targetJedis.del(valueDump.getKey())>=0){
+                            r = targetJedis.restore(valueDump.getKey(), Math.toIntExact(ms), valueDump.getValue());
+
                         }
+//                        int ttl = (int) (ms / 1000);
+//                        if (targetJedis.exists(valueDump.getKey())) {
+//                            if (targetJedis.del(valueDump.getKey()) >= 0) {
+//                                r = targetJedis.restore(valueDump.getKey(), Math.toIntExact(ms), valueDump.getValue());
+//                            } else {
+//                                r = targetJedis.restore(valueDump.getKey(), Math.toIntExact(ms), valueDump.getValue());
+//                            }
+//                        } else {
+//                            r = targetJedis.restore(valueDump.getKey(), Math.toIntExact(ms), valueDump.getValue());
+//                        }
                     }
 
 
@@ -158,7 +146,7 @@ public class BatchedRestoreTask implements Callable<Object> {
                     if (r.equals("OK")) {
                         i = -1;
                         info.append(key);
-                        info.append("->");
+                        info.append("-> ");
                         info.append(r.toString());
                         log.info(info.toString());
                         break;
@@ -206,13 +194,12 @@ public class BatchedRestoreTask implements Callable<Object> {
             log.info(epx.getMessage() + ": " + i + ":" + key);
         } finally {
 
-            if (targetJedis != null) {
-                targetJedis.close();
-            }
+//            if (targetJedis != null) {
+////                targetJedisClientPool.returnBrokenResource(targetJedis);
+//                targetJedis.close();
+//            }
         }
-        return r;
     }
-
 
     public byte[][] listBytes(List<byte[]> datas) {
         byte[][] array = new byte[datas.size()][];
