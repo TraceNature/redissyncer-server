@@ -9,6 +9,8 @@ import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -20,6 +22,7 @@ import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -105,10 +108,45 @@ public class ExceptionAdvice {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResultMap MethodArgumentNotValidException(MethodArgumentNotValidException e){
-        String message = e.getMessage();
+        String msg = msgConvertor(((MethodArgumentNotValidException) e).getBindingResult());
         return ResultMap.builder().code(CodeConstant.VALITOR_ERROR_CODE)
-                .msg(message);
+                .msg(msg);
     }
+
+
+
+    /*  数据校验处理 */
+//    @ExceptionHandler({BindException.class, ConstraintViolationException.class})
+//    public ResultMap validatorExceptionHandler(Exception e) {
+//        String msg = e instanceof BindException ? msgConvertor(((BindException) e).getBindingResult())
+//                : msgConvertor(((ConstraintViolationException) e).getConstraintViolations());
+//
+//                return ResultMap.builder().code(CodeConstant.VALITOR_ERROR_CODE)
+//                .msg(msg);
+//
+//    }
+
+    /**
+     * 校验消息转换拼接
+     *
+     * @param bindingResult
+     * @return
+     */
+    public static String msgConvertor(BindingResult bindingResult) {
+        List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+        StringBuilder sb = new StringBuilder();
+        fieldErrors.forEach(fieldError -> sb.append(fieldError.getDefaultMessage()).append(","));
+
+        return sb.deleteCharAt(sb.length() - 1).toString().toLowerCase();
+    }
+
+    private String msgConvertor(Set<ConstraintViolation<?>> constraintViolations) {
+        StringBuilder sb = new StringBuilder();
+        constraintViolations.forEach(violation -> sb.append(violation.getMessage()).append(","));
+
+        return sb.deleteCharAt(sb.length() - 1).toString().toLowerCase();
+    }
+
 
 
     /**

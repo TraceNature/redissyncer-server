@@ -3,14 +3,13 @@ package com.i1314i.syncerplusservice.replicator.service;
 import com.moilioncircle.redis.replicator.*;
 import com.moilioncircle.redis.replicator.io.PeekableInputStream;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.util.Objects;
 
-public class JDRedisReplicator  extends RedisReplicator {
+public class JDRedisReplicator  extends RedisReplicator implements Serializable {
+
+
 
     public JDRedisReplicator(File file, FileType fileType, Configuration configuration) throws FileNotFoundException {
         super(file, fileType, configuration);

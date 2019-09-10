@@ -211,7 +211,7 @@ public class RedisUrlUtils {
             }
 
         }
-        System.out.println(JSON.toJSONString(rdbVersion));
+
 
         Object rdb=rdbVersion.get(redisVersion);
 
@@ -221,9 +221,6 @@ public class RedisUrlUtils {
         if(rdb instanceof  Integer){
             return (Integer) rdb;
         }else {
-            System.out.println(rdb);
-            System.out.println("----------");
-
             return 0;
         }
 

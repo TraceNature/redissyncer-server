@@ -34,10 +34,6 @@ public class SendDefaultCommand {
          */
         if (event instanceof DefaultCommand) {
             // Step3: sync aof command
-            RedisUrlUtils.doCommandCheckTask(r);
-            if (RedisUrlUtils.doThreadisCloseCheckTask()) {
-                return;
-            }
 
             RedisClient redisClient = null;
             try {

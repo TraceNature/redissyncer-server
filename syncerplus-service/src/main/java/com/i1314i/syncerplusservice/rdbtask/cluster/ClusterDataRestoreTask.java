@@ -1,27 +1,34 @@
-package com.i1314i.syncerplusservice.rdbtask.single;
+package com.i1314i.syncerplusservice.rdbtask.cluster;
 
 import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
 import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
 import com.i1314i.syncerplusservice.entity.RedisInfo;
+import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
+import com.i1314i.syncerplusservice.rdbtask.cluster.command.SendClusterRdbCommand;
+import com.i1314i.syncerplusservice.rdbtask.cluster.command.SendClusterRdbCommand1;
 import com.i1314i.syncerplusservice.rdbtask.enums.RedisCommandType;
 import com.i1314i.syncerplusservice.rdbtask.single.command.SendRdbCommand;
 import com.i1314i.syncerplusservice.replicator.listener.ValueDumpIterableEventListener;
 import com.i1314i.syncerplusservice.replicator.service.JDRedisReplicator;
 import com.i1314i.syncerplusservice.replicator.visitor.ValueDumpIterableRdbVisitor;
+import com.i1314i.syncerplusservice.service.command.SendClusterDefaultCommand;
 import com.i1314i.syncerplusservice.service.command.SendDefaultCommand;
+import com.i1314i.syncerplusservice.service.command.SendRDBClusterDefaultCommand;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusservice.task.BatchedKeyValueTask.cluster.RdbClusterCommand;
+import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
+import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.i1314i.syncerplusservice.util.TaskMsgUtils;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Replicator;
-import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
 import com.moilioncircle.redis.replicator.event.Event;
 import com.moilioncircle.redis.replicator.event.EventListener;
 import com.moilioncircle.redis.replicator.event.PostRdbSyncEvent;
@@ -36,12 +43,14 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.NoRouteToHostException;
+import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Map;
 
 @Slf4j
-public class SingleDataRestoreTask implements Runnable {
+public class ClusterDataRestoreTask implements Runnable {
     static ThreadPoolConfig threadPoolConfig;
     static ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
@@ -55,15 +64,17 @@ public class SingleDataRestoreTask implements Runnable {
     private int threadCount = 30;  //写线程数
     private boolean status = true;
     private String threadName; //线程名称
-    private RedisSyncDataDto syncDataDto;
-    private SendDefaultCommand sendDefaultCommand=new SendDefaultCommand();
+    private RedisClusterDto syncDataDto;
+    private SendRDBClusterDefaultCommand sendDefaultCommand=new SendRDBClusterDefaultCommand();
+    private RdbClusterCommand sendDumpKeyDiffVersionCommand=new RdbClusterCommand();
+    private  JedisClusterPlus redisClient;
     private double redisVersion;
+    SendClusterRdbCommand1 clusterRdbCommand=new SendClusterRdbCommand1();
     private RedisInfo info;
     private String taskId;
-    public SingleDataRestoreTask(RedisSyncDataDto syncDataDto, RedisInfo info,String taskId) {
+    public ClusterDataRestoreTask(RedisClusterDto syncDataDto, RedisInfo info,String sourceUri,String taskId) {
         this.syncDataDto = syncDataDto;
-        this.sourceUri = syncDataDto.getSourceUri();
-        this.targetUri = syncDataDto.getTargetUri();
+        this.sourceUri=sourceUri;
         this.threadName = syncDataDto.getThreadName();
         this.info=info;
         this.taskId=taskId;
@@ -81,67 +92,67 @@ public class SingleDataRestoreTask implements Runnable {
 
         try {
             RedisURI suri = new RedisURI(sourceUri);
-            RedisURI turi = new RedisURI(targetUri);
-            JDJedisClientPool targetJedisClientPool = RedisUrlUtils.getJDJedisClient(syncDataDto, turi);
-
-
-            ConnectionPool pools = RedisUrlUtils.getConnectionPool();
-            final ConnectionPool pool = pools;
-
-
-            /**
-             * 初始化连接池
-             */
-            pool.init(syncDataDto.getMinPoolSize(), syncDataDto.getMaxPoolSize(), syncDataDto.getMaxWaitTime(), turi, syncDataDto.getTimeBetweenEvictionRunsMillis(), syncDataDto.getIdleTimeRunsMillis());
-
-
+            SyncJedisClusterClient poolss=RedisUrlUtils.getConnectionClusterPool(syncDataDto);
+            redisClient=poolss.jedisCluster();
             final Replicator r  = RedisMigrator.newBacthedCommandDress(new JDRedisReplicator(suri));
-
             TaskMsgUtils.getThreadMsgEntity(taskId).addReplicator(r);
 
             r.setRdbVisitor(new ValueDumpIterableRdbVisitor(r,info.getRdbVersion()));
-//            1036363
-//
-//            r.getConfiguration().setReplOffset(10000);
-//            r.getConfiguration().setReplId("e1399afce9f5b5c35c5315ae68e4807fe81e764f");
             r.addEventListener(new ValueDumpIterableEventListener(1000, new EventListener() {
                 @Override
                 public void onEvent(Replicator replicator, Event event) {
-
-//                    r.getConfiguration().getReplOffset()
 
 
                     if (TaskMsgUtils.doThreadisCloseCheckTask(taskId)){
 
                         try {
+                          if(redisClient!=null){
+                              redisClient.close();
+                          }
                             r.close();
 
+
                             if(status){
-                                Thread.currentThread().interrupt();
+                               Thread.currentThread().interrupt();
                                 status= false;
-                                System.out.println("线程正准备关闭...." + Thread.currentThread().getName());
+                                TaskMsgUtils.stopCreateThread(Arrays.asList(taskId));
+                                System.out.println(" 线程正准备关闭...." + Thread.currentThread().getName());
                             }
 
                         } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (TaskMsgException e) {
                             e.printStackTrace();
                         }
                         return;
                     }
 
+
                     if (event instanceof PreRdbSyncEvent) {
-                        log.info("{} :全量同步启动");
+                        log.info("{} :全量同步启动 ");
                     }
 
 
                     if (event instanceof PostRdbSyncEvent) {
-                        log.info("{} :全量同步结束");
+                        log.info("{} :全量同步结束 ");
                     }
 
                     if (event instanceof BatchedKeyValuePair<?, ?>) {
 
+
+
                         BatchedKeyValuePair event1 = (BatchedKeyValuePair) event;
+                        if (event1.getDb() == null)
+                            return;
+
                         DB db=event1.getDb();
-                        int dbbnum= (int) db.getDbNumber();
+                        if(null!=syncDataDto.getDbNum()&&syncDataDto.getDbNum().size()>0){
+                            if(syncDataDto.getDbNum().containsKey((int)db.getDbNumber())){
+                            }else {
+                                return;
+                            }
+                        }
+
                         Long ms;
                         if(event1.getExpiredMs()==null){
                             ms =0L;
@@ -149,17 +160,9 @@ public class SingleDataRestoreTask implements Runnable {
                             ms =event1.getExpiredMs()-System.currentTimeMillis();
                         }
                         if (event1.getValue() != null) {
-
-                            if(null!=syncDataDto.getDbNum()&&syncDataDto.getDbNum().size()>0){
-                                if(syncDataDto.getDbNum().containsKey((int)db.getDbNumber())){
-                                    dbbnum=syncDataDto.getDbNum().get((int)db.getDbNumber());
-                                }else {
-                                    return;
-                                }
-                            }
-
                             try {
-                                threadPoolTaskExecutor.submit(new SendRdbCommand(ms, RedisCommandType.getRedisCommandTypeEnum(event1.getValueRdbType()),event,RedisCommandType.getJDJedis(targetJedisClientPool,event,syncDataDto.getDbNum()),new String((byte[]) event1.getKey()),syncDataDto.getRedisVersion()));
+//                                clusterRdbCommand.sendCommand(ms, RedisCommandType.getRedisCommandTypeEnum(event1.getValueRdbType()),event,redisClient,new String((byte[]) event1.getKey()));
+                                threadPoolTaskExecutor.submit(new SendClusterRdbCommand(ms, RedisCommandType.getRedisCommandTypeEnum(event1.getValueRdbType()),event,redisClient,new String((byte[]) event1.getKey())));
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -169,7 +172,21 @@ public class SingleDataRestoreTask implements Runnable {
                     }
 
                     if (event instanceof DumpKeyValuePair) {
+
+                        /**
+                         * 若存在Map映射则只同步映射关系中的数据
+                         */
                         DumpKeyValuePair valuePair = (DumpKeyValuePair) event;
+                        if (valuePair.getDb() == null)
+                            return;
+
+                        DB db=valuePair.getDb();
+                        if(null!=syncDataDto.getDbNum()&&syncDataDto.getDbNum().size()>0){
+                            if(syncDataDto.getDbNum().containsKey((int)db.getDbNumber())){
+                            }else {
+                                return;
+                            }
+                        }
 
                         if(valuePair.getValue()!=null){
                             Long ms;
@@ -177,23 +194,12 @@ public class SingleDataRestoreTask implements Runnable {
                                 ms =0L;
                             }else {
                                 ms =valuePair.getExpiredMs()-System.currentTimeMillis();
-//                                ms=ms/1000;
-//                                System.out.println(ms);
-                                System.out.println(ms);
                             }
 
-                            DB db=valuePair.getDb();
-                            int dbbnum= (int) db.getDbNumber();
 
-                            if(null!=syncDataDto.getDbNum()&&syncDataDto.getDbNum().size()>0){
-                                if(syncDataDto.getDbNum().containsKey((int)db.getDbNumber())){
-                                    dbbnum=syncDataDto.getDbNum().get((int)db.getDbNumber());
-                                }else {
-                                    return;
-                                }
-                            }
                             try {
-                                threadPoolTaskExecutor.submit(new SendRdbCommand(ms, RedisCommandTypeEnum.DUMP,event,RedisCommandType.getJDJedis(targetJedisClientPool,event,syncDataDto.getDbNum()),new String((byte[]) valuePair.getKey()),syncDataDto.getRedisVersion()));
+//                                clusterRdbCommand.sendCommand(ms, RedisCommandTypeEnum.DUMP,event,redisClient,new String((byte[]) valuePair.getKey()));
+                                threadPoolTaskExecutor.submit(new SendClusterRdbCommand(ms, RedisCommandTypeEnum.DUMP,event,redisClient,new String((byte[]) valuePair.getKey())));
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -205,13 +211,17 @@ public class SingleDataRestoreTask implements Runnable {
                     /**
                      * 命令同步
                      */
-                    sendDefaultCommand.sendDefaultCommand(event,r,pool,threadPoolTaskExecutor,syncDataDto);
+
+                    /**
+                     * 命令同步
+                     */
+                    sendDefaultCommand.sendDefaultCommand(event,r,redisClient,threadPoolTaskExecutor,taskId);
 
 
                 }
             }));
             r.open();
-        } catch (URISyntaxException e) {
+        }catch (URISyntaxException e) {
             e.printStackTrace();
         } catch (EOFException ex ){
             try {
@@ -226,7 +236,7 @@ public class SingleDataRestoreTask implements Runnable {
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
-          log.warn("任务Id【{}】异常停止，停止原因【{}】",taskId,p.getMessage());
+            log.warn("任务Id【{}】异常停止，停止原因【{}】",taskId,p.getMessage());
         }catch (ConnectException cx){
             try {
                 Map<String,String> msg=TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
@@ -242,6 +252,8 @@ public class SingleDataRestoreTask implements Runnable {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】",taskId,et.getMessage());
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
     }
 

@@ -2,6 +2,7 @@ package com.i1314i.syncerplusservice.persistence;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.i1314i.syncerplusservice.entity.thread.ThreadMsgEntity;
 import com.i1314i.syncerplusservice.util.file.FileUtils;
 
 import java.io.File;
@@ -16,7 +17,7 @@ public class SettingPersistenceTask implements Runnable{
         while (true){
             try {
                 FileUtils.flushSettings();
-                Thread.sleep(1000);
+                Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -26,7 +27,7 @@ public class SettingPersistenceTask implements Runnable{
 
     public static void main(String[] args) {
 
-        Map<String,Thread> aliveThreadHashMap=JSON.parseObject(FileUtils.getText(System.getProperty("user.dir")+ FileUtils.getSettingName()),new TypeReference<HashMap<String,Thread>>() {});
+        Map<String, ThreadMsgEntity> aliveThreadHashMap=JSON.parseObject(FileUtils.getText(System.getProperty("user.dir")+ FileUtils.getSettingName()),new TypeReference<HashMap<String,ThreadMsgEntity>>() {});
         System.out.println(aliveThreadHashMap);
         System.out.println(JSON.toJSONString(aliveThreadHashMap));
         System.out.println(System.getProperty("user.dir"));

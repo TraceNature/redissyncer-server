@@ -6,4 +6,6 @@ public class CodeConstant {
     public static final String HTTP_MSG_PARSE_ERROR_CODE="400";
 
     public static final String VALITOR_ERROR_CODE="100";
+
+
 }

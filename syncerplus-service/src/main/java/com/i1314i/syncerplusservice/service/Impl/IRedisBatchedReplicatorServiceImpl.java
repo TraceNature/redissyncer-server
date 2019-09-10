@@ -7,6 +7,7 @@ import com.i1314i.syncerplusservice.entity.dto.RedisJDClousterClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.rdbtask.cluster.ClusterDataRestoreTask;
 import com.i1314i.syncerplusservice.rdbtask.single.SingleDataRestoreTask;
+import com.i1314i.syncerplusservice.rdbtask.single.pipeline.SingleDataPipelineRestoreTask;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.task.BatchedKeyValueTask.cluster.BatchedKVClusterSyncTask;
@@ -61,6 +62,11 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
 
     @Override
     public void batchedSync(RedisClusterDto clusterDto) throws TaskMsgException {
+
+    }
+
+    @Override
+    public void batchedSync(RedisClusterDto clusterDto,String taskId) throws TaskMsgException {
         Set<String> sourceRedisUris = clusterDto.getSourceUris();
         Set<String> targetRedisUris = clusterDto.getTargetUris();
 
@@ -91,17 +97,17 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
 
         if (clusterDto.getTargetUris().size() == 1) {
             //单机 间或者往京东云集群迁移
-            batchedSyncToSingle(clusterDto);
+            batchedSyncToSingle(clusterDto,taskId);
 
         } else if (clusterDto.getSourceUris().size() == 1 && clusterDto.getTargetUris().size() > 1) {
 
 
 
             //单机往cluster迁移
-            batchedSyncSingleToCluster(clusterDto);
+            batchedSyncSingleToCluster(clusterDto,taskId);
         } else {
             //cluster
-            batchedSyncToCluster(clusterDto);
+            batchedSyncToCluster(clusterDto,taskId);
         }
     }
 
@@ -110,7 +116,7 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
      * 往cluster迁移
      * @param clusterDto
      */
-    private void batchedSyncToCluster(RedisClusterDto clusterDto) throws TaskMsgException {
+    private void batchedSyncToCluster(RedisClusterDto clusterDto,String taskId) throws TaskMsgException {
         System.out.println("-----------------batchedSyncToCluster");
         Set<String> sourceRedisUris = clusterDto.getSourceUris();
         Set<String> targetRedisUris = clusterDto.getTargetUris();
@@ -126,7 +132,7 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
         int i=0;
         for (String sourceUrl : sourceRedisUris) {
 //            threadPoolTaskExecutor.submit(new BatchedKVClusterSyncTask(clusterDto, sourceUrl));
-            threadPoolTaskExecutor.execute(new ClusterDataRestoreTask(clusterDto, (RedisInfo) clusterDto.getTargetUriData().toArray()[i],sourceUrl));
+            threadPoolTaskExecutor.execute(new ClusterDataRestoreTask(clusterDto, (RedisInfo) clusterDto.getTargetUriData().toArray()[i],sourceUrl,taskId));
             i++;
         }
 
@@ -157,7 +163,7 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
      * 单机往cluster迁移
      * @param clusterDto
      */
-    private void batchedSyncSingleToCluster(RedisClusterDto clusterDto) throws TaskMsgException {
+    private void batchedSyncSingleToCluster(RedisClusterDto clusterDto,String taskId) throws TaskMsgException {
         System.out.println("-----------------batchedSyncSingleToCluster");
         Set<String> sourceRedisUris = clusterDto.getSourceUris();
         Set<String> targetRedisUris = clusterDto.getTargetUris();
@@ -171,14 +177,14 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
         }
 
 
-        threadPoolTaskExecutor.execute(new ClusterDataRestoreTask(clusterDto, (RedisInfo) clusterDto.getTargetUriData().toArray()[0], (String) sourceRedisUris.toArray()[0]));
+        threadPoolTaskExecutor.execute(new ClusterDataRestoreTask(clusterDto, (RedisInfo) clusterDto.getTargetUriData().toArray()[0], (String) sourceRedisUris.toArray()[0],taskId));
         log.info("--------单机到集群-------");
 
 
     }
 
 
-    private void batchedSyncToSingle(RedisClusterDto clusterDto) {
+    private void batchedSyncToSingle(RedisClusterDto clusterDto, String taskId) {
         /**
          * 获取所有地址并处理新建线程进行同步
          */
@@ -195,9 +201,9 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
             //进行数据同步
             try {
                 if (i == 0) {
-                    syncTask(syncDataDto, source, String.valueOf(targetRedisUris.toArray()[0]), true);
+                    syncTask(syncDataDto, source, String.valueOf(targetRedisUris.toArray()[0]), true,taskId);
                 } else {
-                    syncTask(syncDataDto, source, String.valueOf(targetRedisUris.toArray()[0]), false);
+                    syncTask(syncDataDto, source, String.valueOf(targetRedisUris.toArray()[0]), false,taskId);
                 }
                 i++;
             } catch (TaskMsgException e) {
@@ -216,12 +222,17 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
     /*
      * zzj add 提出判断连接的部分
      * */
-    public void syncTask(RedisSyncDataDto syncDataDto, String sourceUri, String targetUri, boolean status) throws TaskMsgException {
+    public void syncTask(RedisSyncDataDto syncDataDto, String sourceUri, String targetUri, boolean status,String taskId) throws TaskMsgException {
         if (status) {
             if (TaskMonitorUtils.containsKeyAliveMap(syncDataDto.getThreadName())) {
                 throw new TaskMsgException(TaskMsgConstant.Task_MSG_PARSE_ERROR_CODE);
             }
         }
-        threadPoolTaskExecutor.execute(new SingleDataRestoreTask(syncDataDto, (RedisInfo) syncDataDto.getTargetUriData().toArray()[0]));
+
+//SingleDataPipelineRestoreTask
+
+        threadPoolTaskExecutor.execute(new SingleDataPipelineRestoreTask(syncDataDto, (RedisInfo) syncDataDto.getTargetUriData().toArray()[0],taskId));
+
+//        threadPoolTaskExecutor.execute(new SingleDataRestoreTask(syncDataDto, (RedisInfo) syncDataDto.getTargetUriData().toArray()[0],taskId));
     }
 }

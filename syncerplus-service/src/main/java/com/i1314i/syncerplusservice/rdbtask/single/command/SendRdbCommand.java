@@ -191,7 +191,7 @@ private double redisVersion;
 
             }
         } catch (Exception epx) {
-            log.info(epx.getMessage() + ": " + i + ":" + key );
+            log.warn(epx.getMessage() + ": " + i + ":" + key );
         } finally {
 
             if(targetJedis!=null){
@@ -221,4 +221,8 @@ private double redisVersion;
         return map;
     }
 
+
+    public void sendPipelineComand(){
+
+    }
 }

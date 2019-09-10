@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.Socket;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -38,7 +39,7 @@ import static com.i1314i.syncerplusservice.replicator.service.JDRedisSocketRepli
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
-public class JDRedisSocketReplicator extends AbstractReplicator {
+public class JDRedisSocketReplicator extends AbstractReplicator implements Serializable {
 
     protected static final Logger logger = LoggerFactory.getLogger(JDRedisSocketReplicator.class);
 

@@ -7,6 +7,7 @@ import com.i1314i.syncerplusservice.entity.RedisPoolProps;
 import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.entity.dto.common.SyncDataDto;
+import com.i1314i.syncerplusservice.entity.dto.task.EditRedisClusterDto;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 
@@ -62,7 +63,11 @@ public class DtoCheckUtils {
             syncDataDto.setTimeBetweenEvictionRunsMillis(redisPoolProps.getTimeBetweenEvictionRunsMillis());
         }
 
+        if (syncDataDto instanceof EditRedisClusterDto) {
 
+            updateUri((RedisClusterDto) syncDataDto);
+            syncDataDto.setTimeBetweenEvictionRunsMillis(redisPoolProps.getTimeBetweenEvictionRunsMillis());
+        }
         return syncDataDto;
     }
 
@@ -76,7 +81,7 @@ public class DtoCheckUtils {
 
         redisClusterDto.setSourceUris(getUrlList(redisClusterDto.getSourceRedisAddress(), redisClusterDto.getSourcePassword()));
         redisClusterDto.setTargetUris(getUrlList(redisClusterDto.getTargetRedisAddress(), redisClusterDto.getTargetPassword()));
-        System.out.println(JSON.toJSONString(redisClusterDto.getTargetUris()));
+
         for (String uri : redisClusterDto.getTargetUris()
         ) {
             double redisVersion = 0L;

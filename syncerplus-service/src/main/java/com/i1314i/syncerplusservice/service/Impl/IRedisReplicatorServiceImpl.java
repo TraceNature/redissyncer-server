@@ -326,6 +326,11 @@ public class IRedisReplicatorServiceImpl implements IRedisReplicatorService {
         }
     }
 
+    @Override
+    public void batchedSync(RedisClusterDto clusterDto, String taskId) throws TaskMsgException {
+
+    }
+
 
     /**
      * 大KV目标为单机节点时

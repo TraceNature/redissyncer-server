@@ -184,8 +184,6 @@ public class SyncPipeSameTask implements Runnable {
                             pipelined.restoreReplace(kv.getKey(),times,kv.getValue());
 
                         }
-
-
                     }
 
 
