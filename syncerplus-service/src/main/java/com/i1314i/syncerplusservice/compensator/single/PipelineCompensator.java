@@ -3,17 +3,17 @@ package com.i1314i.syncerplusservice.compensator.single;
 import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
 import com.i1314i.syncerplusservice.entity.EventEntity;
-import com.i1314i.syncerplusservice.entity.PipelineDataEntity;
 import com.i1314i.syncerplusservice.entity.thread.EventTypeEntity;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusservice.task.clusterTask.command.ClusterProtocolCommand;
 import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
 import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
-import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.i1314i.syncerplusservice.util.TaskMsgUtils;
 import com.moilioncircle.redis.replicator.Configuration;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.rdb.datatype.DB;
 import lombok.extern.slf4j.Slf4j;
+import redis.clients.jedis.Protocol;
 import redis.clients.jedis.params.SetParams;
 
 import java.net.URISyntaxException;
@@ -33,6 +33,7 @@ public class PipelineCompensator {
         //提交数据的总量
         int statusListLenght = statusList.size();
         int aNum=0;
+        System.out.println(statusList.size()+": "+keys.size());
         Set<EventEntity> mistakeKeys = new HashSet<>();
         for (int i = 0; i < statusList.size(); i++) {
             Object status = statusList.get(i);
@@ -62,6 +63,9 @@ public class PipelineCompensator {
             }
 
         }
+        statusList.clear();
+        keys.clear();
+
             if(mistakeKeys==null||mistakeKeys.size()==0){
 
                 return true;
@@ -166,6 +170,18 @@ public class PipelineCompensator {
                         break;
                     }
 
+
+                    try {
+                       CommandConpensator(eventEntity.getRedisCommandTypeEnum(), tJdJedis,eventEntity);
+                    } catch (Exception e) {
+                        try {
+                            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+                        } catch (TaskMsgException ex) {
+                            e.printStackTrace();
+                        }
+                        break;
+                    }
+
                     /**
                     if(eventEntity.getRedisCommandTypeEnum().equals(RedisCommandTypeEnum.DUMP)){
                         if(eventEntity.getMs()!=0L){
@@ -241,6 +257,19 @@ public class PipelineCompensator {
 
 
         return true;
+    }
+
+    private static void CommandConpensator(RedisCommandTypeEnum redisCommandTypeEnum, JDJedis tJdJedis, EventEntity eventEntity) {
+
+        if (redisCommandTypeEnum.equals(RedisCommandTypeEnum.COMMAND)) {
+            if(eventEntity.getCommand()!=null){
+                tJdJedis.sendCommand(new ClusterProtocolCommand(eventEntity.getCommand().getCommand()),eventEntity.getCommand().getArgs());
+            }
+
+        }
+
+
+
     }
 
 

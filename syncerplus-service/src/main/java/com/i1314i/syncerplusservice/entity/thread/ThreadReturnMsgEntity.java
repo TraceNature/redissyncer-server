@@ -19,6 +19,8 @@ import java.util.List;
 
 public class ThreadReturnMsgEntity {
     private String id;
-    private String threadName;
+    private String taskName;
     private ThreadStatusEnum status;
+    private RedisClusterDto redisClusterDto;
+
 }

@@ -1,6 +1,7 @@
 package com.i1314i.syncerplusservice.entity.dto;
 
 import com.i1314i.syncerplusservice.entity.dto.common.SyncDataDto;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,10 +16,11 @@ public class RedisSyncDataDto extends SyncDataDto {
     @NotBlank(message = "目标redis路径不能为空")
     private String targetUri;
     @NotBlank(message = "任务名称不能为空")
-    private String threadName;
+    private String taskName;
     private double redisVersion;
     private int rdbVersion;
-
+    @Builder.Default
+    private boolean afresh=true;
     public RedisSyncDataDto() {
         super(1, 100, 3000, 15000, 15000, 1, "off",new HashMap<>());
     }
@@ -27,7 +29,7 @@ public class RedisSyncDataDto extends SyncDataDto {
         super(minPoolSize,maxPoolSize,maxWaitTime,timeBetweenEvictionRunsMillis,idleTimeRunsMillis);
         this.sourceUri = sourceUri;
         this.targetUri = targetUri;
-        this.threadName = threadName;
+        this.taskName = threadName;
     }
 
     public double getRedisVersion() {

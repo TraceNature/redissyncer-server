@@ -8,6 +8,8 @@ import lombok.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 @Builder
@@ -15,16 +17,21 @@ import java.util.List;
 
 @EqualsAndHashCode
 public class ThreadMsgEntity implements Serializable {
+
     private Thread thread;
     private String id;
-    private String threadName;
+    private String taskName;
     private ThreadStatusEnum status;
     private RedisClusterDto redisClusterDto;
     private List<Replicator> rList=new ArrayList<>();
-
+    private Map<String,OffSetEntity>offsetMap=new ConcurrentHashMap<>();
     public ThreadMsgEntity() {
         if(rList==null){
             rList=new ArrayList<>();
+        }
+
+        if(offsetMap==null){
+            offsetMap=new ConcurrentHashMap<>();
         }
     }
 
@@ -32,8 +39,14 @@ public class ThreadMsgEntity implements Serializable {
         if(rList==null){
             rList=new ArrayList<>();
         }
+
+        if(offsetMap==null){
+            offsetMap=new ConcurrentHashMap<>();
+        }
         if(r!=null)
             rList.add(r);
 
     }
+
+
 }

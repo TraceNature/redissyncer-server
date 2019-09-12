@@ -13,21 +13,21 @@ public interface IRedisReplicatorService {
      * @param redisPath
      * @param aofPath
      */
-    void backupAof(String redisPath, String aofPath);
+//    void backupAof(String redisPath, String aofPath);
 
     /**
      * RDB备份
      * @param redisPath
      * @param path
      */
-    void backUPRdb(String redisPath, String path);
+//    void backUPRdb(String redisPath, String path);
 
-    void sync(String sourceUri, String targetUri) throws TaskMsgException;
-    void sync(String sourceUri, String targetUri,String threadName) throws TaskMsgException;
-    void sync(RedisSyncDataDto syncDataDto) throws TaskMsgException;
+//    void sync(String sourceUri, String targetUri) throws TaskMsgException;
+//    void sync(String sourceUri, String targetUri,String threadName) throws TaskMsgException;
+//    void sync(RedisSyncDataDto syncDataDto) throws TaskMsgException;
 
-    void sync(RedisClusterDto clusterDto) throws TaskMsgException;
-    void batchedSync(RedisClusterDto clusterDto) throws TaskMsgException;
+//    void sync(RedisClusterDto clusterDto) throws TaskMsgException;
+//    void batchedSync(RedisClusterDto clusterDto) throws TaskMsgException;
     void batchedSync(RedisClusterDto clusterDto,String taskId) throws TaskMsgException;
-    void syncToJDCloud(RedisJDClousterClusterDto jdClousterClusterDto) throws TaskMsgException;
+//    void syncToJDCloud(RedisJDClousterClusterDto jdClousterClusterDto) throws TaskMsgException;
 }

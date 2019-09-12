@@ -1,6 +1,5 @@
 package com.i1314i.syncerplusservice.monitor;
 
-import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -18,22 +17,24 @@ public class MinerMonitorThread extends Thread {
     public void run() {
         log.info("Alive线程监控任务启动....");
         while(!done){
-            synchronized (this) {
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                Map<String, Thread>  aliveThreadMap=TaskMonitorUtils.getAliveThreadHashMap();
-                if(aliveThreadMap.size()>0){
-                    for (Map.Entry<String, Thread> entry:aliveThreadMap.entrySet()) {
-                        if(!entry.getValue().isAlive()||entry.getValue().isInterrupted()){
-                            TaskMonitorUtils.removeAliveThread(entry.getKey(),entry.getValue());
-                            TaskMonitorUtils.setStateThread(entry.getKey());
-                        }
-                    }
+//            synchronized (this) {
+//                try {
+//                    Thread.sleep(5000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                Map<String, Thread>  aliveThreadMap=TaskMonitorUtils.getAliveThreadHashMap();
+//                if(aliveThreadMap.size()>0){
+//                    for (Map.Entry<String, Thread> entry:aliveThreadMap.entrySet()) {
+//                        if(!entry.getValue().isAlive()||entry.getValue().isInterrupted()){
+//                            TaskMonitorUtils.removeAliveThread(entry.getKey(),entry.getValue());
+//                            TaskMonitorUtils.setStateThread(entry.getKey());
+//                        }
+//                    }
+//
+//                }
 
-                }
+
 //                if (MinerQueue.unVisitedIsEmpty()
 //                        && MinerQueue.waitingMiseringIsEmpty()
 //                        && MinerQueue.storeIsEmpty()) {
@@ -44,7 +45,7 @@ public class MinerMonitorThread extends Thread {
 //                    LOG.info("MinerMonitorThread已经访问队列URL大小[" + MinerQueue.getUrlSetSize() + "]当前线程[" + Thread.currentThread().getName() + "]");
 //                    LOG.info("用时[" + MinerUtil.msToss(endTime - MinerUtil.starTime) + "]当前线程[" + Thread.currentThread().getName() + "]");
 //                }
-            }
+//            }
         }
     }
 

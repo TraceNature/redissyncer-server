@@ -1,15 +1,10 @@
 package com.i1314i.syncerplusservice.util.file;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.i1314i.syncerplusservice.entity.thread.ThreadMsgEntity;
-import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.i1314i.syncerplusservice.util.TaskMsgUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -246,10 +241,11 @@ public class FileUtils {
                         ThreadMsgEntity newData=new ThreadMsgEntity();
 
                         newData.setId(msgEntity.getId());
-                        newData.setThreadName(msgEntity.getThreadName());
+                        newData.setTaskName(msgEntity.getTaskName());
                         newData.setThread(msgEntity.getThread());
                         newData.setRedisClusterDto(msgEntity.getRedisClusterDto());
                         newData.setStatus(msgEntity.getStatus());
+                        newData.setOffsetMap(msgEntity.getOffsetMap());
 //                        BeanUtils.copyProperties(msgEntity,newData);
 //                        newData.setRList(new ArrayList<>());
                         data.put(d.getKey(),newData);
@@ -287,7 +283,6 @@ public class FileUtils {
 
         return object;
     }
-
     public static void main(String[] args) {
         createSyncerSetting("hello");
     }

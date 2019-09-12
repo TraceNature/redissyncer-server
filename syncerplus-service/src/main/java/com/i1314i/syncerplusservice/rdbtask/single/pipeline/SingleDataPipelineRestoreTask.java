@@ -9,14 +9,12 @@ import com.i1314i.syncerplusservice.entity.RedisInfo;
 import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.entity.thread.EventTypeEntity;
-import com.i1314i.syncerplusservice.pool.ConnectionPool;
+import com.i1314i.syncerplusservice.entity.thread.OffSetEntity;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.rdbtask.enums.RedisCommandType;
-import com.i1314i.syncerplusservice.rdbtask.single.command.SendRdbCommand;
 import com.i1314i.syncerplusservice.replicator.listener.ValueDumpIterableEventListener;
 import com.i1314i.syncerplusservice.replicator.service.JDRedisReplicator;
 import com.i1314i.syncerplusservice.replicator.visitor.ValueDumpIterableRdbVisitor;
-import com.i1314i.syncerplusservice.service.command.SendDefaultCommand;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.task.clusterTask.command.ClusterProtocolCommand;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.LockPipe;
@@ -24,7 +22,6 @@ import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSyncTask;
 import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
-import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.i1314i.syncerplusservice.util.TaskMsgUtils;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Replicator;
@@ -40,7 +37,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import redis.clients.jedis.Jedis;
+import org.springframework.util.StringUtils;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
@@ -52,6 +49,7 @@ import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -74,7 +72,7 @@ public class SingleDataPipelineRestoreTask implements Runnable {
     private SendPipelineRdbCommand sendDefaultCommand = new SendPipelineRdbCommand();
     private RedisInfo info;
     private String taskId;
-
+    private boolean afresh;
     private boolean syncStatus = true;
     Pipeline pipelined = null;
 
@@ -82,7 +80,7 @@ public class SingleDataPipelineRestoreTask implements Runnable {
     @Getter
     @Setter
     private String dbindex="-1";
-
+    private final AtomicLong dbNum = new AtomicLong(0);
     private LockPipe lockPipe = new LockPipe();
     private SyncTaskEntity taskEntity = new SyncTaskEntity();
 
@@ -90,9 +88,10 @@ public class SingleDataPipelineRestoreTask implements Runnable {
         this.syncDataDto = syncDataDto;
         this.sourceUri = syncDataDto.getSourceUri();
         this.targetUri = syncDataDto.getTargetUri();
-        this.threadName = syncDataDto.getThreadName();
+        this.threadName = syncDataDto.getTaskName();
         this.info = info;
         this.taskId = taskId;
+        this.afresh=syncDataDto.isAfresh();
     }
 
 
@@ -101,8 +100,6 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 
         //设线程名称
         Thread.currentThread().setName(threadName);
-        TaskMonitorUtils.addAliveThread(Thread.currentThread().getName(), Thread.currentThread());
-
 
         try {
             RedisURI suri = new RedisURI(sourceUri);
@@ -124,7 +121,27 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 
             r.setRdbVisitor(new ValueDumpIterableRdbVisitor(r, info.getRdbVersion()));
 //            1036363
-//
+
+            OffSetEntity offset= TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().get(sourceUri);
+            if(offset==null){
+
+                offset=new OffSetEntity();
+                TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(sourceUri,offset);
+            }else {
+
+                if(StringUtils.isEmpty(offset.getReplId())){
+                    offset.setReplId(r.getConfiguration().getReplId());
+                }else if(offset.getReplOffset().get()>-1){
+                    if(!afresh){
+                        r.getConfiguration().setReplOffset(offset.getReplOffset().get());
+                        r.getConfiguration().setReplId(offset.getReplId());
+                    }
+
+                }
+            }
+
+            final OffSetEntity baseOffSet= TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().get(sourceUri);
+//            TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(taskId,offset);
 //            r.getConfiguration().setReplOffset(14105376832);
 //            r.getConfiguration().setReplId("e1399afce9f5b5c35c5315ae68e4807fe81e764f");
             r.addEventListener(new ValueDumpIterableEventListener(1000, new EventListener() {
@@ -166,6 +183,13 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 
 
                     if (event instanceof PostRdbSyncEvent) {
+
+                        if(r.getConfiguration().getReplOffset()>=0){
+                            baseOffSet.setReplId(r.getConfiguration().getReplId());
+                            baseOffSet.getReplOffset().set(r.getConfiguration().getReplOffset());
+                        }
+
+//                        TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(taskId,baseOffSet);
                         log.info("{} :全量同步结束 ");
                     }
 
@@ -219,6 +243,7 @@ public class SingleDataPipelineRestoreTask implements Runnable {
                         }
                     }
                     if (event instanceof DumpKeyValuePair) {
+//                        System.out.println(r.getConfiguration().getReplId()+":"+r.getConfiguration().getReplOffset());
 
                         DumpKeyValuePair valuePair = (DumpKeyValuePair) event;
                         if (valuePair.getValue() != null) {
@@ -268,7 +293,17 @@ public class SingleDataPipelineRestoreTask implements Runnable {
                      */
 
                     if (event instanceof DefaultCommand) {
+                        System.out.println(r.getConfiguration().getReplId()+":"+r.getConfiguration().getReplOffset());
+                        baseOffSet.setReplId(r.getConfiguration().getReplId());
+                        baseOffSet.getReplOffset().set(r.getConfiguration().getReplOffset());
+//                        TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(taskId,baseOffSet);
                         DefaultCommand dc = (DefaultCommand) event;
+                        if(dc.getCommand().equals("SELECT".getBytes())){
+                            System.out.println(new String(dc.getArgs()[0]));
+                        }
+                        EventEntity eventEntity=new EventEntity(new DB(dbNum.get()), EventTypeEntity.USE,RedisCommandTypeEnum.COMMAND,dc);
+                        taskEntity.addKey(eventEntity);
+
                         pipelineLock.sendCommand(new ClusterProtocolCommand(dc.getCommand()), dc.getArgs());
 //                        pipelined.sendCommand(new ClusterProtocolCommand(dc.getCommand()), dc.getArgs());
                         taskEntity.add();

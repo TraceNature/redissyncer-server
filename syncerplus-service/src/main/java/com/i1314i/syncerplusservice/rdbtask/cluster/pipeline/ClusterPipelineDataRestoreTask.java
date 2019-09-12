@@ -2,14 +2,11 @@ package com.i1314i.syncerplusservice.rdbtask.cluster.pipeline;
 
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
-import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
 import com.i1314i.syncerplusservice.entity.RedisInfo;
 import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
 import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
-import com.i1314i.syncerplusservice.rdbtask.cluster.command.SendClusterRdbCommand;
 import com.i1314i.syncerplusservice.rdbtask.cluster.command.SendClusterRdbCommand1;
-import com.i1314i.syncerplusservice.rdbtask.enums.RedisCommandType;
 import com.i1314i.syncerplusservice.replicator.listener.ValueDumpIterableEventListener;
 import com.i1314i.syncerplusservice.replicator.service.JDRedisReplicator;
 import com.i1314i.syncerplusservice.replicator.visitor.ValueDumpIterableRdbVisitor;
@@ -21,26 +18,18 @@ import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.pipelineCluster.JedisClusterPipeline;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
-import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.i1314i.syncerplusservice.util.TaskMsgUtils;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Replicator;
 import com.moilioncircle.redis.replicator.event.Event;
 import com.moilioncircle.redis.replicator.event.EventListener;
-import com.moilioncircle.redis.replicator.event.PostRdbSyncEvent;
-import com.moilioncircle.redis.replicator.event.PreRdbSyncEvent;
-import com.moilioncircle.redis.replicator.rdb.datatype.DB;
-import com.moilioncircle.redis.replicator.rdb.dump.datatype.DumpKeyValuePair;
-import com.moilioncircle.redis.replicator.rdb.iterable.datatype.BatchedKeyValuePair;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.NoRouteToHostException;
-import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Arrays;
@@ -77,7 +66,7 @@ public class ClusterPipelineDataRestoreTask implements Runnable {
     public ClusterPipelineDataRestoreTask(RedisClusterDto syncDataDto, RedisInfo info, String sourceUri, String taskId) {
         this.syncDataDto = syncDataDto;
         this.sourceUri=sourceUri;
-        this.threadName = syncDataDto.getThreadName();
+        this.threadName = syncDataDto.getTaskName();
         this.info=info;
         this.taskId=taskId;
     }
@@ -89,7 +78,7 @@ public class ClusterPipelineDataRestoreTask implements Runnable {
 
         //设线程名称
         Thread.currentThread().setName(threadName);
-        TaskMonitorUtils.addAliveThread(Thread.currentThread().getName(), Thread.currentThread());
+
 
 
         try {

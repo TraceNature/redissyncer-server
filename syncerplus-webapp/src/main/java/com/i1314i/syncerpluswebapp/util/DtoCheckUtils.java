@@ -2,14 +2,20 @@ package com.i1314i.syncerpluswebapp.util;
 
 import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.entity.ResultMap;
+import com.i1314i.syncerplusservice.constant.TaskMsgConstant;
+import com.i1314i.syncerplusservice.constant.ThreadStatusEnum;
 import com.i1314i.syncerplusservice.entity.RedisInfo;
 import com.i1314i.syncerplusservice.entity.RedisPoolProps;
 import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.entity.dto.common.SyncDataDto;
 import com.i1314i.syncerplusservice.entity.dto.task.EditRedisClusterDto;
+import com.i1314i.syncerplusservice.entity.thread.ThreadMsgEntity;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
+import com.i1314i.syncerplusservice.util.TaskMsgUtils;
+import com.i1314i.syncerplusservice.util.code.CodeUtils;
+import org.springframework.util.StringUtils;
 
 import java.net.URISyntaxException;
 import java.util.*;
@@ -64,10 +70,58 @@ public class DtoCheckUtils {
         }
 
         if (syncDataDto instanceof EditRedisClusterDto) {
-
             updateUri((RedisClusterDto) syncDataDto);
             syncDataDto.setTimeBetweenEvictionRunsMillis(redisPoolProps.getTimeBetweenEvictionRunsMillis());
         }
+        return syncDataDto;
+    }
+
+
+    public synchronized static Object loadingRedisClusterDto(EditRedisClusterDto syncDataDto) throws TaskMsgException {
+        ThreadMsgEntity data=TaskMsgUtils.getThreadMsgEntity(syncDataDto.getTaskId());
+
+        if(data.getStatus().equals(ThreadStatusEnum.RUN)){
+//            throw new TaskMsgException("不能编辑正在运行中的任务【"+syncDataDto.getTaskId()+"】");
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASK_EDIT_ERROR_CODE,"不能编辑正在运行中的任务【"+syncDataDto.getTaskId()+"】"));
+        }
+        RedisClusterDto dto=data.getRedisClusterDto();
+
+        RedisClusterDto newDto=new RedisClusterDto(syncDataDto.getSourceRedisAddress(),
+                syncDataDto.getTargetRedisAddress(),
+                syncDataDto.getSourcePassword(),
+                syncDataDto.getTargetPassword(),
+                dto.getTaskName(),
+                dto.getMinPoolSize(),
+                dto.getMaxPoolSize(),
+                dto.getMaxWaitTime(),
+                dto.getTimeBetweenEvictionRunsMillis(),
+                dto.getIdleTimeRunsMillis(),
+                dto.getDiffVersion(),
+                dto.getPipeline());
+
+
+        if(syncDataDto.getDbNum()!=null&&syncDataDto.getDbNum().size()>0){
+            newDto.setDbNum(syncDataDto.getDbNum());
+        }
+
+
+
+
+        if(StringUtils.isEmpty(syncDataDto.getTargetRedisAddress())){
+            newDto.setTargetRedisAddress(dto.getTargetRedisAddress());
+        }else if(StringUtils.isEmpty(syncDataDto.getSourceRedisAddress())){
+            newDto.setTargetRedisAddress(dto.getSourceRedisAddress());
+        }
+
+        updateUri(newDto);
+
+        if(StringUtils.isEmpty(syncDataDto.getTaskName())){
+            newDto.setTaskName(dto.getTaskName());
+        }
+        newDto.setAutostart(syncDataDto.isAutostart());
+        newDto.setAfresh(syncDataDto.isAfresh());
+
+        data.setRedisClusterDto(newDto);
         return syncDataDto;
     }
 
@@ -94,7 +148,8 @@ public class DtoCheckUtils {
             Integer integer = RedisUrlUtils.getRdbVersion(redisVersion);
             if (integer == 0) {
                 if (rdbVersion == 0) {
-                    throw new TaskMsgException("targetRedisVersion can not be empty /targetRedisVersion error");
+//                    throw new TaskMsgException("targetRedisVersion can not be empty /targetRedisVersion error");
+                    throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_MSG_ERROR_CODE,TaskMsgConstant.TASK_MSG_REDIS_MSG_ERROR));
                 } else {
                     redisClusterDto.addRedisInfo(new RedisInfo(redisClusterDto.getTargetRedisVersion(), uri, rdbVersion));
                 }

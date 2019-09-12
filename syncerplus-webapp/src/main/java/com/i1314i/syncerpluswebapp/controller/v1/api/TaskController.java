@@ -1,5 +1,7 @@
 package com.i1314i.syncerpluswebapp.controller.v1.api;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.i1314i.syncerpluscommon.entity.ResultMap;
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
 import com.i1314i.syncerplusservice.constant.ThreadStatusEnum;
@@ -23,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,15 +51,15 @@ public class TaskController {
         String threadId= TemplateUtils.uuid();
 
 
-            String threadName=redisClusterDto.getThreadName();
+            String threadName=redisClusterDto.getTaskName();
             if(StringUtils.isEmpty(threadName)){
                 threadName=threadId;
-                redisClusterDto.setThreadName(threadId);
+                redisClusterDto.setTaskName(threadId);
             }
 
             ThreadMsgEntity  msgEntity=ThreadMsgEntity.builder().id(threadId)
                     .status(ThreadStatusEnum.CREATE)
-                    .threadName(threadName)
+                    .taskName(threadName)
                     .redisClusterDto(redisClusterDto)
                     .build();
 
@@ -79,6 +80,22 @@ public class TaskController {
         msg.put("taskid",threadId);
         return  ResultMap.builder().code("200").msg("Task created successfully").data(msg);
     }
+
+
+
+    /**
+     * 根据taskId编辑非运行状态任务
+     * @param redisClusterDto
+     * @return
+     */
+    @RequestMapping(value = "/edittask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    public ResultMap editTask(@RequestBody @Validated EditRedisClusterDto redisClusterDto) throws TaskMsgException {
+        redisClusterDto= (EditRedisClusterDto) DtoCheckUtils.loadingRedisClusterDto(redisClusterDto);
+
+
+        return  ResultMap.builder().code("200").msg("The request is successful").data("编辑成功");
+    }
+
 
     @RequestMapping(value = "/data")
     public ResultMap getData(){
@@ -113,26 +130,6 @@ public class TaskController {
     }
 
 
-    /**
-     * 根据taskId编辑非运行状态任务
-     * @param redisClusterDto
-     * @return
-     */
-    @RequestMapping(value = "/edittask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
-    public ResultMap editTask(@RequestBody @Validated EditRedisClusterDto redisClusterDto) throws TaskMsgException {
-        redisClusterDto= (EditRedisClusterDto) DtoCheckUtils.ckeckRedisClusterDto(redisClusterDto,redisPoolProps);
-        TaskMsgUtils.getThreadMsgEntity(redisClusterDto.getTaskId());
-//
-//        ThreadMsgEntity  msgEntity=ThreadMsgEntity.builder().id(threadId)
-//                .status(ThreadStatusEnum.CREATE)
-//                .threadName(threadName)
-//                .redisClusterDto(redisClusterDto)
-//                .build();
-//
-//
-        Map<String,String> msg=TaskMsgUtils.stopCreateThread(Arrays.asList(""));
-        return  ResultMap.builder().code("200").msg("The request is successful").data(msg);
-    }
 
 
     /**
@@ -160,4 +157,8 @@ public class TaskController {
         return  ResultMap.builder().code("200").msg("The request is successful").data(msg);
     }
 
+    @RequestMapping(value = "/test")
+    public String getMap(){
+        return JSON.toJSONString( TaskMsgUtils.getAliveThreadHashMap(), SerializerFeature.DisableCircularReferenceDetect);
+    }
 }

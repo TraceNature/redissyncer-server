@@ -27,10 +27,6 @@ public class SendClusterDefaultCommand {
 
         if (event instanceof DefaultCommand) {
 
-            RedisUrlUtils.doCommandCheckTask(r);
-            if (RedisUrlUtils.doThreadisCloseCheckTask()) {
-                return;
-            }
 
             StringBuffer info = new StringBuffer();
             // Step3: sync aof command

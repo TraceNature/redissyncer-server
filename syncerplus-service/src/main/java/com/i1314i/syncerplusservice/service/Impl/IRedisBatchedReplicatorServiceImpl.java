@@ -6,15 +6,11 @@ import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisJDClousterClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.rdbtask.cluster.ClusterDataRestoreTask;
-import com.i1314i.syncerplusservice.rdbtask.single.SingleDataRestoreTask;
 import com.i1314i.syncerplusservice.rdbtask.single.pipeline.SingleDataPipelineRestoreTask;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
-import com.i1314i.syncerplusservice.task.BatchedKeyValueTask.cluster.BatchedKVClusterSyncTask;
-import com.i1314i.syncerplusservice.task.clusterTask.ClusterRdbSameVersionJDCloudRestoreTask;
-import com.i1314i.syncerplusservice.task.singleTask.defaultVersion.SyncTask;
+
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
-import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,40 +26,10 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
     @Autowired
     ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-    @Override
-    public void backupAof(String redisPath, String aofPath) {
 
-    }
 
-    @Override
-    public void backUPRdb(String redisPath, String path) {
 
-    }
 
-    @Override
-    public void sync(String sourceUri, String targetUri) throws TaskMsgException {
-
-    }
-
-    @Override
-    public void sync(String sourceUri, String targetUri, String threadName) throws TaskMsgException {
-
-    }
-
-    @Override
-    public void sync(RedisSyncDataDto syncDataDto) throws TaskMsgException {
-
-    }
-
-    @Override
-    public void sync(RedisClusterDto clusterDto) throws TaskMsgException {
-
-    }
-
-    @Override
-    public void batchedSync(RedisClusterDto clusterDto) throws TaskMsgException {
-
-    }
 
     @Override
     public void batchedSync(RedisClusterDto clusterDto,String taskId) throws TaskMsgException {
@@ -212,22 +178,20 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
         }
     }
 
-    @Override
-    public void syncToJDCloud(RedisJDClousterClusterDto jdClousterClusterDto) throws TaskMsgException {
-        System.out.println("-----------------syncToJDCloud");
-    }
 
 
 
     /*
      * zzj add 提出判断连接的部分
      * */
+
+
     public void syncTask(RedisSyncDataDto syncDataDto, String sourceUri, String targetUri, boolean status,String taskId) throws TaskMsgException {
-        if (status) {
-            if (TaskMonitorUtils.containsKeyAliveMap(syncDataDto.getThreadName())) {
-                throw new TaskMsgException(TaskMsgConstant.Task_MSG_PARSE_ERROR_CODE);
-            }
-        }
+//        if (status) {
+//            if (TaskMonitorUtils.containsKeyAliveMap(syncDataDto.getThreadName())) {
+//                throw new TaskMsgException(TaskMsgConstant.Task_MSG_PARSE_ERROR_CODE);
+//            }
+//        }
 
 //SingleDataPipelineRestoreTask
 

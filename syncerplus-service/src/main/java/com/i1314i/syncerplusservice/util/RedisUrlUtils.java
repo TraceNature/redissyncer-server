@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
 import com.i1314i.syncerplusservice.constant.KeyValueEnum;
 import com.i1314i.syncerplusservice.constant.RedisVersion;
+import com.i1314i.syncerplusservice.constant.TaskMsgConstant;
 import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
@@ -18,6 +19,7 @@ import com.i1314i.syncerplusservice.util.Jedis.cluster.JedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.pipelineCluster.JedisClusterPipeline;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
+import com.i1314i.syncerplusservice.util.code.CodeUtils;
 import com.i1314i.syncerplusservice.util.file.FileUtils;
 import com.moilioncircle.redis.replicator.Configuration;
 import com.moilioncircle.redis.replicator.RedisURI;
@@ -80,16 +82,22 @@ public class RedisUrlUtils {
             }
 
 
-            throw new TaskMsgException("无法连接该reids");
+//            throw new TaskMsgException("无法连接该reids");
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR_CODE,TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR));
 
         } catch (URISyntaxException e) {
-            throw new TaskMsgException(name + ":连接链接不正确");
+//            throw new TaskMsgException(name + ":连接链接不正确");
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,name + ":连接链接不正确"));
         } catch (JedisDataException e) {
-            throw new TaskMsgException(name + ":" + e.getMessage());
+//            throw new TaskMsgException(name + ":" + e.getMessage());
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,name + ":" + e.getMessage()));
         } catch (TaskRestoreException e) {
-            throw new TaskMsgException(name + ":error:" + e.getMessage());
+//            throw new TaskMsgException(name + ":error:" + e.getMessage());
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,name + ":" + e.getMessage()));
         } catch (Exception e) {
-            throw new TaskMsgException(name + ":error:" + e.getMessage());
+//            throw new TaskMsgException(name + ":error:" + e.getMessage());
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,name + ":" + e.getMessage()));
+
         } finally {
             if (null != target) {
                 target.close();
@@ -260,13 +268,17 @@ public class RedisUrlUtils {
 
                if (type.equals(KeyValueEnum.KEY)){
                    if(maxInt[0]>dbNum){
-                       throw new TaskMsgException("dbMaping中库号超出Redis库的最大大小 :["+maxInt[0]+"] : "+sourceUri);
+//                       throw new TaskMsgException("dbMaping中库号超出Redis库的最大大小 :["+maxInt[0]+"] : "+sourceUri);
+
+                       throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_DB_ERROR_CODE,"dbMaping中库号超出Redis库的最大大小 :["+maxInt[0]+"] : "+sourceUri));
                    }
                }
 
                if(type.equals(KeyValueEnum.VALUE)){
                    if(maxInt[1]>dbNum){
-                       throw new TaskMsgException("dbMaping中库号超出Redis库的最大大小 :["+maxInt[1]+"] : "+sourceUri);
+                       throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_DB_ERROR_CODE,"dbMaping中库号超出Redis库的最大大小 :["+maxInt[1]+"] : "+sourceUri));
+
+//                       throw new TaskMsgException("dbMaping中库号超出Redis库的最大大小 :["+maxInt[1]+"] : "+sourceUri);
                    }
                }
 
@@ -356,72 +368,7 @@ public class RedisUrlUtils {
         return new JDJedisClientPool(turi.getHost(), turi.getPort(), sourceConfig, sourceCon.getAuthPassword(), 0);
     }
 
-    /**
-     * 线程检查
-     *
-     * @param r
-     */
-    public static synchronized void doCheckTask(Replicator r, Thread thread) {
-        /**
-         * 当aliveMap中不存在此线程时关闭
-         */
-        if (!TaskMonitorUtils.getAliveThreadHashMap().containsKey(thread.getName())) {
-            try {
-                System.out.println("线程正准备关闭...." + thread.getName());
-                if (!Thread.currentThread().isInterrupted()) {
-                    Thread.currentThread().interrupt();
-                }
 
-                r.close();
-                /**
-                 * 清楚所有线程记录
-                 */
-                TaskMonitorUtils.removeAliveThread(thread.getName(), Thread.currentThread());
-            } catch (IOException e) {
-                TaskMonitorUtils.addDeadThread(thread.getName(), Thread.currentThread());
-                log.info("数据同步关闭失败");
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-
-    public static synchronized void doCommandCheckTask(Replicator r) {
-        /**
-         * 当aliveMap中不存在此线程时关闭
-         */
-        if (!TaskMonitorUtils.getAliveThreadHashMap().containsKey(Thread.currentThread().getName())) {
-            try {
-                System.out.println("线程正准备关闭....");
-                if (!Thread.currentThread().isInterrupted()) {
-                    Thread.currentThread().interrupt();
-                }
-
-                r.close();
-                /**
-                 * 清楚所有线程记录
-                 */
-                TaskMonitorUtils.removeAliveThread(Thread.currentThread().getName(), Thread.currentThread());
-            } catch (IOException e) {
-                TaskMonitorUtils.addDeadThread(Thread.currentThread().getName(), Thread.currentThread());
-                log.info("数据同步关闭失败");
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-
-    public static synchronized boolean doThreadisCloseCheckTask() {
-        /**
-         * 当aliveMap中不存在此线程时关闭
-         */
-        if (!TaskMonitorUtils.getAliveThreadHashMap().containsKey(Thread.currentThread().getName()))
-            return true;
-
-        return false;
-    }
 
     public void clearPool(ConnectionPool pools, TestJedisClient targetJedisClientPool, TestJedisClient sourceJedisClientPool) {
         if (pools != null) {
@@ -437,16 +384,7 @@ public class RedisUrlUtils {
         }
     }
 
-    public static synchronized boolean doThreadisCloseCheckTask(String name) {
-        name = getOldName(name);
-        /**
-         * 当aliveMap中不存在此线程时关闭
-         */
-        if (!TaskMonitorUtils.getAliveThreadHashMap().containsKey(name))
-            return true;
 
-        return false;
-    }
 
 
     public static synchronized ConnectionPool getConnectionPool() {
@@ -516,10 +454,15 @@ public class RedisUrlUtils {
 
         try {
             if (!RedisUrlUtils.checkRedisUrl(url)) {
-                throw new TaskMsgException("scheme must be [redis].");
+
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_URI_ERROR_CODE,TaskMsgConstant.TASK_MSG_REDIS_URI_ERROR));
+
+//                throw new TaskMsgException("scheme must be [redis].");
             }
             if (!RedisUrlUtils.getRedisClientConnectState(url, name)) {
-                throw new TaskMsgException(name + " :连接redis失败");
+//                throw new TaskMsgException(name + " :连接redis失败");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR_CODE,TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR));
+
             }
         } catch (URISyntaxException e) {
             throw new TaskMsgException(e.getMessage());

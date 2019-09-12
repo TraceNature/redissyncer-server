@@ -6,18 +6,13 @@ import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
 import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.service.command.SendClusterDefaultCommand;
-import com.i1314i.syncerplusservice.task.clusterTask.cluster.RdbClusterSameVersionRestoreTask;
-import com.i1314i.syncerplusservice.task.clusterTask.cluster.SendClusterDumpKeySameVersionCommand;
-import com.i1314i.syncerplusservice.task.singleTask.pipe.LockPipe;
-import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSyncTask;
+
 import com.i1314i.syncerplusservice.task.singleTask.pipe.cluster.LockPipeCluster;
-import com.i1314i.syncerplusservice.task.singleTask.pipe.cluster.PipelinedClusterSumSyncTask;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.cluster.PipelinedClusterSyncTask;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.pipelineCluster.JedisClusterPipeline;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
-import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.moilioncircle.redis.replicator.CloseListener;
 import com.moilioncircle.redis.replicator.RedisReplicator;
 import com.moilioncircle.redis.replicator.RedisURI;
@@ -26,15 +21,12 @@ import com.moilioncircle.redis.replicator.event.Event;
 import com.moilioncircle.redis.replicator.event.EventListener;
 import com.moilioncircle.redis.replicator.event.PostRdbSyncEvent;
 import com.moilioncircle.redis.replicator.event.PreRdbSyncEvent;
-import com.moilioncircle.redis.replicator.rdb.datatype.DB;
 import com.moilioncircle.redis.replicator.rdb.dump.datatype.DumpKeyValuePair;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import redis.clients.jedis.Pipeline;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Date;
 import java.util.concurrent.Callable;
 
 
@@ -69,11 +61,11 @@ public class ClusterRdbSameVersionJDCloudPipelineRestoreTask implements Callable
     private LockPipeCluster lockPipe=new LockPipeCluster();
     private SyncTaskEntity taskEntity = new SyncTaskEntity();
 
-    private SendClusterDumpKeySameVersionCommand sendDumpKeySameVersionCommand=new SendClusterDumpKeySameVersionCommand();
+//    private SendClusterDumpKeySameVersionCommand sendDumpKeySameVersionCommand=new SendClusterDumpKeySameVersionCommand();
     private SendClusterDefaultCommand sendDefaultCommand=new SendClusterDefaultCommand();
     public ClusterRdbSameVersionJDCloudPipelineRestoreTask(RedisClusterDto syncDataDto, String sourceUrl) {
         this.syncDataDto = syncDataDto;
-        this.threadName = syncDataDto.getThreadName();
+        this.threadName = syncDataDto.getTaskName();
         this.sourceUrl=sourceUrl;
         if (status) {
             this.status = false;
@@ -88,7 +80,7 @@ public class ClusterRdbSameVersionJDCloudPipelineRestoreTask implements Callable
 
         //设线程名称
         Thread.currentThread().setName(threadName);
-        TaskMonitorUtils.addAliveThread(Thread.currentThread().getName(), Thread.currentThread());
+
         RedisURI suri = null;
         try {
             suri = new RedisURI(sourceUrl);
@@ -146,10 +138,7 @@ public class ClusterRdbSameVersionJDCloudPipelineRestoreTask implements Callable
                     if (event instanceof DumpKeyValuePair) {
                         DumpKeyValuePair kv = (DumpKeyValuePair) event;
 
-                        RedisUrlUtils.doCheckTask(r, Thread.currentThread());
 
-                        if (RedisUrlUtils.doThreadisCloseCheckTask())
-                            return;
 
 
 

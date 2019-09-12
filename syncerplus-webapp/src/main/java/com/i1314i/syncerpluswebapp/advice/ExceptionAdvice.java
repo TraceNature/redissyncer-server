@@ -3,6 +3,7 @@ package com.i1314i.syncerpluswebapp.advice;
 
 import com.i1314i.syncerpluscommon.entity.ResultMap;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusservice.util.code.CodeUtils;
 import com.i1314i.syncerpluswebapp.constant.CodeConstant;
 import com.i1314i.syncerpluswebapp.constant.HttpMsgConstant;
 import lombok.extern.java.Log;
@@ -31,15 +32,7 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 @Slf4j
 public class ExceptionAdvice {
-    /**
-     * 500错误请求 信息解析错误
-     * @return
-     */
-//    @ExceptionHandler(Exception.class)
-//    public ResultMap Exception(){
-//        return ResultMap.builder().code(CodeConstant.HTTP_ERROR_CODE)
-//                .msg(HttpMsgConstant.HTTP_ERROR_MESSAGE);
-//    }
+
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResultMap IllegalArgumentException(IllegalArgumentException e){
@@ -158,10 +151,15 @@ public class ExceptionAdvice {
     @ExceptionHandler(TaskMsgException.class)
     public ResultMap TaskMsgException(TaskMsgException e){
         log.warn(e.getMessage());
-        return ResultMap.builder().code(CodeConstant.VALITOR_ERROR_CODE)
-                .msg(e.getMessage());
+        return CodeUtils.codeMessages(e.getMessage());
     }
 
+//    @ExceptionHandler(TaskMsgException.class)
+//    public ResultMap TaskMsgException(TaskMsgException e){
+//        log.warn(e.getMessage());
+//        return ResultMap.builder().code(CodeConstant.VALITOR_ERROR_CODE)
+//                .msg(e.getMessage());
+//    }
 
     /**
      * 400错误请求 信息解析错误
@@ -173,4 +171,13 @@ public class ExceptionAdvice {
                 .msg(HttpMsgConstant.HTTP_MSG_PARSE_ERROR_CODE);
     }
 
+    /**
+     * 500错误请求 信息解析错误
+     * @return
+     */
+    @ExceptionHandler(Exception.class)
+    public ResultMap Exception(){
+        return ResultMap.builder().code(CodeConstant.HTTP_ERROR_CODE)
+                .msg(HttpMsgConstant.HTTP_ERROR_MESSAGE);
+    }
 }

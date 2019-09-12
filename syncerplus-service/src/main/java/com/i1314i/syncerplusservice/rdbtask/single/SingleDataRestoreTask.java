@@ -1,11 +1,11 @@
 package com.i1314i.syncerplusservice.rdbtask.single;
 
-import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
 import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
 import com.i1314i.syncerplusservice.entity.RedisInfo;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
+import com.i1314i.syncerplusservice.entity.thread.OffSetEntity;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.rdbtask.enums.RedisCommandType;
@@ -17,11 +17,9 @@ import com.i1314i.syncerplusservice.service.command.SendDefaultCommand;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
-import com.i1314i.syncerplusservice.util.TaskMonitorUtils;
 import com.i1314i.syncerplusservice.util.TaskMsgUtils;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Replicator;
-import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
 import com.moilioncircle.redis.replicator.event.Event;
 import com.moilioncircle.redis.replicator.event.EventListener;
 import com.moilioncircle.redis.replicator.event.PostRdbSyncEvent;
@@ -64,7 +62,7 @@ public class SingleDataRestoreTask implements Runnable {
         this.syncDataDto = syncDataDto;
         this.sourceUri = syncDataDto.getSourceUri();
         this.targetUri = syncDataDto.getTargetUri();
-        this.threadName = syncDataDto.getThreadName();
+        this.threadName = syncDataDto.getTaskName();
         this.info=info;
         this.taskId=taskId;
     }
@@ -76,7 +74,6 @@ public class SingleDataRestoreTask implements Runnable {
 
         //设线程名称
         Thread.currentThread().setName(threadName);
-        TaskMonitorUtils.addAliveThread(Thread.currentThread().getName(), Thread.currentThread());
 
 
         try {

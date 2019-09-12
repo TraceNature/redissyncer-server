@@ -1,12 +1,14 @@
 package com.i1314i.syncerplusservice.util;
 
 import com.alibaba.fastjson.JSON;
+import com.i1314i.syncerplusservice.constant.TaskMsgConstant;
 import com.i1314i.syncerplusservice.constant.ThreadStatusEnum;
 import com.i1314i.syncerplusservice.entity.dto.task.ListTaskMsgDto;
 import com.i1314i.syncerplusservice.entity.thread.ThreadMsgEntity;
 import com.i1314i.syncerplusservice.entity.thread.ThreadReturnMsgEntity;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusservice.util.code.CodeUtils;
 import com.moilioncircle.redis.replicator.Replicator;
 import lombok.Getter;
 import lombok.Setter;
@@ -41,7 +43,8 @@ public class TaskMsgUtils {
      */
     public synchronized static void addAliveThread(String threadId,ThreadMsgEntity threadMsgEntity) throws TaskMsgException {
         if(checkThreadMsg(threadMsgEntity)){
-            throw new TaskMsgException("相同配置任务已存在，请修改任务名");
+//            throw new TaskMsgException("相同配置任务已存在，请修改任务名");
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR));
         }
         if(!aliveThreadHashMap.containsKey(threadId)){
             aliveThreadHashMap.put(threadId,threadMsgEntity);
@@ -73,14 +76,23 @@ public class TaskMsgUtils {
     public synchronized  static  Map<String,String> startCreateThread(List<String> taskids, IRedisReplicatorService redisBatchedReplicatorService) throws TaskMsgException {
         Map<String,String>taskMap=new HashMap<>();
 
+
         for (String taskId:taskids
         ) {
+
+            if(!aliveThreadHashMap.containsKey(taskId)){
+//                throw new TaskMsgException("taskid为【"+taskId+"】的任务还未创建");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_RUN_ERROR_CODE,"taskid为【"+taskId+"】的任务还未创建"));
+            }
+
             if(StringUtils.isEmpty(taskId)){
-                throw new TaskMsgException("taskids中不能存在空值");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR));
+//                throw new TaskMsgException("taskids中不能存在空值");
             }
             ThreadMsgEntity entity=getThreadMsgEntity(taskId);
             if(entity.getStatus().equals(ThreadStatusEnum.RUN)){
-                throw new TaskMsgException("任务：【"+taskId+"】已经在运行中");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_RUNING_ERROR_CODE,"任务：【"+taskId+"】已经在运行中"));
+//                throw new TaskMsgException("任务：【"+taskId+"】已经在运行中");
             }
 
         }
@@ -113,16 +125,26 @@ public class TaskMsgUtils {
     public synchronized  static  Map<String,String> stopCreateThread(List<String> taskids) throws TaskMsgException {
         Map<String,String>taskMap=new HashMap<>();
 
+
         for (String taskId:taskids
         ) {
+
+            if(!aliveThreadHashMap.containsKey(taskId)){
+//                throw new TaskMsgException("taskid为【"+taskId+"】的任务还未创建");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_UNCREATE_ERROR_CODE,"taskid为【"+taskId+"】的任务还未创建"));
+            }
+
             if(StringUtils.isEmpty(taskId)){
-                throw new TaskMsgException("taskids中不能存在空值");
+//                throw new TaskMsgException("taskids中不能存在空值");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR));
             }
 
             ThreadMsgEntity entity=getThreadMsgEntity(taskId);
 
             if(!entity.getStatus().equals(ThreadStatusEnum.RUN)){
-                throw new TaskMsgException("任务：【"+taskId+"】不在运行中");
+//                throw new TaskMsgException("任务：【"+taskId+"】不在运行中");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_RUN_ERROR_CODE,"任务：【"+taskId+"】不在运行中"));
+
             }
         }
 
@@ -170,8 +192,15 @@ public class TaskMsgUtils {
 
         for (String taskId:taskids
         ) {
+
+            if(!aliveThreadHashMap.containsKey(taskId)){
+                continue;
+            }
+
+
             if(StringUtils.isEmpty(taskId)){
-                throw new TaskMsgException("taskids中不能存在空值");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR));
+//                throw new TaskMsgException("taskids中不能存在空值");
             }
         }
 
@@ -224,14 +253,15 @@ public class TaskMsgUtils {
                 for (String name:listTaskMsgDto.getTasknames()
                 ) {
                     if(StringUtils.isEmpty(name)){
-                        throw new TaskMsgException("tasknames 不能有为空的参数");
+                        throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKNAME_RUNING_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKNAME_RUNING_ERROR));
+//                        throw new TaskMsgException("tasknames 不能有为空的参数");
                     }
                 }
 
                 for (String name:listTaskMsgDto.getTasknames()
                      ) {
                     for(Map.Entry<String,ThreadMsgEntity>thre:aliveThreadHashMap.entrySet()){
-                        if(thre.getValue().getThreadName().equals(name)){
+                        if(thre.getValue().getTaskName().equals(name)){
                             ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                             BeanUtils.copyProperties(thre.getValue(),msgEntity);
                             taskList.add(msgEntity);
@@ -241,7 +271,8 @@ public class TaskMsgUtils {
 
 
             }else {
-                throw new TaskMsgException("bynames 参数类型错误");
+//                throw new TaskMsgException("bynames 参数类型错误");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKNAME_TYPE_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKNAME_TYPE_ERROR));
             }
         }else if(listTaskMsgDto.getRegulation().trim().equals("all")){
             for(Map.Entry<String,ThreadMsgEntity>thre:aliveThreadHashMap.entrySet()){
@@ -312,7 +343,8 @@ public class TaskMsgUtils {
                 &&!listTaskMsgDto.getRegulation().trim().equals("bynames")
                 && !listTaskMsgDto.getRegulation().trim().equals("byids")
                 && !listTaskMsgDto.getRegulation().trim().equals("bystatus")){
-            throw new TaskMsgException("regulation 参数类型错误");
+//            throw new TaskMsgException("regulation 参数类型错误");
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_REGULATION_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKID_REGULATION_ERROR));
         }
     }
 
@@ -330,15 +362,18 @@ public class TaskMsgUtils {
         for (String taskId:taskids
         ) {
             if(StringUtils.isEmpty(taskId)){
-                throw new TaskMsgException("taskids中不能存在空值");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR));
+//                throw new TaskMsgException("taskids中不能存在空值");
             }
 
             if(aliveThreadHashMap.containsKey(taskId)){
                 if(aliveThreadHashMap.get(taskId).getStatus().equals(ThreadStatusEnum.RUN)){
-                    throw new TaskMsgException("请先停止taskids中处于运行状态的任务");
+                    throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_RUN_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKID_RUN_ERROR));
+                    //throw new TaskMsgException("请先停止taskids中处于运行状态的任务");
                 }
             }else{
-                throw new TaskMsgException("不存在任务id为："+taskId+"的任务");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_EXIST_ERROR_CODE,"不存在任务id为："+taskId+"的任务"));
+//                throw new TaskMsgException("不存在任务id为："+taskId+"的任务");
             }
         }
 
