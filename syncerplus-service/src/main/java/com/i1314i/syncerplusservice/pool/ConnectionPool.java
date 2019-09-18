@@ -1,7 +1,7 @@
 package com.i1314i.syncerplusservice.pool;
 
-import com.moilioncircle.redis.replicator.RedisURI;
 
+import com.i1314i.syncerplusredis.entity.RedisURI;
 
 /**
  * RedisClient连接池
@@ -18,7 +18,7 @@ public interface ConnectionPool {
      * @param timeBetweenEvictionRunsMillis
      * @param idleTimeRunsMillis
      */
-    void init(int minActive,int maxActive, long maxWait, RedisURI redisURI, long timeBetweenEvictionRunsMillis,long idleTimeRunsMillis);
+    void init(int minActive, int maxActive, long maxWait, RedisURI redisURI, long timeBetweenEvictionRunsMillis, long idleTimeRunsMillis);
 
 
 

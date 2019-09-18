@@ -1,15 +1,16 @@
 package com.i1314i.syncerplusservice.service.command;
 
 
+import com.i1314i.syncerplusredis.cmd.impl.DefaultCommand;
+import com.i1314i.syncerplusredis.event.Event;
+import com.i1314i.syncerplusredis.replicator.Replicator;
 import com.i1314i.syncerplusservice.entity.dto.common.SyncDataDto;
+import com.i1314i.syncerplusservice.entity.thread.OffSetEntity;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.task.CommitSendTask;
 import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
-import com.moilioncircle.redis.replicator.Replicator;
-import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
-import com.moilioncircle.redis.replicator.event.Event;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,11 +29,16 @@ public class SendDefaultCommand {
     private String dbindex="-1";
 
 
-    public void sendDefaultCommand(Event event, Replicator r, ConnectionPool pool, ThreadPoolTaskExecutor threadPoolTaskExecutor, SyncDataDto syncDataDto){
+    public void sendDefaultCommand(final OffSetEntity baseOffSet, Event event, Replicator r, ConnectionPool pool, ThreadPoolTaskExecutor threadPoolTaskExecutor, SyncDataDto syncDataDto){
         /**
          * 命令同步
          */
         if (event instanceof DefaultCommand) {
+
+
+            baseOffSet.setReplId(r.getConfiguration().getReplId());
+            baseOffSet.getReplOffset().set(r.getConfiguration().getReplOffset());
+
             // Step3: sync aof command
 
             RedisClient redisClient = null;

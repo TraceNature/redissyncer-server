@@ -1,10 +1,9 @@
 package com.i1314i.syncerplusservice.service.dump;
 
-import com.moilioncircle.redis.replicator.event.Event;
-import com.moilioncircle.redis.replicator.event.PreRdbSyncEvent;
-import com.moilioncircle.redis.replicator.rdb.datatype.DB;
-import com.moilioncircle.redis.replicator.rdb.datatype.EvictType;
-import com.moilioncircle.redis.replicator.rdb.datatype.ExpiredType;
+import com.i1314i.syncerplusredis.event.PreRdbSyncEvent;
+import com.i1314i.syncerplusredis.rdb.datatype.DB;
+import com.i1314i.syncerplusredis.rdb.datatype.EvictType;
+import com.i1314i.syncerplusredis.rdb.datatype.ExpiredType;
 import lombok.Getter;
 import lombok.Setter;
 

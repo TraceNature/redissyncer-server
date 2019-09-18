@@ -1,8 +1,8 @@
 package com.i1314i.syncerplusservice.task.clusterTask.command;
 
 
+import com.i1314i.syncerplusredis.cmd.impl.DefaultCommand;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
-import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
 import lombok.extern.slf4j.Slf4j;
 
 import redis.clients.jedis.JedisCluster;

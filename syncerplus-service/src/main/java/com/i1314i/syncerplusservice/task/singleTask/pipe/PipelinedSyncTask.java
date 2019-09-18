@@ -1,9 +1,9 @@
 package com.i1314i.syncerplusservice.task.singleTask.pipe;
 
+import com.i1314i.syncerplusredis.entity.RedisURI;
 import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
 import com.i1314i.syncerplusservice.rdbtask.single.pipeline.PipelineLock;
 import com.i1314i.syncerplusservice.util.TaskMsgUtils;
-import com.moilioncircle.redis.replicator.RedisURI;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import redis.clients.jedis.Pipeline;

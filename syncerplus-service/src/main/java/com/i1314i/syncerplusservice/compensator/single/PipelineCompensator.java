@@ -1,6 +1,9 @@
 package com.i1314i.syncerplusservice.compensator.single;
 
 import com.alibaba.fastjson.JSON;
+import com.i1314i.syncerplusredis.entity.Configuration;
+import com.i1314i.syncerplusredis.entity.RedisURI;
+import com.i1314i.syncerplusredis.rdb.datatype.DB;
 import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
 import com.i1314i.syncerplusservice.entity.EventEntity;
 import com.i1314i.syncerplusservice.entity.thread.EventTypeEntity;
@@ -9,11 +12,10 @@ import com.i1314i.syncerplusservice.task.clusterTask.command.ClusterProtocolComm
 import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
 import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
 import com.i1314i.syncerplusservice.util.TaskMsgUtils;
-import com.moilioncircle.redis.replicator.Configuration;
-import com.moilioncircle.redis.replicator.RedisURI;
-import com.moilioncircle.redis.replicator.rdb.datatype.DB;
+
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Protocol;
+import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.params.SetParams;
 
 import java.net.URISyntaxException;
@@ -27,19 +29,74 @@ import static redis.clients.jedis.Protocol.Command.AUTH;
  * pipeline补偿机制
  */
 @Slf4j
-public class PipelineCompensator {
+public class PipelineCompensator implements Runnable{
 
-    public  synchronized static boolean singleCompensator(List<Object> statusList, List<EventEntity> keys, RedisURI suri, RedisURI turi, String thredId) {
+    private List<Object> statusList;
+    private List<EventEntity> keys;
+    private RedisURI suri;
+    private RedisURI turi;
+    private String thredId;
+
+    public PipelineCompensator(List<Object> statusList, List<EventEntity> keys, RedisURI suri, RedisURI turi, String thredId) {
+
+        this.statusList = statusList;
+        this.keys = keys;
+        this.suri = suri;
+        this.turi = turi;
+        this.thredId = thredId;
+    }
+
+    public  boolean singleCompensator(List<Object> statusList, List<EventEntity> keys, RedisURI suri, RedisURI turi, String thredId) {
         //提交数据的总量
         int statusListLenght = statusList.size();
         int aNum=0;
-        System.out.println(statusList.size()+": "+keys.size());
+
+//        System.out.println(statusList.size()+":"+keys.size());
+
         Set<EventEntity> mistakeKeys = new HashSet<>();
         for (int i = 0; i < statusList.size(); i++) {
             Object status = statusList.get(i);
+            if(i>=keys.size()){
+                break;
+            }
             EventEntity dataEntity = keys.get(i);
+//            System.out.println(  JSON.toJSONString(statusList));
+//            if(dataEntity.getRedisCommandTypeEnum().equals(RedisCommandTypeEnum.COMMAND)){
+//
+//                if(dataEntity.getTypeEntity().equals(EventTypeEntity.USE)){
+//                    aNum++;
+//                    if (status instanceof String) {
+//                        if (!status.toString().trim().toUpperCase().equals("OK")) {
+//                            mistakeKeys.add(keys.get(i));
+//                        }
+//                    } else if (status instanceof Integer) {
+//                        if (Integer.valueOf(status.toString()) < 0) {
+//                            mistakeKeys.add(keys.get(i));
+//                        }
+//                    } else if (status instanceof Long) {
+//                        if (Long.valueOf(status.toString()) < 0) {
+//                            mistakeKeys.add(keys.get(i));
+//
+//                        }
+//                    }else if (status instanceof JedisDataException){
+//                        JedisDataException e= (JedisDataException) status;
+//                        if(e.getMessage().toUpperCase().equals("ERR DUMP payload version or checksum are wrong".toUpperCase())){
+//                            try {
+//                                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+//                            } catch (TaskMsgException ex) {
+//                                ex.printStackTrace();
+//                            }
+//                            log.warn("任务Id【{}】异常停止 ，停止原因【{}】", thredId, e.getMessage());
+//                        }
+//                    }else  {
+//
+//                        System.out.println(status.getClass()+" :"+JSON.toJSONString(status));
+//
+//                    }
+//                }
+//            }
 
-            if (dataEntity.getTypeEntity().equals(EventTypeEntity.USE)) {
+            if (dataEntity.getTypeEntity().equals(EventTypeEntity.USE)&&!dataEntity.getRedisCommandTypeEnum().equals(RedisCommandTypeEnum.COMMAND)) {
                 aNum++;
 
                 if (status instanceof String) {
@@ -57,8 +114,21 @@ public class PipelineCompensator {
                         mistakeKeys.add(keys.get(i));
 
                     }
-                } else {
-                    System.out.println(JSON.toJSONString(keys.get(i)));
+                }else if (status instanceof JedisDataException){
+                    JedisDataException e= (JedisDataException) status;
+                    if(e.getMessage().toUpperCase().equals("ERR DUMP payload version or checksum are wrong".toUpperCase())){
+                        try {
+                            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+                        } catch (TaskMsgException ex) {
+                            ex.printStackTrace();
+                        }
+                        log.warn("任务Id【{}】异常停止，停止原因【{}】", thredId, e.getMessage());
+                    }
+                }else {
+
+//                    System.out.println(status.getClass()+" :"+JSON.toJSONString(status));
+//                    System.out.println(status.getClass()+JSON.toJSONString(status));
+//                    System.out.println(JSON.toJSONString(keys.get(i)));
                 }
             }
 
@@ -384,6 +454,14 @@ public class PipelineCompensator {
         List<EventEntity> listResultS = Stream.of(new EventEntity("test".getBytes(), 0, new DB(0),EventTypeEntity.USE,RedisCommandTypeEnum.STRING),
                 new EventEntity("test1".getBytes(), 0, new DB(0),EventTypeEntity.USE,RedisCommandTypeEnum.STRING)).collect(Collectors.toList());
 
-        singleCompensator(listResult,listResultS,sui,tui,"test");
+//        singleCompensator(listResult,listResultS,sui,tui,"test");
     }
+
+    @Override
+    public void run() {
+
+        singleCompensator(statusList,  keys,  suri,  turi,  thredId);
+    }
+
+
 }

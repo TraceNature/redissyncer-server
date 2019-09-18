@@ -18,6 +18,7 @@ import java.util.Map;
 @EqualsAndHashCode
 
 public class RedisClusterDto extends SyncDataDto implements Serializable {
+    private static final long serialVersionUID = -5809782578272943998L;
     @NotBlank(message = "源RedisCluster地址不能为空")
     private String sourceRedisAddress;
     @NotBlank(message = "目标RedisCluster地址不能为空")

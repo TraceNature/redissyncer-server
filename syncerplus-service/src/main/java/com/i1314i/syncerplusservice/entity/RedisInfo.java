@@ -1,6 +1,7 @@
 package com.i1314i.syncerplusservice.entity;
 
-import com.moilioncircle.redis.replicator.RedisURI;
+
+import com.i1314i.syncerplusredis.entity.RedisURI;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.util.StringUtils;

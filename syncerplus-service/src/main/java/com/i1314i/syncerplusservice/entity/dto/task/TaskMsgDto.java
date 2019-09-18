@@ -13,6 +13,7 @@ public class TaskMsgDto {
     @NotEmpty(message = "taskids不能为空")
     private List<String> taskids;
 
-
+//    @NotEmpty(message = "taskid不能为空")
+//    private String taskid;
 
 }

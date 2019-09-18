@@ -6,6 +6,7 @@ import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisJDClousterClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.rdbtask.cluster.ClusterDataRestoreTask;
+import com.i1314i.syncerplusservice.rdbtask.single.SingleDataRestoreTask;
 import com.i1314i.syncerplusservice.rdbtask.single.pipeline.SingleDataPipelineRestoreTask;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;

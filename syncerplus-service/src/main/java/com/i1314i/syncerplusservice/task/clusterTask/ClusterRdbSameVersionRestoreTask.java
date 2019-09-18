@@ -4,8 +4,7 @@ import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
 import com.i1314i.syncerplusservice.util.Jedis.StringUtils;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
-import com.moilioncircle.redis.replicator.RedisReplicator;
-import com.moilioncircle.redis.replicator.Replicator;
+
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.JedisCluster;
 

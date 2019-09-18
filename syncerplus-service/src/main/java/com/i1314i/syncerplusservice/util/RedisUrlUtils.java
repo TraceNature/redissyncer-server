@@ -2,6 +2,8 @@ package com.i1314i.syncerplusservice.util;
 
 import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
+import com.i1314i.syncerplusredis.entity.Configuration;
+import com.i1314i.syncerplusredis.entity.RedisURI;
 import com.i1314i.syncerplusservice.constant.KeyValueEnum;
 import com.i1314i.syncerplusservice.constant.RedisVersion;
 import com.i1314i.syncerplusservice.constant.TaskMsgConstant;
@@ -21,9 +23,6 @@ import com.i1314i.syncerplusservice.util.Jedis.cluster.pipelineCluster.JedisClus
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import com.i1314i.syncerplusservice.util.code.CodeUtils;
 import com.i1314i.syncerplusservice.util.file.FileUtils;
-import com.moilioncircle.redis.replicator.Configuration;
-import com.moilioncircle.redis.replicator.RedisURI;
-import com.moilioncircle.redis.replicator.Replicator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import redis.clients.jedis.Jedis;
@@ -83,7 +82,7 @@ public class RedisUrlUtils {
 
 
 //            throw new TaskMsgException("无法连接该reids");
-            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR_CODE,TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR));
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR));
 
         } catch (URISyntaxException e) {
 //            throw new TaskMsgException(name + ":连接链接不正确");
@@ -461,7 +460,7 @@ public class RedisUrlUtils {
             }
             if (!RedisUrlUtils.getRedisClientConnectState(url, name)) {
 //                throw new TaskMsgException(name + " :连接redis失败");
-                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR_CODE,TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR));
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR));
 
             }
         } catch (URISyntaxException e) {

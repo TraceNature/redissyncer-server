@@ -1,9 +1,10 @@
 package com.i1314i.syncerplusservice.pool.Impl;
 
+import com.i1314i.syncerplusredis.entity.Configuration;
+import com.i1314i.syncerplusredis.entity.RedisURI;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
-import com.moilioncircle.redis.replicator.Configuration;
-import com.moilioncircle.redis.replicator.RedisURI;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

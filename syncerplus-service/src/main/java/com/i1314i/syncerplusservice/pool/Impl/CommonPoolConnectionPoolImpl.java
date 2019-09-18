@@ -1,9 +1,10 @@
 package com.i1314i.syncerplusservice.pool.Impl;
 
+import com.i1314i.syncerplusredis.entity.RedisURI;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
 import com.i1314i.syncerplusservice.pool.factory.CommonPoolConnectionFactory;
-import com.moilioncircle.redis.replicator.RedisURI;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool.Config;

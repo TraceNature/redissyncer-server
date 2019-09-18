@@ -1,12 +1,13 @@
 package com.i1314i.syncerplusservice.pool;
 
 
+import com.i1314i.syncerplusredis.cmd.CommandName;
+import com.i1314i.syncerplusredis.cmd.parser.*;
+import com.i1314i.syncerplusredis.rdb.dump.DumpRdbVisitor;
+import com.i1314i.syncerplusredis.rdb.iterable.ValueIterableRdbVisitor;
+import com.i1314i.syncerplusredis.replicator.Replicator;
 import com.i1314i.syncerplusservice.rdb.vister.DefaultRdbPlusVisitor;
-import com.moilioncircle.redis.replicator.*;
-import com.moilioncircle.redis.replicator.cmd.CommandName;
-import com.moilioncircle.redis.replicator.cmd.parser.*;
-import com.moilioncircle.redis.replicator.rdb.dump.DumpRdbVisitor;
-import com.moilioncircle.redis.replicator.rdb.iterable.ValueIterableRdbVisitor;
+
 
 public class RedisMigrator {
     public synchronized static Replicator dress(Replicator r) {

@@ -1,8 +1,8 @@
 package com.i1314i.syncerplusservice.entity.thread;
 
+import com.i1314i.syncerplusredis.replicator.Replicator;
 import com.i1314i.syncerplusservice.constant.ThreadStatusEnum;
 import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
-import com.moilioncircle.redis.replicator.Replicator;
 import lombok.*;
 
 import java.io.Serializable;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @EqualsAndHashCode
 public class ThreadMsgEntity implements Serializable {
-
+    private static final long serialVersionUID = -5809782578272943999L;
     private Thread thread;
     private String id;
     private String taskName;

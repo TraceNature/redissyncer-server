@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 /**
  * 统一异常捕获处理
  **/
-@RestControllerAdvice
+//@RestControllerAdvice
 @Slf4j
 public class ExceptionAdvice {
 

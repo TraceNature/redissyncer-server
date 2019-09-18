@@ -1,7 +1,9 @@
 package com.i1314i.syncerplusservice.replicator.service;
 
-import com.moilioncircle.redis.replicator.Configuration;
-import com.moilioncircle.redis.replicator.Replicator;
+
+
+import com.i1314i.syncerplusredis.entity.Configuration;
+import com.i1314i.syncerplusredis.replicator.Replicator;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

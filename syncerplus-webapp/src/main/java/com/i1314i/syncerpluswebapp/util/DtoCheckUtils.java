@@ -31,36 +31,46 @@ public class DtoCheckUtils {
      */
     public synchronized static Object ckeckRedisClusterDto(SyncDataDto syncDataDto, RedisPoolProps redisPoolProps) throws TaskMsgException {
         if (syncDataDto instanceof RedisSyncDataDto) {
-            if (syncDataDto.getIdleTimeRunsMillis() == 0) {
-                syncDataDto.setIdleTimeRunsMillis(redisPoolProps.getIdleTimeRunsMillis());
-            }
-            if (syncDataDto.getMaxWaitTime() == 0) {
-                syncDataDto.setMaxWaitTime(redisPoolProps.getMaxWaitTime());
-            }
-            if (syncDataDto.getMaxPoolSize() == 0) {
-                syncDataDto.setMaxPoolSize(redisPoolProps.getMaxPoolSize());
-            }
-            if (syncDataDto.getMinPoolSize() == 0) {
-                syncDataDto.setMinPoolSize(redisPoolProps.getMinPoolSize());
-            }
-
+//            if (syncDataDto.getIdleTimeRunsMillis() == 0) {
+//                syncDataDto.setIdleTimeRunsMillis(redisPoolProps.getIdleTimeRunsMillis());
+//            }
+//            if (syncDataDto.getMaxWaitTime() == 0) {
+//                syncDataDto.setMaxWaitTime(redisPoolProps.getMaxWaitTime());
+//            }
+//            if (syncDataDto.getMaxPoolSize() == 0) {
+//                syncDataDto.setMaxPoolSize(redisPoolProps.getMaxPoolSize());
+//            }
+//            if (syncDataDto.getMinPoolSize() == 0) {
+//                syncDataDto.setMinPoolSize(redisPoolProps.getMinPoolSize());
+//            }
+            syncDataDto.setIdleTimeRunsMillis(redisPoolProps.getIdleTimeRunsMillis());
+            syncDataDto.setMaxWaitTime(redisPoolProps.getMaxWaitTime());
+            syncDataDto.setMaxPoolSize(redisPoolProps.getMaxPoolSize());
+            syncDataDto.setMinPoolSize(redisPoolProps.getMinPoolSize());
             syncDataDto.setTimeBetweenEvictionRunsMillis(redisPoolProps.getTimeBetweenEvictionRunsMillis());
         }
 
         if (syncDataDto instanceof RedisClusterDto) {
 
-            if (syncDataDto.getMaxWaitTime() == 0) {
-                syncDataDto.setMaxWaitTime(redisPoolProps.getMaxWaitTime());
-            }
-            if (syncDataDto.getIdleTimeRunsMillis() == 0) {
-                syncDataDto.setIdleTimeRunsMillis(redisPoolProps.getIdleTimeRunsMillis());
-            }
-            if (syncDataDto.getMaxPoolSize() == 0) {
-                syncDataDto.setMaxPoolSize(redisPoolProps.getMaxPoolSize());
-            }
-            if (syncDataDto.getMinPoolSize() == 0) {
-                syncDataDto.setMinPoolSize(redisPoolProps.getMinPoolSize());
-            }
+//            if (syncDataDto.getMaxWaitTime() == 0) {
+//                syncDataDto.setMaxWaitTime(redisPoolProps.getMaxWaitTime());
+//            }
+//            if (syncDataDto.getIdleTimeRunsMillis() == 0) {
+//                syncDataDto.setIdleTimeRunsMillis(redisPoolProps.getIdleTimeRunsMillis());
+//            }
+//            if (syncDataDto.getMaxPoolSize() == 0) {
+//                syncDataDto.setMaxPoolSize(redisPoolProps.getMaxPoolSize());
+//            }
+//            if (syncDataDto.getMinPoolSize() == 0) {
+//                syncDataDto.setMinPoolSize(redisPoolProps.getMinPoolSize());
+//            }
+
+
+            syncDataDto.setMaxWaitTime(redisPoolProps.getMaxWaitTime());
+            syncDataDto.setIdleTimeRunsMillis(redisPoolProps.getIdleTimeRunsMillis());
+            syncDataDto.setMaxPoolSize(redisPoolProps.getMaxPoolSize());
+            syncDataDto.setMinPoolSize(redisPoolProps.getMinPoolSize());
+
 
             if (syncDataDto.getDbNum() == null) {
                 syncDataDto.setDbNum(new HashMap<>());
@@ -90,7 +100,7 @@ public class DtoCheckUtils {
                 syncDataDto.getTargetRedisAddress(),
                 syncDataDto.getSourcePassword(),
                 syncDataDto.getTargetPassword(),
-                dto.getTaskName(),
+                syncDataDto.getTaskName(),
                 dto.getMinPoolSize(),
                 dto.getMaxPoolSize(),
                 dto.getMaxWaitTime(),
@@ -99,18 +109,30 @@ public class DtoCheckUtils {
                 dto.getDiffVersion(),
                 dto.getPipeline());
 
+        if(syncDataDto.getTargetRedisVersion()!=0L){
+            newDto.setTargetRedisVersion(syncDataDto.getTargetRedisVersion());
+        }else {
+            newDto.setTargetRedisVersion(dto.getTargetRedisVersion());
+        }
+
+
 
         if(syncDataDto.getDbNum()!=null&&syncDataDto.getDbNum().size()>0){
             newDto.setDbNum(syncDataDto.getDbNum());
+        }else {
+            newDto.setDbNum(dto.getDbNum());
         }
+
 
 
 
 
         if(StringUtils.isEmpty(syncDataDto.getTargetRedisAddress())){
             newDto.setTargetRedisAddress(dto.getTargetRedisAddress());
+            newDto.setTargetPassword(dto.getTargetPassword());
         }else if(StringUtils.isEmpty(syncDataDto.getSourceRedisAddress())){
-            newDto.setTargetRedisAddress(dto.getSourceRedisAddress());
+            newDto.setSourceRedisAddress(dto.getSourceRedisAddress());
+            newDto.setSourcePassword(dto.getSourcePassword());
         }
 
         updateUri(newDto);
@@ -119,7 +141,7 @@ public class DtoCheckUtils {
             newDto.setTaskName(dto.getTaskName());
         }
         newDto.setAutostart(syncDataDto.isAutostart());
-        newDto.setAfresh(syncDataDto.isAfresh());
+        newDto.setAfresh(dto.isAfresh());
 
         data.setRedisClusterDto(newDto);
         return syncDataDto;

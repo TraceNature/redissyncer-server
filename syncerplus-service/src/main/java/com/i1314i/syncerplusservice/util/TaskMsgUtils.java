@@ -1,6 +1,7 @@
 package com.i1314i.syncerplusservice.util;
 
 import com.alibaba.fastjson.JSON;
+import com.i1314i.syncerplusredis.replicator.Replicator;
 import com.i1314i.syncerplusservice.constant.TaskMsgConstant;
 import com.i1314i.syncerplusservice.constant.ThreadStatusEnum;
 import com.i1314i.syncerplusservice.entity.dto.task.ListTaskMsgDto;
@@ -9,7 +10,7 @@ import com.i1314i.syncerplusservice.entity.thread.ThreadReturnMsgEntity;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
 import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.code.CodeUtils;
-import com.moilioncircle.redis.replicator.Replicator;
+
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.BeanUtils;
@@ -112,6 +113,42 @@ public class TaskMsgUtils {
                 }
             }
         }
+
+        return taskMap;
+    }
+    public synchronized  static  Map<String,String> startCreateThread(String taskId, IRedisReplicatorService redisBatchedReplicatorService) throws TaskMsgException {
+        Map<String,String>taskMap=new HashMap<>();
+
+        if(StringUtils.isEmpty(taskId)){
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR));
+//                throw new TaskMsgException("taskids中不能存在空值");
+        }
+
+            if(!aliveThreadHashMap.containsKey(taskId)){
+//                throw new TaskMsgException("taskid为【"+taskId+"】的任务还未创建");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_RUN_ERROR_CODE,"taskid为【"+taskId+"】的任务还未创建"));
+            }
+
+
+            ThreadMsgEntity entity=getThreadMsgEntity(taskId);
+            if(entity.getStatus().equals(ThreadStatusEnum.RUN)){
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_RUNING_ERROR_CODE,"任务：【"+taskId+"】已经在运行中"));
+//                throw new TaskMsgException("任务：【"+taskId+"】已经在运行中");
+            }
+
+
+
+            if(!StringUtils.isEmpty(taskId)){
+
+                if(null!=entity){
+                    redisBatchedReplicatorService.batchedSync(entity.getRedisClusterDto(),taskId);
+                    entity.setStatus(ThreadStatusEnum.RUN);
+                    aliveThreadHashMap.put(taskId,entity);
+                    taskMap.put(taskId,"Task started successfully");
+                }else {
+                    taskMap.put(taskId,"The task does not exist. Please create the task first");
+                }
+            }
 
         return taskMap;
     }
@@ -264,6 +301,7 @@ public class TaskMsgUtils {
                         if(thre.getValue().getTaskName().equals(name)){
                             ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                             BeanUtils.copyProperties(thre.getValue(),msgEntity);
+                            BeanUtils.copyProperties(thre.getValue().getRedisClusterDto(),msgEntity);
                             taskList.add(msgEntity);
                         }
                     }
@@ -278,6 +316,7 @@ public class TaskMsgUtils {
             for(Map.Entry<String,ThreadMsgEntity>thre:aliveThreadHashMap.entrySet()){
                 ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                 BeanUtils.copyProperties(thre.getValue(),msgEntity);
+                BeanUtils.copyProperties(thre.getValue().getRedisClusterDto(),msgEntity);
                 taskList.add(msgEntity);
             }
         }else if(listTaskMsgDto.getRegulation().trim().equals("byids")){
@@ -285,7 +324,9 @@ public class TaskMsgUtils {
             for (String id:listTaskMsgDto.getTaskids()
             ) {
                 if(StringUtils.isEmpty(id)){
-                    throw new TaskMsgException("taskids 不能有为空的参数");
+                    throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR));
+
+//                    throw new TaskMsgException("taskids 不能有为空的参数");
                 }
             }
 
@@ -296,6 +337,7 @@ public class TaskMsgUtils {
                     if(thre.getValue().getId().equals(id)){
                         ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                         BeanUtils.copyProperties(thre.getValue(),msgEntity);
+                        BeanUtils.copyProperties(thre.getValue().getRedisClusterDto(),msgEntity);
                         taskList.add(msgEntity);
                     }
                 }
@@ -303,7 +345,9 @@ public class TaskMsgUtils {
         }else if(listTaskMsgDto.getRegulation().trim().equals("bystatus")){
 
             if(StringUtils.isEmpty(listTaskMsgDto.getTaskstatus())){
-                throw new TaskMsgException("taskstatus 不能有为空");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKSTATUS_NULL_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKSTATUS_NULL_ERROR));
+
+//                throw new TaskMsgException("taskstatus 不能有为空");
             }
             ThreadStatusEnum statusEnum=null;
             if(listTaskMsgDto.getTaskstatus().equals("live")){
@@ -320,11 +364,13 @@ public class TaskMsgUtils {
                     if(thre.getValue().getStatus().equals(statusEnum)){
                         ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                         BeanUtils.copyProperties(thre.getValue(),msgEntity);
+                        BeanUtils.copyProperties(thre.getValue().getRedisClusterDto(),msgEntity);
                         taskList.add(msgEntity);
                     }
                     if(statusEnum.equals(ThreadStatusEnum.CREATE)&&listTaskMsgDto.getTaskstatus().equals("stop")){
                         ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                         BeanUtils.copyProperties(thre.getValue(),msgEntity);
+                        BeanUtils.copyProperties(thre.getValue().getRedisClusterDto(),msgEntity);
                         taskList.add(msgEntity);
                     }
                 }

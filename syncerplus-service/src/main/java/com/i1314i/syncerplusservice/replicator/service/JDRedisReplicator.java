@@ -1,7 +1,15 @@
 package com.i1314i.syncerplusservice.replicator.service;
 
-import com.moilioncircle.redis.replicator.*;
-import com.moilioncircle.redis.replicator.io.PeekableInputStream;
+
+
+import com.i1314i.syncerplusredis.entity.Configuration;
+import com.i1314i.syncerplusredis.entity.FileType;
+import com.i1314i.syncerplusredis.entity.RedisURI;
+import com.i1314i.syncerplusredis.io.PeekableInputStream;
+import com.i1314i.syncerplusredis.replicator.RedisAofReplicator;
+import com.i1314i.syncerplusredis.replicator.RedisMixReplicator;
+import com.i1314i.syncerplusredis.replicator.RedisRdbReplicator;
+import com.i1314i.syncerplusredis.replicator.RedisReplicator;
 
 import java.io.*;
 import java.net.URISyntaxException;

@@ -36,17 +36,19 @@
 
 
         <!-- https://mvnrepository.com/artifact/com.moilioncircle/redis-replicator -->
-        <dependency>
-            <groupId>com.moilioncircle</groupId>
-            <artifactId>redis-replicator</artifactId>
-            <version>3.2.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>redis.clients</groupId>
-                    <artifactId>jedis</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.moilioncircle</groupId>-->
+<!--            <artifactId>redis-replicator</artifactId>-->
+<!--            <version>3.2.1</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>redis.clients</groupId>-->
+<!--                    <artifactId>jedis</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
+
+
         <!-- https://mvnrepository.com/artifact/redis.clients/jedis -->
         <dependency>
             <groupId>redis.clients</groupId>
@@ -78,7 +80,17 @@
             <version>1.0.3</version>
             <scope>compile</scope>
         </dependency>
-
+        <dependency>
+            <artifactId>syncerplus-redis</artifactId>
+            <groupId>com.i1314i</groupId>
+            <version>1.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>redis.clients</groupId>
+                    <artifactId>jedis</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
 
     </dependencies>

@@ -7,6 +7,7 @@
         <module>syncerplus-common</module>
         <module>syncerplus-service</module>
         <module>syncerplus-webapp</module>
+        <module>syncerplus-redis</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>

@@ -10,6 +10,7 @@ import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.task.EditRedisClusterDto;
 import com.i1314i.syncerplusservice.entity.dto.task.ListTaskMsgDto;
 import com.i1314i.syncerplusservice.entity.dto.task.TaskMsgDto;
+import com.i1314i.syncerplusservice.entity.dto.task.TaskStartMsgDto;
 import com.i1314i.syncerplusservice.entity.thread.ThreadMsgEntity;
 import com.i1314i.syncerplusservice.entity.thread.ThreadReturnMsgEntity;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
@@ -66,6 +67,8 @@ public class TaskController {
             if(redisClusterDto.isAutostart()){
                 redisBatchedReplicatorService.batchedSync(redisClusterDto,threadId);
                 msgEntity.setStatus(ThreadStatusEnum.RUN);
+            }else {
+                msgEntity.getRedisClusterDto().setAfresh(true);
             }
         try {
             TaskMsgUtils.addAliveThread(threadId, msgEntity);
@@ -92,7 +95,6 @@ public class TaskController {
     public ResultMap editTask(@RequestBody @Validated EditRedisClusterDto redisClusterDto) throws TaskMsgException {
         redisClusterDto= (EditRedisClusterDto) DtoCheckUtils.loadingRedisClusterDto(redisClusterDto);
 
-
         return  ResultMap.builder().code("200").msg("The request is successful").data("编辑成功");
     }
 
@@ -112,8 +114,8 @@ public class TaskController {
      * @return
      */
     @RequestMapping(value = "/starttask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
-    public ResultMap startTask(@RequestBody @Validated TaskMsgDto taskMsgDto) throws TaskMsgException {
-        Map<String,String> msg=TaskMsgUtils.startCreateThread(taskMsgDto.getTaskids(),redisBatchedReplicatorService);
+    public ResultMap startTask(@RequestBody @Validated TaskStartMsgDto taskMsgDto) throws TaskMsgException {
+        Map<String,String> msg=TaskMsgUtils.startCreateThread(taskMsgDto.getTaskid(),redisBatchedReplicatorService);
         return  ResultMap.builder().code("200").msg("The request is successful").data(msg);
     }
 

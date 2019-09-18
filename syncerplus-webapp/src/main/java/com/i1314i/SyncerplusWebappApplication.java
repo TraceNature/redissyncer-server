@@ -31,6 +31,7 @@ public class SyncerplusWebappApplication {
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         SpringApplication.run(SyncerplusWebappApplication.class, args);
+
         /**
          * 开启线程监控
          */

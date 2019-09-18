@@ -31,7 +31,13 @@ public class SyncTaskEntity {
     }
 
     public List<EventEntity> getKeys() {
-        return keys;
+        try {
+            lock.lock();
+            return keys;
+        }finally {
+            lock.unlock();
+        }
+
     }
 
     public synchronized int getSyncNums() {

@@ -1,8 +1,8 @@
 package com.i1314i.syncerplusservice.task;
 
+import com.i1314i.syncerplusredis.cmd.impl.DefaultCommand;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisClient;
-import com.moilioncircle.redis.replicator.cmd.impl.DefaultCommand;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 
@@ -19,7 +19,7 @@ public class CommitSendTask implements Callable<Object> {
 
 
 
-    public CommitSendTask(DefaultCommand command, RedisClient redisClient, ConnectionPool pool, StringBuffer info,String dbIndex) {
+    public CommitSendTask(DefaultCommand command, RedisClient redisClient, ConnectionPool pool, StringBuffer info, String dbIndex) {
         this.command = command;
         this.redisClient = redisClient;
         this.pool = pool;

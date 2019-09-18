@@ -1,16 +1,16 @@
 package com.i1314i.syncerplusservice.replicator.visitor;
 
-import com.moilioncircle.redis.replicator.Replicator;
-import com.moilioncircle.redis.replicator.io.RawByteListener;
-import com.moilioncircle.redis.replicator.io.RedisInputStream;
-import com.moilioncircle.redis.replicator.rdb.BaseRdbParser;
-import com.moilioncircle.redis.replicator.rdb.DefaultRdbValueVisitor;
-import com.moilioncircle.redis.replicator.rdb.datatype.Module;
-import com.moilioncircle.redis.replicator.rdb.datatype.ZSetEntry;
-import com.moilioncircle.redis.replicator.rdb.module.ModuleParser;
-import com.moilioncircle.redis.replicator.rdb.skip.SkipRdbParser;
-import com.moilioncircle.redis.replicator.util.ByteBuilder;
-import com.moilioncircle.redis.replicator.util.Strings;
+import com.i1314i.syncerplusredis.io.RawByteListener;
+import com.i1314i.syncerplusredis.io.RedisInputStream;
+import com.i1314i.syncerplusredis.rdb.BaseRdbParser;
+import com.i1314i.syncerplusredis.rdb.DefaultRdbValueVisitor;
+import com.i1314i.syncerplusredis.rdb.datatype.Module;
+import com.i1314i.syncerplusredis.rdb.datatype.ZSetEntry;
+import com.i1314i.syncerplusredis.rdb.module.ModuleParser;
+import com.i1314i.syncerplusredis.rdb.skip.SkipRdbParser;
+import com.i1314i.syncerplusredis.replicator.Replicator;
+import com.i1314i.syncerplusredis.util.objectutil.ByteBuilder;
+import com.i1314i.syncerplusredis.util.objectutil.Strings;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -19,9 +19,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import static com.moilioncircle.redis.replicator.Constants.*;
-import static com.moilioncircle.redis.replicator.util.CRC64.crc64;
-import static com.moilioncircle.redis.replicator.util.CRC64.longToByteArray;
+import static com.i1314i.syncerplusredis.util.objectutil.CRC64.crc64;
+import static com.i1314i.syncerplusredis.replicator.Constants.*;
+import static com.i1314i.syncerplusredis.util.objectutil.CRC64.crc64;
+import static com.i1314i.syncerplusredis.util.objectutil.CRC64.longToByteArray;
 
 
 public class ValueIterableDumpRdbValueVisitor extends DefaultRdbValueVisitor {

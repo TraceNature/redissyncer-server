@@ -1,20 +1,18 @@
 package com.i1314i.syncerplusservice.rdbtask.single.command;
 
+import com.i1314i.syncerplusredis.event.Event;
+import com.i1314i.syncerplusredis.rdb.datatype.ZSetEntry;
+import com.i1314i.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
+import com.i1314i.syncerplusredis.rdb.iterable.datatype.*;
 import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
 
+import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
-import com.moilioncircle.redis.replicator.event.Event;
-import com.moilioncircle.redis.replicator.rdb.datatype.ZSetEntry;
-import com.moilioncircle.redis.replicator.rdb.dump.datatype.DumpKeyValuePair;
-import com.moilioncircle.redis.replicator.rdb.iterable.datatype.*;
+import com.i1314i.syncerplusservice.util.TaskMsgUtils;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.params.SetParams;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import java.util.*;
 
 
 @Slf4j
@@ -25,15 +23,16 @@ private Event event;
 private JDJedis targetJedis;
 private  String key;
 private double redisVersion;
+private String taskId;
 
-
-    public SendRdbCommand(Long ms, RedisCommandTypeEnum typeEnum, Event event, JDJedis targetJedis, String key, double redisVersion) {
+    public SendRdbCommand(String taskId,Long ms, RedisCommandTypeEnum typeEnum, Event event, JDJedis targetJedis, String key, double redisVersion) {
         this.ms = ms;
         this.typeEnum = typeEnum;
         this.event = event;
         this.targetJedis = targetJedis;
         this.key = key;
         this.redisVersion = redisVersion;
+        this.taskId=taskId;
     }
 
     @Override
@@ -57,7 +56,6 @@ private double redisVersion;
                         byte[][] array = listBytes(valueList.getValue());
                         r =targetJedis.lpush(valueList.getKey(), array);
                     }else if(typeEnum.equals(RedisCommandTypeEnum.SET)){
-
                         BatchedKeyStringValueSet valueSet = (BatchedKeyStringValueSet) event;
                         byte[][] array = setBytes( valueSet.getValue());
                         r =targetJedis.sadd(valueSet.getKey(), array);
@@ -191,7 +189,16 @@ private double redisVersion;
 
             }
         } catch (Exception epx) {
-            log.warn(epx.getMessage() + ": " + i + ":" + key );
+
+            if(epx.getMessage().toUpperCase().equals("ERR DUMP payload version or checksum are wrong".toUpperCase())){
+                try {
+                    log.warn("redis版本号错误，宕掉任务 "+epx.getMessage() + ": " + i + ":" + key );
+                    Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                } catch (TaskMsgException e) {
+                    e.printStackTrace();
+                }
+            }
+
         } finally {
 
             if(targetJedis!=null){
