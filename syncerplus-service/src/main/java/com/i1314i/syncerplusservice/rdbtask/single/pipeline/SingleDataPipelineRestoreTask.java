@@ -32,6 +32,7 @@ import com.i1314i.syncerplusservice.task.clusterTask.command.ClusterProtocolComm
 import com.i1314i.syncerplusservice.task.singleTask.pipe.LockPipe;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSyncTask;
 import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
+import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusservice.util.TaskMsgUtils;
@@ -91,6 +92,19 @@ public class SingleDataPipelineRestoreTask implements Runnable {
     private LockPipe lockPipe = new LockPipe();
     private SyncTaskEntity taskEntity = new SyncTaskEntity();
     private Date time;
+    private int  batchSize;
+    public SingleDataPipelineRestoreTask(RedisSyncDataDto syncDataDto, RedisInfo info, String taskId,int batchSize) {
+        this.syncDataDto = syncDataDto;
+        this.sourceUri = syncDataDto.getSourceUri();
+        this.targetUri = syncDataDto.getTargetUri();
+        this.threadName = syncDataDto.getTaskName();
+        this.info = info;
+        this.taskId = taskId;
+        this.afresh=syncDataDto.isAfresh();
+        this.batchSize=batchSize;
+    }
+
+
     public SingleDataPipelineRestoreTask(RedisSyncDataDto syncDataDto, RedisInfo info, String taskId) {
         this.syncDataDto = syncDataDto;
         this.sourceUri = syncDataDto.getSourceUri();
@@ -99,14 +113,17 @@ public class SingleDataPipelineRestoreTask implements Runnable {
         this.info = info;
         this.taskId = taskId;
         this.afresh=syncDataDto.isAfresh();
+        this.batchSize=1000;
     }
 
     @Override
     public void run() {
-
+        if(batchSize==0){
+            batchSize=1000;
+        }
         //设线程名称
         Thread.currentThread().setName(threadName);
-
+        System.out.println("batchSize:"+batchSize);
         try {
             RedisURI suri = new RedisURI(sourceUri);
             RedisURI turi = new RedisURI(targetUri);
@@ -159,13 +176,15 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 //            TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(taskId,offset);
 //            r.getConfiguration().setReplOffset(14105376832);
 //            r.getConfiguration().setReplId("e1399afce9f5b5c35c5315ae68e4807fe81e764f");
-            r.addEventListener(new ValueDumpIterableEventListener(1000, new EventListener() {
+
+
+            r.addEventListener(new ValueDumpIterableEventListener(batchSize, new EventListener() {
                 @Override
                 public void onEvent(Replicator replicator, Event event) {
 
 //                    r.getConfiguration().getReplOffset()
 //                    lockPipe.syncpipe(pipelined, taskEntity, 1000, true);
-                    lockPipe.syncpipe(pipelineLock, taskEntity, 1000, true,suri,turi);
+                    lockPipe.syncpipe(pipelineLock, taskEntity, batchSize, true,suri,turi);
                     if (TaskMsgUtils.doThreadisCloseCheckTask(taskId)) {
 
                         try {
@@ -195,7 +214,7 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 
                     if (event instanceof PreRdbSyncEvent) {
                         time=new Date();
-                        log.info("{} :全量同步启动");
+                        log.info("【{}】 :全量同步启动",taskId);
                     }
 
 
@@ -205,9 +224,9 @@ public class SingleDataPipelineRestoreTask implements Runnable {
                             baseOffSet.setReplId(r.getConfiguration().getReplId());
                             baseOffSet.getReplOffset().set(r.getConfiguration().getReplOffset());
                         }
-                        System.out.println("时间"+ (new Date().getTime()-time.getTime()));
+//                        System.out.println("时间"+ (new Date().getTime()-time.getTime()));
 //                        TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(taskId,baseOffSet);
-                        log.info("{} :全量同步结束 ");
+                        log.info("【{}】 :全量同步结束 时间：{}",taskId,(new Date().getTime()-time.getTime()));
                     }
 
                     if (event instanceof BatchedKeyValuePair<?, ?>) {
@@ -222,6 +241,9 @@ public class SingleDataPipelineRestoreTask implements Runnable {
                         } else {
 //                            ms = event1.getExpiredMs();
                             ms = event1.getExpiredMs() - System.currentTimeMillis();
+                            if(ms<0L){
+                                return;
+                            }
                         }
                         if (event1.getValue() != null) {
 
@@ -270,7 +292,11 @@ public class SingleDataPipelineRestoreTask implements Runnable {
                             if (valuePair.getExpiredMs() == null) {
                                 ms = 0L;
                             } else {
+
                                 ms = valuePair.getExpiredMs() - System.currentTimeMillis();
+                                if(ms<0L){
+                                    return;
+                                }
                             }
 
                             DB db = valuePair.getDb();

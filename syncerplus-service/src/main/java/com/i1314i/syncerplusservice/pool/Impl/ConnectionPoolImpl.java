@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -97,7 +98,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
                     Configuration tconfig = Configuration.valueOf(redisURI);
 
                     //获取password
-                    if (tconfig.getAuthPassword() != null) {
+                    if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
                         Object auth = redisClient.send(AUTH, tconfig.getAuthPassword().getBytes());
                         log.info("AUTH:" + auth);
                     }

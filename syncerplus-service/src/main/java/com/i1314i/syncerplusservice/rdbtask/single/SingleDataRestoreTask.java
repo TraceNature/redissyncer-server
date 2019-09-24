@@ -180,6 +180,9 @@ public class SingleDataRestoreTask implements Runnable {
                             ms =0L;
                         }else {
                             ms =event1.getExpiredMs()-System.currentTimeMillis();
+                            if(ms<0L){
+                                return;
+                            }
                         }
                         if (event1.getValue() != null) {
 
@@ -212,7 +215,9 @@ public class SingleDataRestoreTask implements Runnable {
                                 ms =valuePair.getExpiredMs()-System.currentTimeMillis();
 //                                ms=ms/1000;
 //                                System.out.println(ms);
-                                System.out.println(ms);
+                                if(ms<0L){
+                                    return;
+                                }
                             }
 
                             DB db=valuePair.getDb();

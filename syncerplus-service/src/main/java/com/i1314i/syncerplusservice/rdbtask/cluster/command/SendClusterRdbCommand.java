@@ -76,10 +76,10 @@ public class SendClusterRdbCommand implements Runnable {
                         DumpKeyValuePair valueDump = (DumpKeyValuePair) event;
 
 
-                        if(targetJedis.del(valueDump.getKey())>=0){
+//                        if(targetJedis.del(valueDump.getKey())>=0){
                             r = targetJedis.restore(valueDump.getKey(), 0, valueDump.getValue());
 
-                        }
+//                        }
 
 //                        if (targetJedis.exists(valueDump.getKey())) {
 //                            if (targetJedis.del(valueDump.getKey()) >= 0) {
@@ -125,10 +125,10 @@ public class SendClusterRdbCommand implements Runnable {
                     } else if (typeEnum.equals(RedisCommandTypeEnum.DUMP)) {
 
                         DumpKeyValuePair valueDump = (DumpKeyValuePair) event;
-                        if(targetJedis.del(valueDump.getKey())>=0){
+//                        if(targetJedis.del(valueDump.getKey())>=0){
                             r = targetJedis.restore(valueDump.getKey(), Math.toIntExact(ms), valueDump.getValue());
 
-                        }
+//                        }
 //                        int ttl = (int) (ms / 1000);
 //                        if (targetJedis.exists(valueDump.getKey())) {
 //                            if (targetJedis.del(valueDump.getKey()) >= 0) {

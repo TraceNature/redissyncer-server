@@ -64,15 +64,24 @@ public class ClusterDataRestoreTask implements Runnable {
     SendClusterRdbCommand1 clusterRdbCommand=new SendClusterRdbCommand1();
     private RedisInfo info;
     private String taskId;
+    private int  batchSize;
+    public ClusterDataRestoreTask(RedisClusterDto syncDataDto, RedisInfo info,String sourceUri,String taskId,int batchSize) {
+        this.syncDataDto = syncDataDto;
+        this.sourceUri=sourceUri;
+        this.threadName = syncDataDto.getTaskName();
+        this.info=info;
+        this.taskId=taskId;
+        this.batchSize=batchSize;
+    }
+
     public ClusterDataRestoreTask(RedisClusterDto syncDataDto, RedisInfo info,String sourceUri,String taskId) {
         this.syncDataDto = syncDataDto;
         this.sourceUri=sourceUri;
         this.threadName = syncDataDto.getTaskName();
         this.info=info;
         this.taskId=taskId;
+        this.batchSize=syncDataDto.getBatchSize();
     }
-
-
 
     @Override
     public void run() {
@@ -80,6 +89,9 @@ public class ClusterDataRestoreTask implements Runnable {
         //设线程名称
         Thread.currentThread().setName(threadName);
 
+        if(batchSize==0){
+            batchSize=1000;
+        }
 
         try {
             RedisURI suri = new RedisURI(sourceUri);
@@ -89,7 +101,7 @@ public class ClusterDataRestoreTask implements Runnable {
             TaskMsgUtils.getThreadMsgEntity(taskId).addReplicator(r);
 
             r.setRdbVisitor(new ValueDumpIterableRdbVisitor(r,info.getRdbVersion()));
-            r.addEventListener(new ValueDumpIterableEventListener(1000, new EventListener() {
+            r.addEventListener(new ValueDumpIterableEventListener(batchSize, new EventListener() {
                 @Override
                 public void onEvent(Replicator replicator, Event event) {
 
@@ -150,6 +162,9 @@ public class ClusterDataRestoreTask implements Runnable {
                             ms =0L;
                         }else {
                             ms =event1.getExpiredMs()-System.currentTimeMillis();
+                            if(ms<0L){
+                                return;
+                            }
                         }
                         if (event1.getValue() != null) {
                             try {
@@ -186,6 +201,9 @@ public class ClusterDataRestoreTask implements Runnable {
                                 ms =0L;
                             }else {
                                 ms =valuePair.getExpiredMs()-System.currentTimeMillis();
+                                if(ms<0L){
+                                    return;
+                                }
                             }
 
 

@@ -168,9 +168,9 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
             //进行数据同步
             try {
                 if (i == 0) {
-                    syncTask(syncDataDto, source, String.valueOf(targetRedisUris.toArray()[0]), true,taskId);
+                    syncTask(syncDataDto, source, String.valueOf(targetRedisUris.toArray()[0]), true,taskId,clusterDto.getBatchSize());
                 } else {
-                    syncTask(syncDataDto, source, String.valueOf(targetRedisUris.toArray()[0]), false,taskId);
+                    syncTask(syncDataDto, source, String.valueOf(targetRedisUris.toArray()[0]), false,taskId,clusterDto.getBatchSize());
                 }
                 i++;
             } catch (TaskMsgException e) {
@@ -187,7 +187,7 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
      * */
 
 
-    public void syncTask(RedisSyncDataDto syncDataDto, String sourceUri, String targetUri, boolean status,String taskId) throws TaskMsgException {
+    public void syncTask(RedisSyncDataDto syncDataDto, String sourceUri, String targetUri, boolean status,String taskId,int batchSize) throws TaskMsgException {
 //        if (status) {
 //            if (TaskMonitorUtils.containsKeyAliveMap(syncDataDto.getThreadName())) {
 //                throw new TaskMsgException(TaskMsgConstant.Task_MSG_PARSE_ERROR_CODE);
@@ -196,7 +196,7 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
 
 //SingleDataPipelineRestoreTask
 
-        threadPoolTaskExecutor.execute(new SingleDataPipelineRestoreTask(syncDataDto, (RedisInfo) syncDataDto.getTargetUriData().toArray()[0],taskId));
+        threadPoolTaskExecutor.execute(new SingleDataPipelineRestoreTask(syncDataDto, (RedisInfo) syncDataDto.getTargetUriData().toArray()[0],taskId,batchSize));
 
 //        threadPoolTaskExecutor.execute(new SingleDataRestoreTask(syncDataDto, (RedisInfo) syncDataDto.getTargetUriData().toArray()[0],taskId));
     }

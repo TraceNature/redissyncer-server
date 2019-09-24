@@ -115,7 +115,11 @@ public class DtoCheckUtils {
             newDto.setTargetRedisVersion(dto.getTargetRedisVersion());
         }
 
-
+        if(syncDataDto.getBatchSize()!=0&&syncDataDto.getBatchSize()!=dto.getBatchSize()){
+            newDto.setBatchSize(syncDataDto.getBatchSize());
+        }else {
+            newDto.setBatchSize(dto.getBatchSize());
+        }
 
         if(syncDataDto.getDbNum()!=null&&syncDataDto.getDbNum().size()>0){
             newDto.setDbNum(syncDataDto.getDbNum());

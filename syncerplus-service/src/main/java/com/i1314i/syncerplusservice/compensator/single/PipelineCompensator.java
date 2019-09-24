@@ -14,6 +14,7 @@ import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
 import com.i1314i.syncerplusservice.util.TaskMsgUtils;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.params.SetParams;
@@ -152,11 +153,11 @@ public class PipelineCompensator implements Runnable{
                 Configuration sconfig = Configuration.valueOf(suri);
 
                 try {
-                    if (sconfig.getAuthPassword() != null) {
+                    if (!StringUtils.isEmpty(sconfig.getAuthPassword())) {
                         Object auth =sJdJedis.sendCommand(AUTH, tconfig.getAuthPassword().getBytes());
                     }
 
-                    if (tconfig.getAuthPassword() != null) {
+                    if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
                         Object auth =tJdJedis.sendCommand(AUTH, tconfig.getAuthPassword().getBytes());
                     }
                 }catch (Exception e){

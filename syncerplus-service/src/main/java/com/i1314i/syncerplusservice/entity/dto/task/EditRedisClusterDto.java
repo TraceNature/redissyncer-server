@@ -24,6 +24,7 @@ public class EditRedisClusterDto extends SyncDataDto implements Serializable {
     @Builder.Default
     private boolean afresh=true;
 
+    private int batchSize;
     public EditRedisClusterDto(String sourceRedisAddress,  String targetRedisAddress, String sourcePassword, String targetPassword,  String threadName, int minPoolSize, int maxPoolSize, long maxWaitTime, long timeBetweenEvictionRunsMillis, long idleTimeRunsMillis, int diffVersion, String pipeline) {
         super(minPoolSize,maxPoolSize,maxWaitTime,timeBetweenEvictionRunsMillis,idleTimeRunsMillis,diffVersion,pipeline);
         this.sourceRedisAddress = sourceRedisAddress;

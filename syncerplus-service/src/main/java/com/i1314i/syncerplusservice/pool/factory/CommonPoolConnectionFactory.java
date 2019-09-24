@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool.BasePoolableObjectFactory;
+import org.springframework.util.StringUtils;
 
 import static redis.clients.jedis.Protocol.Command.AUTH;
 
@@ -41,7 +42,7 @@ public class CommonPoolConnectionFactory extends BasePoolableObjectFactory {
         Configuration tconfig = Configuration.valueOf(redisURI);
 
         //获取password
-        if (tconfig.getAuthPassword() != null) {
+        if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
             Object auth = redisClient.send(AUTH, tconfig.getAuthPassword().getBytes());
             log.info("AUTH:" + auth);
         }

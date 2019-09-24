@@ -62,19 +62,23 @@ public class RedisUrlUtils {
             target = new RedisClient(turi.getHost(), turi.getPort());
 
             Configuration tconfig = Configuration.valueOf(turi);
+
             //获取password
-            if (tconfig.getAuthPassword() != null) {
+            if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
+
                 Object auth = target.send(AUTH, tconfig.getAuthPassword().getBytes());
             }
             int i = 3;
             while (i > 0) {
                 try {
                     String png = (String) target.send("PING".getBytes());
+                    System.out.println("------:"+png);
                     if (png.equals("PONG")) {
                         return true;
                     }
                     i--;
                 } catch (Exception e) {
+
                     return false;
                 }
 
@@ -126,7 +130,7 @@ public class RedisUrlUtils {
             Configuration targetConfig = Configuration.valueOf(targetUriplus);
 
             //获取password
-            if (targetConfig.getAuthPassword() != null) {
+            if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
                 Object targetAuth = target.auth(targetConfig.getAuthPassword());
             }
             String info=target.info();
@@ -167,12 +171,12 @@ public class RedisUrlUtils {
             Configuration targetConfig = Configuration.valueOf(targetUriplus);
 
             //获取password
-            if (sourceConfig.getAuthPassword() != null) {
+            if (!StringUtils.isEmpty(sourceConfig.getAuthPassword())) {
                 Object sourceAuth = source.auth(sourceConfig.getAuthPassword());
             }
 
             //获取password
-            if (targetConfig.getAuthPassword() != null) {
+            if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
                 Object targetAuth = target.auth(targetConfig.getAuthPassword());
             }
 
@@ -255,7 +259,7 @@ public class RedisUrlUtils {
                 source = new Jedis(sourceUriplus.getHost(), sourceUriplus.getPort());
                 Configuration sourceConfig = Configuration.valueOf(sourceUriplus);
                 //获取password
-                if (sourceConfig.getAuthPassword() != null) {
+                if (StringUtils.isEmpty(sourceConfig.getAuthPassword())) {
                     Object sourceAuth = source.auth(sourceConfig.getAuthPassword());
                 }
 
@@ -460,6 +464,7 @@ public class RedisUrlUtils {
             }
             if (!RedisUrlUtils.getRedisClientConnectState(url, name)) {
 //                throw new TaskMsgException(name + " :连接redis失败");
+
                 throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR));
 
             }

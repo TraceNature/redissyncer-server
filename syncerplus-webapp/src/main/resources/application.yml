@@ -1,3 +1,4 @@
+
 syncerplus:
   redispool:
     #池中空闲链接回收线程执行间隔时间  例：每隔1000毫秒执行一次回收函数
@@ -22,4 +23,6 @@ syncerplus:
     keepAliveSeconds: 300
 
 #logging:
+server:
+  port: 8081
 #  config: log/logback.xml
