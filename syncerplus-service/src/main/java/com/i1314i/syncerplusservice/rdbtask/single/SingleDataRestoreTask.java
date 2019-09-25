@@ -215,7 +215,7 @@ public class SingleDataRestoreTask implements Runnable {
                                 ms =valuePair.getExpiredMs()-System.currentTimeMillis();
 //                                ms=ms/1000;
 //                                System.out.println(ms);
-                                if(ms<0L){
+                                if(ms<=0L){
                                     return;
                                 }
                             }

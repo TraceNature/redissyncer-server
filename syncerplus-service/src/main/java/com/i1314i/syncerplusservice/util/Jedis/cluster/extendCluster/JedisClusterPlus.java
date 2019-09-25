@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class JedisClusterPlus extends BinaryJedisClusterPlus implements JedisClusterCommands,
+public  class JedisClusterPlus extends BinaryJedisClusterPlus implements JedisClusterCommands,
         MultiKeyJedisClusterCommands, JedisClusterScriptingCommands {
     private Map<String,String>nodesMap;
     public JedisClusterPlus(HostAndPort node,Map<String,String>nodesMap) {

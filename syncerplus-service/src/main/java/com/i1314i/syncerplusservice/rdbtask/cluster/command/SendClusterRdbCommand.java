@@ -77,8 +77,7 @@ public class SendClusterRdbCommand implements Runnable {
 
 
 //                        if(targetJedis.del(valueDump.getKey())>=0){
-                            r = targetJedis.restore(valueDump.getKey(), 0, valueDump.getValue());
-
+                            r = targetJedis.restoreReplace(valueDump.getKey(), 0, valueDump.getValue());
 //                        }
 
 //                        if (targetJedis.exists(valueDump.getKey())) {
@@ -126,7 +125,7 @@ public class SendClusterRdbCommand implements Runnable {
 
                         DumpKeyValuePair valueDump = (DumpKeyValuePair) event;
 //                        if(targetJedis.del(valueDump.getKey())>=0){
-                            r = targetJedis.restore(valueDump.getKey(), Math.toIntExact(ms), valueDump.getValue());
+                            r = targetJedis.restoreReplace(valueDump.getKey(), Math.toIntExact(ms), valueDump.getValue());
 
 //                        }
 //                        int ttl = (int) (ms / 1000);
@@ -143,6 +142,7 @@ public class SendClusterRdbCommand implements Runnable {
 
 
                 }
+
                 if (r instanceof String) {
                     if (r.equals("OK")) {
                         i = -1;
@@ -192,7 +192,8 @@ public class SendClusterRdbCommand implements Runnable {
 
             }
         } catch (Exception epx) {
-            log.info(epx.getMessage() + ": " + i + ":" + key);
+            epx.printStackTrace();
+            log.warn(epx.toString()+":"+epx.getMessage() + ": " + i + ":" + key);
         } finally {
 
 //            if (targetJedis != null) {

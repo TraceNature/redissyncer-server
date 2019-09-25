@@ -71,6 +71,7 @@ private String taskId;
                         BatchedKeyStringValueHash valueHash = (BatchedKeyStringValueHash) event;
 
                         r =targetJedis.hmset(valueHash.getKey(), valueHash.getValue());
+
                     }else if(typeEnum.equals(RedisCommandTypeEnum.DUMP)){
                         DumpKeyValuePair valueDump= (DumpKeyValuePair) event;
                         if (redisVersion < 3.0) {

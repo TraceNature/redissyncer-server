@@ -162,12 +162,14 @@ public class ClusterDataRestoreTask implements Runnable {
                             ms =0L;
                         }else {
                             ms =event1.getExpiredMs()-System.currentTimeMillis();
-                            if(ms<0L){
+                            if(ms<=0L){
                                 return;
                             }
                         }
-                        if (event1.getValue() != null) {
+                        if (event1.getValue() != null&&event1.getKey()!=null) {
                             try {
+
+//                                new SendClusterRdbCommand(ms, RedisCommandType.getRedisCommandTypeEnum(event1.getValueRdbType()),event,redisClient,new String((byte[]) event1.getKey())).run();
 //                                clusterRdbCommand.sendCommand(ms, RedisCommandType.getRedisCommandTypeEnum(event1.getValueRdbType()),event,redisClient,new String((byte[]) event1.getKey()));
                                 threadPoolTaskExecutor.submit(new SendClusterRdbCommand(ms, RedisCommandType.getRedisCommandTypeEnum(event1.getValueRdbType()),event,redisClient,new String((byte[]) event1.getKey())));
                             } catch (Exception e) {

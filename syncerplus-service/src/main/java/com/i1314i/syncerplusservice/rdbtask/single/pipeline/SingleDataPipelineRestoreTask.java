@@ -70,7 +70,6 @@ public class SingleDataPipelineRestoreTask implements Runnable {
     }
     private String sourceUri;  //源redis地址
     private String targetUri;  //目标redis地址
-    private int threadCount = 30;  //写线程数
     private boolean status = true;
     private String threadName; //线程名称
     private RedisSyncDataDto syncDataDto;
@@ -185,6 +184,7 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 //                    r.getConfiguration().getReplOffset()
 //                    lockPipe.syncpipe(pipelined, taskEntity, 1000, true);
                     lockPipe.syncpipe(pipelineLock, taskEntity, batchSize, true,suri,turi);
+
                     if (TaskMsgUtils.doThreadisCloseCheckTask(taskId)) {
 
                         try {
@@ -351,7 +351,7 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 //                        TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(taskId,baseOffSet);
                         DefaultCommand dc = (DefaultCommand) event;
                         if(dc.getCommand().equals("SELECT".getBytes())){
-
+                                                                        
                         }else {
 
                             EventEntity eventEntity=new EventEntity(new DB(dbNum.get()),EventTypeEntity.USE,RedisCommandTypeEnum.COMMAND,dc);
