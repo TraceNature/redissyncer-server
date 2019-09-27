@@ -14,6 +14,7 @@ import com.i1314i.syncerplusredis.replicator.Replicator;
 import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
 import com.i1314i.syncerplusservice.entity.RedisInfo;
 import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
+import com.i1314i.syncerplusservice.entity.thread.OffSetEntity;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.rdbtask.cluster.command.SendClusterRdbCommand;
 import com.i1314i.syncerplusservice.rdbtask.cluster.command.SendClusterRdbCommand1;
@@ -31,6 +32,7 @@ import com.i1314i.syncerplusservice.util.TaskMsgUtils;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.util.StringUtils;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -39,7 +41,10 @@ import java.net.NoRouteToHostException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 public class ClusterDataRestoreTask implements Runnable {
@@ -50,14 +55,19 @@ public class ClusterDataRestoreTask implements Runnable {
         threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
         threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
     }
-
+    private boolean afresh;
     private String sourceUri;  //源redis地址
     private String targetUri;  //目标redis地址
     private int threadCount = 30;  //写线程数
     private boolean status = true;
     private String threadName; //线程名称
+    private Date time;
     private RedisClusterDto syncDataDto;
     private SendRDBClusterDefaultCommand sendDefaultCommand=new SendRDBClusterDefaultCommand();
+
+    //判断增量是否可写
+    private final AtomicBoolean commandDbStatus=new AtomicBoolean(true);
+
     private RdbClusterCommand sendDumpKeyDiffVersionCommand=new RdbClusterCommand();
     private  JedisClusterPlus redisClient;
     private double redisVersion;
@@ -65,12 +75,15 @@ public class ClusterDataRestoreTask implements Runnable {
     private RedisInfo info;
     private String taskId;
     private int  batchSize;
+
+
     public ClusterDataRestoreTask(RedisClusterDto syncDataDto, RedisInfo info,String sourceUri,String taskId,int batchSize) {
         this.syncDataDto = syncDataDto;
         this.sourceUri=sourceUri;
         this.threadName = syncDataDto.getTaskName();
         this.info=info;
         this.taskId=taskId;
+        this.afresh=syncDataDto.isAfresh();
         this.batchSize=batchSize;
     }
 
@@ -80,6 +93,7 @@ public class ClusterDataRestoreTask implements Runnable {
         this.threadName = syncDataDto.getTaskName();
         this.info=info;
         this.taskId=taskId;
+        this.afresh=syncDataDto.isAfresh();
         this.batchSize=syncDataDto.getBatchSize();
     }
 
@@ -99,6 +113,26 @@ public class ClusterDataRestoreTask implements Runnable {
             redisClient=poolss.jedisCluster();
             final Replicator r  = RedisMigrator.newBacthedCommandDress(new JDRedisReplicator(suri));
             TaskMsgUtils.getThreadMsgEntity(taskId).addReplicator(r);
+
+            OffSetEntity offset= TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().get(sourceUri);
+            if(offset==null){
+
+                offset=new OffSetEntity();
+                TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(sourceUri,offset);
+            }else {
+
+                if(StringUtils.isEmpty(offset.getReplId())){
+                    offset.setReplId(r.getConfiguration().getReplId());
+                }else if(offset.getReplOffset().get()>-1){
+                    if(!afresh){
+                        r.getConfiguration().setReplOffset(offset.getReplOffset().get());
+                        r.getConfiguration().setReplId(offset.getReplId());
+                    }
+
+                }
+            }
+
+            final OffSetEntity baseOffSet= TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().get(sourceUri);
 
             r.setRdbVisitor(new ValueDumpIterableRdbVisitor(r,info.getRdbVersion()));
             r.addEventListener(new ValueDumpIterableEventListener(batchSize, new EventListener() {
@@ -133,12 +167,18 @@ public class ClusterDataRestoreTask implements Runnable {
 
 
                     if (event instanceof PreRdbSyncEvent) {
-                        log.info("{} :全量同步启动 ");
+                        time=new Date();
+                        log.warn("【{}】 :全量同步启动",taskId);
                     }
 
 
                     if (event instanceof PostRdbSyncEvent) {
-                        log.info("{} :全量同步结束 ");
+                        if(r.getConfiguration().getReplOffset()>=0){
+                            baseOffSet.setReplId(r.getConfiguration().getReplId());
+                            baseOffSet.getReplOffset().set(r.getConfiguration().getReplOffset());
+                        }
+
+                        log.warn("【{}】 :全量同步结束 时间：{}",taskId,(new Date().getTime()-time.getTime()));
                     }
 
                     if (event instanceof BatchedKeyValuePair<?, ?>) {
@@ -199,7 +239,7 @@ public class ClusterDataRestoreTask implements Runnable {
 
                         if(valuePair.getValue()!=null){
                             Long ms;
-                            if(valuePair.getExpiredMs()==null){
+                            if(valuePair.getExpiredMs()==null||valuePair.getExpiredMs()==0L){
                                 ms =0L;
                             }else {
                                 ms =valuePair.getExpiredMs()-System.currentTimeMillis();
@@ -227,7 +267,7 @@ public class ClusterDataRestoreTask implements Runnable {
                     /**
                      * 命令同步
                      */
-                    sendDefaultCommand.sendDefaultCommand(event,r,redisClient,threadPoolTaskExecutor,taskId);
+                    sendDefaultCommand.sendDefaultCommand(event,r,redisClient,threadPoolTaskExecutor,taskId,baseOffSet,syncDataDto.getDbNum(),commandDbStatus);
 
 
                 }

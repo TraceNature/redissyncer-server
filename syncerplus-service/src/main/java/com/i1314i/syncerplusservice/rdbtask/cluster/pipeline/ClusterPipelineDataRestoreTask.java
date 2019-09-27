@@ -130,7 +130,7 @@ public class ClusterPipelineDataRestoreTask implements Runnable {
                     /**
                      * 命令同步
                      */
-                    sendDefaultCommand.sendDefaultCommand(event,r,redisClient,threadPoolTaskExecutor,taskId);
+//                    sendDefaultCommand.sendDefaultCommand(event,r,redisClient,threadPoolTaskExecutor,taskId);
 
 
                 }

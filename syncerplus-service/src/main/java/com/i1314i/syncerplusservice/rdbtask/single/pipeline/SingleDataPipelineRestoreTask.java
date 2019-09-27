@@ -2,6 +2,7 @@ package com.i1314i.syncerplusservice.rdbtask.single.pipeline;
 
 import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
+import com.i1314i.syncerpluscommon.util.common.Bytes;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
 import com.i1314i.syncerplusredis.cmd.impl.DefaultCommand;
 import com.i1314i.syncerplusredis.entity.RedisURI;
@@ -54,6 +55,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -88,8 +90,11 @@ public class SingleDataPipelineRestoreTask implements Runnable {
     @Setter
     private String dbindex="-1";
     private final AtomicLong dbNum = new AtomicLong(0);
+    //判断增量是否可写
+    private final AtomicBoolean commandDbStatus=new AtomicBoolean(true);
     private LockPipe lockPipe = new LockPipe();
     private SyncTaskEntity taskEntity = new SyncTaskEntity();
+
     private Date time;
     private int  batchSize;
     public SingleDataPipelineRestoreTask(RedisSyncDataDto syncDataDto, RedisInfo info, String taskId,int batchSize) {
@@ -144,7 +149,7 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 //             */
 //            pool.init(syncDataDto.getMinPoolSize(), syncDataDto.getMaxPoolSize(), syncDataDto.getMaxWaitTime(), turi, syncDataDto.getTimeBetweenEvictionRunsMillis(), syncDataDto.getIdleTimeRunsMillis());
 
-
+            int dbbnum = 0;
             final Replicator r = RedisMigrator.newBacthedCommandDress(new JDRedisReplicator(suri));
 
             TaskMsgUtils.getThreadMsgEntity(taskId).addReplicator(r);
@@ -350,18 +355,47 @@ public class SingleDataPipelineRestoreTask implements Runnable {
                         baseOffSet.getReplOffset().set(r.getConfiguration().getReplOffset());
 //                        TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(taskId,baseOffSet);
                         DefaultCommand dc = (DefaultCommand) event;
-                        if(dc.getCommand().equals("SELECT".getBytes())){
-                                                                        
+
+
+                        if(Arrays.equals(dc.getCommand(),"SELECT".getBytes())){
+                            int commDbNum= Integer.parseInt(new String(dc.getArgs()[0]));
+
+
+                            if(syncDataDto.getDbNum()==null||syncDataDto.getDbNum().size()==0){
+                                dbNum.set(commDbNum);
+                                commandDbStatus.set(true);
+                            }else {
+                                if(syncDataDto.getDbNum().containsKey(commDbNum)){
+                                    byte[][]dbData=dc.getArgs();
+                                    dbData[0]=String.valueOf(syncDataDto.getDbNum().get(commDbNum)).getBytes();
+                                    dc.setArgs(dbData);
+                                    dbNum.set(syncDataDto.getDbNum().get(commDbNum));
+                                    commandDbStatus.set(true);
+                                }else {
+                                    commandDbStatus.set(false);
+                                    return ;
+                                }
+
+                            }
+
                         }else {
+
+                            if(!commandDbStatus.get()&&!Arrays.equals(dc.getCommand(),"FLUSHALL".getBytes())){
+                                return;
+                            }
 
                             EventEntity eventEntity=new EventEntity(new DB(dbNum.get()),EventTypeEntity.USE,RedisCommandTypeEnum.COMMAND,dc);
 //                            EventEntity eventEntity=new EventEntity(dc.getArgs()[0],new DB(dbNum.get()),EventTypeEntity.USE,RedisCommandTypeEnum.COMMAND);
                             taskEntity.addKey(eventEntity);
-//                            System.out.println(new String(dc.getArgs()[0]));
+
                         }
+                        if(!commandDbStatus.get()&&!Arrays.equals(dc.getCommand(),"FLUSHALL".getBytes())){
+                            return;
+                        }
+
                         taskEntity.add();
                         pipelineLock.sendCommand(new ClusterProtocolCommand(dc.getCommand()), dc.getArgs());
-//                        pipelined.sendCommand(new ClusterProtocolCommand(dc.getCommand()), dc.getArgs());
+
 
                     }
 //                    sendDefaultCommand.sendDefaultCommand(event, r, pool, threadPoolTaskExecutor, syncDataDto);

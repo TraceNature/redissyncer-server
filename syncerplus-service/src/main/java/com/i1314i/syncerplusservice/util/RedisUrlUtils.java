@@ -259,7 +259,7 @@ public class RedisUrlUtils {
                 source = new Jedis(sourceUriplus.getHost(), sourceUriplus.getPort());
                 Configuration sourceConfig = Configuration.valueOf(sourceUriplus);
                 //获取password
-                if (StringUtils.isEmpty(sourceConfig.getAuthPassword())) {
+                if (!StringUtils.isEmpty(sourceConfig.getAuthPassword())) {
                     Object sourceAuth = source.auth(sourceConfig.getAuthPassword());
                 }
 
