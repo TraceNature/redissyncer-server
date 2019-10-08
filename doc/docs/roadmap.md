@@ -7,14 +7,14 @@
   - [x] 通过jedis计算hash槽，进行集群分发 
 - [x] 全功能pipeline写入
 - [x] 大KV的支持
-- [ ] pipeline失败补偿流程
-- [ ]  任务状态持久化
-- [ ] 接口梳理
-  - [ ] createtask
-  - [ ] starttask
-  - [ ] stoptask
-  - [ ] listtasks
-  - [ ] deletetask  
+- [x] pipeline失败补偿流程
+- [x]  任务状态持久化
+- [x] 接口梳理
+  - [x] createtask
+  - [x] starttask
+  - [x] stoptask
+  - [x] listtasks
+  - [x] deletetask  
 - [ ] 同步模式拆分：全量、增量和全量+增量，增量offset包括三类beginbuf、endbuf、自定值
 - [ ]  断点续传：通过targetoffset续传，如果offset值已过期，该任务作废
 - [ ] 任务监控

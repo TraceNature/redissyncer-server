@@ -4,7 +4,7 @@
 <configuration scan="true" scanPeriod="60 seconds" debug="false">
 
         <!-- 路径名称 -->
-        <property name="log.base" value="logs" />
+        <property name="log.base" value="/data/logs" />
         <!-- 保存的文件名 -->
         <property name="log.fileName" value="log" />
 
