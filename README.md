@@ -47,7 +47,7 @@
 
     配置文件以及日志外置启动
     nohup java -jar syncerplus-webapp-1.0.jar  --logging.config=/usr/local/jdks/config/logback.xml  &
-    
+<!--    
 #### Docker 打包镜像
         项目主目录下执行：
         mvn clean install -pl syncerplus-webapp -am
@@ -55,6 +55,7 @@
         mvn package dockerfile:build
         
         docker run -d -p 80:8080 --name xxx
+        -->
 ### 三、使用方法
 
 
