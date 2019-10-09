@@ -1,3 +1,4 @@
+* 1.0 
 - [x] 多线程写入
 - [x] 数据源及目标校验
 - [x] 多任务模式
@@ -15,10 +16,10 @@
   - [x] stoptask
   - [x] listtasks
   - [x] deletetask  
-- [ ] 同步模式拆分：全量、增量和全量+增量，增量offset包括三类beginbuf、endbuf、自定值
+
+* 2.0
+- [ ] 同步模式拆分：全量、增量和全量+增量，增量offset包括beginbuf、endbuf
 - [ ]  断点续传：通过targetoffset续传，如果offset值已过期，该任务作废
-- [ ] 任务监控
-- [ ] 新增参数maxtasks:根据实例所能承载的线程限制最大任务数
-- [ ] 集成kafka
-- [ ] 分布式任务
+- [ ] 离线rds或aof文件加载
+- [ ] 数据校验
 - [ ] cli客户端程序(完成基本架构及部分功能)
