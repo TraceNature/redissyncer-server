@@ -1,0 +1,16 @@
+{
+    "dbNum": {
+        "1": "1"
+    },
+    "idleTimeRunsMillis": 100000,
+    "maxPoolSize": 110,
+    "maxWaitTime": 10000,
+    "minPoolSize": 100,
+    "pipeline": "off",
+    "sourcePassword": "redistest0102",
+    "sourceRedisAddress": "114.67.100.239:6379",
+    "targetRedisAddress": "114.67.100.239:8003;114.67.100.239:8002;114.67.100.238:8002;114.67.100.238:8003;114.67.100.240:8002;114.67.100.240:8003",
+    "targetPassword": "",
+    "threadName": "test",
+    "timeBetweenEvictionRunsMillis": 1000
+}
