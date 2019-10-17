@@ -5,25 +5,28 @@ import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
 import com.i1314i.syncerplusredis.entity.RedisURI;
 import com.i1314i.syncerplusredis.event.Event;
 import com.i1314i.syncerplusredis.event.EventListener;
+import com.i1314i.syncerplusredis.exception.IncrementException;
+import com.i1314i.syncerplusredis.extend.replicator.listener.ValueDumpIterableEventListener;
+import com.i1314i.syncerplusredis.extend.replicator.service.JDRedisReplicator;
+import com.i1314i.syncerplusredis.extend.replicator.visitor.ValueDumpIterableRdbVisitor;
 import com.i1314i.syncerplusredis.replicator.Replicator;
-import com.i1314i.syncerplusservice.entity.RedisInfo;
-import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
-import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
+import com.i1314i.syncerplusredis.entity.RedisInfo;
+import com.i1314i.syncerplusredis.entity.SyncTaskEntity;
+import com.i1314i.syncerplusredis.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.rdbtask.cluster.command.SendClusterRdbCommand1;
-import com.i1314i.syncerplusservice.replicator.listener.ValueDumpIterableEventListener;
-import com.i1314i.syncerplusservice.replicator.service.JDRedisReplicator;
-import com.i1314i.syncerplusservice.replicator.visitor.ValueDumpIterableRdbVisitor;
+
 import com.i1314i.syncerplusservice.service.command.SendRDBClusterDefaultCommand;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.task.BatchedKeyValueTask.cluster.RdbClusterCommand;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.cluster.LockPipeCluster;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.pipelineCluster.JedisClusterPipeline;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
-import com.i1314i.syncerplusservice.util.TaskMsgUtils;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
 
+import com.i1314i.syncerplusservice.util.SyncTaskUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -104,7 +107,7 @@ public class ClusterPipelineDataRestoreTask implements Runnable {
 
 
 //                    lockPipe.syncpipe(lockPipe, taskEntity, 1000, true,suri,turi);
-                    if (TaskMsgUtils.doThreadisCloseCheckTask(taskId)) {
+                    if (SyncTaskUtils.doThreadisCloseCheckTask(taskId)) {
 
                         try {
                             r.close();
@@ -138,28 +141,28 @@ public class ClusterPipelineDataRestoreTask implements Runnable {
             r.open();
         }catch (URISyntaxException e) {
             try {
-                Map<String,String> msg=TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException et) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】",taskId,e.getMessage());
         } catch (EOFException ex ){
             try {
-                Map<String,String> msg=TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】",taskId,ex.getMessage());
         }catch (NoRouteToHostException p){
             try {
-                Map<String,String> msg=TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】",taskId,p.getMessage());
         }catch (ConnectException cx){
             try {
-                Map<String,String> msg=TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
@@ -167,13 +170,20 @@ public class ClusterPipelineDataRestoreTask implements Runnable {
         }
         catch (IOException et) {
             try {
-                Map<String,String> msg=TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg= SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】",taskId,et.getMessage());
         } catch (ParseException e) {
             e.printStackTrace();
+        } catch (IncrementException et) {
+            try {
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
+            } catch (TaskMsgException e) {
+                e.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, et.getMessage());
         }
 
     }

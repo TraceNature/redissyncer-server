@@ -8,17 +8,15 @@ import com.i1314i.syncerplusredis.rdb.datatype.DB;
 import com.i1314i.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
 import com.i1314i.syncerplusredis.replicator.Constants;
 import com.i1314i.syncerplusredis.replicator.Replicator;
-import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
+import com.i1314i.syncerplusredis.constant.RedisCommandTypeEnum;
 import com.i1314i.syncerplusservice.rdbtask.enums.RedisCommandType;
 import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import java.util.Date;
 import java.util.Map;
 
 

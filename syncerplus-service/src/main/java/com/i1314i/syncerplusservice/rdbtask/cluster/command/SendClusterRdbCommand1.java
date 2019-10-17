@@ -4,7 +4,7 @@ import com.i1314i.syncerplusredis.event.Event;
 import com.i1314i.syncerplusredis.rdb.datatype.ZSetEntry;
 import com.i1314i.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import com.i1314i.syncerplusredis.rdb.iterable.datatype.*;
-import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
+import com.i1314i.syncerplusredis.constant.RedisCommandTypeEnum;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.params.SetParams;

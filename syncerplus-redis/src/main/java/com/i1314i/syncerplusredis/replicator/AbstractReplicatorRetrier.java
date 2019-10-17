@@ -16,28 +16,37 @@
 
 package com.i1314i.syncerplusredis.replicator;
 
+import com.i1314i.syncerplusredis.constant.ThreadStatusEnum;
 import com.i1314i.syncerplusredis.entity.Configuration;
+import com.i1314i.syncerplusredis.exception.IncrementException;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Arrays;
+import java.util.Map;
 
 /**
  * @author Leon Chen
  * @since 2.4.7
  */
+
+@Slf4j
 public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
     protected int retries = 0;
 
     protected abstract boolean isManualClosed();
 
-    protected abstract boolean open() throws IOException;
+    protected abstract boolean open() throws IOException, IncrementException;
     
     protected abstract boolean connect() throws IOException;
 
     protected abstract boolean close(IOException reason) throws IOException;
 
     @Override
-    public void retry(Replicator replicator) throws IOException {
+    public void retry(Replicator replicator) throws IOException, IncrementException {
         IOException exception = null;
         Configuration configuration = replicator.getConfiguration();
         for (; retries < configuration.getRetries() || configuration.getRetries() <= 0; retries++) {
@@ -46,9 +55,10 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
             final long interval = configuration.getRetryTimeInterval();
             try {
                 if (connect()) {
-                    reset();
+//                    reset();
                 }
                 if (!open()) {
+
                     reset();
                     close(null);
                     sleep(interval);
@@ -62,7 +72,74 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
                 sleep(interval);
             }
         }
-        if (exception != null) throw exception;
+
+
+        if (exception != null)
+            throw exception;
+
+    }
+
+
+    @Override
+    public void retry(Replicator replicator,String taskId) throws IOException {
+
+        IOException exception = null;
+        Configuration configuration = replicator.getConfiguration();
+        for (; retries < configuration.getRetries() || configuration.getRetries() <= 0; retries++) {
+            exception = null;
+            if (isManualClosed()) break;
+            final long interval = configuration.getRetryTimeInterval();
+            try {
+                if (connect()) {
+//                    reset();
+                }
+                if (!open()) {
+
+                    reset();
+                    close(null);
+                    sleep(interval);
+                    continue;
+                }
+                exception = null;
+                break;
+            } catch (IOException | UncheckedIOException e) {
+                exception = translate(e);
+                close(exception);
+                sleep(interval);
+            } catch (IncrementException e) {
+                try {
+                    Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                } catch (TaskMsgException ex) {
+                    ex.printStackTrace();
+                }
+                log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,e.getMessage());
+            }
+            return;
+        }
+
+
+
+        if(TaskMsgUtils.getThreadMsgEntity(taskId).getStatus().equals(ThreadStatusEnum.RUN)){
+            System.out.println("-------------------------over");
+            try {
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+            } catch (TaskMsgException e) {
+                e.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,exception);
+        }
+
+
+
+//        if (exception != null)
+//            throw exception;
+//
+        if (exception != null)
+            throw exception;
+
+
+
+
     }
 
     protected void reset() {

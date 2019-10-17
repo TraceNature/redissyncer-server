@@ -24,6 +24,7 @@ import com.i1314i.syncerplusredis.entity.Configuration;
 import com.i1314i.syncerplusredis.entity.FileType;
 import com.i1314i.syncerplusredis.entity.RedisURI;
 import com.i1314i.syncerplusredis.event.EventListener;
+import com.i1314i.syncerplusredis.exception.IncrementException;
 import com.i1314i.syncerplusredis.io.PeekableInputStream;
 import com.i1314i.syncerplusredis.io.RawByteListener;
 import com.i1314i.syncerplusredis.rdb.RdbVisitor;
@@ -76,9 +77,19 @@ public class RedisReplicator implements Replicator {
         }
     }
 
-    public RedisReplicator(String host, int port, Configuration configuration) {
-        this.replicator = new RedisSocketReplicator(host, port, configuration);
+    public RedisReplicator(String host, int port, Configuration configuration,boolean status) {
+        loadingRedisReplicator(host,port,configuration,status);
     }
+
+
+    private void loadingRedisReplicator(String host, int port, Configuration configuration,boolean status){
+        this.replicator = new RedisSocketReplicator(host, port, configuration,status);
+    }
+
+    public RedisReplicator(String host, int port, Configuration configuration) {
+        loadingRedisReplicator(host,port,configuration,true);
+    }
+
 
     /**
      * @param uri redis uri.
@@ -89,7 +100,7 @@ public class RedisReplicator implements Replicator {
      */
     public RedisReplicator(String uri) throws URISyntaxException, IOException {
         Objects.requireNonNull(uri);
-        initialize(new RedisURI(uri));
+        initialize(new RedisURI(uri),true);
     }
 
     /**
@@ -98,10 +109,19 @@ public class RedisReplicator implements Replicator {
      * @since 2.4.2
      */
     public RedisReplicator(RedisURI uri) throws IOException {
-        initialize(uri);
+        loadRedisReplicator(uri,true);
     }
 
-    private void initialize(RedisURI uri) throws IOException {
+    private void loadRedisReplicator(RedisURI uri,boolean status) throws IOException {
+        initialize(uri,status);
+    }
+
+    public RedisReplicator(RedisURI uri,boolean status) throws IOException {
+//        loadRedisReplicator(uri,status);
+        initialize(uri,status);
+    }
+
+    private void initialize(RedisURI uri,boolean status) throws IOException {
         Objects.requireNonNull(uri);
         Configuration configuration = Configuration.valueOf(uri);
         if (uri.getFileType() != null) {
@@ -124,7 +144,17 @@ public class RedisReplicator implements Replicator {
                     throw new UnsupportedOperationException(uri.getFileType().toString());
             }
         } else {
-            this.replicator = new RedisSocketReplicator(uri.getHost(), uri.getPort(), configuration);
+
+            this.replicator = new RedisSocketReplicator(uri.getHost(), uri.getPort(), configuration,status);
+
+//            if(status){
+//                this.replicator = new RedisSocketReplicator(uri.getHost(), uri.getPort(), configuration,status);
+//            }else {
+//                System.out.println("==="+status);
+//                this.replicator = new JDAofRedisSocketReplicator(uri.getHost(), uri.getPort(), configuration);
+//            }
+
+//            this.replicator = new RedisSocketReplicator(uri.getHost(), uri.getPort(), configuration);
         }
     }
 
@@ -244,8 +274,13 @@ public class RedisReplicator implements Replicator {
     }
 
     @Override
-    public void open() throws IOException {
+    public void open() throws IOException, IncrementException {
         replicator.open();
+    }
+
+    @Override
+    public void open(String taskId) throws IOException, IncrementException {
+        replicator.open(taskId);
     }
 
     @Override

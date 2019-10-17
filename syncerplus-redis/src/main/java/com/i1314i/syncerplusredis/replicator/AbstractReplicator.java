@@ -25,6 +25,7 @@ import com.i1314i.syncerplusredis.cmd.parser.AppendParser;
 
 import com.i1314i.syncerplusredis.cmd.parser.*;
 import com.i1314i.syncerplusredis.entity.Configuration;
+import com.i1314i.syncerplusredis.exception.IncrementException;
 import com.i1314i.syncerplusredis.io.RedisInputStream;
 
 import com.i1314i.syncerplusredis.cmd.parser.*;
@@ -242,7 +243,7 @@ public abstract class AbstractReplicator extends AbstractReplicatorListener impl
         addCommandParser(CommandName.name("XSETID"), new XSetIdParser());
     }
     
-    public void open() throws IOException {
+    public void open() throws IOException, IncrementException {
         manual.compareAndSet(true, false);
     }
     

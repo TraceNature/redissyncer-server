@@ -1,17 +1,15 @@
 package com.i1314i.syncerplusservice.task.singleTask.pipe;
 
-import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
 import com.i1314i.syncerplusredis.entity.RedisURI;
 import com.i1314i.syncerplusservice.compensator.single.PipelineCompensator;
-import com.i1314i.syncerplusservice.entity.EventEntity;
-import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
+import com.i1314i.syncerplusredis.entity.EventEntity;
+import com.i1314i.syncerplusredis.entity.SyncTaskEntity;
 
 import com.i1314i.syncerplusservice.rdbtask.single.pipeline.PipelineLock;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;

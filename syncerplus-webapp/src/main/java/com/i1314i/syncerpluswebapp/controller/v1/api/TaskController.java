@@ -4,18 +4,19 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.i1314i.syncerpluscommon.entity.ResultMap;
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
-import com.i1314i.syncerplusservice.constant.ThreadStatusEnum;
-import com.i1314i.syncerplusservice.entity.RedisPoolProps;
-import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
-import com.i1314i.syncerplusservice.entity.dto.task.EditRedisClusterDto;
-import com.i1314i.syncerplusservice.entity.dto.task.ListTaskMsgDto;
-import com.i1314i.syncerplusservice.entity.dto.task.TaskMsgDto;
-import com.i1314i.syncerplusservice.entity.dto.task.TaskStartMsgDto;
-import com.i1314i.syncerplusservice.entity.thread.ThreadMsgEntity;
-import com.i1314i.syncerplusservice.entity.thread.ThreadReturnMsgEntity;
+import com.i1314i.syncerplusredis.constant.ThreadStatusEnum;
+import com.i1314i.syncerplusredis.entity.RedisPoolProps;
+import com.i1314i.syncerplusredis.entity.dto.RedisClusterDto;
+import com.i1314i.syncerplusredis.entity.dto.task.EditRedisClusterDto;
+import com.i1314i.syncerplusredis.entity.dto.task.ListTaskMsgDto;
+import com.i1314i.syncerplusredis.entity.dto.task.TaskMsgDto;
+import com.i1314i.syncerplusredis.entity.dto.task.TaskStartMsgDto;
+import com.i1314i.syncerplusredis.entity.thread.ThreadMsgEntity;
+import com.i1314i.syncerplusredis.entity.thread.ThreadReturnMsgEntity;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
-import com.i1314i.syncerplusservice.util.TaskMsgUtils;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
+import com.i1314i.syncerplusservice.util.SyncTaskUtils;
 import com.i1314i.syncerpluswebapp.util.DtoCheckUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -65,7 +66,7 @@ public class TaskController {
                     .build();
 
             if(redisClusterDto.isAutostart()){
-                redisBatchedReplicatorService.batchedSync(redisClusterDto,threadId);
+                redisBatchedReplicatorService.batchedSync(redisClusterDto,threadId,redisClusterDto.isAfresh());
                 msgEntity.setStatus(ThreadStatusEnum.RUN);
             }else {
                 msgEntity.getRedisClusterDto().setAfresh(true);
@@ -115,7 +116,7 @@ public class TaskController {
      */
     @RequestMapping(value = "/starttask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap startTask(@RequestBody @Validated TaskStartMsgDto taskMsgDto) throws TaskMsgException {
-        Map<String,String> msg=TaskMsgUtils.startCreateThread(taskMsgDto.getTaskid(),redisBatchedReplicatorService);
+        Map<String,String> msg= SyncTaskUtils.startCreateThread(taskMsgDto.getTaskid(),taskMsgDto.isAfresh(),redisBatchedReplicatorService);
         return  ResultMap.builder().code("200").msg("The request is successful").data(msg);
     }
 
@@ -127,7 +128,7 @@ public class TaskController {
      */
     @RequestMapping(value = "/stoptask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap stopTask(@RequestBody @Validated TaskMsgDto taskMsgDto) throws TaskMsgException {
-        Map<String,String> msg=TaskMsgUtils.stopCreateThread(taskMsgDto.getTaskids());
+        Map<String,String> msg=SyncTaskUtils.stopCreateThread(taskMsgDto.getTaskids());
         return  ResultMap.builder().code("200").msg("The request is successful").data(msg);
     }
 
@@ -142,7 +143,7 @@ public class TaskController {
     @RequestMapping(value = "/listtasks",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap listTask(@RequestBody @Validated ListTaskMsgDto listTaskMsgDto) throws TaskMsgException {
 
-        List<ThreadReturnMsgEntity> listCreateThread=TaskMsgUtils.listCreateThread(listTaskMsgDto);
+        List<ThreadReturnMsgEntity> listCreateThread=SyncTaskUtils.listCreateThread(listTaskMsgDto);
         return  ResultMap.builder().code("200").msg("The request is successful").data(listCreateThread);
     }
 
@@ -154,7 +155,7 @@ public class TaskController {
      */
     @RequestMapping(value = "/deletetask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap deleteTask(@RequestBody @Validated TaskMsgDto taskMsgDto) throws TaskMsgException {
-        Map<String,String> msg=TaskMsgUtils.delCreateThread(taskMsgDto.getTaskids());
+        Map<String,String> msg=SyncTaskUtils.delCreateThread(taskMsgDto.getTaskids());
 //        List<ThreadReturnMsgEntity> listCreateThread=TaskMsgUtils.listCreateThread(listTaskMsgDto);
         return  ResultMap.builder().code("200").msg("The request is successful").data(msg);
     }

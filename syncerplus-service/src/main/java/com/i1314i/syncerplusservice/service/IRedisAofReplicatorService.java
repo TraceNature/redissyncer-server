@@ -1,8 +1,7 @@
 package com.i1314i.syncerplusservice.service;
 
-import com.i1314i.syncerplusservice.entity.dto.RedisAofSyncDataDto;
-import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.entity.dto.RedisAofSyncDataDto;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;

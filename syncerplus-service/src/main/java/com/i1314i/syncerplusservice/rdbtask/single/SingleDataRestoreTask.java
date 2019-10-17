@@ -7,27 +7,30 @@ import com.i1314i.syncerplusredis.event.Event;
 import com.i1314i.syncerplusredis.event.EventListener;
 import com.i1314i.syncerplusredis.event.PostRdbSyncEvent;
 import com.i1314i.syncerplusredis.event.PreRdbSyncEvent;
+import com.i1314i.syncerplusredis.exception.IncrementException;
+import com.i1314i.syncerplusredis.extend.replicator.listener.ValueDumpIterableEventListener;
+import com.i1314i.syncerplusredis.extend.replicator.service.JDRedisReplicator;
+import com.i1314i.syncerplusredis.extend.replicator.visitor.ValueDumpIterableRdbVisitor;
 import com.i1314i.syncerplusredis.rdb.datatype.DB;
 import com.i1314i.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import com.i1314i.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
 import com.i1314i.syncerplusredis.replicator.Replicator;
-import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
-import com.i1314i.syncerplusservice.entity.RedisInfo;
-import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
-import com.i1314i.syncerplusservice.entity.thread.OffSetEntity;
+import com.i1314i.syncerplusredis.constant.RedisCommandTypeEnum;
+import com.i1314i.syncerplusredis.entity.RedisInfo;
+import com.i1314i.syncerplusredis.entity.dto.RedisSyncDataDto;
+import com.i1314i.syncerplusredis.entity.thread.OffSetEntity;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.rdbtask.enums.RedisCommandType;
 import com.i1314i.syncerplusservice.rdbtask.single.command.SendRdbCommand;
-import com.i1314i.syncerplusservice.replicator.listener.ValueDumpIterableEventListener;
-import com.i1314i.syncerplusservice.replicator.service.JDRedisReplicator;
-import com.i1314i.syncerplusservice.replicator.visitor.ValueDumpIterableRdbVisitor;
+
 import com.i1314i.syncerplusservice.service.command.SendDefaultCommand;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
-import com.i1314i.syncerplusservice.util.TaskMsgUtils;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
 
+import com.i1314i.syncerplusservice.util.SyncTaskUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.StringUtils;
@@ -100,8 +103,8 @@ public class SingleDataRestoreTask implements Runnable {
             pool.init(syncDataDto.getMinPoolSize(), syncDataDto.getMaxPoolSize(), syncDataDto.getMaxWaitTime(), turi, syncDataDto.getTimeBetweenEvictionRunsMillis(), syncDataDto.getIdleTimeRunsMillis());
 
 
-            final Replicator r  = RedisMigrator.newBacthedCommandDress(new JDRedisReplicator(suri));
 
+            final Replicator r  = RedisMigrator.newBacthedCommandDress(new JDRedisReplicator(suri));
             TaskMsgUtils.getThreadMsgEntity(taskId).addReplicator(r);
 
             r.setRdbVisitor(new ValueDumpIterableRdbVisitor(r,info.getRdbVersion()));
@@ -137,7 +140,7 @@ public class SingleDataRestoreTask implements Runnable {
 //                    r.getConfiguration().getReplOffset()
 
 
-                    if (TaskMsgUtils.doThreadisCloseCheckTask(taskId)) {
+                    if (SyncTaskUtils.doThreadisCloseCheckTask(taskId)) {
 
                         try {
                             r.close();
@@ -253,42 +256,42 @@ public class SingleDataRestoreTask implements Runnable {
             e.printStackTrace();
         } catch (EOFException ex) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, ex.getMessage());
         } catch (NoRouteToHostException p) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, p.getMessage());
         } catch (ConnectException cx) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, cx.getMessage());
         }catch (AssertionError er){
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, er.getMessage());
         }catch (JedisConnectionException ty){
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, ty.getMessage());
         }catch (SocketException ii){
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
@@ -297,7 +300,14 @@ public class SingleDataRestoreTask implements Runnable {
 
         catch (IOException et) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
+            } catch (TaskMsgException e) {
+                e.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, et.getMessage());
+        } catch (IncrementException et) {
+            try {
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }

@@ -1,9 +1,7 @@
 package com.i1314i.syncerplusservice.service;
 
-import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
-import com.i1314i.syncerplusservice.entity.dto.RedisJDClousterClusterDto;
-import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.entity.dto.RedisClusterDto;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,6 +26,6 @@ public interface IRedisReplicatorService {
 
 //    void sync(RedisClusterDto clusterDto) throws TaskMsgException;
 //    void batchedSync(RedisClusterDto clusterDto) throws TaskMsgException;
-    void batchedSync(RedisClusterDto clusterDto,String taskId) throws TaskMsgException;
+    void batchedSync(RedisClusterDto clusterDto,String taskId,boolean afresh) throws TaskMsgException;
 //    void syncToJDCloud(RedisJDClousterClusterDto jdClousterClusterDto) throws TaskMsgException;
 }

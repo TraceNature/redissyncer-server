@@ -16,6 +16,8 @@
 
 package com.i1314i.syncerplusredis.replicator;
 
+import com.i1314i.syncerplusredis.exception.IncrementException;
+
 import java.io.Closeable;
 import java.io.IOException;
 
@@ -25,7 +27,9 @@ import java.io.IOException;
  */
 public interface Replicator extends Closeable, ReplicatorRegister, ReplicatorListener {
 
-    void open() throws IOException;
+    void open() throws IOException, IncrementException;
+
+    void open(String taskId) throws IOException, IncrementException;
     
     void close() throws IOException;
 }

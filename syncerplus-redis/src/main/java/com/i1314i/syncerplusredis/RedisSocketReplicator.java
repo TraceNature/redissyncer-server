@@ -21,6 +21,7 @@ import com.i1314i.syncerplusredis.cmd.impl.SelectCommand;
 import com.i1314i.syncerplusredis.entity.Configuration;
 import com.i1314i.syncerplusredis.event.PostCommandSyncEvent;
 import com.i1314i.syncerplusredis.event.PreCommandSyncEvent;
+import com.i1314i.syncerplusredis.exception.IncrementException;
 import com.i1314i.syncerplusredis.io.AsyncBufferedInputStream;
 import com.i1314i.syncerplusredis.io.RateLimitInputStream;
 import com.i1314i.syncerplusredis.io.RedisInputStream;
@@ -34,6 +35,7 @@ import com.i1314i.syncerplusredis.util.objectutil.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -70,8 +72,9 @@ public class RedisSocketReplicator extends AbstractReplicator {
     protected RedisOutputStream outputStream;
     protected ScheduledExecutorService executor;
     protected final RedisSocketFactory socketFactory;
+    protected  boolean status;
     
-    public RedisSocketReplicator(String host, int port, Configuration configuration) {
+    public RedisSocketReplicator(String host, int port, Configuration configuration,boolean status) {
         Objects.requireNonNull(host);
         if (port <= 0 || port > 65535) throw new IllegalArgumentException("illegal argument port: " + port);
         Objects.requireNonNull(configuration);
@@ -79,6 +82,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
         this.port = port;
         this.configuration = configuration;
         this.socketFactory = new RedisSocketFactory(configuration);
+        this.status=status;
         builtInCommandParserRegister();
         if (configuration.isUseDefaultExceptionListener())
             addExceptionListener(new DefaultExceptionListener());
@@ -99,28 +103,53 @@ public class RedisSocketReplicator extends AbstractReplicator {
      * @throws IOException when read timeout or connect timeout
      */
     @Override
-    public void open() throws IOException {
+    public void open() throws IOException, IncrementException {
+
         super.open();
         this.executor = Executors.newSingleThreadScheduledExecutor();
         try {
             new RedisSocketReplicatorRetrier().retry(this);
+        }catch (EOFException e){
+            System.out.println(e.getMessage());
         } finally {
             doClose();
             doCloseListener(this);
             terminateQuietly(executor, configuration.getConnectionTimeout(), MILLISECONDS);
         }
     }
-    
-    protected SyncMode trySync(final String reply) throws IOException {
+
+    @Override
+    public void open(String taskId) throws IOException, IncrementException {
+
+        super.open();
+        this.executor = Executors.newSingleThreadScheduledExecutor();
+        try {
+            new RedisSocketReplicatorRetrier().retry(this,taskId);
+        }catch (EOFException e){
+            System.out.println(e.getMessage());
+        } finally {
+            doClose();
+            doCloseListener(this);
+            terminateQuietly(executor, configuration.getConnectionTimeout(), MILLISECONDS);
+        }
+    }
+
+    protected SyncMode trySync(final String reply) throws IOException, IncrementException {
         logger.info(reply);
         if (reply.startsWith("FULLRESYNC")) {
-            // reset db
-            this.db = -1;
-            parseDump(this);
-            String[] ary = reply.split(" ");
-            configuration.setReplId(ary[1]);
-            configuration.setReplOffset(Long.parseLong(ary[2]));
-            return PSYNC;
+
+            if(!status){
+                throw new IncrementException("增量同步runId不存在..结束");
+            }else {
+                // reset db
+                this.db = -1;
+                parseDump(this);
+                String[] ary = reply.split(" ");
+                configuration.setReplId(ary[1]);
+                configuration.setReplOffset(Long.parseLong(ary[2]));
+                return PSYNC;
+            }
+
         } else if (reply.startsWith("CONTINUE")) {
             String[] ary = reply.split(" ");
             // redis-4.0 compatible
@@ -364,7 +393,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
         }
 
         @Override
-        protected boolean open() throws IOException {
+        protected boolean open() throws IOException, IncrementException {
             String replId = configuration.getReplId();
             long replOffset = configuration.getReplOffset();
             logger.info("PSYNC {} {}", replId, String.valueOf(replOffset >= 0 ? replOffset + 1 : replOffset));
@@ -384,6 +413,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
             }
             final long[] offset = new long[1];
             while (getStatus() == CONNECTED) {
+
                 Object obj = replyParser.parse(len -> offset[0] = len);
                 if (obj instanceof Object[]) {
                     if (verbose() && logger.isDebugEnabled())

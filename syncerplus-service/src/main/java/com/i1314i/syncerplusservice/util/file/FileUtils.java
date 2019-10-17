@@ -1,7 +1,7 @@
 package com.i1314i.syncerplusservice.util.file;
 
-import com.i1314i.syncerplusservice.entity.thread.ThreadMsgEntity;
-import com.i1314i.syncerplusservice.util.TaskMsgUtils;
+import com.i1314i.syncerplusredis.entity.thread.ThreadMsgEntity;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;

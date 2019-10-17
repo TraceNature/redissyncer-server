@@ -20,6 +20,7 @@ import com.i1314i.syncerplusredis.cmd.*;
 import com.i1314i.syncerplusredis.entity.Configuration;
 import com.i1314i.syncerplusredis.event.PostCommandSyncEvent;
 import com.i1314i.syncerplusredis.event.PreCommandSyncEvent;
+import com.i1314i.syncerplusredis.exception.IncrementException;
 import com.i1314i.syncerplusredis.io.PeekableInputStream;
 import com.i1314i.syncerplusredis.io.RedisInputStream;
 import com.i1314i.syncerplusredis.rdb.RdbParser;
@@ -66,7 +67,7 @@ public class RedisMixReplicator extends AbstractReplicator {
     }
     
     @Override
-    public void open() throws IOException {
+    public void open() throws IOException, IncrementException {
         super.open();
         if (!compareAndSet(DISCONNECTED, CONNECTED)) return;
         try {
@@ -78,7 +79,12 @@ public class RedisMixReplicator extends AbstractReplicator {
             doCloseListener(this);
         }
     }
-    
+
+    @Override
+    public void open(String taskId) throws IOException, IncrementException {
+
+    }
+
     protected void doOpen() throws IOException {
         configuration.setReplOffset(0L);
         if (peekable.peek() == 'R') {

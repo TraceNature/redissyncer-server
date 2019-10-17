@@ -1,6 +1,6 @@
 package com.i1314i.syncerplusservice.pool;
 
-import com.i1314i.syncerplusservice.service.exception.TaskRestoreException;
+import com.i1314i.syncerplusredis.exception.TaskRestoreException;
 import com.i1314i.syncerplusservice.util.Jedis.IJedisClient;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -1260,6 +1260,8 @@ public class TestJedisClient implements IJedisClient {
     }
 
 
+
+
     public  void closePool() {
         if(jedisPool!=null)
             jedisPool.close();

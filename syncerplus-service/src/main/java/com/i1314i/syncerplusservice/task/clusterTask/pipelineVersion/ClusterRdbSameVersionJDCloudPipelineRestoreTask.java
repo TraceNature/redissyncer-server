@@ -11,8 +11,8 @@ import com.i1314i.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import com.i1314i.syncerplusredis.replicator.CloseListener;
 import com.i1314i.syncerplusredis.replicator.RedisReplicator;
 import com.i1314i.syncerplusredis.replicator.Replicator;
-import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
-import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
+import com.i1314i.syncerplusredis.entity.SyncTaskEntity;
+import com.i1314i.syncerplusredis.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.service.command.SendClusterDefaultCommand;
 

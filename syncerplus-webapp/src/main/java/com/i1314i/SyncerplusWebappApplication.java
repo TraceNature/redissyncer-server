@@ -1,12 +1,10 @@
 package com.i1314i;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
-import com.i1314i.syncerplusservice.constant.ThreadStatusEnum;
-import com.i1314i.syncerplusservice.entity.thread.ThreadMsgEntity;
+import com.i1314i.syncerplusredis.constant.ThreadStatusEnum;
+import com.i1314i.syncerplusredis.entity.thread.ThreadMsgEntity;
 import com.i1314i.syncerplusservice.monitor.*;
 import com.i1314i.syncerplusservice.persistence.SettingPersistenceTask;
-import com.i1314i.syncerplusservice.util.TaskMsgUtils;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
 import com.i1314i.syncerplusservice.util.file.FileUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,10 +14,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -60,7 +56,6 @@ public class SyncerplusWebappApplication {
             }
             TaskMsgUtils.setAliveThreadHashMap(data);
 
-            System.out.println(JSON.toJSONString(data));
         }
 
 

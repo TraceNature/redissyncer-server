@@ -16,6 +16,8 @@
 
 package com.i1314i.syncerplusredis.replicator;
 
+import com.i1314i.syncerplusredis.exception.IncrementException;
+
 import java.io.IOException;
 
 /**
@@ -23,5 +25,8 @@ import java.io.IOException;
  * @since 2.4.7
  */
 interface ReplicatorRetrier {
-    void retry(Replicator replicator) throws IOException;
+    void retry(Replicator replicator) throws IOException, IncrementException;
+
+    void retry(Replicator replicator,String taskId) throws IOException;
+
 }

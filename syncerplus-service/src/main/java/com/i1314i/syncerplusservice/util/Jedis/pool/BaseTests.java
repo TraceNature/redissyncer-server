@@ -3,6 +3,7 @@ package com.i1314i.syncerplusservice.util.Jedis.pool;
 import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerplusredis.event.Event;
 import com.i1314i.syncerplusredis.event.EventListener;
+import com.i1314i.syncerplusredis.exception.IncrementException;
 import com.i1314i.syncerplusredis.replicator.RedisReplicator;
 import com.i1314i.syncerplusredis.replicator.Replicator;
 
@@ -11,7 +12,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 public class BaseTests {
-    public static void main(String[] args) throws IOException, URISyntaxException {
+    public static void main(String[] args) throws IOException, URISyntaxException, IncrementException {
         final Replicator replicator = new RedisReplicator("redis://114.67.100.239:6379?authPassword=redistest0102");
         replicator.addEventListener(new EventListener() {
             @Override

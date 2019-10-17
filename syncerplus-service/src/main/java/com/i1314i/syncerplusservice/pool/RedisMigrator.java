@@ -106,6 +106,7 @@ public class RedisMigrator {
     }
 
 
+
     public synchronized static Replicator newBacthedCommandDress(Replicator r) {
         r.getConfiguration();
         return addCommandParser(r);

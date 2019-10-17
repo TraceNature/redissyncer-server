@@ -20,6 +20,7 @@ import com.i1314i.syncerplusredis.cmd.*;
 import com.i1314i.syncerplusredis.entity.Configuration;
 import com.i1314i.syncerplusredis.event.PostCommandSyncEvent;
 import com.i1314i.syncerplusredis.event.PreCommandSyncEvent;
+import com.i1314i.syncerplusredis.exception.IncrementException;
 import com.i1314i.syncerplusredis.io.RedisInputStream;
 import com.i1314i.syncerplusredis.util.objectutil.Strings;
 import org.slf4j.Logger;
@@ -59,7 +60,7 @@ public class RedisAofReplicator extends AbstractReplicator {
     }
     
     @Override
-    public void open() throws IOException {
+    public void open() throws IOException, IncrementException {
         super.open();
         if (!compareAndSet(DISCONNECTED, CONNECTED)) return;
         try {
@@ -71,7 +72,12 @@ public class RedisAofReplicator extends AbstractReplicator {
             doCloseListener(this);
         }
     }
-    
+
+    @Override
+    public void open(String taskId) throws IOException, IncrementException {
+
+    }
+
     protected void doOpen() throws IOException {
         configuration.setReplOffset(0L);
         submitEvent(new PreCommandSyncEvent());

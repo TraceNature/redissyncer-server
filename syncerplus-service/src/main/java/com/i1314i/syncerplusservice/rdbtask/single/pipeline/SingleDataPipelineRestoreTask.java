@@ -2,7 +2,6 @@ package com.i1314i.syncerplusservice.rdbtask.single.pipeline;
 
 import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.config.ThreadPoolConfig;
-import com.i1314i.syncerpluscommon.util.common.Bytes;
 import com.i1314i.syncerpluscommon.util.spring.SpringUtil;
 import com.i1314i.syncerplusredis.cmd.impl.DefaultCommand;
 import com.i1314i.syncerplusredis.entity.RedisURI;
@@ -10,34 +9,34 @@ import com.i1314i.syncerplusredis.event.Event;
 import com.i1314i.syncerplusredis.event.EventListener;
 import com.i1314i.syncerplusredis.event.PostRdbSyncEvent;
 import com.i1314i.syncerplusredis.event.PreRdbSyncEvent;
+import com.i1314i.syncerplusredis.exception.IncrementException;
+import com.i1314i.syncerplusredis.extend.replicator.listener.ValueDumpIterableEventListener;
+import com.i1314i.syncerplusredis.extend.replicator.service.JDRedisReplicator;
+import com.i1314i.syncerplusredis.extend.replicator.visitor.ValueDumpIterableRdbVisitor;
 import com.i1314i.syncerplusredis.rdb.datatype.DB;
 import com.i1314i.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import com.i1314i.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
 import com.i1314i.syncerplusredis.replicator.Replicator;
-import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
-import com.i1314i.syncerplusservice.entity.EventEntity;
-import com.i1314i.syncerplusservice.entity.RedisInfo;
-import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
-import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
-import com.i1314i.syncerplusservice.entity.thread.EventTypeEntity;
-import com.i1314i.syncerplusservice.entity.thread.OffSetEntity;
-import com.i1314i.syncerplusservice.pool.ConnectionPool;
+import com.i1314i.syncerplusredis.constant.RedisCommandTypeEnum;
+import com.i1314i.syncerplusredis.entity.EventEntity;
+import com.i1314i.syncerplusredis.entity.RedisInfo;
+import com.i1314i.syncerplusredis.entity.SyncTaskEntity;
+import com.i1314i.syncerplusredis.entity.dto.RedisSyncDataDto;
+import com.i1314i.syncerplusredis.entity.thread.EventTypeEntity;
+import com.i1314i.syncerplusredis.entity.thread.OffSetEntity;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.rdbtask.enums.RedisCommandType;
-import com.i1314i.syncerplusservice.replicator.listener.ValueDumpIterableEventListener;
-import com.i1314i.syncerplusservice.replicator.service.JDRedisReplicator;
-import com.i1314i.syncerplusservice.replicator.visitor.ValueDumpIterableRdbVisitor;
-import com.i1314i.syncerplusservice.service.command.SendDefaultCommand;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.task.clusterTask.command.ClusterProtocolCommand;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.LockPipe;
 import com.i1314i.syncerplusservice.task.singleTask.pipe.PipelinedSyncTask;
 import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
-import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
-import com.i1314i.syncerplusservice.util.TaskMsgUtils;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
 
+import com.i1314i.syncerplusservice.util.SyncTaskUtils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +96,10 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 
     private Date time;
     private int  batchSize;
-    public SingleDataPipelineRestoreTask(RedisSyncDataDto syncDataDto, RedisInfo info, String taskId,int batchSize) {
+    private String offsetPlace;
+    private String type;
+    public SingleDataPipelineRestoreTask(RedisSyncDataDto syncDataDto, RedisInfo info, String taskId,int batchSize,boolean afresh) {
+        System.out.println(JSON.toJSONString(syncDataDto));
         this.syncDataDto = syncDataDto;
         this.sourceUri = syncDataDto.getSourceUri();
         this.targetUri = syncDataDto.getTargetUri();
@@ -106,6 +108,9 @@ public class SingleDataPipelineRestoreTask implements Runnable {
         this.taskId = taskId;
         this.afresh=syncDataDto.isAfresh();
         this.batchSize=batchSize;
+        this.afresh=afresh;
+        this.offsetPlace=syncDataDto.getOffsetPlace();
+        this.type=syncDataDto.getType();
     }
 
 
@@ -140,6 +145,10 @@ public class SingleDataPipelineRestoreTask implements Runnable {
             }
             PipelineLock pipelineLock=new PipelineLock(pipelined,taskEntity,taskId,targetJedisplus,targetJedisClientPool);
 
+
+
+
+
 //            ConnectionPool pools = RedisUrlUtils.getConnectionPool();
 //            final ConnectionPool pool = pools;
 //
@@ -148,9 +157,16 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 //             * 初始化连接池
 //             */
 //            pool.init(syncDataDto.getMinPoolSize(), syncDataDto.getMaxPoolSize(), syncDataDto.getMaxWaitTime(), turi, syncDataDto.getTimeBetweenEvictionRunsMillis(), syncDataDto.getIdleTimeRunsMillis());
+            Replicator replicator=new JDRedisReplicator(suri,afresh);
+
+//            if(!afresh){
+//                replicator=new JDRedisReplicator(suri,false);
+//            }else {
+//                replicator=new JDRedisReplicator(suri);
+//            }
 
             int dbbnum = 0;
-            final Replicator r = RedisMigrator.newBacthedCommandDress(new JDRedisReplicator(suri));
+            final Replicator r = RedisMigrator.newBacthedCommandDress(replicator);
 
             TaskMsgUtils.getThreadMsgEntity(taskId).addReplicator(r);
 
@@ -159,6 +175,8 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 //            1036363
 
             OffSetEntity offset= TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().get(sourceUri);
+
+
             if(offset==null){
 
                 offset=new OffSetEntity();
@@ -176,10 +194,35 @@ public class SingleDataPipelineRestoreTask implements Runnable {
                 }
             }
 
+            if(type.trim().toLowerCase().equals("partial")){
+                String[]data=RedisUrlUtils.selectSyncerBuffer(sourceUri,offsetPlace);
+                long offsetNum=0L;
+                try {
+                     offsetNum= Long.parseLong(data[0]);
+
+                     if(offsetPlace.trim().toLowerCase().equals("beginbuf")){
+                         offsetNum-=1;
+                     }
+                }catch (Exception e){
+
+                }
+
+                if(offsetNum!=0L&&!StringUtils.isEmpty(data[1])){
+
+
+                    r.getConfiguration().setReplOffset(offsetNum);
+                    r.getConfiguration().setReplId(data[1]);
+                }
+
+//                r.getConfiguration().setReplOffset(14105376832);
+//                r.getConfiguration().setReplId("e1399afce9f5b5c35c5315ae68e4807fe81e764f");
+            }
+
             final OffSetEntity baseOffSet= TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().get(sourceUri);
 //            TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(taskId,offset);
 //            r.getConfiguration().setReplOffset(14105376832);
 //            r.getConfiguration().setReplId("e1399afce9f5b5c35c5315ae68e4807fe81e764f");
+
 
 
             r.addEventListener(new ValueDumpIterableEventListener(batchSize, new EventListener() {
@@ -190,7 +233,7 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 //                    lockPipe.syncpipe(pipelined, taskEntity, 1000, true);
                     lockPipe.syncpipe(pipelineLock, taskEntity, batchSize, true,suri,turi);
 
-                    if (TaskMsgUtils.doThreadisCloseCheckTask(taskId)) {
+                    if (SyncTaskUtils.doThreadisCloseCheckTask(taskId)) {
 
                         try {
                             r.close();
@@ -229,6 +272,18 @@ public class SingleDataPipelineRestoreTask implements Runnable {
                             baseOffSet.setReplId(r.getConfiguration().getReplId());
                             baseOffSet.getReplOffset().set(r.getConfiguration().getReplOffset());
                         }
+
+                        if(type.trim().toLowerCase().equals("full")){
+                            try {
+                                Map<String, String> msg = SyncTaskUtils.stopCreateThread(Arrays.asList(taskId));
+                            } catch (TaskMsgException e) {
+                                e.printStackTrace();
+                            }
+                            log.warn("任务Id【{}】full全量同步结束", taskId);
+
+                            return;
+                        }
+//                        if(type)
 //                        System.out.println("时间"+ (new Date().getTime()-time.getTime()));
 //                        TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(taskId,baseOffSet);
                         log.info("【{}】 :全量同步结束 时间：{}",taskId,(new Date().getTime()-time.getTime()));
@@ -350,6 +405,8 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 
 
                     if (event instanceof DefaultCommand) {
+
+
 //                        System.out.println(r.getConfiguration().getReplId()+":"+r.getConfiguration().getReplOffset());
                         baseOffSet.setReplId(r.getConfiguration().getReplId());
                         baseOffSet.getReplOffset().set(r.getConfiguration().getReplOffset());
@@ -403,47 +460,47 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 
                 }
             }));
-            r.open();
+            r.open(taskId);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         } catch (EOFException ex) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, ex.getMessage());
         } catch (NoRouteToHostException p) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, p.getMessage());
         } catch (ConnectException cx) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, cx.getMessage());
         }catch (AssertionError er){
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, er.getMessage());
         }catch (JedisConnectionException ty){
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, ty.getMessage());
         }catch (SocketException ii){
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
@@ -452,7 +509,14 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 
         catch (IOException et) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
+            } catch (TaskMsgException e) {
+                e.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, et.getMessage());
+        } catch (IncrementException et) {
+            try {
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }

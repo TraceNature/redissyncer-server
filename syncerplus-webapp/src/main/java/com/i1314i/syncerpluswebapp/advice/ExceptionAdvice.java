@@ -2,11 +2,10 @@ package com.i1314i.syncerpluswebapp.advice;
 
 
 import com.i1314i.syncerpluscommon.entity.ResultMap;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
-import com.i1314i.syncerplusservice.util.code.CodeUtils;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.util.code.CodeUtils;
 import com.i1314i.syncerpluswebapp.constant.CodeConstant;
 import com.i1314i.syncerpluswebapp.constant.HttpMsgConstant;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;

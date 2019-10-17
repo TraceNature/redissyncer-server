@@ -4,39 +4,33 @@ import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
 import com.i1314i.syncerplusredis.entity.Configuration;
 import com.i1314i.syncerplusredis.entity.RedisURI;
-import com.i1314i.syncerplusservice.constant.KeyValueEnum;
-import com.i1314i.syncerplusservice.constant.RedisVersion;
-import com.i1314i.syncerplusservice.constant.TaskMsgConstant;
-import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
-import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
+import com.i1314i.syncerplusredis.constant.KeyValueEnum;
+import com.i1314i.syncerplusredis.constant.RedisVersion;
+import com.i1314i.syncerplusredis.constant.TaskMsgConstant;
+import com.i1314i.syncerplusredis.entity.dto.RedisClusterDto;
+import com.i1314i.syncerplusredis.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.Impl.CommonPoolConnectionPoolImpl;
 import com.i1314i.syncerplusservice.pool.Impl.ConnectionPoolImpl;
 import com.i1314i.syncerplusservice.pool.RedisClient;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
-import com.i1314i.syncerplusservice.service.exception.TaskRestoreException;
-import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.exception.TaskRestoreException;
 import com.i1314i.syncerplusservice.util.Jedis.TestJedisClient;
-import com.i1314i.syncerplusservice.util.Jedis.cluster.JedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
-import com.i1314i.syncerplusservice.util.Jedis.cluster.pipelineCluster.JedisClusterPipeline;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
-import com.i1314i.syncerplusservice.util.code.CodeUtils;
+import com.i1314i.syncerplusredis.util.code.CodeUtils;
+import com.i1314i.syncerplusservice.util.Regex.RegexUtil;
 import com.i1314i.syncerplusservice.util.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisDataException;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static redis.clients.jedis.Protocol.Command.AUTH;
 
@@ -320,14 +314,7 @@ public class RedisUrlUtils {
         return nums;
     }
 
-    public static void main(String[] args) throws URISyntaxException, TaskMsgException {
-        Map<Integer,Integer>map=new HashMap<>();
-        map.put(1,11);
-        map.put(2,22);
-        map.put(3,33);
-//        doCheckDbNum(Stream.of("redis://114.67.100.239:6379?authPassword=redistest0102").collect(Collectors.toList()),map,KeyValueEnum.VALUE);
-//        System.out.println(JSON.toJSONString(getMapMaxInteger(map)));
-    }
+
     /**
      * 获取客户端
      *
@@ -471,6 +458,94 @@ public class RedisUrlUtils {
         } catch (URISyntaxException e) {
             throw new TaskMsgException(e.getMessage());
         }
+    }
+
+
+    /**
+     * 获取buffer值
+     */
+
+    public static String[] selectSyncerBuffer( String targetUri,String type) throws URISyntaxException {
+
+        RedisURI targetUriplus = new RedisURI(targetUri);
+        /**
+         * 源目标
+         */
+        Jedis target = null;
+        String[] version = new String[2];
+        version[0]="0";
+
+        try {
+            target = new Jedis(targetUriplus.getHost(), targetUriplus.getPort());
+            Configuration targetConfig = Configuration.valueOf(targetUriplus);
+
+            //获取password
+            if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
+                Object targetAuth = target.auth(targetConfig.getAuthPassword());
+            }
+            String info=target.info();
+
+            version = getRedisBuffer(info,type);
+
+        } catch (Exception e) {
+
+        } finally {
+            if (target != null)
+                target.close();
+        }
+        return version;
+    }
+
+
+    private static String[] getRedisBuffer(String info,String type) {
+        String[] version = new String[2];
+        version[0]="0";
+        try {
+            String firstRgex = "repl_backlog_first_byte_offset:(.*?)\r\n";
+            String endRrgex = "master_repl_offset:(.*?)\r\n";
+            String replid="master_replid:(.*?)\r\n";
+            String runIdRrgex = "run_id:(.*?)\r\n";
+            if(type.trim().equals("endbuf")){
+                if(RegexUtil.getSubUtilSimple(info, endRrgex).length()>0){
+                    version[0] = RegexUtil.getSubUtilSimple(info, endRrgex);
+                }
+            }else {
+                if(RegexUtil.getSubUtilSimple(info, firstRgex).length()>0){
+                    version[0] = RegexUtil.getSubUtilSimple(info, firstRgex);
+                }
+            }
+
+            String runid1=RegexUtil.getSubUtilSimple(info, replid);
+            System.out.println("runid1:"+runid1);
+            if(!StringUtils.isEmpty(runid1.trim())){
+                version[1]=runid1;
+            }else {
+                version[1]=RegexUtil.getSubUtilSimple(info, runIdRrgex);
+            }
+
+        } catch (Exception e) {
+
+        } finally {
+//            if(jedisClient!=null){
+//                jedisClient.close();
+//            }
+
+        }
+        return version;
+
+    }
+
+
+
+    public static void main(String[] args) throws URISyntaxException, TaskMsgException {
+//        Map<Integer,Integer>map=new HashMap<>();
+//        map.put(1,11);
+//        map.put(2,22);
+//        map.put(3,33);
+//        doCheckDbNum(Stream.of("redis://114.67.100.239:6379?authPassword=redistest0102").collect(Collectors.toList()),map,KeyValueEnum.VALUE);
+//        System.out.println(JSON.toJSONString(getMapMaxInteger(map)));
+
+        System.out.println(JSON.toJSONString(selectSyncerBuffer("redis://114.67.100.238:6379?authPassword=redistest0102","endbuf")));
     }
 
 

@@ -4,11 +4,12 @@ import com.i1314i.syncerplusredis.event.Event;
 import com.i1314i.syncerplusredis.rdb.datatype.ZSetEntry;
 import com.i1314i.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import com.i1314i.syncerplusredis.rdb.iterable.datatype.*;
-import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
+import com.i1314i.syncerplusredis.constant.RedisCommandTypeEnum;
 
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
-import com.i1314i.syncerplusservice.util.TaskMsgUtils;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
+import com.i1314i.syncerplusservice.util.SyncTaskUtils;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.params.SetParams;
 
@@ -194,7 +195,7 @@ private String taskId;
             if(epx.getMessage().toUpperCase().equals("ERR DUMP payload version or checksum are wrong".toUpperCase())){
                 try {
                     log.warn("redis版本号错误，宕掉任务 "+epx.getMessage() + ": " + i + ":" + key );
-                    Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                    Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
                 } catch (TaskMsgException e) {
                     e.printStackTrace();
                 }

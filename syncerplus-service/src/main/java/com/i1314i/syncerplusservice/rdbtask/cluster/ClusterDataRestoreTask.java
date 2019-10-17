@@ -7,29 +7,31 @@ import com.i1314i.syncerplusredis.event.Event;
 import com.i1314i.syncerplusredis.event.EventListener;
 import com.i1314i.syncerplusredis.event.PostRdbSyncEvent;
 import com.i1314i.syncerplusredis.event.PreRdbSyncEvent;
+import com.i1314i.syncerplusredis.exception.IncrementException;
+import com.i1314i.syncerplusredis.extend.replicator.listener.ValueDumpIterableEventListener;
+import com.i1314i.syncerplusredis.extend.replicator.service.JDRedisReplicator;
+import com.i1314i.syncerplusredis.extend.replicator.visitor.ValueDumpIterableRdbVisitor;
 import com.i1314i.syncerplusredis.rdb.datatype.DB;
 import com.i1314i.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import com.i1314i.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
 import com.i1314i.syncerplusredis.replicator.Replicator;
-import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
-import com.i1314i.syncerplusservice.entity.RedisInfo;
-import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
-import com.i1314i.syncerplusservice.entity.thread.OffSetEntity;
+import com.i1314i.syncerplusredis.constant.RedisCommandTypeEnum;
+import com.i1314i.syncerplusredis.entity.RedisInfo;
+import com.i1314i.syncerplusredis.entity.dto.RedisClusterDto;
+import com.i1314i.syncerplusredis.entity.thread.OffSetEntity;
 import com.i1314i.syncerplusservice.pool.RedisMigrator;
 import com.i1314i.syncerplusservice.rdbtask.cluster.command.SendClusterRdbCommand;
 import com.i1314i.syncerplusservice.rdbtask.cluster.command.SendClusterRdbCommand1;
 import com.i1314i.syncerplusservice.rdbtask.enums.RedisCommandType;
-import com.i1314i.syncerplusservice.replicator.listener.ValueDumpIterableEventListener;
-import com.i1314i.syncerplusservice.replicator.service.JDRedisReplicator;
-import com.i1314i.syncerplusservice.replicator.visitor.ValueDumpIterableRdbVisitor;
 import com.i1314i.syncerplusservice.service.command.SendRDBClusterDefaultCommand;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.task.BatchedKeyValueTask.cluster.RdbClusterCommand;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.SyncJedisClusterClient;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
-import com.i1314i.syncerplusservice.util.TaskMsgUtils;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
 
+import com.i1314i.syncerplusservice.util.SyncTaskUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.StringUtils;
@@ -44,7 +46,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 public class ClusterDataRestoreTask implements Runnable {
@@ -75,7 +76,8 @@ public class ClusterDataRestoreTask implements Runnable {
     private RedisInfo info;
     private String taskId;
     private int  batchSize;
-
+    private String offsetPlace;
+    private String type;
 
     public ClusterDataRestoreTask(RedisClusterDto syncDataDto, RedisInfo info,String sourceUri,String taskId,int batchSize) {
         this.syncDataDto = syncDataDto;
@@ -87,7 +89,7 @@ public class ClusterDataRestoreTask implements Runnable {
         this.batchSize=batchSize;
     }
 
-    public ClusterDataRestoreTask(RedisClusterDto syncDataDto, RedisInfo info,String sourceUri,String taskId) {
+    public ClusterDataRestoreTask(RedisClusterDto syncDataDto, RedisInfo info,String sourceUri,String taskId,boolean afresh) {
         this.syncDataDto = syncDataDto;
         this.sourceUri=sourceUri;
         this.threadName = syncDataDto.getTaskName();
@@ -95,6 +97,9 @@ public class ClusterDataRestoreTask implements Runnable {
         this.taskId=taskId;
         this.afresh=syncDataDto.isAfresh();
         this.batchSize=syncDataDto.getBatchSize();
+        this.afresh=afresh;
+        this.offsetPlace=syncDataDto.getOffsetPlace();
+        this.type=syncDataDto.getType();
     }
 
     @Override
@@ -111,7 +116,7 @@ public class ClusterDataRestoreTask implements Runnable {
             RedisURI suri = new RedisURI(sourceUri);
             SyncJedisClusterClient poolss=RedisUrlUtils.getConnectionClusterPool(syncDataDto);
             redisClient=poolss.jedisCluster();
-            final Replicator r  = RedisMigrator.newBacthedCommandDress(new JDRedisReplicator(suri));
+            final Replicator r  = RedisMigrator.newBacthedCommandDress(new JDRedisReplicator(suri,afresh));
             TaskMsgUtils.getThreadMsgEntity(taskId).addReplicator(r);
 
             OffSetEntity offset= TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().get(sourceUri);
@@ -132,6 +137,25 @@ public class ClusterDataRestoreTask implements Runnable {
                 }
             }
 
+            if(type.trim().toLowerCase().equals("partial")){
+                String[]data=RedisUrlUtils.selectSyncerBuffer(sourceUri,offsetPlace);
+                long offsetNum=0L;
+                try {
+                    offsetNum= Long.parseLong(data[0]);
+
+                }catch (Exception e){
+
+                }
+
+                if(offsetNum!=0L&&!StringUtils.isEmpty(data[1])){
+
+                    r.getConfiguration().setReplOffset(offsetNum);
+                    r.getConfiguration().setReplId(data[1]);
+                }
+
+            }
+
+
             final OffSetEntity baseOffSet= TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().get(sourceUri);
 
             r.setRdbVisitor(new ValueDumpIterableRdbVisitor(r,info.getRdbVersion()));
@@ -140,7 +164,7 @@ public class ClusterDataRestoreTask implements Runnable {
                 public void onEvent(Replicator replicator, Event event) {
 
 
-                    if (TaskMsgUtils.doThreadisCloseCheckTask(taskId)){
+                    if (SyncTaskUtils.doThreadisCloseCheckTask(taskId)){
 
                         try {
                           if(redisClient!=null){
@@ -153,7 +177,7 @@ public class ClusterDataRestoreTask implements Runnable {
                             if(status){
                                Thread.currentThread().interrupt();
                                 status= false;
-                                TaskMsgUtils.stopCreateThread(Arrays.asList(taskId));
+                                SyncTaskUtils.stopCreateThread(Arrays.asList(taskId));
                                 System.out.println(" 线程正准备关闭...." + Thread.currentThread().getName());
                             }
 
@@ -173,9 +197,22 @@ public class ClusterDataRestoreTask implements Runnable {
 
 
                     if (event instanceof PostRdbSyncEvent) {
+
+
                         if(r.getConfiguration().getReplOffset()>=0){
                             baseOffSet.setReplId(r.getConfiguration().getReplId());
                             baseOffSet.getReplOffset().set(r.getConfiguration().getReplOffset());
+                        }
+
+                        if(type.trim().toLowerCase().equals("full")){
+                            try {
+                                Map<String, String> msg = SyncTaskUtils.stopCreateThread(Arrays.asList(taskId));
+                            } catch (TaskMsgException e) {
+                                e.printStackTrace();
+                            }
+                            log.warn("任务Id【{}】full全量同步结束", taskId);
+
+                            return;
                         }
 
                         log.warn("【{}】 :全量同步结束 时间：{}",taskId,(new Date().getTime()-time.getTime()));
@@ -272,26 +309,26 @@ public class ClusterDataRestoreTask implements Runnable {
 
                 }
             }));
-            r.open();
+            r.open(taskId);
         }catch (URISyntaxException e) {
             e.printStackTrace();
         } catch (EOFException ex ){
             try {
-                Map<String,String> msg=TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】",taskId,ex.getMessage());
         }catch (NoRouteToHostException p){
             try {
-                Map<String,String> msg=TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】",taskId,p.getMessage());
         }catch (ConnectException cx){
             try {
-                Map<String,String> msg=TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
@@ -299,13 +336,20 @@ public class ClusterDataRestoreTask implements Runnable {
         }
         catch (IOException et) {
             try {
-                Map<String,String> msg=TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】",taskId,et.getMessage());
         } catch (ParseException e) {
             e.printStackTrace();
+        } catch (IncrementException et) {
+            try {
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
+            } catch (TaskMsgException e) {
+                e.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, et.getMessage());
         }
     }
 

@@ -1,9 +1,9 @@
 package com.i1314i.syncerpluswebapp.controller;
 
-import com.i1314i.syncerplusservice.entity.dto.RedisAofSyncDataDto;
+import com.i1314i.syncerplusredis.entity.dto.RedisAofSyncDataDto;
 
 import com.i1314i.syncerplusservice.service.IRedisAofReplicatorService;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;

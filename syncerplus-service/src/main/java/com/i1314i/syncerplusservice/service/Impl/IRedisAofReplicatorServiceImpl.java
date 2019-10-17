@@ -1,13 +1,11 @@
 package com.i1314i.syncerplusservice.service.Impl;
 
-import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerplusredis.cmd.Command;
 import com.i1314i.syncerplusredis.cmd.CommandParser;
-import com.i1314i.syncerplusservice.entity.dto.RedisAofSyncDataDto;
+import com.i1314i.syncerplusredis.entity.dto.RedisAofSyncDataDto;
 
 import com.i1314i.syncerplusservice.service.IRedisAofReplicatorService;
-import com.i1314i.syncerplusservice.service.dump.CommandKeyValuePair;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 
 
 import lombok.extern.slf4j.Slf4j;

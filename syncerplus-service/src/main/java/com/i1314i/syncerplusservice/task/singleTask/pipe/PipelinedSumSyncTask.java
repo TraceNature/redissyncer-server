@@ -1,10 +1,9 @@
 package com.i1314i.syncerplusservice.task.singleTask.pipe;
 
-import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
+import com.i1314i.syncerplusredis.entity.SyncTaskEntity;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Pipeline;
 
-import java.util.Date;
 import java.util.concurrent.Callable;
 
 /**

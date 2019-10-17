@@ -5,7 +5,7 @@ import com.i1314i.syncerplusredis.rdb.datatype.DB;
 import com.i1314i.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import com.i1314i.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
 import com.i1314i.syncerplusredis.replicator.Constants;
-import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
+import com.i1314i.syncerplusredis.constant.RedisCommandTypeEnum;
 import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import lombok.extern.slf4j.Slf4j;

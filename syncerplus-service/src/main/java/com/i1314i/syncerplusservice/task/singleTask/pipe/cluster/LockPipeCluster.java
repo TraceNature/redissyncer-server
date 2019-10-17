@@ -1,10 +1,8 @@
 package com.i1314i.syncerplusservice.task.singleTask.pipe.cluster;
 
-import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
+import com.i1314i.syncerplusredis.entity.SyncTaskEntity;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.pipelineCluster.JedisClusterPipeline;
 import lombok.extern.slf4j.Slf4j;
-import redis.clients.jedis.Pipeline;
-import redis.clients.jedis.Response;
 
 import java.util.Date;
 

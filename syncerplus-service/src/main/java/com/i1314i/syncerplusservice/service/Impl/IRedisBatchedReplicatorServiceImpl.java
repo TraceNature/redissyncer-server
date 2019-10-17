@@ -1,15 +1,12 @@
 package com.i1314i.syncerplusservice.service.Impl;
-import com.i1314i.syncerplusservice.constant.KeyValueEnum;
-import com.i1314i.syncerplusservice.constant.TaskMsgConstant;
-import com.i1314i.syncerplusservice.entity.RedisInfo;
-import com.i1314i.syncerplusservice.entity.dto.RedisClusterDto;
-import com.i1314i.syncerplusservice.entity.dto.RedisJDClousterClusterDto;
-import com.i1314i.syncerplusservice.entity.dto.RedisSyncDataDto;
+import com.i1314i.syncerplusredis.constant.KeyValueEnum;
+import com.i1314i.syncerplusredis.entity.RedisInfo;
+import com.i1314i.syncerplusredis.entity.dto.RedisClusterDto;
+import com.i1314i.syncerplusredis.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.rdbtask.cluster.ClusterDataRestoreTask;
-import com.i1314i.syncerplusservice.rdbtask.single.SingleDataRestoreTask;
 import com.i1314i.syncerplusservice.rdbtask.single.pipeline.SingleDataPipelineRestoreTask;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +30,7 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
 
 
     @Override
-    public void batchedSync(RedisClusterDto clusterDto,String taskId) throws TaskMsgException {
+    public void batchedSync(RedisClusterDto clusterDto,String taskId,boolean afresh) throws TaskMsgException {
         Set<String> sourceRedisUris = clusterDto.getSourceUris();
         Set<String> targetRedisUris = clusterDto.getTargetUris();
 
@@ -64,17 +61,17 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
 
         if (clusterDto.getTargetUris().size() == 1) {
             //单机 间或者往京东云集群迁移
-            batchedSyncToSingle(clusterDto,taskId);
+            batchedSyncToSingle(clusterDto,taskId,afresh);
 
         } else if (clusterDto.getSourceUris().size() == 1 && clusterDto.getTargetUris().size() > 1) {
 
 
 
             //单机往cluster迁移
-            batchedSyncSingleToCluster(clusterDto,taskId);
+            batchedSyncSingleToCluster(clusterDto,taskId,afresh);
         } else {
             //cluster
-            batchedSyncToCluster(clusterDto,taskId);
+            batchedSyncToCluster(clusterDto,taskId,afresh);
         }
     }
 
@@ -83,7 +80,7 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
      * 往cluster迁移
      * @param clusterDto
      */
-    private void batchedSyncToCluster(RedisClusterDto clusterDto,String taskId) throws TaskMsgException {
+    private void batchedSyncToCluster(RedisClusterDto clusterDto,String taskId,boolean afresh) throws TaskMsgException {
         System.out.println("-----------------batchedSyncToCluster");
         Set<String> sourceRedisUris = clusterDto.getSourceUris();
         Set<String> targetRedisUris = clusterDto.getTargetUris();
@@ -99,7 +96,7 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
         int i=0;
         for (String sourceUrl : sourceRedisUris) {
 //            threadPoolTaskExecutor.submit(new BatchedKVClusterSyncTask(clusterDto, sourceUrl));
-            threadPoolTaskExecutor.execute(new ClusterDataRestoreTask(clusterDto, (RedisInfo) clusterDto.getTargetUriData().toArray()[i],sourceUrl,taskId));
+            threadPoolTaskExecutor.execute(new ClusterDataRestoreTask(clusterDto, (RedisInfo) clusterDto.getTargetUriData().toArray()[i],sourceUrl,taskId,afresh));
             i++;
         }
 
@@ -130,7 +127,7 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
      * 单机往cluster迁移
      * @param clusterDto
      */
-    private void batchedSyncSingleToCluster(RedisClusterDto clusterDto,String taskId) throws TaskMsgException {
+    private void batchedSyncSingleToCluster(RedisClusterDto clusterDto,String taskId,boolean afresh) throws TaskMsgException {
         System.out.println("-----------------batchedSyncSingleToCluster");
         Set<String> sourceRedisUris = clusterDto.getSourceUris();
         Set<String> targetRedisUris = clusterDto.getTargetUris();
@@ -144,14 +141,14 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
         }
 
 
-        threadPoolTaskExecutor.execute(new ClusterDataRestoreTask(clusterDto, (RedisInfo) clusterDto.getTargetUriData().toArray()[0], (String) sourceRedisUris.toArray()[0],taskId));
+        threadPoolTaskExecutor.execute(new ClusterDataRestoreTask(clusterDto, (RedisInfo) clusterDto.getTargetUriData().toArray()[0], (String) sourceRedisUris.toArray()[0],taskId,afresh));
         log.info("--------单机到集群-------");
 
 
     }
 
 
-    private void batchedSyncToSingle(RedisClusterDto clusterDto, String taskId) {
+    private void batchedSyncToSingle(RedisClusterDto clusterDto, String taskId,boolean afresh) {
         /**
          * 获取所有地址并处理新建线程进行同步
          */
@@ -168,9 +165,9 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
             //进行数据同步
             try {
                 if (i == 0) {
-                    syncTask(syncDataDto, source, String.valueOf(targetRedisUris.toArray()[0]), true,taskId,clusterDto.getBatchSize());
+                    syncTask(syncDataDto, source, String.valueOf(targetRedisUris.toArray()[0]), true,taskId,clusterDto.getBatchSize(),afresh);
                 } else {
-                    syncTask(syncDataDto, source, String.valueOf(targetRedisUris.toArray()[0]), false,taskId,clusterDto.getBatchSize());
+                    syncTask(syncDataDto, source, String.valueOf(targetRedisUris.toArray()[0]), false,taskId,clusterDto.getBatchSize(),afresh);
                 }
                 i++;
             } catch (TaskMsgException e) {
@@ -187,7 +184,7 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
      * */
 
 
-    public void syncTask(RedisSyncDataDto syncDataDto, String sourceUri, String targetUri, boolean status,String taskId,int batchSize) throws TaskMsgException {
+    public void syncTask(RedisSyncDataDto syncDataDto, String sourceUri, String targetUri, boolean status,String taskId,int batchSize,boolean afresh) throws TaskMsgException {
 //        if (status) {
 //            if (TaskMonitorUtils.containsKeyAliveMap(syncDataDto.getThreadName())) {
 //                throw new TaskMsgException(TaskMsgConstant.Task_MSG_PARSE_ERROR_CODE);
@@ -196,7 +193,7 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
 
 //SingleDataPipelineRestoreTask
 
-        threadPoolTaskExecutor.execute(new SingleDataPipelineRestoreTask(syncDataDto, (RedisInfo) syncDataDto.getTargetUriData().toArray()[0],taskId,batchSize));
+        threadPoolTaskExecutor.execute(new SingleDataPipelineRestoreTask(syncDataDto, (RedisInfo) syncDataDto.getTargetUriData().toArray()[0],taskId,batchSize,afresh));
 
 //        threadPoolTaskExecutor.execute(new SingleDataRestoreTask(syncDataDto, (RedisInfo) syncDataDto.getTargetUriData().toArray()[0],taskId));
     }

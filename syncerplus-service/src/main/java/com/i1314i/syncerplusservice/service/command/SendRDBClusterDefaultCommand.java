@@ -4,7 +4,7 @@ package com.i1314i.syncerplusservice.service.command;
 import com.i1314i.syncerplusredis.cmd.impl.DefaultCommand;
 import com.i1314i.syncerplusredis.event.Event;
 import com.i1314i.syncerplusredis.replicator.Replicator;
-import com.i1314i.syncerplusservice.entity.thread.OffSetEntity;
+import com.i1314i.syncerplusredis.entity.thread.OffSetEntity;
 import com.i1314i.syncerplusservice.task.clusterTask.command.CommitClusterSendTask;
 import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisClusterPlus;
 
@@ -12,11 +12,9 @@ import com.i1314i.syncerplusservice.util.Jedis.cluster.extendCluster.JedisCluste
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 /**

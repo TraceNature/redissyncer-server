@@ -1,21 +1,20 @@
 package com.i1314i.syncerplusservice.compensator.single;
 
-import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerplusredis.entity.Configuration;
 import com.i1314i.syncerplusredis.entity.RedisURI;
 import com.i1314i.syncerplusredis.rdb.datatype.DB;
-import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
-import com.i1314i.syncerplusservice.entity.EventEntity;
-import com.i1314i.syncerplusservice.entity.thread.EventTypeEntity;
-import com.i1314i.syncerplusservice.service.exception.TaskMsgException;
+import com.i1314i.syncerplusredis.constant.RedisCommandTypeEnum;
+import com.i1314i.syncerplusredis.entity.EventEntity;
+import com.i1314i.syncerplusredis.entity.thread.EventTypeEntity;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.task.clusterTask.command.ClusterProtocolCommand;
 import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
 import com.i1314i.syncerplusservice.util.Jedis.ObjectUtils;
-import com.i1314i.syncerplusservice.util.TaskMsgUtils;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
 
+import com.i1314i.syncerplusservice.util.SyncTaskUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
-import redis.clients.jedis.Protocol;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.params.SetParams;
 
@@ -119,7 +118,7 @@ public class PipelineCompensator implements Runnable{
                     JedisDataException e= (JedisDataException) status;
                     if(e.getMessage().toUpperCase().equals("ERR DUMP payload version or checksum are wrong".toUpperCase())){
                         try {
-                            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+                            Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(thredId));
                         } catch (TaskMsgException ex) {
                             ex.printStackTrace();
                         }
@@ -163,7 +162,7 @@ public class PipelineCompensator implements Runnable{
                 }catch (Exception e){
                     try {
                         log.info("[{}]补偿机制获取链接失败",thredId);
-                        Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+                        Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(thredId));
                     } catch (TaskMsgException ex) {
                         e.printStackTrace();
                     }
@@ -183,7 +182,7 @@ public class PipelineCompensator implements Runnable{
                     } catch (Exception e) {
 
                         try {
-                            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+                            Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(thredId));
                         } catch (TaskMsgException ex) {
                             e.printStackTrace();
                         }
@@ -194,7 +193,7 @@ public class PipelineCompensator implements Runnable{
                         SetConpensator(eventEntity.getRedisCommandTypeEnum(), tJdJedis, sJdJedis, eventEntity);
                     } catch (Exception e) {
                         try {
-                            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+                            Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(thredId));
                         } catch (TaskMsgException ex) {
                             e.printStackTrace();
                         }
@@ -204,7 +203,7 @@ public class PipelineCompensator implements Runnable{
                         ZSetConpensator(eventEntity.getRedisCommandTypeEnum(), tJdJedis, sJdJedis, eventEntity);
                     } catch (Exception e) {
                         try {
-                            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+                            Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(thredId));
                         } catch (TaskMsgException ex) {
                             e.printStackTrace();
                         }
@@ -214,7 +213,7 @@ public class PipelineCompensator implements Runnable{
                         StringConpensator(eventEntity.getRedisCommandTypeEnum(), tJdJedis, sJdJedis, eventEntity);
                     } catch (Exception e) {
                         try {
-                            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+                            Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(thredId));
                         } catch (TaskMsgException ex) {
                             e.printStackTrace();
                         }
@@ -224,7 +223,7 @@ public class PipelineCompensator implements Runnable{
                         ListConpensator(eventEntity.getRedisCommandTypeEnum(), tJdJedis, sJdJedis, eventEntity);
                     } catch (Exception e) {
                         try {
-                            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+                            Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(thredId));
                         } catch (TaskMsgException ex) {
                             e.printStackTrace();
                         }
@@ -234,7 +233,7 @@ public class PipelineCompensator implements Runnable{
                         HashConpensator(eventEntity.getRedisCommandTypeEnum(), tJdJedis, sJdJedis, eventEntity);
                     } catch (Exception e) {
                         try {
-                            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+                            Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(thredId));
                         } catch (TaskMsgException ex) {
                             e.printStackTrace();
                         }
@@ -246,7 +245,7 @@ public class PipelineCompensator implements Runnable{
                        CommandConpensator(eventEntity.getRedisCommandTypeEnum(), tJdJedis,eventEntity);
                     } catch (Exception e) {
                         try {
-                            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+                            Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(thredId));
                         } catch (TaskMsgException ex) {
                             e.printStackTrace();
                         }
@@ -306,7 +305,7 @@ public class PipelineCompensator implements Runnable{
             }else{
                 //结束当前线程停止同步
                 try {
-                    TaskMsgUtils.brokenCreateThread(Arrays.asList(thredId));
+                    SyncTaskUtils.brokenCreateThread(Arrays.asList(thredId));
                 } catch (TaskMsgException e) {
                     e.printStackTrace();
                 }

@@ -1,12 +1,10 @@
 package com.i1314i.syncerplusservice.rdbtask.single.pipeline;
 
-import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
+import com.i1314i.syncerplusredis.entity.SyncTaskEntity;
 import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
 import com.i1314i.syncerplusservice.util.Jedis.pool.JDJedisClientPool;
 import lombok.Getter;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
-import redis.clients.jedis.BuilderFactory;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;
 import redis.clients.jedis.commands.ProtocolCommand;

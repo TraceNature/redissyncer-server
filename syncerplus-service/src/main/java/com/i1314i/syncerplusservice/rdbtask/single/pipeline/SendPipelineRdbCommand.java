@@ -3,11 +3,10 @@ package com.i1314i.syncerplusservice.rdbtask.single.pipeline;
 import com.i1314i.syncerplusredis.event.Event;
 import com.i1314i.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import com.i1314i.syncerplusredis.rdb.iterable.datatype.*;
-import com.i1314i.syncerplusservice.constant.RedisCommandTypeEnum;
-import com.i1314i.syncerplusservice.entity.EventEntity;
-import com.i1314i.syncerplusservice.entity.SyncTaskEntity;
-import com.i1314i.syncerplusservice.entity.thread.EventTypeEntity;
-import com.i1314i.syncerplusservice.util.Jedis.JDJedis;
+import com.i1314i.syncerplusredis.constant.RedisCommandTypeEnum;
+import com.i1314i.syncerplusredis.entity.EventEntity;
+import com.i1314i.syncerplusredis.entity.SyncTaskEntity;
+import com.i1314i.syncerplusredis.entity.thread.EventTypeEntity;
 import com.i1314i.syncerplusservice.util.common.RedisCommon;
 
 import redis.clients.jedis.Pipeline;

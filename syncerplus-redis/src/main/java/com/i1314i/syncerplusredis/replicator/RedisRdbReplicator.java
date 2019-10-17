@@ -17,6 +17,7 @@
 package com.i1314i.syncerplusredis.replicator;
 
 import com.i1314i.syncerplusredis.entity.Configuration;
+import com.i1314i.syncerplusredis.exception.IncrementException;
 import com.i1314i.syncerplusredis.io.RedisInputStream;
 import com.i1314i.syncerplusredis.rdb.RdbParser;
 
@@ -47,7 +48,7 @@ public class RedisRdbReplicator extends AbstractReplicator {
     }
     
     @Override
-    public void open() throws IOException {
+    public void open() throws IOException, IncrementException {
         super.open();
         if (!compareAndSet(DISCONNECTED, CONNECTED)) return;
         try {
@@ -59,7 +60,12 @@ public class RedisRdbReplicator extends AbstractReplicator {
             doCloseListener(this);
         }
     }
-    
+
+    @Override
+    public void open(String taskId) throws IOException, IncrementException {
+
+    }
+
     protected void doOpen() throws IOException {
         try {
             new RdbParser(inputStream, this).parse();
