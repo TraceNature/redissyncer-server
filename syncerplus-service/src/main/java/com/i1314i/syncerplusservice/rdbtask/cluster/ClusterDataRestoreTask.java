@@ -143,16 +143,23 @@ public class ClusterDataRestoreTask implements Runnable {
                 try {
                     offsetNum= Long.parseLong(data[0]);
 
+                    if(offsetPlace.trim().toLowerCase().equals("beginbuf")){
+                        offsetNum-=1;
+                    }
                 }catch (Exception e){
 
                 }
 
                 if(offsetNum!=0L&&!StringUtils.isEmpty(data[1])){
 
+
                     r.getConfiguration().setReplOffset(offsetNum);
                     r.getConfiguration().setReplId(data[1]);
                 }
 
+
+//                r.getConfiguration().setReplOffset(14105376832);
+//                r.getConfiguration().setReplId("e1399afce9f5b5c35c5315ae68e4807fe81e764f");
             }
 
 

@@ -52,7 +52,7 @@ public class DefaultRdbValuePlusVisitor extends RdbValueVisitor {
         byte[] val = parser.rdbLoadEncodedStringObject().first();
 
 
-        System.out.println(new String(val));
+
         return (T) val;
     }
 

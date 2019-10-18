@@ -99,7 +99,7 @@ public class SingleDataPipelineRestoreTask implements Runnable {
     private String offsetPlace;
     private String type;
     public SingleDataPipelineRestoreTask(RedisSyncDataDto syncDataDto, RedisInfo info, String taskId,int batchSize,boolean afresh) {
-        System.out.println(JSON.toJSONString(syncDataDto));
+
         this.syncDataDto = syncDataDto;
         this.sourceUri = syncDataDto.getSourceUri();
         this.targetUri = syncDataDto.getTargetUri();
@@ -213,6 +213,7 @@ public class SingleDataPipelineRestoreTask implements Runnable {
                     r.getConfiguration().setReplOffset(offsetNum);
                     r.getConfiguration().setReplId(data[1]);
                 }
+
 
 //                r.getConfiguration().setReplOffset(14105376832);
 //                r.getConfiguration().setReplId("e1399afce9f5b5c35c5315ae68e4807fe81e764f");

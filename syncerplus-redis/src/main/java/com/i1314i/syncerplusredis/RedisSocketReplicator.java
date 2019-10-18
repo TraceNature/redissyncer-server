@@ -127,6 +127,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
             new RedisSocketReplicatorRetrier().retry(this,taskId);
         }catch (EOFException e){
             System.out.println(e.getMessage());
+
         } finally {
             doClose();
             doCloseListener(this);

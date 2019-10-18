@@ -26,7 +26,7 @@ public class RedisSyncDataDto extends SyncDataDto {
     @Builder.Default
     private String type="all";
     @Builder.Default
-    private String offsetPlace="beginbuf";
+    private String offsetPlace="endbuf";
 
     public RedisSyncDataDto() {
         super(1, 100, 3000, 15000, 15000, 1, "off",new HashMap<>());

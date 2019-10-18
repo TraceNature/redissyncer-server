@@ -397,7 +397,7 @@ public class JDRedisSocketReplicator extends AbstractReplicator implements Seria
                     final CommandParser<? extends Command> parser;
                     if ((parser = commands.get(name)) == null) {
                         logger.warn("command [{}] not register. raw command:{}", name, format(raw));
-                        System.out.println("---------"+offset[0]);
+
                         configuration.addOffset(offset[0]);
                         offset[0] = 0L;
                         continue;
@@ -421,7 +421,7 @@ public class JDRedisSocketReplicator extends AbstractReplicator implements Seria
                     logger.warn("unexpected redis reply:{}", obj);
                 }
                 configuration.addOffset(offset[0]);
-                System.out.println("--A-------"+offset[0]);
+
                 offset[0] = 0L;
             }
             if (getStatus() == CONNECTED) {

@@ -92,6 +92,7 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
                     final int w = write(buffer, offset, r);
                     r -= w;
                     offset += w;
+
                 }
             }
         } catch (IOException e) {

@@ -55,7 +55,7 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
             final long interval = configuration.getRetryTimeInterval();
             try {
                 if (connect()) {
-//                    reset();
+                    //reset();
                 }
                 if (!open()) {
 
@@ -106,6 +106,14 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
                 exception = translate(e);
                 close(exception);
                 sleep(interval);
+
+                //待验证
+                try {
+                    Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                } catch (TaskMsgException ex) {
+                    ex.printStackTrace();
+                }
+                log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,e.getMessage());
             } catch (IncrementException e) {
                 try {
                     Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
