@@ -77,12 +77,12 @@ public class TaskController {
         }catch (TaskMsgException ex){
             throw ex;
         } catch (Exception e){
-            return  ResultMap.builder().code("100").msg("Failed to create task");
+            return  ResultMap.builder().code("1000").msg("Failed to create task");
         }
 
         HashMap msg=new HashMap();
         msg.put("taskid",threadId);
-        return  ResultMap.builder().code("200").msg("Task created successfully").data(msg);
+        return  ResultMap.builder().code("2000").msg("Task created successfully").data(msg);
     }
 
 
@@ -96,13 +96,13 @@ public class TaskController {
     public ResultMap editTask(@RequestBody @Validated EditRedisClusterDto redisClusterDto) throws TaskMsgException {
         redisClusterDto= (EditRedisClusterDto) DtoCheckUtils.loadingRedisClusterDto(redisClusterDto);
 
-        return  ResultMap.builder().code("200").msg("The request is successful").data("编辑成功");
+        return  ResultMap.builder().code("2000").msg("The request is successful").data("编辑成功");
     }
 
 
     @RequestMapping(value = "/data")
     public ResultMap getData(){
-        return ResultMap.builder().code("200").data( TaskMsgUtils.getAliveThreadHashMap());
+        return ResultMap.builder().code("2000").data( TaskMsgUtils.getAliveThreadHashMap());
     }
 
 
@@ -117,7 +117,7 @@ public class TaskController {
     @RequestMapping(value = "/starttask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap startTask(@RequestBody @Validated TaskStartMsgDto taskMsgDto) throws TaskMsgException {
         Map<String,String> msg= SyncTaskUtils.startCreateThread(taskMsgDto.getTaskid(),taskMsgDto.isAfresh(),redisBatchedReplicatorService);
-        return  ResultMap.builder().code("200").msg("The request is successful").data(msg);
+        return  ResultMap.builder().code("2000").msg("The request is successful").data(msg);
     }
 
 
@@ -129,7 +129,7 @@ public class TaskController {
     @RequestMapping(value = "/stoptask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap stopTask(@RequestBody @Validated TaskMsgDto taskMsgDto) throws TaskMsgException {
         Map<String,String> msg=SyncTaskUtils.stopCreateThread(taskMsgDto.getTaskids());
-        return  ResultMap.builder().code("200").msg("The request is successful").data(msg);
+        return  ResultMap.builder().code("2000").msg("The request is successful").data(msg);
     }
 
 
@@ -144,7 +144,7 @@ public class TaskController {
     public ResultMap listTask(@RequestBody @Validated ListTaskMsgDto listTaskMsgDto) throws TaskMsgException {
 
         List<ThreadReturnMsgEntity> listCreateThread=SyncTaskUtils.listCreateThread(listTaskMsgDto);
-        return  ResultMap.builder().code("200").msg("The request is successful").data(listCreateThread);
+        return  ResultMap.builder().code("2000").msg("The request is successful").data(listCreateThread);
     }
 
 
@@ -157,7 +157,7 @@ public class TaskController {
     public ResultMap deleteTask(@RequestBody @Validated TaskMsgDto taskMsgDto) throws TaskMsgException {
         Map<String,String> msg=SyncTaskUtils.delCreateThread(taskMsgDto.getTaskids());
 //        List<ThreadReturnMsgEntity> listCreateThread=TaskMsgUtils.listCreateThread(listTaskMsgDto);
-        return  ResultMap.builder().code("200").msg("The request is successful").data(msg);
+        return  ResultMap.builder().code("2000").msg("The request is successful").data(msg);
     }
 
     @RequestMapping(value = "/test")

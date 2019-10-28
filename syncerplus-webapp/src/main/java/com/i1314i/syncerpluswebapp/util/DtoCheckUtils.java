@@ -89,7 +89,10 @@ public class DtoCheckUtils {
 
     public synchronized static Object loadingRedisClusterDto(EditRedisClusterDto syncDataDto) throws TaskMsgException {
         ThreadMsgEntity data=TaskMsgUtils.getThreadMsgEntity(syncDataDto.getTaskId());
+        if(data==null){
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_EXIST_ERROR_CODE,"任务【"+syncDataDto.getTaskId()+"】不存在"));
 
+        }
         if(data.getStatus().equals(ThreadStatusEnum.RUN)){
 //            throw new TaskMsgException("不能编辑正在运行中的任务【"+syncDataDto.getTaskId()+"】");
             throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASK_EDIT_ERROR_CODE,"不能编辑正在运行中的任务【"+syncDataDto.getTaskId()+"】"));

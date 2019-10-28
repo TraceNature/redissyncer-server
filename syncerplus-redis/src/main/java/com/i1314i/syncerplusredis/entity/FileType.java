@@ -17,11 +17,10 @@
 package com.i1314i.syncerplusredis.entity;
 
 /**
- * @author Leon Chen
  * @since 2.1.0
  */
 public enum FileType {
-    AOF, RDB, MIXED;
+    AOF, RDB, MIXED,ONLINEAOF,ONLINERDB;
 
     /**
      * @param type string type
@@ -39,7 +38,11 @@ public enum FileType {
             return MIXED;
         } else if (type.equalsIgnoreCase("mixed")) {
             return MIXED;
-        } else {
+        } else if (type.equalsIgnoreCase("onelinerdb")) {
+            return ONLINERDB;
+        } else if (type.equalsIgnoreCase("onelineaof")) {
+            return ONLINEAOF;
+        }else {
             return null;
         }
     }

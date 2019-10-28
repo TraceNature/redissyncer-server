@@ -157,7 +157,12 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 //             * 初始化连接池
 //             */
 //            pool.init(syncDataDto.getMinPoolSize(), syncDataDto.getMaxPoolSize(), syncDataDto.getMaxWaitTime(), turi, syncDataDto.getTimeBetweenEvictionRunsMillis(), syncDataDto.getIdleTimeRunsMillis());
+
+
             Replicator replicator=new JDRedisReplicator(suri,afresh);
+
+
+
 
 //            if(!afresh){
 //                replicator=new JDRedisReplicator(suri,false);
