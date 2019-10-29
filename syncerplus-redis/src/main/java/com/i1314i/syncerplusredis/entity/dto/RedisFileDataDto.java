@@ -1,7 +1,6 @@
 package com.i1314i.syncerplusredis.entity.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import javax.validation.constraints.NotBlank;
 
@@ -9,7 +8,9 @@ import javax.validation.constraints.NotBlank;
 /**
  * RDB AOF文件同步配置
  */
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode
 public class RedisFileDataDto {
     private static final long serialVersionUID = -5809782578272943998L;
     @NotBlank(message = "AOF/RDB 地址不能为空")
