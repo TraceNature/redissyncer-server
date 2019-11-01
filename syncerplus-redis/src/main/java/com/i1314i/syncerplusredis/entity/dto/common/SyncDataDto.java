@@ -1,6 +1,8 @@
 package com.i1314i.syncerplusredis.entity.dto.common;
 
+import com.i1314i.syncerplusredis.entity.FileType;
 import com.i1314i.syncerplusredis.entity.RedisInfo;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +19,7 @@ import java.util.Set;
 @Getter@Setter
 @EqualsAndHashCode
 public class SyncDataDto implements Serializable {
+    private static final long serialVersionUID = -5809782578272943997L;
     private int minPoolSize;
     private int maxPoolSize;
     private long maxWaitTime;
@@ -29,7 +32,16 @@ public class SyncDataDto implements Serializable {
     private Set<String>targetUris;
     private Set<RedisInfo>targetUriData=new HashSet<>();
     private double targetRedisVersion;
-    public SyncDataDto(int minPoolSize, int maxPoolSize, long maxWaitTime, long timeBetweenEvictionRunsMillis, long idleTimeRunsMillis, int diffVersion, String pipeline,Map<Integer,Integer>dbNum ) {
+    private String fileAddress;
+
+    //迁移类型：psync/文件
+    @Builder.Default
+    private FileType fileType=FileType.SYNC;
+
+    public SyncDataDto() {
+    }
+
+    public SyncDataDto(int minPoolSize, int maxPoolSize, long maxWaitTime, long timeBetweenEvictionRunsMillis, long idleTimeRunsMillis, int diffVersion, String pipeline, Map<Integer,Integer>dbNum ) {
         this.minPoolSize = minPoolSize;
         this.maxPoolSize = maxPoolSize;
         this.maxWaitTime = maxWaitTime;

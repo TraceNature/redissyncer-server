@@ -47,6 +47,10 @@ public class PipelineCompensator implements Runnable{
     }
 
     public  boolean singleCompensator(List<Object> statusList, List<EventEntity> keys, RedisURI suri, RedisURI turi, String thredId) {
+       if(suri==null){
+           return true;
+       }
+
         //提交数据的总量
         int statusListLenght = statusList.size();
         int aNum=0;

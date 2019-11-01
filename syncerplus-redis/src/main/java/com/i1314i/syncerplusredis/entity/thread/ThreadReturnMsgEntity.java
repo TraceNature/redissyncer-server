@@ -3,10 +3,12 @@ package com.i1314i.syncerplusredis.entity.thread;
 
 
 import com.i1314i.syncerplusredis.constant.ThreadStatusEnum;
+import com.i1314i.syncerplusredis.entity.FileType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 
@@ -25,14 +27,21 @@ public class ThreadReturnMsgEntity {
     private String targetRedisAddress;
     private boolean afresh;
     private Map<Integer,Integer> dbNum;
-    private Set<String> sourceUris;
-    private Set<String>targetUris;
+    @Builder.Default
+    private Set<String> sourceUris=new HashSet<>();
+    @Builder.Default
+    private Set<String>targetUris=new HashSet<>();
     private double targetRedisVersion;
+
+    @Builder.Default
+    private FileType fileType=FileType.SYNC;
+
     public Set<String> getSourceUris() {
         Set<String>sourceUri=new HashSet<>();
         for (String data:sourceUris
         ) {
-            sourceUri.add(data.split("\\?")[0]);
+            if(!StringUtils.isEmpty(data))
+              sourceUri.add(data.split("\\?")[0]);
         }
         return sourceUri;
     }
@@ -42,8 +51,19 @@ public class ThreadReturnMsgEntity {
         Set<String>targetUri=new HashSet<>();
         for (String data:targetUris
              ) {
-            targetUri.add(data.split("\\?")[0]);
+            if(!StringUtils.isEmpty(data))
+             targetUri.add(data.split("\\?")[0]);
         }
         return targetUri;
+    }
+
+    public void loading(){
+        if(sourceUris==null){
+            sourceUris=new HashSet<>();
+        }
+
+        if(targetUris==null){
+            targetUris=new HashSet<>();
+        }
     }
 }

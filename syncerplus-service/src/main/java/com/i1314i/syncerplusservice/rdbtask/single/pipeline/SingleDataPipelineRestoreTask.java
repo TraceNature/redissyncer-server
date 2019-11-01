@@ -158,7 +158,7 @@ public class SingleDataPipelineRestoreTask implements Runnable {
 //             */
 //            pool.init(syncDataDto.getMinPoolSize(), syncDataDto.getMaxPoolSize(), syncDataDto.getMaxWaitTime(), turi, syncDataDto.getTimeBetweenEvictionRunsMillis(), syncDataDto.getIdleTimeRunsMillis());
 
-
+            
             Replicator replicator=new JDRedisReplicator(suri,afresh);
 
 

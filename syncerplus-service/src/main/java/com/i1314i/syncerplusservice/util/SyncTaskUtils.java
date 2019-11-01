@@ -2,6 +2,7 @@ package com.i1314i.syncerplusservice.util;
 
 import com.i1314i.syncerplusredis.constant.TaskMsgConstant;
 import com.i1314i.syncerplusredis.constant.ThreadStatusEnum;
+import com.i1314i.syncerplusredis.entity.FileType;
 import com.i1314i.syncerplusredis.entity.dto.task.ListTaskMsgDto;
 import com.i1314i.syncerplusredis.entity.thread.ThreadMsgEntity;
 import com.i1314i.syncerplusredis.entity.thread.ThreadReturnMsgEntity;
@@ -93,7 +94,12 @@ public class SyncTaskUtils {
         if(!StringUtils.isEmpty(taskId)){
 
             if(null!=entity){
-                redisBatchedReplicatorService.batchedSync(entity.getRedisClusterDto(),taskId,afresh);
+                if(entity.getRedisClusterDto().getFileType().equals(FileType.ONLINERDB)||entity.getRedisClusterDto().getFileType().equals(FileType.ONLINEAOF)){
+                    redisBatchedReplicatorService.filebatchedSync(entity.getRedisClusterDto(),taskId);
+                }else {
+                    redisBatchedReplicatorService.batchedSync(entity.getRedisClusterDto(),taskId,afresh);
+                }
+
                 entity.setStatus(ThreadStatusEnum.RUN);
                 TaskMsgUtils.getAliveThreadHashMap().put(taskId,entity);
                 taskMap.put(taskId,"Task started successfully");
@@ -254,6 +260,8 @@ public class SyncTaskUtils {
                             ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                             BeanUtils.copyProperties(thre.getValue(),msgEntity);
                             BeanUtils.copyProperties(thre.getValue().getRedisClusterDto(),msgEntity);
+                            msgEntity.setTargetRedisVersion(thre.getValue().getRedisClusterDto().getTargetRedisVersion());
+                            msgEntity.loading();
                             taskList.add(msgEntity);
                         }
                     }
@@ -269,6 +277,8 @@ public class SyncTaskUtils {
                 ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                 BeanUtils.copyProperties(thre.getValue(),msgEntity);
                 BeanUtils.copyProperties(thre.getValue().getRedisClusterDto(),msgEntity);
+                msgEntity.loading();
+                msgEntity.setTargetRedisVersion(thre.getValue().getRedisClusterDto().getTargetRedisVersion());
                 taskList.add(msgEntity);
             }
         }else if(listTaskMsgDto.getRegulation().trim().equals("byids")){
@@ -290,6 +300,8 @@ public class SyncTaskUtils {
                         ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                         BeanUtils.copyProperties(thre.getValue(),msgEntity);
                         BeanUtils.copyProperties(thre.getValue().getRedisClusterDto(),msgEntity);
+                        msgEntity.loading();
+                        msgEntity.setTargetRedisVersion(thre.getValue().getRedisClusterDto().getTargetRedisVersion());
                         taskList.add(msgEntity);
                     }
                 }
@@ -317,12 +329,16 @@ public class SyncTaskUtils {
                     ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                     BeanUtils.copyProperties(thre.getValue(),msgEntity);
                     BeanUtils.copyProperties(thre.getValue().getRedisClusterDto(),msgEntity);
+                    msgEntity.loading();
+                    msgEntity.setTargetRedisVersion(thre.getValue().getRedisClusterDto().getTargetRedisVersion());
                     taskList.add(msgEntity);
                 }
                 if(statusEnum.equals(ThreadStatusEnum.CREATE)&&listTaskMsgDto.getTaskstatus().equals("stop")){
                     ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                     BeanUtils.copyProperties(thre.getValue(),msgEntity);
                     BeanUtils.copyProperties(thre.getValue().getRedisClusterDto(),msgEntity);
+                    msgEntity.loading();
+                    msgEntity.setTargetRedisVersion(thre.getValue().getRedisClusterDto().getTargetRedisVersion());
                     taskList.add(msgEntity);
                 }
             }

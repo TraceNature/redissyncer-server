@@ -16,23 +16,33 @@
 
 package com.i1314i.syncerplusredis.replicator;
 
+import com.i1314i.syncerplusredis.RedisSocketReplicator;
 import com.i1314i.syncerplusredis.entity.Configuration;
 import com.i1314i.syncerplusredis.exception.IncrementException;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusredis.io.RedisInputStream;
 import com.i1314i.syncerplusredis.rdb.RdbParser;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Executors;
 
 import static com.i1314i.syncerplusredis.replicator.Status.CONNECTED;
 import static com.i1314i.syncerplusredis.replicator.Status.DISCONNECTED;
+import static com.i1314i.syncerplusredis.util.objectutil.Concurrents.terminateQuietly;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * @since 4.0
  */
+@Slf4j
 public class RedisOnlineRdbReplicator extends AbstractReplicator {
 
 //    public RedisOnlineRdbReplicator(String  fileUrl, Configuration configuration) {
@@ -51,8 +61,9 @@ public class RedisOnlineRdbReplicator extends AbstractReplicator {
     }
 
 
-    public RedisOnlineRdbReplicator(String fileUrl, Configuration configuration) {
+    public RedisOnlineRdbReplicator(String fileUrl, Configuration configuration,String taskId) {
         try {
+
             URL url = new URL(fileUrl);
             HttpURLConnection conn = (HttpURLConnection)url.openConnection();
             //设置超时间为3秒
@@ -71,8 +82,13 @@ public class RedisOnlineRdbReplicator extends AbstractReplicator {
             if (configuration.isUseDefaultExceptionListener())
                 addExceptionListener(new DefaultExceptionListener());
 
-        }catch (IOException e){
-
+        }catch (Exception e){
+            try {
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+            } catch (TaskMsgException ex) {
+                ex.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,"文件下载异常");
         }
     }
     
@@ -93,12 +109,38 @@ public class RedisOnlineRdbReplicator extends AbstractReplicator {
     @Override
     public void open(String taskId) throws IOException, IncrementException {
 
+        super.open();
+        if (!compareAndSet(DISCONNECTED, CONNECTED)) return;
+        try {
+            doOpen(taskId);
+        } catch (UncheckedIOException e) {
+            if (!(e.getCause() instanceof EOFException)) throw e.getCause();
+        } finally {
+            doClose();
+            doCloseListener(this);
+        }
+
+
     }
 
     protected void doOpen() throws IOException {
         try {
             new RdbParser(inputStream, this).parse();
         } catch (EOFException ignore) {
+
+        }
+    }
+
+    protected void doOpen(String taskId) throws IOException {
+        try {
+            new RdbParser(inputStream, this).parse();
+        } catch (EOFException ignore) {
+            try {
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+            } catch (TaskMsgException ex) {
+                ex.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,ignore.getMessage());
         }
     }
 }

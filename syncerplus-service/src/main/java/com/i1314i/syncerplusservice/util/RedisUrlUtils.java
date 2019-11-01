@@ -8,6 +8,7 @@ import com.i1314i.syncerplusredis.constant.KeyValueEnum;
 import com.i1314i.syncerplusredis.constant.RedisVersion;
 import com.i1314i.syncerplusredis.constant.TaskMsgConstant;
 import com.i1314i.syncerplusredis.entity.dto.RedisClusterDto;
+import com.i1314i.syncerplusredis.entity.dto.RedisFileDataDto;
 import com.i1314i.syncerplusredis.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusservice.pool.ConnectionPool;
 import com.i1314i.syncerplusservice.pool.Impl.CommonPoolConnectionPoolImpl;
@@ -345,6 +346,23 @@ public class RedisUrlUtils {
      * @return
      */
     public static synchronized JDJedisClientPool getJDJedisClient(RedisSyncDataDto syncDataDto, RedisURI turi) {
+        JedisPoolConfig sourceConfig = new JedisPoolConfig();
+        Configuration sourceCon = Configuration.valueOf(turi);
+        sourceConfig.setMaxTotal(syncDataDto.getMaxPoolSize());
+        sourceConfig.setMaxIdle(syncDataDto.getMinPoolSize());
+        sourceConfig.setMinIdle(syncDataDto.getMinPoolSize());
+        //当池内没有返回对象时，最大等待时间
+        sourceConfig.setMaxWaitMillis(syncDataDto.getMaxWaitTime());
+        sourceConfig.setTimeBetweenEvictionRunsMillis(syncDataDto.getTimeBetweenEvictionRunsMillis());
+        sourceConfig.setTestOnReturn(true);
+        sourceConfig.setTestOnBorrow(true);
+        return new JDJedisClientPool(turi.getHost(), turi.getPort(), sourceConfig, sourceCon.getAuthPassword(), 0);
+    }
+
+
+
+    public static synchronized JDJedisClientPool getJDJedisClients(RedisSyncDataDto syncDataDto, RedisURI turi) {
+
         JedisPoolConfig sourceConfig = new JedisPoolConfig();
         Configuration sourceCon = Configuration.valueOf(turi);
         sourceConfig.setMaxTotal(syncDataDto.getMaxPoolSize());

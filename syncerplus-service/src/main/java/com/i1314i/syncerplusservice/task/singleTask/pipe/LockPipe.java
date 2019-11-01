@@ -78,6 +78,7 @@ public class LockPipe {
 
 
     public  synchronized void syncpipe(PipelineLock pipelineLock, SyncTaskEntity taskEntity, int num, boolean type, RedisURI suri, RedisURI turi){
+
         if (pipelineLock!=null){
 
             if(type){

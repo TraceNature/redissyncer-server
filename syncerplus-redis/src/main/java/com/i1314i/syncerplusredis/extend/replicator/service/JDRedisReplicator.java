@@ -23,8 +23,8 @@ public class JDRedisReplicator  extends RedisReplicator implements Serializable 
         super(file, fileType, configuration);
     }
 
-    public JDRedisReplicator(InputStream in, FileType fileType, String fileUrl, Configuration configuration) {
-        super(in, fileType, fileUrl, configuration);
+    public JDRedisReplicator(InputStream in, FileType fileType, String fileUrl, Configuration configuration,String taskId) {
+        super(in, fileType, fileUrl, configuration,taskId);
     }
 
     public JDRedisReplicator(InputStream in, FileType fileType, Configuration configuration) {

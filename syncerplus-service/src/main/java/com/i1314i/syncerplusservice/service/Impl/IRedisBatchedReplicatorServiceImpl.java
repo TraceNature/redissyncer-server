@@ -3,6 +3,8 @@ import com.i1314i.syncerplusredis.constant.KeyValueEnum;
 import com.i1314i.syncerplusredis.entity.RedisInfo;
 import com.i1314i.syncerplusredis.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusredis.entity.dto.RedisSyncDataDto;
+import com.i1314i.syncerplusservice.filetask.cluster.RdbFileClusterDataRestoreTask;
+import com.i1314i.syncerplusservice.filetask.single.RdbFilePipelineRestoreTask;
 import com.i1314i.syncerplusservice.rdbtask.cluster.ClusterDataRestoreTask;
 import com.i1314i.syncerplusservice.rdbtask.single.pipeline.SingleDataPipelineRestoreTask;
 import com.i1314i.syncerplusservice.service.IRedisReplicatorService;
@@ -31,6 +33,7 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
 
     @Override
     public void batchedSync(RedisClusterDto clusterDto,String taskId,boolean afresh) throws TaskMsgException {
+
         Set<String> sourceRedisUris = clusterDto.getSourceUris();
         Set<String> targetRedisUris = clusterDto.getTargetUris();
 
@@ -72,6 +75,45 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
         } else {
             //cluster
             batchedSyncToCluster(clusterDto,taskId,afresh);
+        }
+    }
+
+    @Override
+    public void filebatchedSync(RedisClusterDto clusterDto, String taskId) throws TaskMsgException {
+        Set<String> targetRedisUris = clusterDto.getTargetUris();
+
+
+        for (String targetUri : targetRedisUris) {
+            RedisUrlUtils.checkRedisUrl(targetUri, "targetUri : " + targetUri);
+        }
+
+
+        /**
+         * 存在dbMap时检查是否超出数据库大小
+         */
+
+
+        try {
+            RedisUrlUtils.doCheckDbNum(targetRedisUris, clusterDto.getDbNum(), KeyValueEnum.VALUE);
+        } catch (URISyntaxException e) {
+            throw new TaskMsgException(e.getMessage());
+        }
+
+
+
+        if (clusterDto.getTargetUris().size() == 1) {
+            //单机 间或者往京东云集群迁移
+            filebatchedSyncToSingle(clusterDto,taskId);
+
+        } else if (clusterDto.getSourceUris().size() == 1 && clusterDto.getTargetUris().size() > 1) {
+
+
+
+            //单机往cluster迁移
+            filebatchedSyncSingleToCluster(clusterDto,taskId);
+        } else {
+            //cluster
+            filebatchedSyncToCluster(clusterDto,taskId);
         }
     }
 
@@ -123,6 +165,36 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
     }
 
 
+
+    /**
+     * RDB/AOF文件往cluster迁移
+     * @param clusterDto
+     */
+    private void filebatchedSyncToCluster(RedisClusterDto clusterDto,String taskId) throws TaskMsgException {
+        System.out.println("-----------------batchedSyncToCluster");
+
+        Set<String> targetRedisUris = clusterDto.getTargetUris();
+
+
+
+        for (String targetUri : targetRedisUris) {
+            RedisUrlUtils.checkRedisUrl(targetUri, " sourceUri: " + targetUri);
+        }
+
+        int i=0;
+//        for (String sourceUrl : sourceRedisUris) {
+////            threadPoolTaskExecutor.submit(new BatchedKVClusterSyncTask(clusterDto, sourceUrl));
+//            threadPoolTaskExecutor.execute(new ClusterDataRestoreTask(clusterDto, (RedisInfo) clusterDto.getTargetUriData().toArray()[i],sourceUrl,taskId,afresh));
+//            i++;
+//        }
+//
+
+        log.info("--------集群到集群-------");
+
+
+    }
+
+
     /**
      * 单机往cluster迁移
      * @param clusterDto
@@ -147,6 +219,35 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
 
     }
 
+
+    /**
+     * rdb/aof文件单机往cluster迁移
+     * @param clusterDto
+     */
+    private void filebatchedSyncSingleToCluster(RedisClusterDto clusterDto,String taskId) throws TaskMsgException {
+        System.out.println("-----------------batchedSyncSingleToCluster");
+        Set<String> targetRedisUris = clusterDto.getTargetUris();
+
+
+
+        for (String targetUri : targetRedisUris) {
+            RedisUrlUtils.checkRedisUrl(targetUri, " targetUri: " + targetUri);
+        }
+
+
+        threadPoolTaskExecutor.execute(new RdbFileClusterDataRestoreTask(clusterDto, (RedisInfo) clusterDto.getTargetUriData().toArray()[0],taskId,clusterDto.getBatchSize()));
+        log.info("--------单机到集群-------");
+
+
+    }
+
+
+    /**
+     * psync单机同步
+     * @param clusterDto
+     * @param taskId
+     * @param afresh
+     */
 
     private void batchedSyncToSingle(RedisClusterDto clusterDto, String taskId,boolean afresh) {
         /**
@@ -177,6 +278,29 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
     }
 
 
+    /**
+     * rdb/aof文件数据同步（单机）
+     * @param clusterDto
+     * @param taskId
+     */
+    private void filebatchedSyncToSingle(RedisClusterDto clusterDto, String taskId) {
+        /**
+         * 获取所有地址并处理新建线程进行同步
+         */
+
+        Set<String> targetRedisUris = clusterDto.getTargetUris();
+            RedisSyncDataDto syncDataDto = new RedisSyncDataDto();
+            BeanUtils.copyProperties(clusterDto, syncDataDto);
+            //set进去数据 copy完后线程池的信息都有 ----------疑问密码如何赋值？？？？？
+            syncDataDto.setTargetUri(String.valueOf(targetRedisUris.toArray()[0]));
+            //进行数据同步
+            try {
+                filesyncTask(syncDataDto,taskId,clusterDto.getBatchSize());
+            } catch (TaskMsgException e) {
+                e.printStackTrace();
+            }
+    }
+
 
 
     /*
@@ -196,5 +320,17 @@ public class IRedisBatchedReplicatorServiceImpl implements IRedisReplicatorServi
         threadPoolTaskExecutor.execute(new SingleDataPipelineRestoreTask(syncDataDto, (RedisInfo) syncDataDto.getTargetUriData().toArray()[0],taskId,batchSize,afresh));
 
 //        threadPoolTaskExecutor.execute(new SingleDataRestoreTask(syncDataDto, (RedisInfo) syncDataDto.getTargetUriData().toArray()[0],taskId));
+    }
+
+
+    /**
+     * 启动file文件数据迁移解析线程
+     * @param syncDataDto
+     * @param taskId
+     * @param batchSize
+     * @throws TaskMsgException
+     */
+    public void filesyncTask(RedisSyncDataDto syncDataDto,String taskId,int batchSize) throws TaskMsgException {
+        threadPoolTaskExecutor.execute(new RdbFilePipelineRestoreTask(syncDataDto, (RedisInfo) syncDataDto.getTargetUriData().toArray()[0],taskId,batchSize));
     }
 }

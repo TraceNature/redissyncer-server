@@ -76,7 +76,7 @@ public class RedisReplicator implements Replicator {
         }
     }
 
-    public RedisReplicator(InputStream in, FileType fileType, String fileUrl, Configuration configuration) {
+    public RedisReplicator(InputStream in, FileType fileType, String fileUrl, Configuration configuration,String taskId) {
         try {
             switch (fileType) {
                 case AOF:
@@ -89,10 +89,10 @@ public class RedisReplicator implements Replicator {
                     this.replicator = new RedisMixReplicator(in, configuration);
                     break;
                 case ONLINERDB:
-                    this.replicator = new RedisOnlineRdbReplicator(fileUrl, configuration);
+                    this.replicator = new RedisOnlineRdbReplicator(fileUrl, configuration,taskId);
                     break;
                 case ONLINEAOF:
-                    this.replicator = new RedisOnlineAofReplicator(fileUrl, configuration);
+                    this.replicator = new RedisOnlineAofReplicator(fileUrl, configuration,taskId);
                     break;
                 default:
                     throw new UnsupportedOperationException(fileType.toString());

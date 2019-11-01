@@ -47,7 +47,12 @@ public class RedisClusterDto extends SyncDataDto implements Serializable {
 
     }
 
+    public RedisClusterDto() {
+    }
 
+    public RedisClusterDto(int minPoolSize, int maxPoolSize, long maxWaitTime, long timeBetweenEvictionRunsMillis, long idleTimeRunsMillis) {
+        super(minPoolSize, maxPoolSize, maxWaitTime, timeBetweenEvictionRunsMillis, idleTimeRunsMillis);
+    }
 
     public static void main(String[] args) {
         RedisClusterDto dto=new RedisClusterDto("","",

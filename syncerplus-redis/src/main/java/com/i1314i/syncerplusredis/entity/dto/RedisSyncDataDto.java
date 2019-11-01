@@ -11,6 +11,7 @@ import java.util.HashMap;
 @Getter
 @Setter
 public class RedisSyncDataDto extends SyncDataDto {
+    private static final long serialVersionUID = -5809782578272943996L;
     @NotBlank(message = "源redis路径地址不能为空")
     private String sourceUri;
     @NotBlank(message = "目标redis路径不能为空")

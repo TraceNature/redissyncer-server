@@ -20,6 +20,6 @@
 * 2.0
 - [x] 同步模式拆分：全量、增量和全量+增量，增量offset包括beginbuf、endbuf
 - [x]  断点续传：通过targetoffset续传，如果offset值已过期，该任务作废
-- [ ] 离线rds或aof文件加载
+- [x] 离线rdb或aof文件加载
 - [ ] 数据校验
 - [ ] cli客户端程序(完成基本架构及部分功能)

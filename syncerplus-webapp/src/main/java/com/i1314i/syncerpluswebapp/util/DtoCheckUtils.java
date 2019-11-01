@@ -7,6 +7,7 @@ import com.i1314i.syncerplusredis.constant.ThreadStatusEnum;
 import com.i1314i.syncerplusredis.entity.RedisInfo;
 import com.i1314i.syncerplusredis.entity.RedisPoolProps;
 import com.i1314i.syncerplusredis.entity.dto.RedisClusterDto;
+import com.i1314i.syncerplusredis.entity.dto.RedisFileDataDto;
 import com.i1314i.syncerplusredis.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusredis.entity.dto.common.SyncDataDto;
 import com.i1314i.syncerplusredis.entity.dto.task.EditRedisClusterDto;
@@ -187,12 +188,41 @@ public class DtoCheckUtils {
             }
 //            rdbVersion
 
-
+            redisClusterDto.setTargetRedisVersion(redisVersion);
         }
 
     }
 
+    public static void updateUri(RedisFileDataDto redisFileDataDto) throws TaskMsgException {
 
+        redisFileDataDto.setTargetUris(getUrlList(redisFileDataDto.getTargetRedisAddress(), redisFileDataDto.getTargetPassword()));
+
+        for (String uri : redisFileDataDto.getTargetUris()
+        ) {
+            double redisVersion = 0L;
+            try {
+                redisVersion = RedisUrlUtils.selectSyncerVersion(uri);
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+            Integer rdbVersion = RedisUrlUtils.getRdbVersion(redisFileDataDto.getTargetRedisVersion());
+            Integer integer = RedisUrlUtils.getRdbVersion(redisVersion);
+            if (integer == 0) {
+                if (rdbVersion == 0) {
+//                    throw new TaskMsgException("targetRedisVersion can not be empty /targetRedisVersion error");
+                    throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_MSG_ERROR_CODE,TaskMsgConstant.TASK_MSG_REDIS_MSG_ERROR));
+                } else {
+                    redisFileDataDto.addRedisInfo(new RedisInfo(redisFileDataDto.getTargetRedisVersion(), uri, rdbVersion));
+                }
+            } else {
+                redisFileDataDto.addRedisInfo(new RedisInfo(redisVersion, uri, RedisUrlUtils.getRdbVersion(redisVersion)));
+            }
+//            rdbVersion
+            redisFileDataDto.setTargetRedisVersion(redisVersion);
+
+        }
+
+    }
     /**
      * 生成uri集合
      *
@@ -202,6 +232,9 @@ public class DtoCheckUtils {
      */
     public synchronized static Set<String> getUrlList(String sourceUrls, String password) {
         Set<String> urlList = new HashSet<>();
+        if (StringUtils.isEmpty(sourceUrls)){
+            return new HashSet<>();
+        }
         String[] sourceUrlsList = sourceUrls.split(";");
         //循环遍历所有的url
         for (String url : sourceUrlsList) {

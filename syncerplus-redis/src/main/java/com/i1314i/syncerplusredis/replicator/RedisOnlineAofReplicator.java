@@ -21,14 +21,19 @@ import com.i1314i.syncerplusredis.entity.Configuration;
 import com.i1314i.syncerplusredis.event.PostCommandSyncEvent;
 import com.i1314i.syncerplusredis.event.PreCommandSyncEvent;
 import com.i1314i.syncerplusredis.exception.IncrementException;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusredis.io.RedisInputStream;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
 import com.i1314i.syncerplusredis.util.objectutil.Strings;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.i1314i.syncerplusredis.replicator.Status.CONNECTED;
@@ -39,6 +44,8 @@ import static com.i1314i.syncerplusredis.util.type.Tuples.of;
 /**
  * @since 4.0
  */
+
+@Slf4j
 public class RedisOnlineAofReplicator extends AbstractReplicator {
 
     protected static final Logger logger = LoggerFactory.getLogger(RedisOnlineAofReplicator.class);
@@ -60,7 +67,7 @@ public class RedisOnlineAofReplicator extends AbstractReplicator {
             addExceptionListener(new DefaultExceptionListener());
     }
 
-    public RedisOnlineAofReplicator(String fileUrl, Configuration configuration) {
+    public RedisOnlineAofReplicator(String fileUrl, Configuration configuration,String taskId) {
         try{
             URL url = new URL(fileUrl);
             HttpURLConnection conn = null;
@@ -78,7 +85,13 @@ public class RedisOnlineAofReplicator extends AbstractReplicator {
             this.inputStream = new RedisInputStream(in, this.configuration.getBufferSize());
 
         }catch (IOException e){
-
+            try {
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+            } catch (TaskMsgException ex) {
+                ex.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,"文件下载异常");
+        
         }
 
         this.inputStream.setRawByteListeners(this.rawByteListeners);
@@ -106,7 +119,22 @@ public class RedisOnlineAofReplicator extends AbstractReplicator {
 
     @Override
     public void open(String taskId) throws IOException, IncrementException {
-
+        super.open();
+        if (!compareAndSet(DISCONNECTED, CONNECTED)) return;
+        try {
+            doOpen();
+        } catch (UncheckedIOException e) {
+            try {
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+            } catch (TaskMsgException ex) {
+                ex.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,e.getMessage());
+            if (!(e.getCause() instanceof EOFException)) throw e.getCause();
+        } finally {
+            doClose();
+            doCloseListener(this);
+        }
     }
 
     protected void doOpen() throws IOException {
