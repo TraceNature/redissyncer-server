@@ -16,6 +16,9 @@
 
 package com.i1314i.syncerplusredis.replicator;
 
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.i1314i.syncerplusredis.cmd.*;
 import com.i1314i.syncerplusredis.entity.Configuration;
 import com.i1314i.syncerplusredis.event.PostCommandSyncEvent;
@@ -25,9 +28,7 @@ import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusredis.io.RedisInputStream;
 import com.i1314i.syncerplusredis.util.TaskMsgUtils;
 import com.i1314i.syncerplusredis.util.objectutil.Strings;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.i1314i.syncerplusredis.util.type.Tuples;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -36,9 +37,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.i1314i.syncerplusredis.replicator.Status.CONNECTED;
-import static com.i1314i.syncerplusredis.replicator.Status.DISCONNECTED;
-import static com.i1314i.syncerplusredis.util.objectutil.Strings.format;
 import static com.i1314i.syncerplusredis.util.type.Tuples.of;
 
 /**
@@ -106,7 +104,7 @@ public class RedisOnlineAofReplicator extends AbstractReplicator {
     @Override
     public void open() throws IOException, IncrementException {
         super.open();
-        if (!compareAndSet(DISCONNECTED, CONNECTED)) return;
+        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) return;
         try {
             doOpen();
         } catch (UncheckedIOException e) {
@@ -120,7 +118,7 @@ public class RedisOnlineAofReplicator extends AbstractReplicator {
     @Override
     public void open(String taskId) throws IOException, IncrementException {
         super.open();
-        if (!compareAndSet(DISCONNECTED, CONNECTED)) return;
+        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) return;
         try {
             doOpen();
         } catch (UncheckedIOException e) {
@@ -142,23 +140,23 @@ public class RedisOnlineAofReplicator extends AbstractReplicator {
         submitEvent(new PreCommandSyncEvent());
         try {
             final long[] offset = new long[1];
-            while (getStatus() == CONNECTED) {
+            while (getStatus() == Status.CONNECTED) {
                 Object obj = replyParser.parse(len -> offset[0] = len);
                 if (obj instanceof Object[]) {
                     if (verbose() && logger.isDebugEnabled())
-                        logger.debug(format((Object[]) obj));
+                        logger.debug(Strings.format((Object[]) obj));
                     Object[] raw = (Object[]) obj;
                     CommandName name = CommandName.name(Strings.toString(raw[0]));
                     final CommandParser<? extends Command> parser;
                     if ((parser = commands.get(name)) == null) {
-                        logger.warn("command [{}] not register. raw command:{}", name, format(raw));
+                        logger.warn("command [{}] not register. raw command:{}", name, Strings.format(raw));
                         configuration.addOffset(offset[0]);
                         offset[0] = 0L;
                         continue;
                     }
                     final long st = configuration.getReplOffset();
                     final long ed = st + offset[0];
-                    submitEvent(parser.parse(raw), of(st, ed));
+                    submitEvent(parser.parse(raw), Tuples.of(st, ed));
                 } else {
                     logger.warn("unexpected redis reply:{}", obj);
                 }

@@ -16,39 +16,44 @@
 
 package com.i1314i.syncerplusredis.replicator;
 
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.i1314i.syncerplusredis.cmd.*;
 import com.i1314i.syncerplusredis.entity.Configuration;
 import com.i1314i.syncerplusredis.event.PostCommandSyncEvent;
 import com.i1314i.syncerplusredis.event.PreCommandSyncEvent;
 import com.i1314i.syncerplusredis.exception.IncrementException;
+import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusredis.io.PeekableInputStream;
 import com.i1314i.syncerplusredis.io.RedisInputStream;
 import com.i1314i.syncerplusredis.rdb.RdbParser;
+import com.i1314i.syncerplusredis.util.TaskMsgUtils;
 import com.i1314i.syncerplusredis.util.objectutil.Strings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.i1314i.syncerplusredis.util.type.Tuples;
 
 import java.io.*;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 
-import static com.i1314i.syncerplusredis.replicator.Status.CONNECTED;
-import static com.i1314i.syncerplusredis.replicator.Status.DISCONNECTED;
-import static com.i1314i.syncerplusredis.util.objectutil.Strings.format;
 import static com.i1314i.syncerplusredis.util.type.Tuples.of;
 
 /**
  * @author Leon Chen
  * @since 2.1.0
  */
+
+@Slf4j
 public class RedisMixReplicator extends AbstractReplicator {
     protected static final Logger logger = LoggerFactory.getLogger(RedisMixReplicator.class);
     protected final ReplyParser replyParser;
     protected final PeekableInputStream peekable;
-    
+
     public RedisMixReplicator(File file, Configuration configuration) throws FileNotFoundException {
         this(new FileInputStream(file), configuration);
     }
-    
+
     public RedisMixReplicator(InputStream in, Configuration configuration) {
         Objects.requireNonNull(in);
         Objects.requireNonNull(configuration);
@@ -65,11 +70,41 @@ public class RedisMixReplicator extends AbstractReplicator {
         if (configuration.isUseDefaultExceptionListener())
             addExceptionListener(new DefaultExceptionListener());
     }
-    
+
+
+    public RedisMixReplicator(String filePath, Configuration configuration, String taskId) {
+        InputStream in = null;
+        try {
+            in = new FileInputStream(filePath);
+        } catch (FileNotFoundException e) {
+            try {
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+            } catch (TaskMsgException ex) {
+                ex.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, "文件下载异常");
+        }
+
+        Objects.requireNonNull(in);
+        Objects.requireNonNull(configuration);
+        this.configuration = configuration;
+        if (in instanceof PeekableInputStream) {
+            this.peekable = (PeekableInputStream) in;
+        } else {
+            in = this.peekable = new PeekableInputStream(in);
+        }
+        this.inputStream = new RedisInputStream(in, this.configuration.getBufferSize());
+        this.inputStream.setRawByteListeners(this.rawByteListeners);
+        this.replyParser = new ReplyParser(inputStream, new RedisCodec());
+        builtInCommandParserRegister();
+        if (configuration.isUseDefaultExceptionListener())
+            addExceptionListener(new DefaultExceptionListener());
+    }
+
     @Override
     public void open() throws IOException, IncrementException {
         super.open();
-        if (!compareAndSet(DISCONNECTED, CONNECTED)) return;
+        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) return;
         try {
             doOpen();
         } catch (UncheckedIOException e) {
@@ -82,7 +117,16 @@ public class RedisMixReplicator extends AbstractReplicator {
 
     @Override
     public void open(String taskId) throws IOException, IncrementException {
-
+        super.open();
+        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) return;
+        try {
+            doOpen(taskId);
+        } catch (UncheckedIOException e) {
+            if (!(e.getCause() instanceof EOFException)) throw e.getCause();
+        } finally {
+            doClose();
+            doCloseListener(this);
+        }
     }
 
     protected void doOpen() throws IOException {
@@ -91,27 +135,27 @@ public class RedisMixReplicator extends AbstractReplicator {
             RdbParser parser = new RdbParser(inputStream, this);
             configuration.setReplOffset(parser.parse());
         }
-        if (getStatus() != CONNECTED) return;
+        if (getStatus() != Status.CONNECTED) return;
         submitEvent(new PreCommandSyncEvent());
         try {
             final long[] offset = new long[1];
-            while (getStatus() == CONNECTED) {
+            while (getStatus() == Status.CONNECTED) {
                 Object obj = replyParser.parse(len -> offset[0] = len);
                 if (obj instanceof Object[]) {
                     if (verbose() && logger.isDebugEnabled())
-                        logger.debug(format((Object[]) obj));
+                        logger.debug(Strings.format((Object[]) obj));
                     Object[] raw = (Object[]) obj;
                     CommandName name = CommandName.name(Strings.toString(raw[0]));
                     final CommandParser<? extends Command> parser;
                     if ((parser = commands.get(name)) == null) {
-                        logger.warn("command [{}] not register. raw command:{}", name, format(raw));
+                        logger.warn("command [{}] not register. raw command:{}", name, Strings.format(raw));
                         configuration.addOffset(offset[0]);
                         offset[0] = 0L;
                         continue;
                     }
                     final long st = configuration.getReplOffset();
                     final long ed = st + offset[0];
-                    submitEvent(parser.parse(raw), of(st, ed));
+                    submitEvent(parser.parse(raw), Tuples.of(st, ed));
                 } else {
                     logger.warn("unexpected redis reply:{}", obj);
                 }
@@ -120,6 +164,54 @@ public class RedisMixReplicator extends AbstractReplicator {
             }
         } catch (EOFException ignore) {
             submitEvent(new PostCommandSyncEvent());
+        }
+    }
+
+    protected void doOpen(String taskId) throws IOException {
+        try {
+            configuration.setReplOffset(0L);
+            if (peekable.peek() == 'R') {
+                RdbParser parser = new RdbParser(inputStream, this);
+                configuration.setReplOffset(parser.parse());
+            }
+            if (getStatus() != Status.CONNECTED) return;
+            submitEvent(new PreCommandSyncEvent());
+            try {
+                final long[] offset = new long[1];
+                while (getStatus() == Status.CONNECTED) {
+                    Object obj = replyParser.parse(len -> offset[0] = len);
+                    if (obj instanceof Object[]) {
+                        if (verbose() && logger.isDebugEnabled())
+                            logger.debug(Strings.format((Object[]) obj));
+                        Object[] raw = (Object[]) obj;
+                        CommandName name = CommandName.name(Strings.toString(raw[0]));
+                        final CommandParser<? extends Command> parser;
+                        if ((parser = commands.get(name)) == null) {
+                            logger.warn("command [{}] not register. raw command:{}", name, Strings.format(raw));
+                            configuration.addOffset(offset[0]);
+                            offset[0] = 0L;
+                            continue;
+                        }
+                        final long st = configuration.getReplOffset();
+                        final long ed = st + offset[0];
+                        submitEvent(parser.parse(raw), Tuples.of(st, ed));
+                    } else {
+                        logger.warn("unexpected redis reply:{}", obj);
+                    }
+                    configuration.addOffset(offset[0]);
+                    offset[0] = 0L;
+                }
+            } catch (EOFException ignore) {
+                submitEvent(new PostCommandSyncEvent());
+            }
+
+        } catch (Exception e) {
+            try {
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+            } catch (TaskMsgException ex) {
+                ex.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, e.getMessage());
         }
     }
 }

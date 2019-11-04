@@ -283,6 +283,56 @@ public class FileUtils {
 
         return object;
     }
+
+
+    public synchronized static void WriteToFile(String path,String object) throws IOException {
+        //创建序列化流并关联文件
+        OutputStream outputStream = new FileOutputStream(path);
+        //实现序列化
+        //注意:序列化后得到的内容不能直接查看,要看必须经过逆序列化
+        outputStream.write(object.getBytes());
+        //关闭流
+        outputStream.close();
+    }
+
+
+    public synchronized static String ReaderFromFile(String path) throws IOException {
+        File file = new File(path);
+        BufferedReader reader = null;
+        StringBuffer sbf = new StringBuffer();
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            String tempStr;
+            while ((tempStr = reader.readLine()) != null) {
+                sbf.append(tempStr);
+            }
+            reader.close();
+            return sbf.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+        return sbf.toString();
+    }
+
+    //    public  synchronized static Map<String,String>getFileTypeData(String fileurl) throws TaskMsgException {
+//        if(StringUtils.isEmpty(fileurl))
+//            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_URI_ERROR_CODE,TaskMsgConstant.TASK_MSG_URI_ERROR));
+//
+//        Map<String,String>data=new ConcurrentHashMap<>();
+//        if(fileurl.trim().toLowerCase().startsWith("file://")){
+//
+//        }
+//
+//    }
+
     public static void main(String[] args) {
         createSyncerSetting("hello");
     }

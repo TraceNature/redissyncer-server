@@ -31,7 +31,10 @@ import com.i1314i.syncerplusredis.rdb.RdbVisitor;
 import com.i1314i.syncerplusredis.rdb.datatype.Module;
 import com.i1314i.syncerplusredis.rdb.module.ModuleParser;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Objects;
 
@@ -80,19 +83,22 @@ public class RedisReplicator implements Replicator {
         try {
             switch (fileType) {
                 case AOF:
-                    this.replicator = new RedisAofReplicator(in, configuration);
+                    this.replicator = new RedisAofReplicator(fileUrl, configuration,taskId);
                     break;
                 case RDB:
-                    this.replicator = new RedisRdbReplicator(in, configuration);
+                    this.replicator = new RedisRdbReplicator(fileUrl, configuration,taskId);
                     break;
                 case MIXED:
-                    this.replicator = new RedisMixReplicator(in, configuration);
+                    this.replicator = new RedisMixReplicator(fileUrl, configuration,taskId);
                     break;
                 case ONLINERDB:
                     this.replicator = new RedisOnlineRdbReplicator(fileUrl, configuration,taskId);
                     break;
                 case ONLINEAOF:
                     this.replicator = new RedisOnlineAofReplicator(fileUrl, configuration,taskId);
+                    break;
+                case ONLINEMIXED:
+                    this.replicator = new RedisOnlineMixReplicator(fileUrl, configuration,taskId);
                     break;
                 default:
                     throw new UnsupportedOperationException(fileType.toString());

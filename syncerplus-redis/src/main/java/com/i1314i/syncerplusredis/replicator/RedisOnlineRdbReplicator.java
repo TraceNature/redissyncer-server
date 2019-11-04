@@ -16,28 +16,23 @@
 
 package com.i1314i.syncerplusredis.replicator;
 
-import com.i1314i.syncerplusredis.RedisSocketReplicator;
+import lombok.extern.slf4j.Slf4j;
 import com.i1314i.syncerplusredis.entity.Configuration;
 import com.i1314i.syncerplusredis.exception.IncrementException;
 import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusredis.io.RedisInputStream;
 import com.i1314i.syncerplusredis.rdb.RdbParser;
 import com.i1314i.syncerplusredis.util.TaskMsgUtils;
-import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Executors;
-
-import static com.i1314i.syncerplusredis.replicator.Status.CONNECTED;
-import static com.i1314i.syncerplusredis.replicator.Status.DISCONNECTED;
-import static com.i1314i.syncerplusredis.util.objectutil.Concurrents.terminateQuietly;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * @since 4.0
@@ -95,7 +90,7 @@ public class RedisOnlineRdbReplicator extends AbstractReplicator {
     @Override
     public void open() throws IOException, IncrementException {
         super.open();
-        if (!compareAndSet(DISCONNECTED, CONNECTED)) return;
+        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) return;
         try {
             doOpen();
         } catch (UncheckedIOException e) {
@@ -110,7 +105,7 @@ public class RedisOnlineRdbReplicator extends AbstractReplicator {
     public void open(String taskId) throws IOException, IncrementException {
 
         super.open();
-        if (!compareAndSet(DISCONNECTED, CONNECTED)) return;
+        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) return;
         try {
             doOpen(taskId);
         } catch (UncheckedIOException e) {

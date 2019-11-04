@@ -26,5 +26,5 @@ syncerplus:
 server:
   port: 8080
 #  config: log/logback.xml
-logging:
-  config: config/logback.xml
+#logging:
+#  config: config/logback.xml

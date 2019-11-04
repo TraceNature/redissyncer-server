@@ -349,6 +349,13 @@ public class RdbFilePipelineRestoreTask implements Runnable {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, et.getMessage());
+        }catch (Exception e){
+            try {
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
+            } catch (TaskMsgException ep) {
+                e.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, e.getMessage());
         }
     }
 

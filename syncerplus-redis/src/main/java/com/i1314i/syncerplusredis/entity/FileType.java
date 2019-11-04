@@ -20,7 +20,7 @@ package com.i1314i.syncerplusredis.entity;
  * @since 2.1.0
  */
 public enum FileType {
-    AOF, RDB, MIXED,ONLINEAOF,ONLINERDB,SYNC;
+    AOF, RDB, MIXED,ONLINEAOF,ONLINERDB,SYNC,ONLINEMIXED;
 
     /**
      * @param type string type
