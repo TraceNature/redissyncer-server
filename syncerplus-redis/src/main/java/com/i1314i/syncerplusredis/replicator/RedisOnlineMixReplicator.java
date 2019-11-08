@@ -93,7 +93,7 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
 
         } catch (Exception e) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),"文件在线读取异常");
             } catch (TaskMsgException ex) {
                 ex.printStackTrace();
             }
@@ -197,7 +197,7 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
 
         } catch (Exception ignore) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),ignore.getMessage());
             } catch (TaskMsgException ex) {
                 ex.printStackTrace();
             }

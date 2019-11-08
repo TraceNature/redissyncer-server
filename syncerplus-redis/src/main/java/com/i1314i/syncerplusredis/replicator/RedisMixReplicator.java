@@ -78,7 +78,7 @@ public class RedisMixReplicator extends AbstractReplicator {
             in = new FileInputStream(filePath);
         } catch (FileNotFoundException e) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),"文件读取异常");
             } catch (TaskMsgException ex) {
                 ex.printStackTrace();
             }
@@ -207,7 +207,7 @@ public class RedisMixReplicator extends AbstractReplicator {
 
         } catch (Exception e) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),e.getMessage());
             } catch (TaskMsgException ex) {
                 ex.printStackTrace();
             }

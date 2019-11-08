@@ -25,6 +25,8 @@ public class ThreadReturnMsgEntity {
 //    private RedisClusterDto redisClusterDto;
     private String sourceRedisAddress;
     private String targetRedisAddress;
+    @Builder.Default
+    private String taskMsg="";
     private boolean afresh;
     private Map<Integer,Integer> dbNum;
     @Builder.Default

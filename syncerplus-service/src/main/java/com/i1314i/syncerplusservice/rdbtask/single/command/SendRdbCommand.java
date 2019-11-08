@@ -195,7 +195,7 @@ private String taskId;
             if(epx.getMessage().toUpperCase().equals("ERR DUMP payload version or checksum are wrong".toUpperCase())){
                 try {
                     log.warn("redis版本号错误，宕掉任务 "+epx.getMessage() + ": " + i + ":" + key );
-                    Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
+                    Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId),epx.getMessage());
                 } catch (TaskMsgException e) {
                     e.printStackTrace();
                 }

@@ -69,7 +69,7 @@ public abstract class JDAbstractReplicatorRetrier implements JDReplicatorRetrier
 
 
         try {
-            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),"重试多次后失败");
         } catch (TaskMsgException e) {
             e.printStackTrace();
         }

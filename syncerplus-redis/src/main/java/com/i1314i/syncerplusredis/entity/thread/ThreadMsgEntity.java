@@ -24,6 +24,7 @@ public class ThreadMsgEntity implements Serializable {
     private String taskName;
     private ThreadStatusEnum status;
     private RedisClusterDto redisClusterDto;
+    private String taskMsg;
     private List<Replicator> rList=new ArrayList<>();
     private Map<String,OffSetEntity>offsetMap=new ConcurrentHashMap<>();
     public ThreadMsgEntity() {

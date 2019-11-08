@@ -200,6 +200,8 @@ public class ClusterDataRestoreTask implements Runnable {
                     if (event instanceof PreRdbSyncEvent) {
                         time=new Date();
                         log.warn("【{}】 :全量同步启动",taskId);
+                        SyncTaskUtils.editTaskMsg(taskId,"全量同步启动");
+
                     }
 
 
@@ -217,12 +219,29 @@ public class ClusterDataRestoreTask implements Runnable {
                             } catch (TaskMsgException e) {
                                 e.printStackTrace();
                             }
-                            log.warn("任务Id【{}】full全量同步结束", taskId);
+
+                            long set=new Date().getTime()-time.getTime();
+                            if(set/1000==0){
+                                SyncTaskUtils.editTaskMsg(taskId,"full全量同步结束 时间(ms)："+set);
+                                log.warn("【{}】 :full全量同步结束 时间：{}(ms)",taskId,set);
+                            }else {
+                                set=set/1000;
+                                SyncTaskUtils.editTaskMsg(taskId,"全量同步结束 时间(s)："+set);
+                                log.warn("【{}】 :full全量同步结束 时间：{}(s)",taskId,set);
+                            }
 
                             return;
                         }
 
-                        log.warn("【{}】 :全量同步结束 时间：{}",taskId,(new Date().getTime()-time.getTime()));
+                        long set=new Date().getTime()-time.getTime();
+                        if(set/1000==0){
+                            SyncTaskUtils.editTaskMsg(taskId,"全量同步结束 时间(ms)："+set+"进入增量状态");
+                            log.warn("【{}】 :全量同步结束 时间：{}(ms) 进入增量状态",taskId,set);
+                        }else {
+                            set=set/1000;
+                            SyncTaskUtils.editTaskMsg(taskId,"全量同步结束 时间(s)："+set+"进入增量状态");
+                            log.warn("【{}】 :全量同步结束 时间：{}(s) 进入增量状态",taskId,set);
+                        }
                     }
 
                     if (event instanceof BatchedKeyValuePair<?, ?>) {
@@ -321,21 +340,21 @@ public class ClusterDataRestoreTask implements Runnable {
             e.printStackTrace();
         } catch (EOFException ex ){
             try {
-                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId),ex.getMessage());
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】",taskId,ex.getMessage());
         }catch (NoRouteToHostException p){
             try {
-                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId),p.getMessage());
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】",taskId,p.getMessage());
         }catch (ConnectException cx){
             try {
-                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId),cx.getMessage());
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
@@ -343,7 +362,7 @@ public class ClusterDataRestoreTask implements Runnable {
         }
         catch (IOException et) {
             try {
-                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String,String> msg=SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId),et.getMessage());
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
@@ -352,7 +371,7 @@ public class ClusterDataRestoreTask implements Runnable {
             e.printStackTrace();
         } catch (IncrementException et) {
             try {
-                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId),et.getMessage());
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }

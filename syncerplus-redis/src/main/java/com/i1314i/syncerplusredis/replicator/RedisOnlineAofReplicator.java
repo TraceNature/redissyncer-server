@@ -84,7 +84,7 @@ public class RedisOnlineAofReplicator extends AbstractReplicator {
 
         }catch (IOException e){
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),"文件在线读取异常");
             } catch (TaskMsgException ex) {
                 ex.printStackTrace();
             }
@@ -123,7 +123,7 @@ public class RedisOnlineAofReplicator extends AbstractReplicator {
             doOpen();
         } catch (UncheckedIOException e) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),e.getMessage());
             } catch (TaskMsgException ex) {
                 ex.printStackTrace();
             }

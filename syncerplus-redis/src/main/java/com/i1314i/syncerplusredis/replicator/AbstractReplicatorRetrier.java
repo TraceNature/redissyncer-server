@@ -109,14 +109,14 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
 
                 //待验证
                 try {
-                    Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                    Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),e.getMessage());
                 } catch (TaskMsgException ex) {
                     ex.printStackTrace();
                 }
                 log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,e.getMessage());
             } catch (IncrementException e) {
                 try {
-                    Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                    Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),e.getMessage());
                 } catch (TaskMsgException ex) {
                     ex.printStackTrace();
                 }
@@ -130,7 +130,7 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
         if(TaskMsgUtils.getThreadMsgEntity(taskId).getStatus().equals(ThreadStatusEnum.RUN)){
             System.out.println("-------------------------over");
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),exception.getMessage());
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }

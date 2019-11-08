@@ -58,7 +58,7 @@ public class RedisRdbReplicator extends AbstractReplicator {
             in = new FileInputStream(filePath);
         } catch (FileNotFoundException e) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),"文件读取异常");
             } catch (TaskMsgException ex) {
                 ex.printStackTrace();
             }
@@ -115,7 +115,7 @@ public class RedisRdbReplicator extends AbstractReplicator {
             new RdbParser(inputStream, this).parse();
         } catch (EOFException ignore) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId));
+                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),ignore.getMessage());
             } catch (TaskMsgException ex) {
                 ex.printStackTrace();
             }

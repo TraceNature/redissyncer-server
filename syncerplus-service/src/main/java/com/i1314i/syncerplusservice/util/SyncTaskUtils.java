@@ -177,12 +177,40 @@ public class SyncTaskUtils {
     }
 
 
+    public synchronized  static  Map<String,String> editTaskMsg(String taskId,String msg)  {
+        try {
+            Map<String,String>taskMap=new HashMap<>();
+
+
+            if(StringUtils.isEmpty(taskId)||!TaskMsgUtils.getAliveThreadHashMap().containsKey(taskId))
+                return null;
+
+            ThreadMsgEntity entity=TaskMsgUtils.getThreadMsgEntity(taskId);
+
+            if(null!=entity)
+                //运行中
+                entity.setTaskMsg(msg);
+
+            return taskMap;
+        }catch (Exception e){
+
+        }
+        return null;
+    }
+
+
+
     /**
      * 异常停止在运行(RUN)中的任务线程
      * @param taskids
      * @return
      */
+
     public synchronized  static  Map<String,String> brokenCreateThread(List<String> taskids) throws TaskMsgException {
+        return brokenCreateThread(taskids,"");
+    }
+
+    public synchronized  static  Map<String,String> brokenCreateThread(List<String> taskids,String msg) throws TaskMsgException {
         Map<String,String>taskMap=new HashMap<>();
 
         for (String taskId:taskids
@@ -218,6 +246,10 @@ public class SyncTaskUtils {
                             }
                         }
                         entity.setStatus(ThreadStatusEnum.BROKEN);
+                        if(StringUtils.isEmpty(msg)){
+                            msg="";
+                        }
+                        entity.setTaskMsg(msg);
                         TaskMsgUtils.getAliveThreadHashMap().put(taskId,entity);
                         taskMap.put(taskId,"Task BROKEN successfully");
                     }else {
@@ -241,7 +273,6 @@ public class SyncTaskUtils {
         checklistTaskMsgDto(listTaskMsgDto);
 
         List<ThreadReturnMsgEntity>taskList=new ArrayList<>();
-
 
         if(listTaskMsgDto.getRegulation().trim().equals("bynames")){
             if(null!=listTaskMsgDto.getTasknames()&&listTaskMsgDto.getTasknames().size()>0){

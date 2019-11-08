@@ -158,7 +158,12 @@ public class TaskMsgUtils {
      * @param taskids
      * @return
      */
+
     public synchronized  static  Map<String,String> brokenCreateThread(List<String> taskids) throws TaskMsgException {
+        return brokenCreateThread(taskids,"");
+    }
+
+    public synchronized  static  Map<String,String> brokenCreateThread(List<String> taskids,String msg) throws TaskMsgException {
         Map<String,String>taskMap=new HashMap<>();
 
         for (String taskId:taskids
@@ -193,7 +198,11 @@ public class TaskMsgUtils {
                                 e.printStackTrace();
                             }
                         }
+                        if(StringUtils.isEmpty(msg)){
+                            msg="";
+                        }
                         entity.setStatus(ThreadStatusEnum.BROKEN);
+                        entity.setTaskMsg(msg);
                         TaskMsgUtils.getAliveThreadHashMap().put(taskId,entity);
                         taskMap.put(taskId,"Task BROKEN successfully");
                     }else {
