@@ -112,7 +112,7 @@ public class RedisUrlUtils {
      * @return
      * @throws URISyntaxException
      */
-    public static double selectSyncerVersion( String targetUri) throws URISyntaxException {
+    public static double selectSyncerVersion( String targetUri) throws URISyntaxException, TaskMsgException {
 
         RedisURI targetUriplus = new RedisURI(targetUri);
         /**
@@ -133,6 +133,7 @@ public class RedisUrlUtils {
             targetVersion = TestJedisClient.getRedisVersion(info);
 
         } catch (Exception e) {
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,e.getMessage()));
 
         } finally {
             if (target != null)

@@ -4,9 +4,12 @@ import com.alibaba.fastjson.JSON;
 import com.i1314i.syncerpluscommon.entity.ResultMap;
 import com.i1314i.syncerpluscommon.util.common.TemplateUtils;
 import com.i1314i.syncerplusredis.constant.ThreadStatusEnum;
+import com.i1314i.syncerplusredis.entity.FileType;
 import com.i1314i.syncerplusredis.entity.RedisPoolProps;
 import com.i1314i.syncerplusredis.entity.dto.RedisClusterDto;
 import com.i1314i.syncerplusredis.entity.dto.RedisFileDataDto;
+import com.i1314i.syncerplusredis.entity.dto.task.EditRedisClusterDto;
+import com.i1314i.syncerplusredis.entity.dto.task.EditRedisFileDataDto;
 import com.i1314i.syncerplusredis.entity.thread.ThreadMsgEntity;
 import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusredis.util.TaskMsgUtils;
@@ -41,6 +44,35 @@ public class RedisFileReplicatorController {
                 redisPoolProps.getTimeBetweenEvictionRunsMillis(),
                 redisPoolProps.getIdleTimeRunsMillis());
 
+
+
+        String type= String.valueOf(redisFileDataDto.getFileType()).toUpperCase();
+        if(type.indexOf("RDB")>=0){
+            if(redisFileDataDto.getFileAddress().trim().toLowerCase().startsWith("http://")||
+                    redisFileDataDto.getFileAddress().trim().toLowerCase().startsWith("https://")){
+                redisFileDataDto.setFileType(FileType.ONLINERDB);
+            }else {
+                redisFileDataDto.setFileType(FileType.RDB);
+            }
+        }
+
+        if(type.indexOf("AOF")>=0){
+            if(redisFileDataDto.getFileAddress().trim().toLowerCase().startsWith("http://")||
+                    redisFileDataDto.getFileAddress().trim().toLowerCase().startsWith("https://")){
+                redisFileDataDto.setFileType(FileType.ONLINEAOF);
+            }else {
+                redisFileDataDto.setFileType(FileType.AOF);
+            }
+        }
+
+        if(type.indexOf("MIXED")>=0){
+            if(redisFileDataDto.getFileAddress().trim().toLowerCase().startsWith("http://")||
+                    redisFileDataDto.getFileAddress().trim().toLowerCase().startsWith("https://")){
+                redisFileDataDto.setFileType(FileType.ONLINEMIXED);
+            }else {
+                redisFileDataDto.setFileType(FileType.MIXED);
+            }
+        }
 
         RedisClusterDto redisClusterDto=new RedisClusterDto(redisPoolProps.getMinPoolSize(),
                 redisPoolProps.getMaxPoolSize(),
@@ -93,4 +125,19 @@ public class RedisFileReplicatorController {
         return  ResultMap.builder().code("2000").msg("Task created successfully").data(msg);
 //        return ResultMap.getInstance().data(redisClusterDto);
     }
+
+
+
+
+    /**
+     * 根据taskId编辑非运行状态任务
+     * @param redisClusterDto
+     * @return
+     */
+    @RequestMapping(value = "/edittask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    public ResultMap editTask(@RequestBody @Validated EditRedisFileDataDto redisClusterDto) throws TaskMsgException {
+        DtoCheckUtils.loadingRedisClusterDto(redisClusterDto);
+        return  ResultMap.builder().code("2000").msg("The request is successful").data("编辑成功");
+    }
+
 }

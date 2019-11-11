@@ -11,11 +11,13 @@ import com.i1314i.syncerplusredis.entity.dto.RedisFileDataDto;
 import com.i1314i.syncerplusredis.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusredis.entity.dto.common.SyncDataDto;
 import com.i1314i.syncerplusredis.entity.dto.task.EditRedisClusterDto;
+import com.i1314i.syncerplusredis.entity.dto.task.EditRedisFileDataDto;
 import com.i1314i.syncerplusredis.entity.thread.ThreadMsgEntity;
 import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusservice.util.RedisUrlUtils;
 import com.i1314i.syncerplusredis.util.TaskMsgUtils;
 import com.i1314i.syncerplusredis.util.code.CodeUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.util.StringUtils;
 
 import java.net.URISyntaxException;
@@ -88,6 +90,12 @@ public class DtoCheckUtils {
     }
 
 
+    /**
+     * 编辑任务信息
+     * @param syncDataDto
+     * @return
+     * @throws TaskMsgException
+     */
     public synchronized static Object loadingRedisClusterDto(EditRedisClusterDto syncDataDto) throws TaskMsgException {
         ThreadMsgEntity data=TaskMsgUtils.getThreadMsgEntity(syncDataDto.getTaskId());
         if(data==null){
@@ -156,6 +164,74 @@ public class DtoCheckUtils {
     }
 
 
+
+    public synchronized static Object loadingRedisClusterDto(EditRedisFileDataDto syncDataDto) throws TaskMsgException {
+        ThreadMsgEntity data=TaskMsgUtils.getThreadMsgEntity(syncDataDto.getTaskId());
+        if(data==null){
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_EXIST_ERROR_CODE,"任务【"+syncDataDto.getTaskId()+"】不存在"));
+
+        }
+        if(data.getStatus().equals(ThreadStatusEnum.RUN)){
+//            throw new TaskMsgException("不能编辑正在运行中的任务【"+syncDataDto.getTaskId()+"】");
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASK_EDIT_ERROR_CODE,"不能编辑正在运行中的任务【"+syncDataDto.getTaskId()+"】"));
+        }
+        RedisClusterDto dto=data.getRedisClusterDto();
+
+
+        if(syncDataDto.getTargetRedisVersion()!=0L){
+            dto.setTargetRedisVersion(syncDataDto.getTargetRedisVersion());
+        }
+
+        if(syncDataDto.getBatchSize()!=0&&syncDataDto.getBatchSize()!=dto.getBatchSize()){
+            dto.setBatchSize(syncDataDto.getBatchSize());
+        }
+
+        if(syncDataDto.getDbNum()!=null&&syncDataDto.getDbNum().size()>0){
+            dto.setDbNum(syncDataDto.getDbNum());
+        }
+
+        if(!StringUtils.isEmpty(syncDataDto.getFileAddress())){
+            dto.setFileAddress(syncDataDto.getFileAddress());
+            dto.setSourceRedisAddress(syncDataDto.getFileAddress());
+        }
+
+        if(!StringUtils.isEmpty(syncDataDto.getTargetRedisAddress())){
+            dto.setTargetRedisAddress(syncDataDto.getTargetRedisAddress());
+        }
+
+        if(!StringUtils.isEmpty(syncDataDto.getTargetPassword())){
+            dto.setTargetPassword(syncDataDto.getTargetPassword());
+        }
+
+        if(!StringUtils.isEmpty(syncDataDto.getFileType())){
+            dto.setFileType(syncDataDto.getFileType());
+        }
+
+        if(!StringUtils.isEmpty(syncDataDto.getTaskName())){
+            dto.setTaskName(syncDataDto.getTaskName());
+        }
+
+
+
+
+        RedisFileDataDto nefileDto=new RedisFileDataDto(dto.getMinPoolSize(),dto.getMaxPoolSize(),dto.getMaxWaitTime(),dto.getTimeBetweenEvictionRunsMillis(),
+                dto.getIdleTimeRunsMillis(),dto.getDiffVersion(),dto.getPipeline(),dto.getDbNum());
+
+        BeanUtils.copyProperties(dto,nefileDto);
+        updateUri(nefileDto);
+
+        if(StringUtils.isEmpty(syncDataDto.getTaskName())){
+            dto.setTaskName(dto.getTaskName());
+        }
+        dto.setAutostart(syncDataDto.isAutostart());
+        dto.setAfresh(dto.isAfresh());
+
+        data.setRedisClusterDto(dto);
+        return dto;
+    }
+
+
+
     /**
      * 更新uri
      *
@@ -171,6 +247,7 @@ public class DtoCheckUtils {
             double redisVersion = 0L;
             try {
                 redisVersion = RedisUrlUtils.selectSyncerVersion(uri);
+
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             }
@@ -202,6 +279,7 @@ public class DtoCheckUtils {
             double redisVersion = 0L;
             try {
                 redisVersion = RedisUrlUtils.selectSyncerVersion(uri);
+
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             }

@@ -249,6 +249,10 @@ public class SyncTaskUtils {
                         if(StringUtils.isEmpty(msg)){
                             msg="";
                         }
+                        if(msg.trim().indexOf("expect [$,:,*,+,-] but: R")>=0){
+                            msg="数据文件格式(RDB/AOF/MIXED)与所填写的FileType不匹配";
+                        }
+
                         entity.setTaskMsg(msg);
                         TaskMsgUtils.getAliveThreadHashMap().put(taskId,entity);
                         taskMap.put(taskId,"Task BROKEN successfully");
