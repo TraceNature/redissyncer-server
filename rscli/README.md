@@ -25,19 +25,21 @@ cargo build
    "dbNum": {
        "1": "1"
    },
-   "idleTimeRunsMillis": 100000,
-   "maxPoolSize": 110,
-   "maxWaitTime": 10000,
-   "minPoolSize": 100,
-   "pipeline": "off",
-   "sourcePassword": "redistest0102",
-   "sourceRedisAddress": "114.67.100.239:6379",
-   "targetRedisAddress": "114.67.100.239:800114.67.100.239:8002;   114.67.100.238:8002;114.67.100.238:800114.67.100.240:8002;   114.67.100.240:8003",
-   "targetPassword": "",
-   "threadName": "test",
-   "timeBetweenEvictionRunsMillis": 1000
+	"sourcePassword": "redistest0102",
+	"sourceRedisAddress": "10.0.1.45:6379",
+	"targetRedisAddress": "10.0.1.44:6379",
+	"targetPassword": "redistest0102",
+	"targetRedisVersion": 4.0,
+	"taskName": "testtask",
+	"autostart": true,
+	"afresh": true,
+	"batchSize": 100
    }
+   
    ```
+详细配置参数详见[API文档](../doc/docs/api.md)
+
+
    * 执行命令
    ```
    target/debug/rscli --config /home/develop/rustproject/rscli/src/   config.yml createtask -e src/createtask.json
@@ -49,5 +51,5 @@ cargo build
 
 * 通过任务名删除任务
    ```
-   target/debug/rscli --config /home/develop/rustproject/rscli/src/    config.yml deletetasks -n abv
+   target/debug/rscli --config /home/develop/rustproject/rscli/src/    config.yml deletetasks -i taskidxxxx
    ```
