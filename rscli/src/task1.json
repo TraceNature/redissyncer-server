@@ -4,7 +4,7 @@
 	"targetRedisAddress": "10.0.1.44:6379",
 	"targetPassword": "redistest0102",
 	"targetRedisVersion": 4.0,
-	"taskName": "testtask试",
+	"taskName": "testtask",
 	"autostart": true,
 	"afresh": true,
 	"batchSize": 100
