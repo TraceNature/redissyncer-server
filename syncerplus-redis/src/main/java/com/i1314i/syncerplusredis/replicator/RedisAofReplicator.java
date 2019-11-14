@@ -88,7 +88,6 @@ public class RedisAofReplicator extends AbstractReplicator {
         if (configuration.isUseDefaultExceptionListener())
             addExceptionListener(new DefaultExceptionListener());
 
-
     }
 
     @Override

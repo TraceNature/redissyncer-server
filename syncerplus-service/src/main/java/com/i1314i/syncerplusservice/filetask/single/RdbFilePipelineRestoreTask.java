@@ -9,10 +9,7 @@ import com.i1314i.syncerplusredis.entity.*;
 import com.i1314i.syncerplusredis.entity.dto.RedisFileDataDto;
 import com.i1314i.syncerplusredis.entity.dto.RedisSyncDataDto;
 import com.i1314i.syncerplusredis.entity.thread.EventTypeEntity;
-import com.i1314i.syncerplusredis.event.Event;
-import com.i1314i.syncerplusredis.event.EventListener;
-import com.i1314i.syncerplusredis.event.PostRdbSyncEvent;
-import com.i1314i.syncerplusredis.event.PreRdbSyncEvent;
+import com.i1314i.syncerplusredis.event.*;
 import com.i1314i.syncerplusredis.exception.IncrementException;
 import com.i1314i.syncerplusredis.exception.TaskMsgException;
 import com.i1314i.syncerplusredis.extend.replicator.listener.ValueDumpIterableEventListener;
@@ -122,9 +119,8 @@ public class RdbFilePipelineRestoreTask implements Runnable {
             }
             PipelineLock pipelineLock=new PipelineLock(pipelined,taskEntity,taskId,targetJedisplus,targetJedisClientPool);
 
+            final Replicator r = RedisMigrator.newBacthedCommandDress(new JDRedisReplicator(null, type,fileAddress,Configuration.defaultSetting(),taskId));
 
-
-            Replicator r = new JDRedisReplicator(null, type,fileAddress,Configuration.defaultSetting(),taskId);
 //            final Replicator r = RedisMigrator.newBacthedCommandDress(replicator);
             r.setRdbVisitor(new ValueDumpIterableRdbVisitor(r, info.getRdbVersion()));
             r.addEventListener(new ValueDumpIterableEventListener(new EventListener() {
@@ -161,6 +157,11 @@ public class RdbFilePipelineRestoreTask implements Runnable {
                         syncStatus = false;
                     }
 
+                    if(event instanceof PreCommandSyncEvent){
+                        time=new Date();
+                        log.warn("【{}】 :全量同步启动",taskId);
+                    }
+
                     if (event instanceof PreRdbSyncEvent) {
                         time=new Date();
                         log.warn("【{}】 :全量同步启动",taskId);
@@ -168,7 +169,26 @@ public class RdbFilePipelineRestoreTask implements Runnable {
 
 
 
+
                     if (event instanceof PostRdbSyncEvent) {
+                        long set=new Date().getTime()-time.getTime();
+                        if(set/1000==0){
+                            SyncTaskUtils.editTaskMsg(taskId,"全量同步结束 时间(ms)："+set);
+                            log.warn("【{}】 :全量同步结束 时间：{}(ms)",taskId,set);
+                        }else {
+                            set=set/1000;
+                            SyncTaskUtils.editTaskMsg(taskId,"全量同步结束 时间(s)："+set);
+                            log.warn("【{}】 :全量同步结束 时间：{}(s)",taskId,set);
+                        }
+
+                        try {
+                            Map<String, String> msg = SyncTaskUtils.stopCreateThread(Arrays.asList(taskId));
+                        } catch (TaskMsgException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    if (event instanceof PostCommandSyncEvent) {
                         long set=new Date().getTime()-time.getTime();
                         if(set/1000==0){
                             SyncTaskUtils.editTaskMsg(taskId,"全量同步结束 时间(ms)："+set);
@@ -290,6 +310,56 @@ public class RdbFilePipelineRestoreTask implements Runnable {
                     }
 
 
+
+                    if (event instanceof DefaultCommand) {
+
+
+
+//                        TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(taskId,baseOffSet);
+                        DefaultCommand dc = (DefaultCommand) event;
+
+
+                        if(Arrays.equals(dc.getCommand(),"SELECT".getBytes())){
+                            int commDbNum= Integer.parseInt(new String(dc.getArgs()[0]));
+
+
+                            if(syncDataDto.getDbNum()==null||syncDataDto.getDbNum().size()==0){
+                                dbNum.set(commDbNum);
+                                commandDbStatus.set(true);
+                            }else {
+                                if(syncDataDto.getDbNum().containsKey(commDbNum)){
+                                    byte[][]dbData=dc.getArgs();
+                                    dbData[0]=String.valueOf(syncDataDto.getDbNum().get(commDbNum)).getBytes();
+                                    dc.setArgs(dbData);
+                                    dbNum.set(syncDataDto.getDbNum().get(commDbNum));
+                                    commandDbStatus.set(true);
+                                }else {
+                                    commandDbStatus.set(false);
+                                    return ;
+                                }
+
+                            }
+
+                        }else {
+
+                            if(!commandDbStatus.get()&&!Arrays.equals(dc.getCommand(),"FLUSHALL".getBytes())){
+                                return;
+                            }
+
+                            EventEntity eventEntity=new EventEntity(new DB(dbNum.get()),EventTypeEntity.USE,RedisCommandTypeEnum.COMMAND,dc);
+//                            EventEntity eventEntity=new EventEntity(dc.getArgs()[0],new DB(dbNum.get()),EventTypeEntity.USE,RedisCommandTypeEnum.COMMAND);
+                            taskEntity.addKey(eventEntity);
+
+                        }
+                        if(!commandDbStatus.get()&&!Arrays.equals(dc.getCommand(),"FLUSHALL".getBytes())){
+                            return;
+                        }
+
+                        taskEntity.add();
+                        pipelineLock.sendCommand(new ClusterProtocolCommand(dc.getCommand()), dc.getArgs());
+
+
+                    }
 
 
                 }

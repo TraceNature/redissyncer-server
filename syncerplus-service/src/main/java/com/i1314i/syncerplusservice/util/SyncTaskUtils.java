@@ -94,7 +94,8 @@ public class SyncTaskUtils {
         if(!StringUtils.isEmpty(taskId)){
 
             if(null!=entity){
-                if(entity.getRedisClusterDto().getFileType().equals(FileType.ONLINERDB)||entity.getRedisClusterDto().getFileType().equals(FileType.ONLINEAOF)){
+                if(entity.getRedisClusterDto().getFileType().equals(FileType.ONLINERDB)||entity.getRedisClusterDto().getFileType().equals(FileType.ONLINEAOF)
+                ||entity.getRedisClusterDto().getFileType().equals(FileType.AOF)||entity.getRedisClusterDto().getFileType().equals(FileType.RDB)){
                     redisBatchedReplicatorService.filebatchedSync(entity.getRedisClusterDto(),taskId);
                 }else {
                     redisBatchedReplicatorService.batchedSync(entity.getRedisClusterDto(),taskId,afresh);

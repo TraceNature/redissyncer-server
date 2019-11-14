@@ -126,10 +126,12 @@ public class RdbFileClusterDataRestoreTask implements Runnable {
             RedisURI suri = new RedisURI(sourceUri);
             SyncJedisClusterClient poolss=RedisUrlUtils.getConnectionClusterPool(syncDataDto);
             redisClient=poolss.jedisCluster();
-            Replicator r = new JDRedisReplicator(null, fileType,syncDataDto.getFileAddress(), Configuration.defaultSetting(),taskId);
+
+            final Replicator r  = RedisMigrator.newBacthedCommandDress( new JDRedisReplicator(null, fileType,syncDataDto.getFileAddress(), Configuration.defaultSetting(),taskId));
 
             TaskMsgUtils.getThreadMsgEntity(taskId).addReplicator(r);
 
+            final OffSetEntity baseOffSet= TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().get(syncDataDto.getFileAddress());
 
 
             r.setRdbVisitor(new ValueDumpIterableRdbVisitor(r,info.getRdbVersion()));
@@ -273,6 +275,14 @@ public class RdbFileClusterDataRestoreTask implements Runnable {
                         }
 
                     }
+
+
+
+                    /**
+                     * 命令同步
+                     */
+                    sendDefaultCommand.sendDefaultCommand(event,r,redisClient,threadPoolTaskExecutor,taskId,baseOffSet,syncDataDto.getDbNum(),commandDbStatus);
+
 
                 }
             }));
