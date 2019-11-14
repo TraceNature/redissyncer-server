@@ -312,10 +312,7 @@ public class RdbFilePipelineRestoreTask implements Runnable {
 
 
                     if (event instanceof DefaultCommand) {
-
-
-
-//                        TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(taskId,baseOffSet);
+//                      TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().put(taskId,baseOffSet);
                         DefaultCommand dc = (DefaultCommand) event;
 
 
