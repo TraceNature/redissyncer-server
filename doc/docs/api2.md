@@ -17,7 +17,7 @@
 | field              | type               | example                                  | description                                                                                                                                                                                                                     | requred |
 | ------------------ | ------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | tasktype           | map<string,string> | "tasktype": "increment"                  | 任务类型，stockonly,incrementonly,total,file(只存量数据，只增量数据，存量＋增量，加载rdb或aof文件);默认值total                                                                                                                  | false   |
-| incrementtype      | map<string,string> | "incrementtype": "beginbuffer"           | 当     tasktype为 incrementonly时，支持两种增量模式        "beginbuffer"、"endbuffer" 即从slave缓冲区的开头或结尾开始同步任务                                                                                                   | false   |
+| incrementtype      | string             | "incrementtype": "beginbuffer"           | 当     tasktype为 incrementonly时，支持两种增量模式        "beginbuffer"、"endbuffer" 即从slave缓冲区的开头或结尾开始同步任务                                                                                                   | false   |
 | dbMapper           | map<string,string> | "dbmapper": {"1": "1"}                   | redis db映射关系，当由此描述时任务按对应关系同步，未列出db不同步 ;无该字段的情况源与目标db一一对应,无该字段迁移源redis所有db库                                                                                                  | false   |
 | sourceRedisAddress | string             | "sourceRedisAddress": "10.0.0.1:6379"    | 源redis地址，cluster集群模式下地址由';'分割，如"10.0.0.1:6379;10.0.0.2:6379"                                                                                                                                                    | true    |
 | sourcePassword     | string             | "sourcePassword": "sourcepasswd"         | 源redis密码默认值为""                                                                                                                                                                                                           | false   |  | false |
@@ -162,7 +162,7 @@
                  
            
               
-### 编辑任务接口
+### 编辑任务接口(暂不开放)
 
     http://116.196.115.143:8080/api/v1/edittask
     
@@ -178,7 +178,7 @@
    
 | field              | type               | example                                  | description                                                                                                                                                                  | requred |
 | ------------------ | ------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| dbNum              | map<string,string> | "dbNum": {"1": "1"}                      | redis db映射关系，当由此描述时任务按对应关系同步，未列出db不同步 ;无该字段的情况源与目标db一一对应,无该字段迁移源redis所有db库                                               | false   |
+| dbMapper           | map<string,string> | "dbNum": {"1": "1"}                      | redis db映射关系，当由此描述时任务按对应关系同步，未列出db不同步 ;无该字段的情况源与目标db一一对应,无该字段迁移源redis所有db库                                               | false   |
 | sourceRedisAddress | string             | "sourceRedisAddress": "10.0.0.1:6379"    | 源redis地址，cluster集群模式下地址由';'分割，如"10.0.0.1:6379;10.0.0.2:6379"                                                                                                 | true    |
 | sourcePassword     | string             | "sourcePassword": "sourcepasswd"         | 源redis密码默认值为""                                                                                                                                                        | false   |  | false |
 | targetRedisAddress | string             | "targetRedisAddress": "192.168.0.1:6379" | 目标redis地址 ,当目标redis为单实例或proxy时，填写单一地址即可，当目标redis为集群且需要借助jedis访问集群时地址用';'分割，"192.168.0.1:6379;192.168.0.3:6379;192.168.0.3:6379" | true    |
@@ -283,7 +283,7 @@
   
  | field              | type               | example                                                 | description                                                                                                                                                                  | requred |
  | ------------------ | ------------------ | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
- | taskName           | string             | "taskname":"product2test"                               | 自定义任务名称                                                                                                                                                               | false   |
+ | taskName           | string             | "taskname":"product2dbNumtest"                          | 自定义任务名称                                                                                                                                                               | false   |
  | fileaddress        | string             | "fileaddress":"http://10.0.1.100:8888/file/example.rdb" | 文件地址支持url或本地地址，url以http或https开头，本地地址为服务所在服务器路径                                                                                                | true    |
  | filetype           | string             | "filetype":"rdb"                                        | 文件类型，"rdb"、"aof"、"mix"                                                                                                                                                | true    |
  | dbMapper           | map<string,string> | "dbmapper": {"1": "1"}                                  | redis db映射关系，当由此描述时任务按对应关系同步，未列出db不同步 ;无该字段的情况源与目标db一一对应,无该字段迁移源redis所有db库                                               | false   |
