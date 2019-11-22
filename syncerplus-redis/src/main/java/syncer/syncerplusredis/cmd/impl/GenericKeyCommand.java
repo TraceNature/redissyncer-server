@@ -20,7 +20,7 @@ package syncer.syncerplusredis.cmd.impl;
  * @author René Kerner (@rk3rn3r)
  * @since 3.3.0
  */
-abstract class GenericKeyCommand extends AbstractCommand {
+public abstract class GenericKeyCommand extends AbstractCommand {
 
     private byte[] key;
 
