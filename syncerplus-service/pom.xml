@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>redis-syncerplus</artifactId>
-        <groupId>com.i1314i</groupId>
+        <groupId>syncer</groupId>
         <version>1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -81,14 +81,14 @@
         </dependency>
 
         <dependency>
-            <groupId>com.i1314i</groupId>
+            <groupId>syncer</groupId>
             <artifactId>syncerplus-common</artifactId>
             <version>1.0.3</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <artifactId>syncerplus-redis</artifactId>
-            <groupId>com.i1314i</groupId>
+            <groupId>syncer</groupId>
             <version>1.1</version>
             <exclusions>
                 <exclusion>

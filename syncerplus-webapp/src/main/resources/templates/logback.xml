@@ -55,7 +55,7 @@
 
         </appender>
 
-        <logger name="com.i1314i" level="INFO"/>
+        <logger name="syncer" level="INFO"/>
 
 
         <!-- 日志输出级别 -->

@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>redis-syncerplus</artifactId>
-        <groupId>com.i1314i</groupId>
+        <groupId>syncer</groupId>
         <version>1.0</version>
     </parent>
 
-    <groupId>com.i1314i</groupId>
+    <groupId>syncer</groupId>
     <artifactId>syncerplus-webapp</artifactId>
     <version>1.0</version>
     <name>syncerplus-webapp</name>
@@ -20,13 +20,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.i1314i</groupId>
+            <groupId>syncer</groupId>
             <artifactId>syncerplus-common</artifactId>
             <version>1.0.3</version>
 <!--            <scope>compile</scope>-->
         </dependency>
         <dependency>
-            <groupId>com.i1314i</groupId>
+            <groupId>syncer</groupId>
             <artifactId>syncerplus-service</artifactId>
             <version>1.0.3</version>
             <scope>compile</scope>

@@ -6,7 +6,6 @@
 
 # 基础镜像
 FROM openjdk:8-jdk-alpine
-MAINTAINER "zhanenqiang"<1604030622@qq.com>
 # 对应pom.xml文件中的dockerfile-maven-plugin插件buildArgs配置项JAR_FILE的值
 ARG JAR_FILE
 # 复制打包完成后的jar文件到/opt目录下
