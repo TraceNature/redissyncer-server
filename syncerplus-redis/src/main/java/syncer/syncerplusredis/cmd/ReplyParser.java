@@ -43,11 +43,11 @@ public class ReplyParser {
     }
 
     public Object parse() throws IOException {
-        return parse(new BulkReplyHandler.SimpleBulkReplyHandler(codec), null);
+        return parse(new BulkReplyHandler.SimpleBulkReplyHandler(), null);
     }
 
     public Object parse(OffsetHandler offsetHandler) throws IOException {
-        return parse(new BulkReplyHandler.SimpleBulkReplyHandler(codec), offsetHandler);
+        return parse(new BulkReplyHandler.SimpleBulkReplyHandler(), offsetHandler);
     }
 
     public Object parse(BulkReplyHandler handler, OffsetHandler offsetHandler) throws IOException {
@@ -128,7 +128,7 @@ public class ReplyParser {
                     if (len == -1) return null;
                     Object[] ary = new Object[(int) len];
                     for (int i = 0; i < len; i++) {
-                        Object obj = parse(new BulkReplyHandler.SimpleBulkReplyHandler(codec));
+                        Object obj = parse(new BulkReplyHandler.SimpleBulkReplyHandler());
                         ary[i] = obj;
                     }
                     return ary;
@@ -140,7 +140,7 @@ public class ReplyParser {
                             builder.put((byte) c);
                         }
                         if ((c = in.read()) == '\n') {
-                            return codec == null ? builder.array() : codec.decode(builder.array());
+                            return builder.array();
                         } else {
                             builder.put((byte) c);
                         }
@@ -153,7 +153,7 @@ public class ReplyParser {
                             builder.put((byte) c);
                         }
                         if ((c = in.read()) == '\n') {
-                            return codec == null ? builder.array() : codec.decode(builder.array());
+                            return builder.array();
                         } else {
                             builder.put((byte) c);
                         }
