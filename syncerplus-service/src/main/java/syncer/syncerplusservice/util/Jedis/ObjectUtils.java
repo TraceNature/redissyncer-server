@@ -44,7 +44,8 @@ public class ObjectUtils {
         try {
             if (bytes != null && bytes.length > 0){
                 bais = new ByteArrayInputStream(bytes);
-                ObjectInputStream ois = new ObjectInputStream(bais);
+                ObjectInputStream ois = new SafeObjectInputStream(bais);
+//                ObjectInputStream ois = new Obj@ectInputStream(bais);
                 return ois.readObject();
             }
         } catch (Exception e) {
