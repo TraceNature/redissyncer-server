@@ -163,7 +163,7 @@ public class TaskController {
      * @param taskMsgDto
      * @return
      */
-    @RequestMapping(value = "/deletetask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    @RequestMapping(value = "/removetask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap deleteTask(@RequestBody @Validated TaskMsgDto taskMsgDto) throws TaskMsgException {
         Map<String,String> msg=SyncTaskUtils.delCreateThread(taskMsgDto.getTaskids());
 //        List<ThreadReturnMsgEntity> listCreateThread=TaskMsgUtils.listCreateThread(listTaskMsgDto);

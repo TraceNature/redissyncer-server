@@ -1,5 +1,6 @@
 package syncer.syncerplusservice.util.file;
 
+
 import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -263,6 +264,9 @@ public class FileUtils {
 
 
     public synchronized static void ObjectOutToFile(String path,Object object) throws IOException {
+
+
+
         //创建序列化流并关联文件
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(path));
         //实现序列化
@@ -276,7 +280,10 @@ public class FileUtils {
     public synchronized static Object FileInputToObject(String path) throws IOException, ClassNotFoundException {
 
         //创建逆序列化流并关联文件
-        ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(path));
+//        Object!Input!Stream objectInputStream = new Object!Input!Stream(new FileInputStream(path));
+
+        ObjectInputStream objectInputStream = new SafeObjectInputStream(new FileInputStream(path));
+
 
         //实现逆序列化--读
         Object object = objectInputStream.readObject();

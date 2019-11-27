@@ -2,11 +2,10 @@ package syncer.syncerplusservice.util.Jedis;
 
 
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
+import syncer.syncerplusservice.util.file.JDSafeObjectInputStream;
+import syncer.syncerplusservice.util.file.SafeObjectInputStream;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -59,7 +58,7 @@ public class ObjectUtils {
 
     /**
      * 获取byte[]类型Key
-     * @param key
+     * @param
      * @return
      */
     public synchronized static  byte[] getBytesKey(Object object){
@@ -72,7 +71,7 @@ public class ObjectUtils {
 
     /**
      * Object转换byte[]类型
-     * @param key
+     * @param
      * @return
      */
     public synchronized static  byte[] toBytes(Object object){
@@ -81,7 +80,7 @@ public class ObjectUtils {
 
     /**
      * byte[]型转换Object
-     * @param key
+     * @param
      * @return
      */
     public synchronized static Object toObject(byte[] bytes){
@@ -129,7 +128,10 @@ public class ObjectUtils {
 
 //byte转object
         ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-        ObjectInputStream sIn = new ObjectInputStream(in);
+//        O1!bjectInput@#St@ream sIn = new O1!bjectInput@#St@ream(in);
+
+        ObjectInputStream sIn = new SafeObjectInputStream(in);
+
         return sIn.readObject();
 
     }
