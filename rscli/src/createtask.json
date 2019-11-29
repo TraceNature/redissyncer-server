@@ -7,9 +7,9 @@
     "maxWaitTime": 10000,
     "minPoolSize": 100,
     "pipeline": "off",
-    "sourcePassword": "redistest0102",
-    "sourceRedisAddress": "114.67.100.239:6379",
-    "targetRedisAddress": "114.67.100.239:8003;114.67.100.239:8002;114.67.100.238:8002;114.67.100.238:8003;114.67.100.240:8002;114.67.100.240:8003",
+    "sourcePassword": "xxxxxx",
+    "sourceRedisAddress": "10.0.0.100:6379",
+    "targetRedisAddress": "10.0.0.100:8003;10.0.0.100:8002;10.0.0.110:8002;10.0.0.110:8003;10.0.0.120:8002;10.0.0.120:8003",
     "targetPassword": "",
     "threadName": "test",
     "timeBetweenEvictionRunsMillis": 1000
