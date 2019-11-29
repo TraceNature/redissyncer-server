@@ -16,20 +16,6 @@ import java.util.*;
 public class ClusterNodesUtil {
 
 
-    public static void main(String[] args) {
-        Set<HostAndPort>hostAndPorts=new HashSet<>();
-//        hostAndPorts.add(new HostAndPort("114.67.83.131",8002));
-//        hostAndPorts.add(new HostAndPort("114.67.83.163",8002));
-        hostAndPorts.add(new HostAndPort("114.67.100.240",8002));
-        hostAndPorts.add(new HostAndPort("114.67.100.238",8002));
-        hostAndPorts.add(new HostAndPort("114.67.100.239",8002));
-//        hostAndPorts.add(new HostAndPort("114.67.105.55",8002));
-        Map<String,String>nodesMap=new HashMap<>();
-        builderMap1(nodesMap,hostAndPorts,"");
-        System.out.println(JSON.toJSONString(nodesMap));
-    }
-
-
 
     public static boolean isExSet(Set<String>set,String tar){
         if(set.contains(tar)){
