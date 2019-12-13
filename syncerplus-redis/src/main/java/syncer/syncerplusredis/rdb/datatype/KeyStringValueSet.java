@@ -16,12 +16,13 @@
 
 package syncer.syncerplusredis.rdb.datatype;
 
+import java.io.Serializable;
 import java.util.Set;
 
 /**
  * @author Leon Chen
  * @since 2.1.0
  */
-public class KeyStringValueSet extends KeyValuePair<byte[], Set<byte[]>> {
+public class KeyStringValueSet extends KeyValuePair<byte[], Set<byte[]>>implements Serializable {
     private static final long serialVersionUID = 1L;
 }

@@ -16,11 +16,13 @@
 
 package syncer.syncerplusredis.rdb.module;
 
+import java.io.Serializable;
+
 /**
  * @author Leon Chen
  * @since 2.1.0
  */
-public class ModuleKey {
+public class ModuleKey implements Serializable {
     private final String moduleName;
     private final int moduleVersion;
 

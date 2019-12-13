@@ -20,12 +20,13 @@ package syncer.syncerplusredis.rdb.iterable.datatype;
 
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 
+import java.io.Serializable;
 import java.util.Set;
 
 /**
  * @author Leon Chen
  * @since 3.0.0
  */
-public class BatchedKeyStringValueZSet extends BatchedKeyValuePair<byte[], Set<ZSetEntry>> {
+public class BatchedKeyStringValueZSet extends BatchedKeyValuePair<byte[], Set<ZSetEntry>> implements Serializable {
     private static final long serialVersionUID = 1L;
 }

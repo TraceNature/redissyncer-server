@@ -2,7 +2,6 @@ package syncer.syncerpluswebapp.controller;
 
 import syncer.syncerplusredis.entity.dto.RedisAofSyncDataDto;
 
-import syncer.syncerplusservice.service.IRedisAofReplicatorService;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -17,11 +16,11 @@ import java.net.URISyntaxException;
 @RequestMapping(value = "/sync")
 @Validated
 public class RedisAofController {
-    @Autowired
-    private IRedisAofReplicatorService redisAofReplicatorService;
-    @RequestMapping(value = "/aof/sync")
-    public String test(@RequestBody @Validated RedisAofSyncDataDto syncDataDto) throws URISyntaxException, IOException, TaskMsgException {
-        redisAofReplicatorService.sync(syncDataDto);
-        return "success";
-    }
+//    @Autowired
+//    private IRedisAofReplicatorService redisAofReplicatorService;
+//    @RequestMapping(value = "/aof/sync")
+//    public String test(@RequestBody @Validated RedisAofSyncDataDto syncDataDto) throws URISyntaxException, IOException, TaskMsgException {
+//        redisAofReplicatorService.sync(syncDataDto);
+//        return "success";
+//    }
 }

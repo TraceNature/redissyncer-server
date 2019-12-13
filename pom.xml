@@ -8,6 +8,7 @@
         <module>syncerplus-service</module>
         <module>syncerplus-webapp</module>
         <module>syncerplus-redis</module>
+        <module>syncer-service</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -119,11 +120,5 @@
 <!--            </plugins>-->
 <!--        </pluginManagement>-->
 <!--    </build>-->
-    <repositories>
-        <repository>
-            <id>snapshots</id>
-            <name>JD maven2 repository-snapshots</name>
-            <url>http://artifactory.jd.com/libs-snapshots-local</url>
-        </repository>
-    </repositories>
+
 </project>

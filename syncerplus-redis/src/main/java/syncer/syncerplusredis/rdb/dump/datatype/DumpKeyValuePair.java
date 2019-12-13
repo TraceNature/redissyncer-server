@@ -19,10 +19,12 @@ package syncer.syncerplusredis.rdb.dump.datatype;
 
 import syncer.syncerplusredis.rdb.datatype.KeyValuePair;
 
+import java.io.Serializable;
+
 /**
  * @author Leon Chen
  * @since 2.5.0
  */
-public class DumpKeyValuePair extends KeyValuePair<byte[], byte[]> {
+public class DumpKeyValuePair extends KeyValuePair<byte[], byte[]> implements Serializable {
     private static final long serialVersionUID = 1L;
 }

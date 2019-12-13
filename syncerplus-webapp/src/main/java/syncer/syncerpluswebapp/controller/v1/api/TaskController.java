@@ -13,10 +13,8 @@ import syncer.syncerplusredis.entity.dto.task.TaskMsgDto;
 import syncer.syncerplusredis.entity.dto.task.TaskStartMsgDto;
 import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
 import syncer.syncerplusredis.entity.thread.ThreadReturnMsgEntity;
-import syncer.syncerplusservice.service.IRedisReplicatorService;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.util.TaskMsgUtils;
-import syncer.syncerplusservice.util.SyncTaskUtils;
 import syncer.syncerpluswebapp.util.DtoCheckUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -26,7 +24,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import syncer.syncerservice.service.IRedisSyncerService;
+import syncer.syncerservice.util.SyncTaskUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,10 +36,12 @@ import java.util.Map;
 @RequestMapping(value = "/api/v1")
 @Validated
 public class TaskController {
-    @Autowired
-    IRedisReplicatorService redisBatchedReplicatorService;
+//    @Autowired
+//    IRedisReplicatorService redisBatchedReplicatorService;
     @Autowired
     RedisPoolProps redisPoolProps;
+    @Autowired
+    IRedisSyncerService redisBatchedSyncerService;
 
     /**
      * 创建同步任务
@@ -48,50 +51,52 @@ public class TaskController {
      */
     @RequestMapping(value = "/creattask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap createTask(@RequestBody @Validated RedisClusterDto redisClusterDto) throws TaskMsgException {
-        DtoCheckUtils.checkRedisClusterDto(redisClusterDto);
 
-//        if(!redisClusterDto.getTasktype().toLowerCase().equals("file")){
-//            redisClusterDto= (RedisClusterDto) DtoCheckUtils.ckeckRedisClusterDto(redisClusterDto,redisPoolProps);
-//        }
+        List<RedisClusterDto> redisClusterDtoList=DtoCheckUtils.loadingRedisClusterDto(redisClusterDto);
+        List<String>taskids=new ArrayList<>();
+        for (RedisClusterDto dto:redisClusterDtoList
+             ) {
+            DtoCheckUtils.checkRedisClusterDto(redisClusterDto);
 
-        redisClusterDto= (RedisClusterDto) DtoCheckUtils.ckeckRedisClusterDto(redisClusterDto,redisPoolProps);
 
+            dto= (RedisClusterDto) DtoCheckUtils.ckeckRedisClusterDto(dto,redisPoolProps);
 
-        String threadId= TemplateUtils.uuid();
+            String threadId= TemplateUtils.uuid();
             String threadName=redisClusterDto.getTaskName();
             if(StringUtils.isEmpty(threadName)){
                 threadName=threadId;
-                redisClusterDto.setTaskName(threadId);
+                dto.setTaskName(threadId);
             }
 
             ThreadMsgEntity  msgEntity=ThreadMsgEntity.builder().id(threadId)
                     .status(ThreadStatusEnum.CREATE)
                     .taskName(threadName)
-                    .redisClusterDto(redisClusterDto)
+                    .redisClusterDto(dto)
                     .build();
 
-            if(redisClusterDto.isAutostart()){
-//                if(redisClusterDto.getTasktype().toLowerCase().equals("file")){
-//                    redisBatchedReplicatorService.filebatchedSync(redisClusterDto,threadId);
-//                }else {
-//                    redisBatchedReplicatorService.batchedSync(redisClusterDto,threadId,redisClusterDto.isAfresh());
-//                }
-                redisBatchedReplicatorService.batchedSync(redisClusterDto,threadId,redisClusterDto.isAfresh());
+
+            try {
+                TaskMsgUtils.addAliveThread(threadId, msgEntity);
+
+            }catch (TaskMsgException ex){
+                throw ex;
+            } catch (Exception e){
+                return  ResultMap.builder().code("1000").msg("Failed to create task");
+            }
+
+
+            if(dto.isAutostart()){
+                redisBatchedSyncerService.batchedSync(dto,threadId,dto.isAfresh());
                 msgEntity.setStatus(ThreadStatusEnum.RUN);
             }else {
                 msgEntity.getRedisClusterDto().setAfresh(true);
             }
-        try {
-            TaskMsgUtils.addAliveThread(threadId, msgEntity);
-
-        }catch (TaskMsgException ex){
-            throw ex;
-        } catch (Exception e){
-            return  ResultMap.builder().code("1000").msg("Failed to create task");
+            taskids.add(threadId);
         }
 
+
         HashMap msg=new HashMap();
-        msg.put("taskid",threadId);
+        msg.put("taskids",taskids);
         return  ResultMap.builder().code("2000").msg("Task created successfully").data(msg);
     }
 
@@ -126,7 +131,7 @@ public class TaskController {
      */
     @RequestMapping(value = "/starttask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap startTask(@RequestBody @Validated TaskStartMsgDto taskMsgDto) throws TaskMsgException {
-        Map<String,String> msg= SyncTaskUtils.startCreateThread(taskMsgDto.getTaskid(),taskMsgDto.isAfresh(),redisBatchedReplicatorService);
+        Map<String,String> msg= SyncTaskUtils.startCreateThread(taskMsgDto.getTaskid(),taskMsgDto.isAfresh(),redisBatchedSyncerService);
         return  ResultMap.builder().code("2000").msg("The request is successful").data(msg);
     }
 

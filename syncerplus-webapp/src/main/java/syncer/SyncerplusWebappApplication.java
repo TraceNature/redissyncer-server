@@ -3,11 +3,10 @@ package syncer;
 import redis.clients.jedis.JedisSentinelPool;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
 import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
-import syncer.syncerplusservice.monitor.*;
-import syncer.syncerplusservice.persistence.SettingPersistenceTask;
+
 import syncer.syncerplusredis.util.TaskMsgUtils;
-import syncer.syncerplusservice.util.file.FileUtils;
-import syncer.syncerplusservice.monitor.MinerMonitorThread;
+
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
@@ -15,6 +14,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import syncer.syncerservice.persistence.SettingPersistenceTask;
+import syncer.syncerservice.util.file.FileUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class SyncerplusWebappApplication {
         /**
          * 开启线程监控
          */
-        new Thread(new MinerMonitorThread()).start();
+//        new Thread(new MinerMonitorThread()).start();
         /**
          * 持久化任务
          */

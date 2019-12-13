@@ -19,11 +19,13 @@ package syncer.syncerplusredis.rdb.iterable.datatype;
 
 import syncer.syncerplusredis.rdb.datatype.KeyValuePair;
 
+import java.io.Serializable;
+
 /**
  * @author Leon Chen
  * @since 3.0.0
  */
-public class BatchedKeyValuePair<K, V> extends KeyValuePair<K, V> {
+public class BatchedKeyValuePair<K, V> extends KeyValuePair<K, V> implements Serializable {
     
     private static final long serialVersionUID = 1L;
     

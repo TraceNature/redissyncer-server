@@ -19,11 +19,13 @@ package syncer.syncerplusredis.rdb.datatype;
 
 import syncer.syncerplusredis.event.AbstractEvent;
 
+import java.io.Serializable;
+
 /**
  * @author Leon Chen
  * @since 2.1.0
  */
-public class AuxField extends AbstractEvent {
+public class AuxField extends AbstractEvent implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

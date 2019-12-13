@@ -20,12 +20,13 @@ package syncer.syncerplusredis.rdb.iterable.datatype;
 
 import syncer.syncerplusredis.rdb.datatype.KeyValuePair;
 
+import java.io.Serializable;
 import java.util.Iterator;
 
 /**
  * @author Leon Chen
  * @since 2.3.0
  */
-public class KeyStringValueByteArrayIterator extends KeyValuePair<byte[], Iterator<byte[]>> {
+public class KeyStringValueByteArrayIterator extends KeyValuePair<byte[], Iterator<byte[]>> implements Serializable {
     private static final long serialVersionUID = 1L;
 }

@@ -213,10 +213,10 @@ public class RedisSocketReplicator extends AbstractReplicator {
             logger.info(reply);
             if ("OK".equals(reply)) return;
             if (reply.contains("no password")) {
-                logger.warn("[AUTH {}] failed. {}", password, reply);
+                logger.warn("[AUTH password] failed. {}", reply);
                 return;
             }
-            throw new AssertionError("[AUTH " + password + "] failed. " + reply);
+            throw new AssertionError("[AUTH password ] failed. " + reply);
         }
     }
 

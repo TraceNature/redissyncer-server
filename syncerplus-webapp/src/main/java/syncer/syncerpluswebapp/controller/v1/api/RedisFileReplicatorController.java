@@ -11,7 +11,6 @@ import syncer.syncerplusredis.entity.dto.task.EditRedisFileDataDto;
 import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.util.TaskMsgUtils;
-import syncer.syncerplusservice.service.IRedisReplicatorService;
 import syncer.syncerpluswebapp.util.DtoCheckUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import syncer.syncerservice.service.IRedisSyncerService;
 
 import java.util.HashMap;
 
@@ -28,10 +28,13 @@ import java.util.HashMap;
 @RequestMapping(value = "/api/v1/file")
 @Validated
 public class RedisFileReplicatorController {
-    @Autowired
-    IRedisReplicatorService redisBatchedReplicatorService;
+//    @Autowired
+//    IRedisReplicatorService redisBatchedReplicatorService;
     @Autowired
     RedisPoolProps redisPoolProps;
+    @Autowired
+    IRedisSyncerService redisBatchedSyncerService;
+
     @RequestMapping(value = "/creattask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
 
     public ResultMap test(@RequestBody @Validated  RedisFileDataDto redisFileDataDto) throws TaskMsgException {
@@ -106,7 +109,7 @@ public class RedisFileReplicatorController {
             TaskMsgUtils.addAliveThread(threadId, msgEntity);
 
         if(redisClusterDto.isAutostart()){
-            redisBatchedReplicatorService.filebatchedSync(redisClusterDto,threadId);
+            redisBatchedSyncerService.batchedSync(redisClusterDto,threadId,redisFileDataDto.isAutostart());
             msgEntity.setStatus(ThreadStatusEnum.RUN);
         }else {
             msgEntity.getRedisClusterDto().setAfresh(true);
@@ -114,9 +117,11 @@ public class RedisFileReplicatorController {
 
         }catch (TaskMsgException ex){
             throw ex;
-        } catch (Exception e){
-            return  ResultMap.builder().code("1000").msg("Failed to create task");
         }
+
+//        catch (Exception e){
+//            return  ResultMap.builder().code("1000").msg("Failed to create task");
+//        }
 
         HashMap msg=new HashMap();
         msg.put("taskid",threadId);

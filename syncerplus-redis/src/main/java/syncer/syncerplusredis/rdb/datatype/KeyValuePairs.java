@@ -20,6 +20,7 @@ package syncer.syncerplusredis.rdb.datatype;
 
 import syncer.syncerplusredis.rdb.iterable.datatype.*;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,7 @@ import java.util.Set;
  * @author Leon Chen
  * @since 3.1.0
  */
-public class KeyValuePairs {
+public class KeyValuePairs implements Serializable {
 
     /*
      * Base

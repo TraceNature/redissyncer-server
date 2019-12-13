@@ -19,6 +19,7 @@ package syncer.syncerplusredis.entity;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -26,7 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Leon Chen
  * @since 2.1.0
  */
-public class Configuration {
+public class Configuration implements Serializable {
 
     private Configuration() {
     }

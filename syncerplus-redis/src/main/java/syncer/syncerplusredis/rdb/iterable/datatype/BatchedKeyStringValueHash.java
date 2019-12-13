@@ -16,12 +16,13 @@
 
 package syncer.syncerplusredis.rdb.iterable.datatype;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
  * @author Leon Chen
  * @since 3.0.0
  */
-public class BatchedKeyStringValueHash extends BatchedKeyValuePair<byte[], Map<byte[], byte[]>> {
+public class BatchedKeyStringValueHash extends BatchedKeyValuePair<byte[], Map<byte[], byte[]>> implements Serializable {
     private static final long serialVersionUID = 1L;
 }

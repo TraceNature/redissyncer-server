@@ -15,12 +15,12 @@ import syncer.syncerplusredis.entity.dto.task.EditRedisClusterDto;
 import syncer.syncerplusredis.entity.dto.task.EditRedisFileDataDto;
 import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
 import syncer.syncerplusredis.exception.TaskMsgException;
-import syncer.syncerplusservice.util.RedisUrlUtils;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 import syncer.syncerplusredis.util.code.CodeUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.StringUtils;
 import syncer.syncerpluswebapp.constant.CodeConstant;
+import syncer.syncerservice.util.RedisUrlCheckUtils;
 
 import java.net.URISyntaxException;
 import java.util.*;
@@ -323,13 +323,13 @@ public class DtoCheckUtils {
         ) {
             double redisVersion = 0L;
             try {
-                redisVersion = RedisUrlUtils.selectSyncerVersion(uri);
+                redisVersion = RedisUrlCheckUtils.selectSyncerVersion(uri);
 
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             }
-            Integer rdbVersion = RedisUrlUtils.getRdbVersion(redisClusterDto.getTargetRedisVersion());
-            Integer integer = RedisUrlUtils.getRdbVersion(redisVersion);
+            Integer rdbVersion = RedisUrlCheckUtils.getRdbVersion(redisClusterDto.getTargetRedisVersion());
+            Integer integer = RedisUrlCheckUtils.getRdbVersion(redisVersion);
             if (integer == 0) {
                 if (rdbVersion == 0) {
 //                    throw new TaskMsgException("targetRedisVersion can not be empty /targetRedisVersion error");
@@ -338,7 +338,7 @@ public class DtoCheckUtils {
                     redisClusterDto.addRedisInfo(new RedisInfo(redisClusterDto.getTargetRedisVersion(), uri, rdbVersion));
                 }
             } else {
-                redisClusterDto.addRedisInfo(new RedisInfo(redisVersion, uri, RedisUrlUtils.getRdbVersion(redisVersion)));
+                redisClusterDto.addRedisInfo(new RedisInfo(redisVersion, uri, RedisUrlCheckUtils.getRdbVersion(redisVersion)));
             }
 //            rdbVersion
 
@@ -355,13 +355,13 @@ public class DtoCheckUtils {
         ) {
             double redisVersion = 0L;
             try {
-                redisVersion = RedisUrlUtils.selectSyncerVersion(uri);
+                redisVersion = RedisUrlCheckUtils.selectSyncerVersion(uri);
 
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             }
-            Integer rdbVersion = RedisUrlUtils.getRdbVersion(redisFileDataDto.getTargetRedisVersion());
-            Integer integer = RedisUrlUtils.getRdbVersion(redisVersion);
+            Integer rdbVersion = RedisUrlCheckUtils.getRdbVersion(redisFileDataDto.getTargetRedisVersion());
+            Integer integer = RedisUrlCheckUtils.getRdbVersion(redisVersion);
             if (integer == 0) {
                 if (rdbVersion == 0) {
 //                    throw new TaskMsgException("targetRedisVersion can not be empty /targetRedisVersion error");
@@ -370,7 +370,7 @@ public class DtoCheckUtils {
                     redisFileDataDto.addRedisInfo(new RedisInfo(redisFileDataDto.getTargetRedisVersion(), uri, rdbVersion));
                 }
             } else {
-                redisFileDataDto.addRedisInfo(new RedisInfo(redisVersion, uri, RedisUrlUtils.getRdbVersion(redisVersion)));
+                redisFileDataDto.addRedisInfo(new RedisInfo(redisVersion, uri, RedisUrlCheckUtils.getRdbVersion(redisVersion)));
             }
 //            rdbVersion
             redisFileDataDto.setTargetRedisVersion(redisVersion);
@@ -387,13 +387,13 @@ public class DtoCheckUtils {
         ) {
             double redisVersion = 0L;
             try {
-                redisVersion = RedisUrlUtils.selectSyncerVersion(uri);
+                redisVersion = RedisUrlCheckUtils.selectSyncerVersion(uri);
 
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             }
-            Integer rdbVersion = RedisUrlUtils.getRdbVersion(redisFileDataDto.getTargetRedisVersion());
-            Integer integer = RedisUrlUtils.getRdbVersion(redisVersion);
+            Integer rdbVersion = RedisUrlCheckUtils.getRdbVersion(redisFileDataDto.getTargetRedisVersion());
+            Integer integer = RedisUrlCheckUtils.getRdbVersion(redisVersion);
             if (integer == 0) {
                 if (rdbVersion == 0) {
 //                    throw new TaskMsgException("targetRedisVersion can not be empty /targetRedisVersion error");
@@ -402,7 +402,7 @@ public class DtoCheckUtils {
                     redisFileDataDto.addRedisInfo(new RedisInfo(redisFileDataDto.getTargetRedisVersion(), uri, rdbVersion));
                 }
             } else {
-                redisFileDataDto.addRedisInfo(new RedisInfo(redisVersion, uri, RedisUrlUtils.getRdbVersion(redisVersion)));
+                redisFileDataDto.addRedisInfo(new RedisInfo(redisVersion, uri, RedisUrlCheckUtils.getRdbVersion(redisVersion)));
             }
 //            rdbVersion
             redisFileDataDto.setTargetRedisVersion(redisVersion);
@@ -442,18 +442,27 @@ public class DtoCheckUtils {
     }
 
 
-    public static void main(String[] args) {
 
 
-        Map HH = new HashMap();
-        HH.put(1, 1);
-        ResultMap map = ResultMap.builder().data(HH);
-
-        RedisClusterDto dto = new RedisClusterDto("sourceAddress", "targetAddress", "sourcePassword",
-                "targetPassword", "test", 100
-                , 110, 10000
-                , 1000, 100000, 1, "off");
-        dto.setDbMapper(HH);
-        System.out.println(JSON.toJSONString(dto));
+    public synchronized static List<RedisClusterDto> loadingRedisClusterDto(RedisClusterDto redisClusterDto) throws TaskMsgException {
+        String sourceAddress=redisClusterDto.getSourceRedisAddress();
+        String[]sourceAdd=sourceAddress.split(";");
+        List<RedisClusterDto>res=new ArrayList<>();
+        for (String data:sourceAdd){
+            if(!StringUtils.isEmpty(data)){
+                RedisClusterDto dto = new RedisClusterDto( 100
+                        , 110, 10000
+                        , 1000, 100000);
+                BeanUtils.copyProperties(redisClusterDto,dto);
+                dto.setSourceRedisAddress(data);
+                res.add(dto);
+            }
+        }
+        if(res.size()==0){
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_URI_ERROR,"sourceRedisAddress存在错误"));
+        }
+        return res;
     }
+
+
 }

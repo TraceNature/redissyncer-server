@@ -20,6 +20,7 @@ package syncer.syncerplusredis.rdb.iterable.datatype;
 
 import syncer.syncerplusredis.rdb.datatype.KeyValuePair;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -27,6 +28,6 @@ import java.util.Map;
  * @author Leon Chen
  * @since 2.3.0
  */
-public class KeyStringValueMapEntryIterator extends KeyValuePair<byte[], Iterator<Map.Entry<byte[], byte[]>>> {
+public class KeyStringValueMapEntryIterator extends KeyValuePair<byte[], Iterator<Map.Entry<byte[], byte[]>>>implements Serializable {
     private static final long serialVersionUID = 1L;
 }

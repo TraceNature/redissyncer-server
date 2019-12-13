@@ -18,11 +18,13 @@ package syncer.syncerplusredis.rdb.iterable.datatype;
 
 import syncer.syncerplusredis.rdb.datatype.Stream;
 
+import java.io.Serializable;
+
 
 /**
  * @author Leon Chen
  * @since 3.0.0
  */
-public class BatchedKeyStringValueStream extends BatchedKeyValuePair<byte[], Stream> {
+public class BatchedKeyStringValueStream extends BatchedKeyValuePair<byte[], Stream> implements Serializable {
     private static final long serialVersionUID = 1L;
 }

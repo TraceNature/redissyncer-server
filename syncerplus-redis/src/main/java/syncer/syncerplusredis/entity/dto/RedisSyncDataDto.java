@@ -16,6 +16,12 @@ public class RedisSyncDataDto extends SyncDataDto {
     private String sourceUri;
     @NotBlank(message = "目标redis路径不能为空")
     private String targetUri;
+    private String sourceHost;
+    private String targetHost;
+    private Integer sourcePort;
+    private Integer targetPort;
+    private String sourcePassword;
+    private String targetPassword;
     @NotBlank(message = "任务名称不能为空")
     private String taskName;
     private double redisVersion;

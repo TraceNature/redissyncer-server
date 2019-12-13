@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -103,6 +104,15 @@ public class SyncDataDto implements Serializable {
 
     public Set<String> getTargetUris() {
         return targetUris;
+    }
+
+    public Set<String> getFileUris() {
+        if(null==fileAddress){
+            return new HashSet<>();
+        }
+
+        return new HashSet<>(Arrays.asList(fileAddress.split(";")));
+
     }
 
     public Set<RedisInfo> getTargetUriData() {
