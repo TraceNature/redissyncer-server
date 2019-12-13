@@ -36,7 +36,7 @@ fn main() {
 
     let matches = App::new("rscli")
         .version("1.0")
-        .author("JiaShiwen. <jiashiwen@jd.com>")
+        .author("JiaShiwen")
         .about("redis syncer cli client")
         .arg(
             Arg::with_name("config")

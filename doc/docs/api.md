@@ -1,6 +1,6 @@
 ### 创建任务接口
 
-    http://116.196.115.143:8080/api/v1/creattask
+    http://10.0.0.90:8080/api/v1/creattask
     
     Method:POST
     
@@ -48,10 +48,10 @@
 
     单机往单机迁移（如主从：推荐源redis节点使用从节点--目标redis节点使用目标主从的主节点）
     {
-    	"sourcePassword": "password",
-    	"sourceRedisAddress": "114.67.100.239:6379",
+    	"sourcePassword": "xxxxxx",
+    	"sourceRedisAddress": "10.0.0.100:6379",
     	"targetRedisAddress": "127.0.0.1:8002",
-    	"targetPassword": "password",
+    	"targetPassword": "xxxxxx",
     	"taskName": "test",
     	"targetRedisVersion":2.8, 
     	"autostart":false,
@@ -60,10 +60,10 @@
     
     多节点往单机迁移（如主从：推荐源redis节点使用从节点--目标redis节点使用目标主从的主节点）
     {
-    	"sourcePassword": "password",
-    	"sourceRedisAddress": "114.67.100.239:6379;114.67.100.238:6379",
+    	"sourcePassword": "xxxxxx",
+    	"sourceRedisAddress": "10.0.0.100:6379;10.0.0.110:6379",
     	"targetRedisAddress": "127.0.0.1:6379;",
-       	"targetPassword": "password",
+       	"targetPassword": "xxxxxx",
        	"taskName": "test",
        	"targetRedisVersion":2.8, 
        	"autostart":false
@@ -72,10 +72,10 @@
 
         cluster从多节点/单节点往集群迁移
         {
-            "sourcePassword": "password",
-            "sourceRedisAddress": "114.67.100.239:6379;114.67.100.238:6379",
+            "sourcePassword": "xxxxxx",
+            "sourceRedisAddress": "10.0.0.100:6379;10.0.0.110:6379",
             "targetRedisAddress": "127.0.0.1:8002;127.0.0.1:8002;127.0.0.1:8002;127.0.0.1:8002;127.0.0.1:8002;127.0.0.1:8002",
-            "targetPassword": "password",
+            "targetPassword": "xxxxxx",
             "taskName": "test",
             "targetRedisVersion":2.8, 
             "autostart":false,
@@ -97,7 +97,7 @@
 #### 启动任务接口 (只允许单任务)
 
     当创建任务接口参数 "autostart"设置为true时，创建完成任务会自动执行启动任务，当为flase时需使用本接口通过返回的taskid启动任务
-    http://116.196.115.143:8080/api/v1/starttask
+    http://10.0.0.90:8080/api/v1/starttask
         
     Method:POST
     
@@ -127,7 +127,7 @@
         
 #### 停止任务接口
     停止正在处于运行的迁移同步任务
-    http://116.196.115.143:8080/api/v1/stoptask
+    http://10.0.0.90:8080/api/v1/stoptask
         
     Method:POST
     
@@ -157,7 +157,7 @@
               
 ### 编辑任务接口
 
-    http://116.196.115.143:8080/api/v1/edittask
+    http://10.0.0.90:8080/api/v1/edittask
     
     Method:POST
     
@@ -195,7 +195,7 @@
  
      删除处于非运行状态的迁移同步任务
      
-     请求地址：http://116.196.115.143:8080/api/v1/deletetask
+     请求地址：http://10.0.0.90:8080/api/v1/deletetask
          
      Method:POST
      
@@ -225,7 +225,7 @@
  #### 查看所有任务接口
  
      删除处于非运行状态的迁移同步任务
-     请求地址：http://116.196.115.143:8080/api/v1/listtasks
+     请求地址：http://10.0.0.90:8080/api/v1/listtasks
          
      Method:POST
      
