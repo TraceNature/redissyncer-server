@@ -14,7 +14,7 @@ public class LocalMemoryQueue<E> implements SyncerQueue<E> {
     private String taskId;
 
     public LocalMemoryQueue( String taskId,int capacity) {
-        this.queue =new LinkedBlockingQueue<>(capacity);
+        this.queue =new LinkedBlockingQueue<>(1000);
         this.taskId = taskId;
     }
 
