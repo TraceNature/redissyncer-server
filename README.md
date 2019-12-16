@@ -10,7 +10,7 @@ RedisSyncer是一个redis同步工具，应用redis单实例及集群同步
 * 易于与现有云环境集成；
 
 ## Quick start
-请参阅[Quick Start Guide](doc/docs/examples.md),文档包括构建及部署方法及基本使用方法
+请参阅[Quick Start Guide](doc/docs/quickstart.md),文档包括构建及部署方法及基本使用方法
 
 ## RoadMap
 请参阅　[RoadMap](doc/docs/roadmap.md)
