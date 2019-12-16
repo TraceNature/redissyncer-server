@@ -203,7 +203,7 @@
  
      删除处于非运行状态的迁移同步任务
      
-     请求地址：http://10.0.0.90:8080/api/v1/deletetask
+     请求地址：http://10.0.0.90:8080/api/v1/removetask
          
      Method:POST
      
