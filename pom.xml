@@ -4,11 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <modules>
-        <module>syncerplus-common</module>
-        <module>syncerplus-service</module>
-        <module>syncerplus-webapp</module>
-        <module>syncerplus-redis</module>
-        <module>syncer-service</module>
+        <module>syncer-common</module>
+        <module>syncer-webapp</module>
+        <module>syncer-replicator</module>
+        <module>syncer-transmission</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -17,9 +16,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>syncer</groupId>
-    <artifactId>redis-syncerplus</artifactId>
+    <artifactId>redis-syncer</artifactId>
     <version>1.0</version>
-    <name>redis-syncerplus</name>
+    <name>redis-syncer</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
