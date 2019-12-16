@@ -8,11 +8,11 @@ mvn clean install -pl syncer-webapp -am
 ```
 * start server
 ```shell script
-java -jar syncerplus-webapp-1.0.jar
+java -jar syncer-webapp/syncer-webapp.jar
 ```
 * start in background
 ```shell script
-nohup java -jar syncerplus-webapp-1.0.jar &
+nohup java -jar syncer-webapp/syncer-webapp.jar &
 ```    
 相关启动参数配置请参阅[配置详情](serverconfig.md)
 
@@ -23,6 +23,7 @@ redissyncer为多任务服务端程序,用户通过curl请求方式实现下列�
 * 启动同步任务
 * 查看同步任务状态
 * 停止任务
+
 * 删除任务
 
 ### redis单实例同步实例
@@ -32,13 +33,13 @@ redissyncer为多任务服务端程序,用户通过curl请求方式实现下列�
 
 ```shell script
 curl -X POST \
-  http://114.67.81.232:8080/api/v1/creattask \
+  http://10.0.0.100:8080/api/v1/creattask \
   -H 'Content-Type: application/json' \
   -d '{
-    "sourcePassword": "redistest0102",
-    "sourceRedisAddress": "114.67.100.239:6379;",
-    "targetRedisAddress": "114.67.100.240:6379",
-    "targetPassword": "redistest0102",
+    "sourcePassword": "xxxxxx",
+    "sourceRedisAddress": "192.168.0.10:6379;",
+    "targetRedisAddress": "192.168.0.20:6379",
+    "targetPassword": "xxxxxx",
     "targetRedisVersion": 4,
     "taskName": "firsttest"
 }'
@@ -61,7 +62,7 @@ curl -X POST \
 * 查看任务状态
 ```shell script
 curl -X POST \
-  http://114.67.81.232:8080/api/v1/listtasks \
+  http://10.0.0.100:8080/api/v1/listtasks \
   -H 'Content-Type: application/json' \
   -d '{
     "regulation": "bynames",
@@ -74,7 +75,7 @@ curl -X POST \
 * 启动任务
 ```shell script
 curl -X POST \
-  http://114.67.81.232:8080/api/v1/starttask \
+  http://10.0.0.100:8080/api/v1/starttask \
   -H 'Content-Type: application/json' \
   -d '{
     "taskid": "10F7B3A0E5344598BAA9F847ADBFF9D6"
@@ -85,7 +86,7 @@ curl -X POST \
 * 停止任务
 ```shell script
 curl -X POST \
-  http://114.67.81.232:8080/api/v1/stoptask \
+  http://10.0.0.100:8080/api/v1/stoptask \
   -H 'Content-Type: application/json' \
   -d '{
     "taskids": [
@@ -101,7 +102,7 @@ curl -X POST \
 * 删除任务
 ```shell script
 curl -X POST \
-  http://114.67.81.232:8080/api/v1/removetask \
+  http://10.0.0.100:8080/api/v1/removetask \
   -H 'Content-Type: application/json' \
   -d '{
     "taskids": [
