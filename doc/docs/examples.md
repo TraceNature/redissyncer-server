@@ -1,32 +1,96 @@
+# resdis同步服务
+## 一、目录结构
+#### 项目模块
+* redis-syncerplus   父模块
+* syncerplus-common  基础模块
+* syncerplus-redis   迁移基础模块
+* syncerplus-service 业务模块
+* syncerplus-webapp  webapp模块（RESTful接口）
 
 
-### 创建任务接口
+## 二、模块详情
 
-    http://10.0.0.90:8080/api/v1/creattask
+### 1.redis-syncerplus 父模块
+ - redis-syncerplus为父模块，通用jar包可直接在其maven pom.xml中引入，其他子模块同时生效
+
+### 1.syncerplus-common模块
+ - syncerplus-common为基础模块，存放通用代码（线程池、dataSource、通用工具类等)
+ - 其他模块依赖syncerplus-common模块
+ 
+ 
+### 2.syncerplus-service模块
+ - 依赖 syncerplus-common模块和 syncerplus-redis模块
+ - 单机redis数据迁移同步
+
+
+
+
+### 3.syncerplus-webapp模块
+ -  依赖 syncerplus-common模块 和 syncerplus-service模块
+ -  打包模块
+ -  该模块对外提供restful接口
+ 
+
+
+
+
+
+### 三、打包方法
+    项目主目录下执行：
+    mvn clean install -pl syncerplus-webapp -am
     
-    Method:POST
+    运行方法：
+    nohup java -jar syncerplus-webapp-1.0.jar &
+    或
+    java -jar syncerplus-webapp-1.0.jar
+
+
+    配置文件以及日志外置启动
+    nohup java -jar syncerplus-webapp-1.0.jar  --logging.config=/usr/local/jdks/config/logback.xml  &
+<!--    
+#### Docker 打包镜像
+        项目主目录下执行：
+        mvn clean install -pl syncerplus-webapp -am
+        webapp目录下执行
+        mvn package dockerfile:build
+        
+        docker run -d -p 80:8080 --name xxx
+        -->
+### 三、使用方法
+
+
     
-    请求头
-    Content-Type:application/json
     
-    请求体：
-   
-       
+    启动新同步任务请求(POST)：JSON格式 具体接口请查看doc/docs/api.md
+    Content-Type:application/json;charset=utf-8;
+
+    {
+    	"sourcePassword": "password",
+    	"sourceRedisAddress": "10.0.0.100:6379",
+    	"targetRedisAddress": "192.168.0.100:8002",
+    	"targetPassword": "xxxxxx",
+    	"taskName": "test",
+    	"targetRedisVersion":2.8, 
+    	"autostart":false,
+    	"afresh":false
+    }    
+    
+    
+
+        
  * 字段描述
    
-| field              | type               | example                                  | description                                                                                                                                                                                                                     | requred |
-| ------------------ | ------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| tasktype           | map<string,string> | "tasktype": "increment"                  | 任务类型，stockonly,incrementonly,total(只存量数据，只增量数据，存量＋增量);默认值total                                                                                                                                         | false   |
-| incrementtype      | string             | "incrementtype": "beginbuffer"           | 当     tasktype为 incrementonly时，支持两种增量模式        "beginbuffer"、"endbuffer" 即从slave缓冲区的开头或结尾开始同步任务                                                                                                   | false   |
-| dbMapper           | map<string,string> | "dbmapper": {"1": "1"}                   | redis db映射关系，当由此描述时任务按对应关系同步，未列出db不同步 ;无该字段的情况源与目标db一一对应,无该字段迁移源redis所有db库                                                                                                  | false   |
-| sourceRedisAddress | string             | "sourceRedisAddress": "10.0.0.1:6379"    | 源redis地址，cluster集群模式下地址由';'分割，如"10.0.0.1:6379;10.0.0.2:6379"                                                                                                                                                    | true    |
-| sourcePassword     | string             | "sourcePassword": "sourcepasswd"         | 源redis密码默认值为""                                                                                                                                                                                                           | false   |  | false |
-| targetRedisAddress | string             | "targetRedisAddress": "192.168.0.1:6379" | 目标redis地址 ,当目标redis为单实例或proxy时，填写单一地址即可，当目标redis为集群且需要借助jedis访问集群时地址用';'分割，"192.168.0.1:6379;192.168.0.3:6379;192.168.0.3:6379"                                                    | true    |
-| targetPassword     | string             | "targetPassword": "xxx"                  | 目标redis密码 ，默认值为""                                                                                                                                                                                                      | false   |
-| targetRedisVersion | string             | "targetversion":"4.0"                    | 目标redis版本, 该参数针对不可获取版本信息的情况，若可获取redis版本信息则按自动获取的版本信息进行处理                                                                                                                            | false   |
-| taskName           | string             | "taskname":"product2test"                | 自定义任务名称                                                                                                                                                                                                                  | false   |
-| autostart          | bool               | "autostart":true                         | 是否创建后自动启动，默认值false                                                                                                                                                                                                 | false   |
-| afresh             | bool               | "afresh":true                            | 如果之前进行过全量同步并且offset值还在积压缓冲区时，为false时则从offset+1值开始进行增量同步，为true时则进行全量同步，缺省默认值为true (注：创建接口时 afresh字段仅和autostart为true时同时使用，afresh字段当startTask为必填字段) | false   |
+| field              | type               | example                                    | description                                                                                                                                                                                                                     | requred |
+| ------------------ | ------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| dbNum              | map<string,string> | "dbNum": {"1": "1"}                        | redis db映射关系，当由此描述时任务按对应关系同步，未列出db不同步 ;无该字段的情况源与目标db一一对应,无该字段迁移源redis所有db库                                                                                                  | false   |
+| sourceRedisAddress | string             | "sourceRedisAddress": "10.0.0.100:6379"    | 源redis地址，cluster集群模式下地址由';'分割，如"10.0.0.100:6379;10.0.0.200:6379"                                                                                                                                                | true    |
+| sourcePassword     | string             | "sourcePassword": "sourcepasswd"           | 源redis密码默认值为""                                                                                                                                                                                                           | false   |  | false |
+| targetRedisAddress | string             | "targetRedisAddress": "192.168.0.100:6379" | 目标redis地址 ,当目标redis为单实例或proxy时，填写单一地址即可，当目标redis为集群且需要借助jedis访问集群时地址用';'分割，"192.168.0.100:6379;192.168.0.110:6379;192.168.0.120:6379"                                              | true    |
+| targetPassword     | string             | "targetPassword": "xxx"                    | 目标redis密码 ，默认值为""                                                                                                                                                                                                      | false   |
+| targetRedisVersion | string             | "targetversion":"4.0"                      | 目标redis版本, 该参数针对不可获取版本信息的情况，若可获取redis版本信息则按自动获取的版本信息进行处理                                                                                                                            | false   |
+| taskName           | string             | "taskname":"product2test"                  | 自定义任务名称                                                                                                                                                                                                                  | false   |
+| autostart          | bool               | "autostart":true                           | 是否创建后自动启动，默认值false                                                                                                                                                                                                 | false   |
+| afresh             | bool               | "afresh":true                              | 如果之前进行过全量同步并且offset值还在积压缓冲区时，为false时则从offset+1值开始进行增量同步，为true时则进行全量同步，缺省默认值为true (注：创建接口时 afresh字段仅和autostart为true时同时使用，afresh字段当startTask为必填字段) | false   |
 
 
 ### 错误码
@@ -44,8 +108,10 @@
 | 500  | 服务端错误                                                    |      |
 | 100  | 参数校验错误（如参数不为空之类的）                            |      |
 
+缺省时为默认配置
 
 
+    
 
 ##### 请求体事例：
 
@@ -63,10 +129,10 @@
     
     多节点往单机迁移（如主从：推荐源redis节点使用从节点--目标redis节点使用目标主从的主节点）
     {
-    	"sourcePassword": "password",
-    	"sourceRedisAddress": "10.0.0.100:6379;10.0.0.110:6379",
-    	"targetRedisAddress": "127.0.0.1:6379;",
-       	"targetPassword": "password",
+    	"sourcePassword": "xxxxx",
+    	"sourceRedisAddress": "10.0.0.100:6379;10.0.0.110:6379;10.0.0.120:6379",
+    	"targetRedisAddress": "127.0.0.1:6379",
+       	"targetPassword": "xxxxx",
        	"taskName": "test",
        	"targetRedisVersion":2.8, 
        	"autostart":false
@@ -75,10 +141,10 @@
 
         cluster从多节点/单节点往集群迁移
         {
-            "sourcePassword": "password",
-            "sourceRedisAddress": "10.0.0.100:6379;10.0.0.110:6379",
-            "targetRedisAddress": "127.0.0.1:8002;127.0.0.1:8002;127.0.0.1:8002;127.0.0.1:8002;127.0.0.1:8002;127.0.0.1:8002",
-            "targetPassword": "password",
+            "sourcePassword": "xxxxx",
+            "sourceRedisAddress": "10.0.0.100:6379;10.0.0.110:6379;10.0.0.120:6379",
+            "targetRedisAddress": "192.168.0.100:8000;192.168.0.110:8000;192.168.0.100:8000;",
+            "targetPassword": "xxxxx",
             "taskName": "test",
             "targetRedisVersion":2.8, 
             "autostart":false,
@@ -113,12 +179,7 @@
     	"taskid":"89E601A6B23348BCB9B362C67BFB2926",
     	"afresh":false
     }
-    
-| field  | type   | example                                     | description                                                                                                                                           | requred |
-| ------ | ------ | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| taskid | string | "taskid":"89E601A6B23348BCB9B362C67BFB2926" | 要启动的任务号                                                                                                                                        | true    |
-| afresh | bool   | "afresh":false                              | 启动任务时是否从头开始，当任务类型为incrementonly或total时该参数为false时为续传模式从任务记录的offset开始同步，若offset已过期则报错，任务必须从头开始 | true    |
-    
+ 
 ### 状态码
 
 | code | msg                                | data | description |
@@ -131,8 +192,7 @@
 | 400  | 错误请求（JSON格式错误）           |      |
 | 500  | 服务端错误                         |      |
 | 100  | 参数校验错误（如参数不为空之类的） |      |
-       
-        
+     
 #### 停止任务接口
     停止正在处于运行的迁移同步任务
     http://10.0.0.90:8080/api/v1/stoptask
@@ -147,7 +207,6 @@
     {
     	"taskids":["89E601A6B23348BCB9B362C67BFB2926"]
     }
-    
 ### 状态码
 
 | code | msg                                 | data | description |
@@ -160,10 +219,9 @@
 | 400  | 错误请求（JSON格式错误）            |      |
 | 500  | 服务端错误                          |      |
 | 100  | 参数校验错误（如参数不为空之类的）  |      |
-                 
-           
-              
-### 编辑任务接口(暂不开放)
+  
+    
+### 编辑任务接口
 
     http://10.0.0.90:8080/api/v1/edittask
     
@@ -179,14 +237,14 @@
    
 | field              | type               | example                                  | description                                                                                                                                                                  | requred |
 | ------------------ | ------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| dbMapper           | map<string,string> | "dbNum": {"1": "1"}                      | redis db映射关系，当由此描述时任务按对应关系同步，未列出db不同步 ;无该字段的情况源与目标db一一对应,无该字段迁移源redis所有db库                                               | false   |
-| sourceRedisAddress | string             | "sourceRedisAddress": "10.0.0.1:6379"    | 源redis地址，cluster集群模式下地址由';'分割，如"10.0.0.1:6379;10.0.0.2:6379"                                                                                                 | true    |
+| dbNum              | map<string,string> | "dbNum": {"1": "1"}                      | redis db映射关系，当由此描述时任务按对应关系同步，未列出db不同步 ;无该字段的情况源与目标db一一对应,无该字段迁移源redis所有db库                                               | false   |
+| sourceRedisAddress | string             | "sourceRedisAddress": "10.0.0.100:6379"  | 源redis地址，cluster集群模式下地址由';'分割，如"10.0.0.100:6379;10.0.0.110:6379;10.0.0.120:6379"                                                                             | true    |
 | sourcePassword     | string             | "sourcePassword": "sourcepasswd"         | 源redis密码默认值为""                                                                                                                                                        | false   |  | false |
 | targetRedisAddress | string             | "targetRedisAddress": "192.168.0.1:6379" | 目标redis地址 ,当目标redis为单实例或proxy时，填写单一地址即可，当目标redis为集群且需要借助jedis访问集群时地址用';'分割，"192.168.0.1:6379;192.168.0.3:6379;192.168.0.3:6379" | true    |
 | targetPassword     | string             | "targetPassword": "xxx"                  | 目标redis密码 ，默认值为""                                                                                                                                                   | false   |
 | targetRedisVersion | string             | "targetversion":"4.0"                    | 目标redis版本, 该参数针对不可获取版本信息的情况，若可获取redis版本信息则按自动获取的版本信息进行处理                                                                         | false   |
 | taskName           | string             | "taskname":"product2test"                | 自定义任务名称                                                                                                                                                               | false   |
-
+      
 ### 状态码
 
 | code | msg                                | data | description |
@@ -198,12 +256,13 @@
 | 400  | 错误请求（JSON格式错误）           |      |
 | 500  | 服务端错误                         |      |
 | 100  | 参数校验错误（如参数不为空之类的） |      |
-            
+    
+              
  #### 删除任务接口
  
      删除处于非运行状态的迁移同步任务
      
-     请求地址：http://10.0.0.90:8080/api/v1/deletetask
+     请求地址：http://10.0.0.90:6379:8080/api/v1/deletetask
          
      Method:POST
      
@@ -228,6 +287,10 @@
 | 400  | 错误请求（JSON格式错误）                                         |      |
 | 500  | 服务端错误                                                       |      |
 | 100  | 参数校验错误（如参数不为空之类的）                               |      |
+
+
+
+
 
 
  #### 查看所有任务接口
@@ -255,8 +318,7 @@
     {
     	"regulation":"all"
     }
-    
-    
+         
 ### 状态码
   
 | code | msg                                | data | description |
@@ -272,25 +334,38 @@
 | 100  | 参数校验错误（如参数不为空之类的） |      |
 
 
- #### 文件导入
-     http://10.0.0.90:8080/api/v1/importfile
-    
-    Method:POST
-    
-    请求头
-    Content-Type:application/json
+连接池配置：在配置文件中修改配置
 
- * 字段描述
-  
- | field              | type               | example                                                 | description                                                                                                                                                                  | requred |
- | ------------------ | ------------------ | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
- | taskName           | string             | "taskname":"product2dbNumtest"                          | 自定义任务名称                                                                                                                                                               | false   |
- | fileaddress        | string             | "fileaddress":"http://10.0.1.100:8888/file/example.rdb" | 文件地址支持url或本地地址，url以http或https开头，本地地址为服务所在服务器路径                                                                                                | true    |
- | filetype           | string             | "filetype":"rdb"                                        | 文件类型，"rdb"、"aof"、"mix"                                                                                                                                                | true    |
- | dbMapper           | map<string,string> | "dbmapper": {"1": "1"}                                  | redis db映射关系，当由此描述时任务按对应关系同步，未列出db不同步 ;无该字段的情况源与目标db一一对应,无该字段迁移源redis所有db库                                               | false   |
- | targetRedisAddress | string             | "targetRedisAddress": "192.168.0.1:6379"                | 目标redis地址 ,当目标redis为单实例或proxy时，填写单一地址即可，当目标redis为集群且需要借助jedis访问集群时地址用';'分割，"192.168.0.1:6379;192.168.0.3:6379;192.168.0.3:6379" | true    |
- | targetPassword     | string             | "targetPassword": "xxx"                                 | 目标redis密码 ，默认值为""                                                                                                                                                   | false   |
- | targetRedisVersion | string             | "targetversion":"4.0"                                   | 目标redis版本, 该参数针对不可获取版本信息的情况，若可获取redis版本信息则按自动获取的版本信息进行处理                                                                         | false   |
- | autostart          | bool               | "autostart":true                                        | 是否创建后自动启动，默认值false                                                                                                                                              | false   |
+    
+      poolconfig:
+        #核心池大小
+        corePoolSize: 50
+        #最大池大小
+        maxPoolSize: 200
+        #队列最大长度
+        queueCapacity: 200
+        #线程池维护线程所允许的空闲时间
+        keepAliveSeconds: 300
+    
+    syncerplus:
+      redispool:
+        #池中空闲链接回收线程执行间隔时间  例：每隔1000毫秒执行一次回收函数
+        timeBetweenEvictionRunsMillis: 300000
+        #池中空闲连接回收未使用的时间  例：1800000毫秒未使用则回收  默认值是30分钟。
+        idleTimeRunsMillis: 1800000
+        #最小池大小
+        minPoolSize: 1
+        #最大池大小
+        maxPoolSize: 25
+        #连接超时时间
+        maxWaitTime: 2000
+        
+        
+        
 
-  #### 文件导出
+
+连接池选择：other.properties
+
+    # selefpool  or commonpool   selefpool为纯手写连接池 commonpool 为基于阿帕奇common-pool工具类构造的自定义连接池
+    redispool.type=commonpool
+    
