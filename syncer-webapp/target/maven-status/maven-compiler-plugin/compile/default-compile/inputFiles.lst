@@ -1,8 +1,0 @@
-/home/develop/IdeaProjects/redissyncer-service/syncer-webapp/src/main/java/syncer/syncerpluswebapp/controller/RedisAofController.java
-/home/develop/IdeaProjects/redissyncer-service/syncer-webapp/src/main/java/syncer/syncerpluswebapp/advice/ExceptionAdvice.java
-/home/develop/IdeaProjects/redissyncer-service/syncer-webapp/src/main/java/syncer/syncerpluswebapp/util/DtoCheckUtils.java
-/home/develop/IdeaProjects/redissyncer-service/syncer-webapp/src/main/java/syncer/syncerpluswebapp/controller/v1/api/RedisFileReplicatorController.java
-/home/develop/IdeaProjects/redissyncer-service/syncer-webapp/src/main/java/syncer/syncerpluswebapp/constant/CodeConstant.java
-/home/develop/IdeaProjects/redissyncer-service/syncer-webapp/src/main/java/syncer/syncerpluswebapp/controller/v1/api/TaskController.java
-/home/develop/IdeaProjects/redissyncer-service/syncer-webapp/src/main/java/syncer/SyncerplusWebappApplication.java
-/home/develop/IdeaProjects/redissyncer-service/syncer-webapp/src/main/java/syncer/syncerpluswebapp/constant/HttpMsgConstant.java
