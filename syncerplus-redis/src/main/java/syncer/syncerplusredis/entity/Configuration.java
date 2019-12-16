@@ -405,18 +405,22 @@ public class Configuration implements Serializable {
     }
 
     private static boolean getBool(String value, boolean defaultValue) {
-        if (value == null)
+        if (value == null) {
             return defaultValue;
-        if (value.equals("false") || value.equals("no"))
+        }
+        if ("false".equals(value)|| "no".equals(value)) {
             return false;
-        if (value.equals("true") || value.equals("yes"))
+        }
+        if ("true".equals(value) ||"yes".equals(value)) {
             return true;
+        }
         return defaultValue;
     }
 
     private static int getInt(String value, int defaultValue) {
-        if (value == null)
+        if (value == null) {
             return defaultValue;
+        }
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
@@ -425,8 +429,9 @@ public class Configuration implements Serializable {
     }
 
     private static long getLong(String value, long defaultValue) {
-        if (value == null)
+        if (value == null) {
             return defaultValue;
+        }
         try {
             return Long.parseLong(value);
         } catch (NumberFormatException e) {

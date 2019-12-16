@@ -160,7 +160,7 @@ public class TaskMsgUtils {
     }
 
     public synchronized  static  Map<String,String> brokenCreateThread(List<String> taskids,String msg) throws TaskMsgException {
-        Map<String,String>taskMap=new HashMap<>();
+        Map<String,String>taskMap=new HashMap<>(10);
 
         for (String taskId:taskids
         ) {

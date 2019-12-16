@@ -42,8 +42,12 @@ public class RateLimitInputStream extends InputStream {
     }
 
     public RateLimitInputStream(InputStream in, int permits) {
-        if (permits <= 1000) permits = 1000;
-        else if (permits > 1000) permits = permits / 1000 * 1000;
+        if (permits <= 1000){
+            permits = 1000;
+        }
+        else if (permits > 1000){
+            permits = permits / 1000 * 1000;
+        }
         logger.info("rate limit force set to {}", permits);
 
         this.in = in;
@@ -71,8 +75,12 @@ public class RateLimitInputStream extends InputStream {
             int r = in.read(b, index, len);
             index += r;
             total -= r;
-            if (r < 0) return r;
-            if (r < len) return length - total;
+            if (r < 0) {
+                return r;
+            }
+            if (r < len){
+                return length - total;
+            }
         }
         assert total == 0;
         return length;
@@ -86,7 +94,9 @@ public class RateLimitInputStream extends InputStream {
             limiter.acquire(skip);
             long r = in.skip(skip);
             total -= r;
-            if (r < skip) return length - total;
+            if (r < skip){
+                return length - total;
+            }
         }
         assert total == 0;
         return length;
@@ -150,10 +160,14 @@ public class RateLimitInputStream extends InputStream {
 
         private long generate() {
             long access = currentTimeMillis();
-            if (access <= this.access) return 0L;
+            if (access <= this.access){
+                return 0L;
+            }
             long p = (access - this.access) * size / 1000L;
             this.permits += p;
-            if (this.permits > size) this.permits = size;
+            if (this.permits > size) {
+                this.permits = size;
+            }
             this.access = access;
             return p;
         }

@@ -29,7 +29,9 @@ public class MSetNxParser implements CommandParser<MSetNxCommand> {
     @Override
     public MSetNxCommand parse(Object[] command) {
         ByteArrayMap kv = new ByteArrayMap();
-        if (command.length == 1) return new MSetNxCommand(kv);
+        if (command.length == 1) {
+            return new MSetNxCommand(kv);
+        }
         int idx = 1;
         while (idx < command.length) {
             byte[] key = CommandParsers.toBytes(command[idx]);

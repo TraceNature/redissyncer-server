@@ -16,7 +16,6 @@ import syncer.syncerservice.util.HashUtils;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClientFactory;
 import syncer.syncerservice.util.KVUtils;
-import syncer.syncerservice.util.queue.LocalDiskMemoryQueue;
 import syncer.syncerservice.util.queue.LocalMemoryQueue;
 import syncer.syncerservice.util.queue.SyncerQueue;
 

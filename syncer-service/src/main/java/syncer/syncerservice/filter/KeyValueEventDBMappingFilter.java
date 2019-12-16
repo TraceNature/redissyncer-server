@@ -82,8 +82,9 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
 
     @Override
     public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) {
-        if(null!=next)
+        if(null!=next) {
             next.run(replicator,eventEntity);
+        }
     }
 
     @Override

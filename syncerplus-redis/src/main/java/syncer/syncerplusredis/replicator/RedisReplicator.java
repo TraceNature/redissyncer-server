@@ -74,6 +74,7 @@ public class RedisReplicator implements Replicator {
                 break;
             case ONLINERDB:
                 this.replicator = new RedisOnlineRdbReplicator(in, configuration);
+                break;
             default:
                 throw new UnsupportedOperationException(fileType.toString());
         }

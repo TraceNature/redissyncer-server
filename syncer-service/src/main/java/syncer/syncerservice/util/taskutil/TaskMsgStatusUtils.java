@@ -15,8 +15,9 @@ public class TaskMsgStatusUtils {
          */
         try {
             ThreadMsgEntity entity= TaskMsgUtils.getAliveThreadHashMap().get(taskId);
-            if(null==entity)
+            if(null==entity) {
                 return true;
+            }
 
             if(!entity.getStatus().equals(ThreadStatusEnum.RUN)){
                 return true;

@@ -119,7 +119,9 @@ public abstract class AbstractReplicator extends AbstractReplicatorListener impl
 
     protected boolean compareAndSet(Status prev, Status next) {
         boolean result = connected.compareAndSet(prev, next);
-        if (result) doStatusListener(this, next);
+        if (result) {
+            doStatusListener(this, next);
+        }
         return result;
     }
     
@@ -240,7 +242,8 @@ public abstract class AbstractReplicator extends AbstractReplicatorListener impl
         addCommandParser(CommandName.name("XTRIM"), new XTrimParser());
         addCommandParser(CommandName.name("XSETID"), new XSetIdParser());
     }
-    
+
+    @Override
     public void open() throws IOException, IncrementException {
         manual.compareAndSet(true, false);
     }

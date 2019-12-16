@@ -1,6 +1,6 @@
-package syncer.syncerplusservice.task.clusterTask.command;
+package syncer.syncerservice.util.jedis.cluster;
 
-import com.alibaba.fastjson.JSON;
+
 import org.springframework.util.StringUtils;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;

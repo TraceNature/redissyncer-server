@@ -20,6 +20,7 @@ package syncer.syncerplusredis.entity;
  * @since 2.1.0
  */
 public enum FileType {
+    //AOF REB MIXED 分别对应 aof rdb mixed混合文件
     AOF, RDB, MIXED,ONLINEAOF,ONLINERDB,SYNC,ONLINEMIXED;
 
     /**
@@ -30,17 +31,17 @@ public enum FileType {
     static FileType parse(String type) {
         if (type == null) {
             return null;
-        } else if (type.equalsIgnoreCase("aof")) {
+        } else if ("aof".equalsIgnoreCase(type)) {
             return AOF;
-        } else if (type.equalsIgnoreCase("rdb")) {
+        } else if ("rdb".equalsIgnoreCase(type)) {
             return RDB;
-        } else if (type.equalsIgnoreCase("mix")) {
+        } else if ("mix".equalsIgnoreCase(type)) {
             return MIXED;
-        } else if (type.equalsIgnoreCase("mixed")) {
+        } else if ("mixed".equalsIgnoreCase(type)) {
             return MIXED;
-        } else if (type.equalsIgnoreCase("onelinerdb")) {
+        } else if ("onelinerdb".equalsIgnoreCase(type)) {
             return ONLINERDB;
-        } else if (type.equalsIgnoreCase("onelineaof")) {
+        } else if ("onelineaof".equalsIgnoreCase(type)) {
             return ONLINEAOF;
         }else {
             return null;

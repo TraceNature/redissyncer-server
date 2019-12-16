@@ -216,8 +216,12 @@ public class RdbParser {
             }
             long start = offset;
             offset += in.unmark();
-            if (event == null) continue;
-            if (replicator.verbose() && logger.isDebugEnabled()) logger.debug("{}", event);
+            if (event == null) {
+                continue;
+            }
+            if (replicator.verbose() && logger.isDebugEnabled()){
+                logger.debug("{}", event);
+            }
             this.replicator.submitEvent(event, of(start, offset));
         }
         return offset;

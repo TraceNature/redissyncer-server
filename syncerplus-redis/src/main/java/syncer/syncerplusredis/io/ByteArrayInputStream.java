@@ -52,10 +52,16 @@ public class ByteArrayInputStream extends InputStream {
             throw new IndexOutOfBoundsException();
         }
 
-        if (pos >= count) return -1;
+        if (pos >= count){
+            return -1;
+        }
         int avail = (int) (count - pos);
-        if (len > avail) len = avail;
-        if (len <= 0) return 0;
+        if (len > avail) {
+            len = avail;
+        }
+        if (len <= 0){
+            return 0;
+        }
         ByteArray.arraycopy(buf, pos, new ByteArray(b), off, len);
         pos += len;
         return len;
@@ -64,7 +70,9 @@ public class ByteArrayInputStream extends InputStream {
     @Override
     public long skip(long n) {
         long k = count - pos;
-        if (n < k) k = n < 0 ? 0 : n;
+        if (n < k) {
+            k = n < 0 ? 0 : n;
+        }
         pos += k;
         return k;
     }

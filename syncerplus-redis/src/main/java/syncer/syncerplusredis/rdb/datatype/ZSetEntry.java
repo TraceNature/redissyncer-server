@@ -64,8 +64,12 @@ public class ZSetEntry implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o){
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ZSetEntry zSetEntry = (ZSetEntry) o;
         return Double.compare(zSetEntry.score, score) == 0 &&
                 Arrays.equals(element, zSetEntry.element);

@@ -15,7 +15,7 @@ public class ScanParamsPlus extends ScanParams {
 
     public final static String SCAN_POINTER_START = String.valueOf(0);
     public final static byte[] SCAN_POINTER_START_BINARY = SafeEncoder.encode(SCAN_POINTER_START);
-
+    @Override
     public ScanParams match(final byte[] pattern) {
         params.put(MATCH, ByteBuffer.wrap(pattern));
         return this;
@@ -27,6 +27,7 @@ public class ScanParamsPlus extends ScanParams {
      * @param pattern
      * @return
      */
+    @Override
     public ScanParams match(final String pattern) {
         params.put(MATCH, ByteBuffer.wrap(SafeEncoder.encode(pattern)));
         return this;
@@ -38,11 +39,12 @@ public class ScanParamsPlus extends ScanParams {
      * @param count
      * @return
      */
+    @Override
     public ScanParams count(final Integer count) {
         params.put(COUNT, ByteBuffer.wrap(Protocol.toByteArray(count)));
         return this;
     }
-
+    @Override
     public Collection<byte[]> getParams() {
         List<byte[]> paramsList = new ArrayList<byte[]>(params.size());
         for (Map.Entry<Protocol.Keyword, ByteBuffer> param : params.entrySet()) {

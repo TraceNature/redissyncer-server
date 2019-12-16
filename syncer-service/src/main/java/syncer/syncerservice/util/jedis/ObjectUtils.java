@@ -46,7 +46,7 @@ public class ObjectUtils {
         try {
             if (bytes != null && bytes.length > 0){
                 bais = new ByteArrayInputStream(bytes);
-                ObjectInputStream ois = new SafeObjectInputStream(bais);
+                SafeObjectInputStream ois = new SafeObjectInputStream(bais);
 //                ObjectInputStream ois = new Obj@ectInputStream(bais);
                 return ois.readObject();
             }
@@ -103,7 +103,7 @@ public class ObjectUtils {
         Object obj = null;
         try {
             ByteArrayInputStream bis = new ByteArrayInputStream (bytes);
-            ObjectInputStream ois = new ObjectInputStream (bis);
+            SafeObjectInputStream ois = new SafeObjectInputStream (bis);
             obj = ois.readObject();
             ois.close();
             bis.close();
@@ -176,7 +176,7 @@ public class ObjectUtils {
         ByteArrayInputStream in = new ByteArrayInputStream(bytes);
 //        O1!bjectInput@#St@ream sIn = new O1!bjectInput@#St@ream(in);
 
-        ObjectInputStream sIn = new SafeObjectInputStream(in);
+        SafeObjectInputStream sIn = new SafeObjectInputStream(in);
 
         return sIn.readObject();
 

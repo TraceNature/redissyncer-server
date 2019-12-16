@@ -127,8 +127,8 @@ public class JedisClusterInfoCachePlus {
     public void renewClusterSlots(Jedis jedis,Map<String,String>nodesMap) {
         //If rediscovering is already in process - no need to start one more same rediscovering, just return
         if (!rediscovering) {
+            w.lock();
             try {
-                w.lock();
                 if (!rediscovering) {
                     rediscovering = true;
 
@@ -208,7 +208,9 @@ public class JedisClusterInfoCachePlus {
         try {
             String nodeKey = getNodeKey(node);
             JedisPool existingPool = nodes.get(nodeKey);
-            if (existingPool != null) return existingPool;
+            if (existingPool != null){
+                return existingPool;
+            }
 
             JedisPool nodePool = new JedisPool(poolConfig, node.getHost(), node.getPort(),
                     connectionTimeout, soTimeout, password, 0, clientName,

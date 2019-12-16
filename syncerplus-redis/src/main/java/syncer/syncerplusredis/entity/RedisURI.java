@@ -173,7 +173,7 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
 
     private void parse(String uri) throws URISyntaxException {
         this.uri = new URI(uri);
-        if (this.uri.getScheme() != null && this.uri.getScheme().equalsIgnoreCase("redis")) {
+        if (this.uri.getScheme() != null && "redis".equalsIgnoreCase(this.uri.getScheme())) {
             this.scheme = "redis";
         } else {
             throw new URISyntaxException(uri, "scheme must be [redis].");
@@ -194,8 +194,10 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
         }
 
         String rawQuery = this.uri.getRawQuery();
-        if (rawQuery == null)
+
+        if (rawQuery == null) {
             return;
+        }
 
         StringBuilder key = new StringBuilder();
         StringBuilder value = new StringBuilder();
@@ -224,13 +226,16 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
     }
 
     private static String decode(String s) {
-        if (s == null)
+        if (s == null) {
             return null;
+        }
         int n = s.length();
-        if (n == 0)
+        if (n == 0) {
             return s;
-        if (s.indexOf('%') < 0)
+        }
+        if (s.indexOf('%') < 0) {
             return s;
+        }
 
         StringBuilder sb = new StringBuilder(n);
         ByteBuffer bb = ByteBuffer.allocate(n);
@@ -241,19 +246,22 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
         while (i < n) {
             if (c != '%') {
                 sb.append(c);
-                if (++i >= n)
+                if (++i >= n) {
                     break;
+                }
                 c = s.charAt(i);
                 continue;
             }
             bb.clear();
             while (true) {
                 bb.put(decode(s.charAt(++i), s.charAt(++i)));
-                if (++i >= n)
+                if (++i >= n) {
                     break;
+                }
                 c = s.charAt(i);
-                if (c != '%')
+                if (c != '%') {
                     break;
+                }
             }
             bb.flip();
             CharBuffer cb = Strings.decode(bb);
@@ -264,12 +272,15 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
     }
 
     private static int decode(char c) {
-        if ((c >= '0') && (c <= '9'))
+        if ((c >= '0') && (c <= '9')) {
             return c - '0';
-        if ((c >= 'a') && (c <= 'f'))
+        }
+        if ((c >= 'a') && (c <= 'f')) {
             return c - 'a' + 10;
-        if ((c >= 'A') && (c <= 'F'))
+        }
+        if ((c >= 'A') && (c <= 'F')) {
             return c - 'A' + 10;
+        }
         return -1;
     }
 
@@ -279,15 +290,18 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
 
     private static String encode(String s) {
         int n = s.length();
-        if (n == 0)
+        if (n == 0) {
             return s;
+        }
 
         int i = 0;
         while (true) {
-            if (s.charAt(i) >= '\u0080')
+            if (s.charAt(i) >= '\u0080') {
                 break;
-            if (++i >= n)
+            }
+            if (++i >= n) {
                 return s;
+            }
         }
 
         String ns = Normalizer.normalize(s, Normalizer.Form.NFC);
@@ -296,10 +310,11 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
         StringBuilder sb = new StringBuilder();
         while (bb.hasRemaining()) {
             int b = bb.get() & 0xFF;
-            if (b >= 0x80)
+            if (b >= 0x80) {
                 appendEscape(sb, (byte) b);
-            else
+            } else {
                 sb.append((char) b);
+            }
         }
         return sb.toString();
     }

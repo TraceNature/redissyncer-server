@@ -47,8 +47,9 @@ public class RedisRdbReplicator extends AbstractReplicator {
         this.configuration = configuration;
         this.inputStream = new RedisInputStream(in, this.configuration.getBufferSize());
         this.inputStream.setRawByteListeners(this.rawByteListeners);
-        if (configuration.isUseDefaultExceptionListener())
+        if (configuration.isUseDefaultExceptionListener()) {
             addExceptionListener(new DefaultExceptionListener());
+        }
     }
 
 
@@ -70,19 +71,24 @@ public class RedisRdbReplicator extends AbstractReplicator {
         this.configuration = configuration;
         this.inputStream = new RedisInputStream(in, this.configuration.getBufferSize());
         this.inputStream.setRawByteListeners(this.rawByteListeners);
-        if (configuration.isUseDefaultExceptionListener())
+        if (configuration.isUseDefaultExceptionListener()) {
             addExceptionListener(new DefaultExceptionListener());
+        }
     }
 
     
     @Override
     public void open() throws IOException, IncrementException {
         super.open();
-        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) return;
+        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) {
+            return;
+        }
         try {
             doOpen();
         } catch (UncheckedIOException e) {
-            if (!(e.getCause() instanceof EOFException)) throw e.getCause();
+            if (!(e.getCause() instanceof EOFException)){
+                throw e.getCause();
+            }
         } finally {
             doClose();
             doCloseListener(this);
@@ -92,11 +98,15 @@ public class RedisRdbReplicator extends AbstractReplicator {
     @Override
     public void open(String taskId) throws IOException, IncrementException {
         super.open();
-        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) return;
+        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) {
+            return;
+        }
         try {
             doOpen(taskId);
         } catch (UncheckedIOException e) {
-            if (!(e.getCause() instanceof EOFException)) throw e.getCause();
+            if (!(e.getCause() instanceof EOFException)) {
+                throw e.getCause();
+            }
         } finally {
             doClose();
             doCloseListener(this);

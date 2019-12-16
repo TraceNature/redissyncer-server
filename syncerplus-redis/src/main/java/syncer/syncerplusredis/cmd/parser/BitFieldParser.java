@@ -42,7 +42,9 @@ public class BitFieldParser implements CommandParser<BitFieldCommand> {
             String token;
             do {
                 idx = parseStatement(idx, command, list);
-                if (idx >= command.length) break;
+                if (idx >= command.length) {
+                    break;
+                }
                 token = CommandParsers.toRune(command[idx]);
             }
             while (token != null && (Strings.isEquals(token, "GET") || Strings.isEquals(token, "SET") || Strings.isEquals(token, "INCRBY")));
@@ -54,7 +56,9 @@ public class BitFieldParser implements CommandParser<BitFieldCommand> {
                 OverFlow overFlow = new OverFlow();
                 idx = parseOverFlow(idx, command, overFlow);
                 overflows.add(overFlow);
-                if (idx >= command.length) break;
+                if (idx >= command.length) {
+                    break;
+                }
             } while (Strings.isEquals(CommandParsers.toRune(command[idx]), "OVERFLOW"));
         }
 
@@ -80,7 +84,9 @@ public class BitFieldParser implements CommandParser<BitFieldCommand> {
             String token;
             do {
                 idx = parseStatement(idx, params, list);
-                if (idx >= params.length) break;
+                if (idx >= params.length) {
+                    break;
+                }
                 token = CommandParsers.toRune(params[idx]);
             }
             while (token != null && (Strings.isEquals(token, "GET") || Strings.isEquals(token, "SET") || Strings.isEquals(token, "INCRBY")));
@@ -154,7 +160,9 @@ public class BitFieldParser implements CommandParser<BitFieldCommand> {
     }
 
     private void accept(String actual, String expect) {
-        if (Strings.isEquals(actual, expect)) return;
+        if (Strings.isEquals(actual, expect)){
+            return;
+        }
         throw new AssertionError("expect " + expect + " but actual " + actual);
     }
 

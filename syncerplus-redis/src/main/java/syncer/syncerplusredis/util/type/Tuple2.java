@@ -70,12 +70,18 @@ public class Tuple2<T1, T2> implements Iterable<Object>, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o){
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Tuple2<?, ?> tuple2 = (Tuple2<?, ?>) o;
 
-        if (v1 != null ? !v1.equals(tuple2.v1) : tuple2.v1 != null) return false;
+        if (v1 != null ? !v1.equals(tuple2.v1) : tuple2.v1 != null) {
+            return false;
+        }
         return v2 != null ? v2.equals(tuple2.v2) : tuple2.v2 == null;
     }
 
@@ -97,7 +103,9 @@ public class Tuple2<T1, T2> implements Iterable<Object>, Serializable {
     }
 
     public static <V> Tuple2<V, V> from(V... ary) {
-        if (ary == null || ary.length != 2) throw new IllegalArgumentException();
+        if (ary == null || ary.length != 2) {
+            throw new IllegalArgumentException();
+        }
         return new Tuple2<>(ary[0], ary[1]);
     }
 
@@ -123,9 +131,13 @@ public class Tuple2<T1, T2> implements Iterable<Object>, Serializable {
 
     public <T> T[] toArray(Class<T> clazz) {
         T[] ary = (T[]) Array.newInstance(clazz, 5);
-        if (!clazz.isInstance(getV1())) throw new UnsupportedOperationException();
+        if (!clazz.isInstance(getV1())) {
+            throw new UnsupportedOperationException();
+        }
         ary[0] = (T) getV1();
-        if (!clazz.isInstance(getV2())) throw new UnsupportedOperationException();
+        if (!clazz.isInstance(getV2())) {
+            throw new UnsupportedOperationException();
+        }
         ary[1] = (T) getV2();
         return ary;
     }

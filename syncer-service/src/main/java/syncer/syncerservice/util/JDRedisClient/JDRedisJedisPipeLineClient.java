@@ -72,10 +72,12 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
             config.setTestOnBorrow(true);
         }
         int timeout = 50000;
-        if (org.springframework.util.StringUtils.isEmpty(password))
+        if (org.springframework.util.StringUtils.isEmpty(password)) {
             jedisPool = new JDJedisPool(this.config, this.host, this.port, timeout);
-        else
+        } else{
             jedisPool = new JDJedisPool(this.config, this.host, this.port, timeout, password, 0, null);
+
+        }
 
         JDJedis jdJedis = jedisPool.getResource();
         pipelined = jdJedis.pipelined();
@@ -271,7 +273,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     }
 
     synchronized void selectDb(Long dbNum){
-        if(dbNum!=null&&currentDbNum!=dbNum.intValue()){
+        if(dbNum!=null&&!currentDbNum.equals(dbNum.intValue())){
             currentDbNum=dbNum.intValue();
             pipelined.select(dbNum.intValue());
         }
@@ -301,7 +303,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
     synchronized void submitCommandNum() {
 
-            long time = new Date().getTime() - date.getTime();
+            long time = System.currentTimeMillis() - date.getTime();
             if (syncTaskEntity.syncNums >= count && time > 5000) {
                 //pipelined.sync();
                 List<Object> resultList = pipelined.syncAndReturnAll();
@@ -394,8 +396,8 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         private volatile List<EventEntity> keys = new ArrayList<>();
 
         public synchronized void addKey(EventEntity key) {
+            lock.lock();
             try {
-                lock.lock();
                 keys.add(key);
             } finally {
                 lock.unlock();
@@ -404,8 +406,8 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         }
 
         public List<EventEntity> getKeys() {
+            lock.lock();
             try {
-                lock.lock();
                 return keys;
             } finally {
                 lock.unlock();
@@ -430,8 +432,8 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         }
 
         public synchronized void add() {
+            lock.lock();
             try {
-                lock.lock();
                 this.syncNums++;
             } finally {
                 lock.unlock();
@@ -441,8 +443,8 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
 
         public synchronized void add(int num) {
+            lock.lock();
             try {
-                lock.lock();
                 this.syncNums += num;
             } finally {
                 lock.unlock();
@@ -450,8 +452,8 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         }
 
         public synchronized void clear() {
+            lock.lock();
             try {
-                lock.lock();
                 this.syncNums = 0;
             } finally {
                 lock.unlock();

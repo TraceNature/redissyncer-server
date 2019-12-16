@@ -43,10 +43,11 @@ public class ThreadMsgEntity implements Serializable {
         }
 
         if(offsetMap==null){
-            offsetMap=new ConcurrentHashMap<>();
+            offsetMap=new ConcurrentHashMap<>(10);
         }
-        if(r!=null)
+        if(r!=null) {
             rList.add(r);
+        }
 
     }
 

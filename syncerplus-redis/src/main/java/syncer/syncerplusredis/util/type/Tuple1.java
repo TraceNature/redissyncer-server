@@ -61,8 +61,12 @@ public class Tuple1<T1> implements Iterable<T1>, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o){
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()){
+            return false;
+        }
 
         Tuple1<?> tuple1 = (Tuple1<?>) o;
 
@@ -85,7 +89,9 @@ public class Tuple1<T1> implements Iterable<T1>, Serializable {
     }
 
     public static <V> Tuple1<V> from(V... ary) {
-        if (ary == null || ary.length != 1) throw new IllegalArgumentException();
+        if (ary == null || ary.length != 1) {
+            throw new IllegalArgumentException();
+        }
         return new Tuple1<>(ary[0]);
     }
 
@@ -111,7 +117,9 @@ public class Tuple1<T1> implements Iterable<T1>, Serializable {
 
     public <T> T[] toArray(Class<T> clazz) {
         T[] ary = (T[]) Array.newInstance(clazz, 5);
-        if (!clazz.isInstance(getV1())) throw new UnsupportedOperationException();
+        if (!clazz.isInstance(getV1())) {
+            throw new UnsupportedOperationException();
+        }
         ary[0] = (T) getV1();
         return ary;
     }

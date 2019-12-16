@@ -51,7 +51,9 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
         Configuration configuration = replicator.getConfiguration();
         for (; retries < configuration.getRetries() || configuration.getRetries() <= 0; retries++) {
             exception = null;
-            if (isManualClosed()) break;
+            if (isManualClosed()) {
+                break;
+            }
             final long interval = configuration.getRetryTimeInterval();
             try {
                 if (connect()) {
@@ -74,8 +76,9 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
         }
 
 
-        if (exception != null)
+        if (exception != null) {
             throw exception;
+        }
 
     }
 
@@ -87,7 +90,9 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
         Configuration configuration = replicator.getConfiguration();
         for (; retries < configuration.getRetries() || configuration.getRetries() <= 0; retries++) {
             exception = null;
-            if (isManualClosed()) break;
+            if (isManualClosed()) {
+                break;
+            }
             final long interval = configuration.getRetryTimeInterval();
             try {
                 if (connect()) {
@@ -142,8 +147,9 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
 //        if (exception != null)
 //            throw exception;
 //
-        if (exception != null)
+        if (exception != null) {
             throw exception;
+        }
 
 
 

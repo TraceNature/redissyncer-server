@@ -65,7 +65,7 @@ public class JDSafeObjectInputStream extends ObjectInputStream {
 
         return hashCode;
     }
-
+    @Override
     protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
         String className = desc.getName();
         long classHash = fnv1a_64(className);

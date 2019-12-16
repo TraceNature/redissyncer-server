@@ -65,7 +65,9 @@ public class RedisInputStream extends InputStream {
     }
 
     protected void notify(byte... bytes) {
-        if (rawByteListeners == null || rawByteListeners.isEmpty()) return;
+        if (rawByteListeners == null || rawByteListeners.isEmpty()) {
+            return;
+        }
         for (RawByteListener listener : rawByteListeners) {
             listener.handle(bytes);
         }
@@ -117,7 +119,9 @@ public class RedisInputStream extends InputStream {
     public ByteArray readBytes(long len) throws IOException {
         ByteArray bytes = new ByteArray(len);
         this.read(bytes, 0, len);
-        if (mark) markLen += len;
+        if (mark) {
+            markLen += len;
+        }
         return bytes;
     }
 
@@ -193,8 +197,12 @@ public class RedisInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-        if (head >= tail) fill();
-        if (mark) markLen += 1;
+        if (head >= tail){
+            fill();
+        }
+        if (mark) {
+            markLen += 1;
+        }
         byte b = buf[head++];
         notify(b);
         return b & 0xff;
@@ -242,11 +250,15 @@ public class RedisInputStream extends InputStream {
         while (total > 0) {
             int available = tail - head;
             if (available >= total) {
-                if (notify) notify(Arrays.copyOfRange(buf, head, head + (int) total));
+                if (notify) {
+                    notify(Arrays.copyOfRange(buf, head, head + (int) total));
+                }
                 head += total;
                 break;
             } else {
-                if (notify) notify(Arrays.copyOfRange(buf, head, tail));
+                if (notify){
+                    notify(Arrays.copyOfRange(buf, head, tail));
+                }
                 total -= available;
                 fill();
             }
@@ -266,7 +278,9 @@ public class RedisInputStream extends InputStream {
 
     protected void fill() throws IOException {
         tail = in.read(buf, 0, buf.length);
-        if (tail == -1) throw new EOFException("end of file or end of stream.");
+        if (tail == -1){
+            throw new EOFException("end of file or end of stream.");
+        }
         total += tail;
         head = 0;
     }

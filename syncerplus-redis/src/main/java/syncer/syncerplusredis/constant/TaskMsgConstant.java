@@ -9,8 +9,8 @@ package syncer.syncerplusredis.constant;
  * 5XXX	以 5 开头的状态码，表示系统错误。
  */
 public class TaskMsgConstant {
-    public static final String Task_ERROR_MESSAGE="线程开小差了...";
-    public static final String Task_MSG_PARSE_ERROR_CODE="任务名称已存在....";
+    public static final String TASK_ERROR_MESSAGE="线程开小差了...";
+    public static final String TASK_MSG_PARSE_ERROR_CODE="任务名称已存在....";
 
     public static final String TASK_MSG_REDIS_ERROR="目标redis连接失败";
     public static final String TASK_MSG_REDIS_ERROR_CODE="4000";

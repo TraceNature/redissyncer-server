@@ -29,7 +29,9 @@ public class MSetParser implements CommandParser<MSetCommand> {
     @Override
     public MSetCommand parse(Object[] command) {
         ByteArrayMap kv = new ByteArrayMap();
-        if (command.length == 1) return new MSetCommand(kv);
+        if (command.length == 1){
+            return new MSetCommand(kv);
+        }
         int idx = 1;
         while (idx < command.length) {
             byte[] key = CommandParsers.toBytes(command[idx]);

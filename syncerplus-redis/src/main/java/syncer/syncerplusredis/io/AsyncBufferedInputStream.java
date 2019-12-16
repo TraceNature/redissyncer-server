@@ -78,13 +78,16 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
     /*
      *
      */
+    @Override
     public void run() {
         try {
             final byte[] buffer = new byte[512 * 1024];
             while (!this.closed.get()) {
                 //
                 int r = this.is.read(buffer, 0, buffer.length);
-                if (r < 0) throw new EOFException();
+                if (r < 0) {
+                    throw new EOFException();
+                }
 
                 //
                 int offset = 0;
@@ -121,7 +124,9 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
     @Override
     public void close() throws IOException {
         //
-        if (!this.closed.compareAndSet(false, true)) return;
+        if (!this.closed.compareAndSet(false, true)) {
+            return;
+        }
 
         //
         try {
@@ -143,9 +148,13 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
         try {
             //
             while (this.ringBuffer.isEmpty()) {
-                if (this.exception != null) throw this.exception;
+                if (this.exception != null) {
+                    throw this.exception;
+                }
                 this.bufferNotEmpty.awaitUninterruptibly();
-                if (this.closed.get()) throw new EOFException();
+                if (this.closed.get()) {
+                    throw new EOFException();
+                }
             }
 
             //
@@ -158,14 +167,18 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
     }
 
     @Override
-    public int read(byte b[], int off, int len) throws IOException {
+    public int read(byte[] b, int off, int len) throws IOException {
         this.lock.lock();
         try {
             //
             while (this.ringBuffer.isEmpty()) {
-                if (this.exception != null) throw this.exception;
+                if (this.exception != null){
+                    throw this.exception;
+                }
                 this.bufferNotEmpty.awaitUninterruptibly();
-                if (this.closed.get()) throw new EOFException();
+                if (this.closed.get()){
+                    throw new EOFException();
+                }
             }
 
             //
@@ -177,13 +190,15 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
         }
     }
 
-    public int write(byte b[], int off, int len) throws IOException {
+    public int write(byte[] b, int off, int len) throws IOException {
         this.lock.lock();
         try {
             //
             while (this.ringBuffer.isFull()) {
                 this.bufferNotFull.awaitUninterruptibly();
-                if (this.closed.get()) throw new EOFException();
+                if (this.closed.get()) {
+                    throw new EOFException();
+                }
             }
 
             //
@@ -240,7 +255,7 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
             return r;
         }
 
-        public int read(byte b[], int off, int len) {
+        public int read(byte[] b, int off, int len) {
             //
             final int r = Math.min(this.size, len);
             if (this.head > this.tail) {
@@ -248,7 +263,9 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
             } else {
                 final int r1 = Math.min(this.buffer.length - this.tail, r);
                 System.arraycopy(this.buffer, this.tail, b, off, r1);
-                if (r1 < r) System.arraycopy(this.buffer, 0, b, off + r1, r - r1);
+                if (r1 < r) {
+                    System.arraycopy(this.buffer, 0, b, off + r1, r - r1);
+                }
             }
 
             //
@@ -257,7 +274,7 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
             return r;
         }
 
-        public int write(byte b[], int off, int len) {
+        public int write(byte[] b, int off, int len) {
             //
             final int w = Math.min(this.buffer.length - this.size, len);
             if (this.head < this.tail) {
@@ -265,7 +282,9 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
             } else {
                 final int w1 = Math.min(this.buffer.length - this.head, w);
                 System.arraycopy(b, off, this.buffer, this.head, w1);
-                if (w1 < w) System.arraycopy(b, off + w1, this.buffer, 0, w - w1);
+                if (w1 < w) {
+                    System.arraycopy(b, off + w1, this.buffer, 0, w - w1);
+                }
             }
 
             //

@@ -45,12 +45,12 @@ public class DtoCheckUtils {
 //                }
 //            }
 
-            if(redisClusterDto.getTasktype().trim().toLowerCase().equals("incrementonly")){
+            if("incrementonly".equals(redisClusterDto.getTasktype().trim().toLowerCase())){
                 String incrementtype =redisClusterDto.getOffsetPlace().trim().toLowerCase();
                 if(StringUtils.isEmpty(incrementtype)){
                     incrementtype="endbuffer";
                 }
-                if(!incrementtype.equals("endbuffer")&&!incrementtype.equals("beginbuffer")){
+                if(!"endbuffer".equals(incrementtype)&&!"beginbuffer".equals(incrementtype)){
                     throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_INCREMENT_ERROR_CODE,TaskMsgConstant.TASK_MSG_INCREMENT_ERROR));
                 }
             }

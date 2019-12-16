@@ -59,6 +59,7 @@ public class CommonPoolConnectionFactory extends BasePoolableObjectFactory {
      * @param obj
      * @throws Exception
      */
+    @Override
     public void destroyObject(Object obj) throws Exception  {
         if(obj instanceof RedisClient){
             ((RedisClient)obj).close();
@@ -77,6 +78,7 @@ public class CommonPoolConnectionFactory extends BasePoolableObjectFactory {
      * @param obj
      * @return
      */
+    @Override
     public boolean validateObject(Object obj) {
         if(obj instanceof RedisClient){
             RedisClient redisClient = ((RedisClient)obj);

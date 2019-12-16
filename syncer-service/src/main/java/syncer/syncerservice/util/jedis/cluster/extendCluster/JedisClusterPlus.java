@@ -2224,7 +2224,7 @@ public  class JedisClusterPlus extends BinaryJedisClusterPlus implements JedisCl
             }
         }.run(key);
     }
-
+    @Override
     public Long waitReplicas(final String key, final int replicas, final long timeout) {
         return new JedisClusterCommandPlus<Long>(connectionHandler, maxAttempts,nodesMap) {
             @Override
@@ -2233,7 +2233,7 @@ public  class JedisClusterPlus extends BinaryJedisClusterPlus implements JedisCl
             }
         }.run(key);
     }
-
+    @Override
     public Object sendCommand(final String sampleKey, final ProtocolCommand cmd, final String... args) {
         return new JedisClusterCommandPlus(connectionHandler, maxAttempts,nodesMap) {
             @Override

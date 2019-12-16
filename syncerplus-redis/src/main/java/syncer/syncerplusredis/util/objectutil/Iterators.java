@@ -49,7 +49,9 @@ public class Iterators {
 
             @Override
             public T next() {
-                if (!hasNext()) throw new NoSuchElementException();
+                if (!hasNext()){
+                    throw new NoSuchElementException();
+                }
                 return t[idx++];
             }
         }

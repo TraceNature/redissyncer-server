@@ -45,18 +45,23 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
         this.inputStream.setRawByteListeners(this.rawByteListeners);
         this.replyParser = new ReplyParser(inputStream, new RedisCodec());
         builtInCommandParserRegister();
-        if (configuration.isUseDefaultExceptionListener())
+        if (configuration.isUseDefaultExceptionListener()) {
             addExceptionListener(new DefaultExceptionListener());
+        }
     }
 
     @Override
     public void open() throws IOException, IncrementException {
         super.open();
-        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) return;
+        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) {
+            return;
+        }
         try {
             doOpen();
         } catch (UncheckedIOException e) {
-            if (!(e.getCause() instanceof EOFException)) throw e.getCause();
+            if (!(e.getCause() instanceof EOFException)) {
+                throw e.getCause();
+            }
         } finally {
             doClose();
             doCloseListener(this);
@@ -88,8 +93,9 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
             this.inputStream.setRawByteListeners(this.rawByteListeners);
             this.replyParser = new ReplyParser(inputStream, new RedisCodec());
             builtInCommandParserRegister();
-            if (configuration.isUseDefaultExceptionListener())
+            if (configuration.isUseDefaultExceptionListener()) {
                 addExceptionListener(new DefaultExceptionListener());
+            }
 
         } catch (Exception e) {
             try {
@@ -105,11 +111,15 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
     public void open(String taskId) throws IOException, IncrementException {
 
         super.open();
-        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) return;
+        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) {
+            return;
+        }
         try {
             doOpen(taskId);
         } catch (UncheckedIOException e) {
-            if (!(e.getCause() instanceof EOFException)) throw e.getCause();
+            if (!(e.getCause() instanceof EOFException)){
+                throw e.getCause();
+            }
         } finally {
             doClose();
             doCloseListener(this);
@@ -124,15 +134,18 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
             RdbParser parser = new RdbParser(inputStream, this);
             configuration.setReplOffset(parser.parse());
         }
-        if (getStatus() != Status.CONNECTED) return;
+        if (getStatus() != Status.CONNECTED){
+            return;
+        }
         submitEvent(new PreCommandSyncEvent());
         try {
             final long[] offset = new long[1];
             while (getStatus() == Status.CONNECTED) {
                 Object obj = replyParser.parse(len -> offset[0] = len);
                 if (obj instanceof Object[]) {
-                    if (verbose() && log.isDebugEnabled())
+                    if (verbose() && log.isDebugEnabled()) {
                         log.debug(Strings.format((Object[]) obj));
+                    }
                     Object[] raw = (Object[]) obj;
                     CommandName name = CommandName.name(Strings.toString(raw[0]));
                     final CommandParser<? extends Command> parser;
@@ -164,15 +177,18 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
                 RdbParser parser = new RdbParser(inputStream, this);
                 configuration.setReplOffset(parser.parse());
             }
-            if (getStatus() != Status.CONNECTED) return;
+            if (getStatus() != Status.CONNECTED) {
+                return;
+            }
             submitEvent(new PreCommandSyncEvent());
             try {
                 final long[] offset = new long[1];
                 while (getStatus() == Status.CONNECTED) {
                     Object obj = replyParser.parse(len -> offset[0] = len);
                     if (obj instanceof Object[]) {
-                        if (verbose() && log.isDebugEnabled())
+                        if (verbose() && log.isDebugEnabled()) {
                             log.debug(Strings.format((Object[]) obj));
+                        }
                         Object[] raw = (Object[]) obj;
                         CommandName name = CommandName.name(Strings.toString(raw[0]));
                         final CommandParser<? extends Command> parser;

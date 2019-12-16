@@ -85,7 +85,7 @@ public class JedisClusterFactory implements FactoryBean<JedisClusterPlus> {
         Map<String,String>nodesMap=new HashMap<>();
         ClusterNodesUtil.builderMap(nodesMap,haps,passWord);
 
-        if(passWord==null||passWord.trim().equals("")){
+        if(passWord==null||"".equals(passWord.trim())){
             jedisCluster = new JedisClusterPlus(haps, connectionTimeout, soTimeout, maxRedirections,jedisPoolConfig,nodesMap);
         }else {
             jedisCluster = new JedisClusterPlus(haps, connectionTimeout, soTimeout, maxRedirections, passWord,jedisPoolConfig,nodesMap);

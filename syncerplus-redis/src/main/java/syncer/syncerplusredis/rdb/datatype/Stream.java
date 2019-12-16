@@ -78,8 +78,12 @@ public class Stream implements Serializable {
     @Override
     public String toString() {
         String r = "Stream{" + "lastId=" + lastId + ", length=" + length;
-        if (groups != null && !groups.isEmpty()) r += ", groups=" + groups;
-        if (entries != null && !entries.isEmpty()) r += ", entries=" + entries.size();
+        if (groups != null && !groups.isEmpty()) {
+            r += ", groups=" + groups;
+        }
+        if (entries != null && !entries.isEmpty()){
+            r += ", entries=" + entries.size();
+        }
         return r + '}';
     }
 
@@ -186,8 +190,12 @@ public class Stream implements Serializable {
         @Override
         public String toString() {
             String r = "Group{" + "name='" + Strings.toString(name) + '\'' + ", lastId=" + lastId;
-            if (consumers != null && !consumers.isEmpty()) r += ", consumers=" + consumers;
-            if (pendingEntries != null && !pendingEntries.isEmpty()) r += ", gpel=" + pendingEntries.size();
+            if (consumers != null && !consumers.isEmpty()){
+                r += ", consumers=" + consumers;
+            }
+            if (pendingEntries != null && !pendingEntries.isEmpty()) {
+                r += ", gpel=" + pendingEntries.size();
+            }
             return r + '}';
         }
     }
@@ -235,7 +243,9 @@ public class Stream implements Serializable {
         @Override
         public String toString() {
             String r = "Consumer{" + "name='" + Strings.toString(name) + '\'' + ", seenTime=" + seenTime;
-            if (pendingEntries != null && !pendingEntries.isEmpty()) r += ", cpel=" + pendingEntries.size();
+            if (pendingEntries != null && !pendingEntries.isEmpty()){
+                r += ", cpel=" + pendingEntries.size();
+            }
             return r + '}';
         }
     }
@@ -344,8 +354,12 @@ public class Stream implements Serializable {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
             ID id = (ID) o;
             return ms == id.ms && seq == id.seq;
         }
@@ -358,7 +372,9 @@ public class Stream implements Serializable {
         @Override
         public int compareTo(ID that) {
             int r = Long.compare(this.ms, that.ms);
-            if (r == 0) return Long.compare(this.seq, that.seq);
+            if (r == 0) {
+                return Long.compare(this.seq, that.seq);
+            }
             return r;
         }
 

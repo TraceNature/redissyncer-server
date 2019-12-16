@@ -58,8 +58,9 @@ public class DefaultRdbModuleParser {
     public long loadSigned(int version) throws IOException {
         if (version == 2) {
             long opcode = parser.rdbLoadLen().len;
-            if (opcode != RDB_MODULE_OPCODE_UINT)
+            if (opcode != RDB_MODULE_OPCODE_UINT) {
                 throw new UnsupportedOperationException("Error loading signed or unsigned long from RDB.");
+            }
         }
         return parser.rdbLoadLen().len;
     }
@@ -88,8 +89,9 @@ public class DefaultRdbModuleParser {
     public String loadString(int version) throws IOException {
         if (version == 2) {
             long opcode = parser.rdbLoadLen().len;
-            if (opcode != RDB_MODULE_OPCODE_STRING)
+            if (opcode != RDB_MODULE_OPCODE_STRING) {
                 throw new UnsupportedOperationException("Error loading string from RDB.");
+            }
         }
         ByteArray bytes = parser.rdbGenericLoadStringObject(Constants.RDB_LOAD_NONE);
         return Strings.toString(bytes.first());
@@ -104,8 +106,9 @@ public class DefaultRdbModuleParser {
     public byte[] loadStringBuffer(int version) throws IOException {
         if (version == 2) {
             long opcode = parser.rdbLoadLen().len;
-            if (opcode != RDB_MODULE_OPCODE_STRING)
+            if (opcode != RDB_MODULE_OPCODE_STRING) {
                 throw new UnsupportedOperationException("Error loading string from RDB.");
+            }
         }
         ByteArray bytes = parser.rdbGenericLoadStringObject(Constants.RDB_LOAD_PLAIN);
         return bytes.first();
@@ -120,8 +123,9 @@ public class DefaultRdbModuleParser {
     public double loadDouble(int version) throws IOException {
         if (version == 2) {
             long opcode = parser.rdbLoadLen().len;
-            if (opcode != RDB_MODULE_OPCODE_DOUBLE)
+            if (opcode != RDB_MODULE_OPCODE_DOUBLE) {
                 throw new UnsupportedOperationException("Error loading double from RDB.");
+            }
         }
         return parser.rdbLoadBinaryDoubleValue();
     }
@@ -135,8 +139,9 @@ public class DefaultRdbModuleParser {
     public float loadFloat(int version) throws IOException {
         if (version == 2) {
             long opcode = parser.rdbLoadLen().len;
-            if (opcode != RDB_MODULE_OPCODE_FLOAT)
+            if (opcode != RDB_MODULE_OPCODE_FLOAT) {
                 throw new UnsupportedOperationException("Error loading float from RDB.");
+            }
         }
         return parser.rdbLoadBinaryFloatValue();
     }

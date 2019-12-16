@@ -30,6 +30,6 @@ public interface Replicator extends Closeable, ReplicatorRegister, ReplicatorLis
     void open() throws IOException, IncrementException;
 
     void open(String taskId) throws IOException, IncrementException;
-    
+    @Override
     void close() throws IOException;
 }

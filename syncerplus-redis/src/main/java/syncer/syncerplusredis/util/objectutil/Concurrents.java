@@ -33,9 +33,15 @@ public class Concurrents {
 
     public static long terminate(ExecutorService exec, long timeout, TimeUnit unit)
             throws InterruptedException {
-        if (exec == null) return timeout;
-        if (!exec.isShutdown()) exec.shutdown();
-        if (timeout <= 0) return 0;
+        if (exec == null) {
+            return timeout;
+        }
+        if (!exec.isShutdown()) {
+            exec.shutdown();
+        }
+        if (timeout <= 0){
+            return 0;
+        }
         final long now = System.nanoTime();
         exec.awaitTermination(timeout, unit);
         final long elapsedTime = System.nanoTime() - now;

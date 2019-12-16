@@ -47,10 +47,11 @@ public class TestJedisClient implements IJedisClient {
         this.config = config;
         int timeout = 50000;
 
-        if (org.springframework.util.StringUtils.isEmpty(password))
+        if (org.springframework.util.StringUtils.isEmpty(password)) {
             jedisPool = new JedisPool(this.config, this.host, this.port, timeout);
-        else
+        } else {
             jedisPool = new JedisPool(this.config, this.host, this.port, timeout, password, db, null);
+        }
     }
 
     /**
@@ -110,8 +111,9 @@ public class TestJedisClient implements IJedisClient {
 
     public Jedis selectDb(Integer index, Jedis jedis) throws JedisException {
 
-        if (jedis == null)
+        if (jedis == null) {
             return null;
+        }
 
         try {
             jedis.select(index);
@@ -124,8 +126,9 @@ public class TestJedisClient implements IJedisClient {
     }
     public JDJedis selectDb(Integer index, JDJedis jedis) throws JedisException {
 
-        if (jedis == null)
+        if (jedis == null) {
             return null;
+        }
 
         try {
             jedis.select(index);
@@ -395,8 +398,9 @@ public class TestJedisClient implements IJedisClient {
 
     public static String restorebyteObject(byte[] key, byte[] value, Integer cacheSeconds, Jedis jedis, boolean status) {
         String result = null;
-        if (jedis == null)
+        if (jedis == null) {
             return "error: jedis is null";
+        }
         try {
             if (cacheSeconds == null) {
                 cacheSeconds = 0;
@@ -851,6 +855,7 @@ public class TestJedisClient implements IJedisClient {
      * @param mapKey 值
      * @return
      */
+    @Override
     public long mapRemove(String key, String mapKey) {
         long result = 0;
         Jedis jedis = null;
@@ -873,6 +878,7 @@ public class TestJedisClient implements IJedisClient {
      * @param mapKey 值
      * @return
      */
+    @Override
     public long mapObjectRemove(String key, String mapKey) {
         long result = 0;
         Jedis jedis = null;
@@ -895,6 +901,7 @@ public class TestJedisClient implements IJedisClient {
      * @param mapKey 值
      * @return
      */
+    @Override
     public boolean mapExists(String key, String mapKey) {
         boolean result = false;
         Jedis jedis = null;
@@ -917,6 +924,8 @@ public class TestJedisClient implements IJedisClient {
      * @param mapKey 值
      * @return
      */
+
+    @Override
     public boolean mapObjectExists(String key, String mapKey) {
         boolean result = false;
         Jedis jedis = null;
@@ -938,6 +947,7 @@ public class TestJedisClient implements IJedisClient {
      * @param key 键
      * @return
      */
+    @Override
     public long del(String key) {
         long result = 0;
         Jedis jedis = null;
@@ -963,6 +973,7 @@ public class TestJedisClient implements IJedisClient {
      * @param key 键
      * @return
      */
+    @Override
     public long delObject(String key) {
         long result = 0;
         Jedis jedis = null;
@@ -988,6 +999,7 @@ public class TestJedisClient implements IJedisClient {
      * @param key 键
      * @return
      */
+    @Override
     public boolean exists(String key) {
         boolean result = false;
         Jedis jedis = null;
@@ -1009,6 +1021,7 @@ public class TestJedisClient implements IJedisClient {
      * @param key 键
      * @return
      */
+    @Override
     public boolean existsObject(String key) {
         boolean result = false;
         Jedis jedis = null;
@@ -1263,8 +1276,9 @@ public class TestJedisClient implements IJedisClient {
 
 
     public  void closePool() {
-        if(jedisPool!=null)
+        if(jedisPool!=null) {
             jedisPool.close();
+        }
 
     }
 }

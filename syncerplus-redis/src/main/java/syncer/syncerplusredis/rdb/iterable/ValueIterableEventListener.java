@@ -56,7 +56,9 @@ public class ValueIterableEventListener implements EventListener {
     }
     
     public ValueIterableEventListener(boolean order, int batchSize, EventListener listener) {
-        if (batchSize <= 0) throw new IllegalArgumentException(String.valueOf(batchSize));
+        if (batchSize <= 0) {
+            throw new IllegalArgumentException(String.valueOf(batchSize));
+        }
         this.order = order;
         this.batchSize = batchSize;
         this.listener = listener;
@@ -85,15 +87,18 @@ public class ValueIterableEventListener implements EventListener {
                 while (it.hasNext()) {
                     next.add(it.next());
                     if (next.size() == batchSize) {
-                        if (prev != null)
+                        if (prev != null) {
                             listener.onEvent(replicator, KeyValuePairs.set(skv, prev, batch++, false));
+                        }
                         prev = next;
                         next = create(order, batchSize);
                     }
                 }
                 final boolean last = next.isEmpty();
                 listener.onEvent(replicator, KeyValuePairs.set(skv, prev, batch++, last));
-                if (!last) listener.onEvent(replicator, KeyValuePairs.set(skv, next, batch++, true));
+                if (!last){
+                    listener.onEvent(replicator, KeyValuePairs.set(skv, next, batch++, true));
+                }
             } else {
                 KeyStringValueByteArrayIterator lkv = (KeyStringValueByteArrayIterator) kv;
                 Iterator<byte[]> it = lkv.getValue();
@@ -102,8 +107,9 @@ public class ValueIterableEventListener implements EventListener {
                     try {
                         next.add(it.next());
                         if (next.size() == batchSize) {
-                            if (prev != null)
+                            if (prev != null) {
                                 listener.onEvent(replicator, KeyValuePairs.list(lkv, prev, batch++, false));
+                            }
                             prev = next;
                             next = new ByteArrayList(batchSize);
                         }
@@ -113,7 +119,9 @@ public class ValueIterableEventListener implements EventListener {
                 }
                 final boolean last = next.isEmpty();
                 listener.onEvent(replicator, KeyValuePairs.list(lkv, prev, batch++, last));
-                if (!last) listener.onEvent(replicator, KeyValuePairs.list(lkv, next, batch++, true));
+                if (!last) {
+                    listener.onEvent(replicator, KeyValuePairs.list(lkv, next, batch++, true));
+                }
             }
         } else if (kv instanceof KeyStringValueMapEntryIterator) {
             KeyStringValueMapEntryIterator mkv = (KeyStringValueMapEntryIterator) kv;
@@ -123,15 +131,18 @@ public class ValueIterableEventListener implements EventListener {
                 Map.Entry<byte[], byte[]> entry = it.next();
                 next.put(entry.getKey(), entry.getValue());
                 if (next.size() == batchSize) {
-                    if (prev != null)
+                    if (prev != null) {
                         listener.onEvent(replicator, KeyValuePairs.hash(mkv, prev, batch++, false));
+                    }
                     prev = next;
                     next = new ByteArrayMap(order, batchSize);
                 }
             }
             final boolean last = next.isEmpty();
             listener.onEvent(replicator, KeyValuePairs.hash(mkv, prev, batch++, last));
-            if (!last) listener.onEvent(replicator, KeyValuePairs.hash(mkv, next, batch++, true));
+            if (!last){
+                listener.onEvent(replicator, KeyValuePairs.hash(mkv, next, batch++, true));
+            }
         } else if (kv instanceof KeyStringValueZSetEntryIterator) {
             KeyStringValueZSetEntryIterator zkv = (KeyStringValueZSetEntryIterator) kv;
             Iterator<ZSetEntry> it = zkv.getValue();
@@ -139,15 +150,18 @@ public class ValueIterableEventListener implements EventListener {
             while (it.hasNext()) {
                 next.add(it.next());
                 if (next.size() == batchSize) {
-                    if (prev != null)
+                    if (prev != null) {
                         listener.onEvent(replicator, KeyValuePairs.zset(zkv, prev, batch++, false));
+                    }
                     prev = next;
                     next = create(order, batchSize);
                 }
             }
             final boolean last = next.isEmpty();
             listener.onEvent(replicator, KeyValuePairs.zset(zkv, prev, batch++, last));
-            if (!last) listener.onEvent(replicator, KeyValuePairs.zset(zkv, next, batch++, true));
+            if (!last){
+                listener.onEvent(replicator, KeyValuePairs.zset(zkv, next, batch++, true));
+            }
         } else if (kv instanceof KeyStringValueModule) {
             listener.onEvent(replicator, KeyValuePairs.module((KeyStringValueModule) kv, (Module) kv.getValue(), batch, true));
         } else if (kv instanceof KeyStringValueStream) {

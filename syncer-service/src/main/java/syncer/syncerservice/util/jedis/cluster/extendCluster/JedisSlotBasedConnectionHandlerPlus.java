@@ -59,7 +59,9 @@ public class JedisSlotBasedConnectionHandlerPlus  extends JedisClusterConnection
 
                 String result = jedis.ping();
 
-                if (result.equalsIgnoreCase("pong")) return jedis;
+                if ("pong".equalsIgnoreCase(result.toLowerCase())){
+                    return jedis;
+                }
 
                 jedis.close();
             } catch (JedisException ex) {

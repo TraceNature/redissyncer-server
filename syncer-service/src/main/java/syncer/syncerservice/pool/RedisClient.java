@@ -45,8 +45,9 @@ public class RedisClient extends Client {
         try{
              r = getOne();
         }catch (Exception e){
-            if(e instanceof  JedisDataException)
+            if(e instanceof  JedisDataException) {
                 throw  new TaskRestoreException(e.getMessage());
+            }
 
         }
 
@@ -66,8 +67,9 @@ public class RedisClient extends Client {
         try{
             r = getOne();
         }catch (Exception e){
-            if(e instanceof  JedisDataException)
+            if(e instanceof  JedisDataException) {
                 throw  new TaskRestoreException(e.getMessage());
+            }
 
         }
 

@@ -60,8 +60,9 @@ public class RedisAofReplicator extends AbstractReplicator {
         this.inputStream.setRawByteListeners(this.rawByteListeners);
         this.replyParser = new ReplyParser(inputStream, new RedisCodec());
         builtInCommandParserRegister();
-        if (configuration.isUseDefaultExceptionListener())
+        if (configuration.isUseDefaultExceptionListener()) {
             addExceptionListener(new DefaultExceptionListener());
+        }
     }
 
 
@@ -85,19 +86,24 @@ public class RedisAofReplicator extends AbstractReplicator {
         this.inputStream.setRawByteListeners(this.rawByteListeners);
         this.replyParser = new ReplyParser(inputStream, new RedisCodec());
         builtInCommandParserRegister();
-        if (configuration.isUseDefaultExceptionListener())
+        if (configuration.isUseDefaultExceptionListener()) {
             addExceptionListener(new DefaultExceptionListener());
+        }
 
     }
 
     @Override
     public void open() throws IOException, IncrementException {
         super.open();
-        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) return;
+        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) {
+            return;
+        }
         try {
             doOpen();
         } catch (UncheckedIOException e) {
-            if (!(e.getCause() instanceof EOFException)) throw e.getCause();
+            if (!(e.getCause() instanceof EOFException)){
+                throw e.getCause();
+            }
         } finally {
             doClose();
             doCloseListener(this);
@@ -107,11 +113,15 @@ public class RedisAofReplicator extends AbstractReplicator {
     @Override
     public void open(String taskId) throws IOException, IncrementException {
         super.open();
-        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) return;
+        if (!compareAndSet(Status.DISCONNECTED, Status.CONNECTED)) {
+            return;
+        }
         try {
             doOpen(taskId);
         } catch (UncheckedIOException e) {
-            if (!(e.getCause() instanceof EOFException)) throw e.getCause();
+            if (!(e.getCause() instanceof EOFException)){
+                throw e.getCause();
+            }
         } finally {
             doClose();
             doCloseListener(this);
@@ -126,8 +136,10 @@ public class RedisAofReplicator extends AbstractReplicator {
             while (getStatus() == Status.CONNECTED) {
                 Object obj = replyParser.parse(len -> offset[0] = len);
                 if (obj instanceof Object[]) {
-                    if (verbose() && logger.isDebugEnabled())
+                    if (verbose() && logger.isDebugEnabled()){
                         logger.debug(Strings.format((Object[]) obj));
+                    }
+
                     Object[] raw = (Object[]) obj;
                     CommandName name = CommandName.name(Strings.toString(raw[0]));
                     final CommandParser<? extends Command> parser;
@@ -161,8 +173,9 @@ public class RedisAofReplicator extends AbstractReplicator {
                 while (getStatus() == Status.CONNECTED) {
                     Object obj = replyParser.parse(len -> offset[0] = len);
                     if (obj instanceof Object[]) {
-                        if (verbose() && logger.isDebugEnabled())
+                        if (verbose() && logger.isDebugEnabled()) {
                             logger.debug(Strings.format((Object[]) obj));
+                        }
                         Object[] raw = (Object[]) obj;
                         CommandName name = CommandName.name(Strings.toString(raw[0]));
                         final CommandParser<? extends Command> parser;

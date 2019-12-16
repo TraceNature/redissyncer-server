@@ -68,7 +68,9 @@ public class ByteBuilder {
             offset += ba.length;
             len -= ba.length;
         }
-        if (len > 0) System.arraycopy(buffer.array(), 0, ary, offset, len);
+        if (len > 0) {
+            System.arraycopy(buffer.array(), 0, ary, offset, len);
+        }
         return ary;
     }
     

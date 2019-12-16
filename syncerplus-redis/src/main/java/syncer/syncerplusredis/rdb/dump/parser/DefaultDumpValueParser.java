@@ -47,11 +47,11 @@ public class DefaultDumpValueParser implements DumpValueParser {
         this.replicator = replicator;
         this.valueVisitor = new DefaultRdbValueVisitor(replicator);
     }
-
+    @Override
     public void parse(DumpKeyValuePair kv, EventListener listener) {
         Objects.requireNonNull(listener).onEvent(replicator, parse(kv));
     }
-
+    @Override
     public KeyValuePair<?, ?> parse(DumpKeyValuePair kv) {
         Objects.requireNonNull(kv);
         try (RedisInputStream in = new RedisInputStream(new ByteArray(kv.getValue()))) {

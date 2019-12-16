@@ -21,7 +21,7 @@ public class RedisCommon {
     }
 
     public static synchronized  Map<byte[], Double> zsetBytes(Set<ZSetEntry> datas){
-        Map<byte[], Double> map = new HashMap<>();
+        Map<byte[], Double> map = new HashMap<>(10);
         datas.forEach(zset -> {
             map.put(zset.getElement(), zset.getScore());
         });

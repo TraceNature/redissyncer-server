@@ -161,8 +161,8 @@ public class JDRedisLettuceClient implements JDRedisClient {
     public String restoreReplace(Long dbNum, byte[] key, int ttl, byte[] serializedValue, boolean highVersion) {
         selectDb(dbNum);
         Lock lock=new ReentrantLock();
+        lock.lock();
         try {
-            lock.lock();
             if(highVersion){
                 return syncCommands.restore(Strings.byteToString(key),serializedValue,RestoreArgs.Builder.ttl(ttl).replace());
             }else {
@@ -198,7 +198,7 @@ public class JDRedisLettuceClient implements JDRedisClient {
     }
 
     void selectDb(Long dbNum){
-        if(dbNum!=null&&currentDbNum!=dbNum.intValue()){
+        if(dbNum!=null&&!currentDbNum.equals(dbNum.intValue())){
             currentDbNum=dbNum.intValue();
             syncCommands.select(dbNum.intValue());
         }

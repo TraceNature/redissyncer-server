@@ -29,7 +29,7 @@ public class SyncTaskUtils {
      * @throws TaskMsgException
      */
     public synchronized  static  Map<String,String> startCreateThread(String taskId, boolean afresh, IRedisSyncerService redisBatchedReplicatorService) throws TaskMsgException {
-        Map<String,String>taskMap=new HashMap<>();
+        Map<String,String>taskMap=new HashMap<>(10);
 
         if(StringUtils.isEmpty(taskId)){
             throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKID_NULL_ERROR));
@@ -78,7 +78,7 @@ public class SyncTaskUtils {
      * @return
      */
     public synchronized  static  Map<String,String> stopCreateThread(List<String> taskids) throws TaskMsgException {
-        Map<String,String>taskMap=new HashMap<>();
+        Map<String,String>taskMap=new HashMap<>(10);
 
 
         for (String taskId:taskids
@@ -139,17 +139,20 @@ public class SyncTaskUtils {
 
     public synchronized  static  Map<String,String> editTaskMsg(String taskId,String msg)  {
         try {
-            Map<String,String>taskMap=new HashMap<>();
+            Map<String,String>taskMap=new HashMap<>(10);
 
 
-            if(StringUtils.isEmpty(taskId)||!TaskMsgUtils.getAliveThreadHashMap().containsKey(taskId))
+            if(StringUtils.isEmpty(taskId)||!TaskMsgUtils.getAliveThreadHashMap().containsKey(taskId)) {
                 return null;
+            }
 
             ThreadMsgEntity entity=TaskMsgUtils.getThreadMsgEntity(taskId);
 
-            if(null!=entity)
+            if(null!=entity){
                 //运行中
                 entity.setTaskMsg(msg);
+            }
+
 
             return taskMap;
         }catch (Exception e){
@@ -185,7 +188,7 @@ public class SyncTaskUtils {
     }
 
     public synchronized  static  Map<String,String> brokenCreateThread(List<String> taskids,String msg) throws TaskMsgException {
-        Map<String,String>taskMap=new HashMap<>();
+        Map<String,String>taskMap=new HashMap<>(10);
 
         for (String taskId:taskids
         ) {
@@ -252,7 +255,7 @@ public class SyncTaskUtils {
 
         List<ThreadReturnMsgEntity>taskList=new ArrayList<>();
 
-        if(listTaskMsgDto.getRegulation().trim().equals("bynames")){
+        if("bynames".equals(listTaskMsgDto.getRegulation().trim())){
             if(null!=listTaskMsgDto.getTasknames()&&listTaskMsgDto.getTasknames().size()>0){
                 for (String name:listTaskMsgDto.getTasknames()
                 ) {
@@ -281,7 +284,7 @@ public class SyncTaskUtils {
 //                throw new TaskMsgException("bynames 参数类型错误");
                 throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKNAME_TYPE_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKNAME_TYPE_ERROR));
             }
-        }else if(listTaskMsgDto.getRegulation().trim().equals("all")){
+        }else if("all".equals(listTaskMsgDto.getRegulation().trim())){
             for(Map.Entry<String,ThreadMsgEntity>thre:TaskMsgUtils.getAliveThreadHashMap().entrySet()){
                 ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                 BeanUtils.copyProperties(thre.getValue(),msgEntity);
@@ -290,7 +293,7 @@ public class SyncTaskUtils {
                 msgEntity.setTargetRedisVersion(thre.getValue().getRedisClusterDto().getTargetRedisVersion());
                 taskList.add(msgEntity);
             }
-        }else if(listTaskMsgDto.getRegulation().trim().equals("byids")){
+        }else if("byids".equals(listTaskMsgDto.getRegulation().trim())){
 
             for (String id:listTaskMsgDto.getTaskids()
             ) {
@@ -315,7 +318,7 @@ public class SyncTaskUtils {
                     }
                 }
             }
-        }else if(listTaskMsgDto.getRegulation().trim().equals("bystatus")){
+        }else if("bystatus".equals(listTaskMsgDto.getRegulation().trim())){
 
             if(StringUtils.isEmpty(listTaskMsgDto.getTaskstatus())){
                 throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKSTATUS_NULL_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKSTATUS_NULL_ERROR));
@@ -323,11 +326,11 @@ public class SyncTaskUtils {
 //                throw new TaskMsgException("taskstatus 不能有为空");
             }
             ThreadStatusEnum statusEnum=null;
-            if(listTaskMsgDto.getTaskstatus().equals("live")){
+            if("live".equals(listTaskMsgDto.getTaskstatus())){
                 statusEnum=ThreadStatusEnum.RUN;
-            }else if(listTaskMsgDto.getTaskstatus().equals("stop")){
+            }else if("stop".equals(listTaskMsgDto.getTaskstatus())){
                 statusEnum=ThreadStatusEnum.STOP;
-            }else if(listTaskMsgDto.getTaskstatus().equals("broken")){
+            }else if("broken".equals(listTaskMsgDto.getTaskstatus())){
                 statusEnum=ThreadStatusEnum.BROKEN;
             }
 
@@ -342,7 +345,7 @@ public class SyncTaskUtils {
                     msgEntity.setTargetRedisVersion(thre.getValue().getRedisClusterDto().getTargetRedisVersion());
                     taskList.add(msgEntity);
                 }
-                if(statusEnum.equals(ThreadStatusEnum.CREATE)&&listTaskMsgDto.getTaskstatus().equals("stop")){
+                if(statusEnum.equals(ThreadStatusEnum.CREATE)&&"stop".equals(listTaskMsgDto.getTaskstatus())){
                     ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                     BeanUtils.copyProperties(thre.getValue(),msgEntity);
                     BeanUtils.copyProperties(thre.getValue().getRedisClusterDto(),msgEntity);
@@ -362,10 +365,10 @@ public class SyncTaskUtils {
      */
     public static void checklistTaskMsgDto(ListTaskMsgDto listTaskMsgDto) throws TaskMsgException {
         //all、bynames、byids、bystatus
-        if(!listTaskMsgDto.getRegulation().trim().equals("all")
-                &&!listTaskMsgDto.getRegulation().trim().equals("bynames")
-                && !listTaskMsgDto.getRegulation().trim().equals("byids")
-                && !listTaskMsgDto.getRegulation().trim().equals("bystatus")){
+        if(!"all".equals(listTaskMsgDto.getRegulation().trim())
+                &&!"bynames".equals(listTaskMsgDto.getRegulation().trim())
+                && !"byids".equals(listTaskMsgDto.getRegulation().trim())
+                && !"bystatus".equals(listTaskMsgDto.getRegulation().trim())){
 //            throw new TaskMsgException("regulation 参数类型错误");
             throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_REGULATION_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKID_REGULATION_ERROR));
         }
@@ -380,7 +383,7 @@ public class SyncTaskUtils {
      * @return
      */
     public synchronized  static  Map<String,String> delCreateThread(List<String> taskids) throws TaskMsgException {
-        Map<String,String>taskMap=new HashMap<>();
+        Map<String,String>taskMap=new HashMap<>(10);
 
         for (String taskId:taskids
         ) {
@@ -427,8 +430,9 @@ public class SyncTaskUtils {
          */
 
         ThreadMsgEntity entity=TaskMsgUtils.getAliveThreadHashMap().get(taskId);
-        if(null==entity)
+        if(null==entity) {
             return true;
+        }
 
         if(!entity.getStatus().equals(ThreadStatusEnum.RUN)){
             return true;

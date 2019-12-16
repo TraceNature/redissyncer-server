@@ -28,16 +28,14 @@ import java.util.HashMap;
 @RequestMapping(value = "/api/v1/file")
 @Validated
 public class RedisFileReplicatorController {
-//    @Autowired
-//    IRedisReplicatorService redisBatchedReplicatorService;
+
     @Autowired
     RedisPoolProps redisPoolProps;
     @Autowired
     IRedisSyncerService redisBatchedSyncerService;
 
     @RequestMapping(value = "/creattask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
-
-    public ResultMap test(@RequestBody @Validated  RedisFileDataDto redisFileDataDto) throws TaskMsgException {
+    public ResultMap creattask(@RequestBody @Validated  RedisFileDataDto redisFileDataDto) throws TaskMsgException {
 
         redisFileDataDto.setRedisFileDataDto(redisPoolProps.getMinPoolSize(),
                 redisPoolProps.getMaxPoolSize(),
@@ -123,7 +121,7 @@ public class RedisFileReplicatorController {
 //            return  ResultMap.builder().code("1000").msg("Failed to create task");
 //        }
 
-        HashMap msg=new HashMap();
+        HashMap msg=new HashMap(10);
         msg.put("taskid",threadId);
         return  ResultMap.builder().code("2000").msg("Task created successfully").data(msg);
 //        return ResultMap.getInstance().data(redisClusterDto);

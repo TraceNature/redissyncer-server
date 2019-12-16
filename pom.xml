@@ -5,7 +5,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>syncerplus-common</module>
-        <module>syncerplus-service</module>
         <module>syncerplus-webapp</module>
         <module>syncerplus-redis</module>
         <module>syncer-service</module>

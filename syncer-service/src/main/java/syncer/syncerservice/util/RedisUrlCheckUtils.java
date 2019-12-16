@@ -40,7 +40,7 @@ public class RedisUrlCheckUtils {
      */
     public static boolean checkRedisUrl(String uri) throws URISyntaxException {
         URI uriplus = new URI(uri);
-        if (uriplus.getScheme() != null && uriplus.getScheme().equalsIgnoreCase("redis")) {
+        if (uriplus.getScheme() != null && "redis".equalsIgnoreCase(uriplus.getScheme())) {
             return true;
         }
         return false;
@@ -95,7 +95,7 @@ public class RedisUrlCheckUtils {
                 try {
                     String png = (String) target.send("PING".getBytes());
                     System.out.println("------:"+png);
-                    if (png.equals("PONG")) {
+                    if ("PONG".equals(png)) {
                         return true;
                     }
                     i--;
@@ -159,8 +159,9 @@ public class RedisUrlCheckUtils {
             throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,e.getMessage()));
 
         } finally {
-            if (target != null)
+            if (target != null) {
                 target.close();
+            }
         }
         return targetVersion;
     }
@@ -207,15 +208,17 @@ public class RedisUrlCheckUtils {
         } catch (Exception e) {
 
         } finally {
-            if (source != null)
+            if (source != null) {
                 source.close();
-            if (target != null)
+            }
+            if (target != null) {
                 target.close();
+            }
         }
         System.out.println(sourceVersion+": "+targetVersion);
-        if (sourceVersion == targetVersion && targetVersion >= 3.0)
+        if (sourceVersion == targetVersion && targetVersion >= 3.0) {
             return RedisVersion.SAME;
-        else if (sourceVersion == targetVersion && targetVersion < 3.0) {
+        } else if (sourceVersion == targetVersion && targetVersion < 3.0) {
             return RedisVersion.LOWER;
         } else {
             return RedisVersion.OTHER;
@@ -304,8 +307,9 @@ public class RedisUrlCheckUtils {
             } catch (Exception e) {
                 throw new TaskMsgException("sourceUri is error :"+e.getMessage());
             } finally {
-                if (source != null)
+                if (source != null) {
                     source.close();
+                }
             }
         }
     }
@@ -356,8 +360,9 @@ public class RedisUrlCheckUtils {
         } catch (Exception e) {
 
         } finally {
-            if (target != null)
+            if (target != null) {
                 target.close();
+            }
         }
         return version;
     }
@@ -370,7 +375,7 @@ public class RedisUrlCheckUtils {
             String endRrgex = "master_repl_offset:(.*?)\r\n";
             String replid="master_replid:(.*?)\r\n";
             String runIdRrgex = "run_id:(.*?)\r\n";
-            if(type.trim().equals("endbuf")){
+            if("endbuf".equals(type.trim())){
                 if(RegexUtil.getSubUtilSimple(info, endRrgex).length()>0){
                     version[0] = RegexUtil.getSubUtilSimple(info, endRrgex);
                 }

@@ -33,8 +33,12 @@ public class CommandName {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         CommandName that = (CommandName) o;
         return name.toUpperCase().equals(that.name.toUpperCase());

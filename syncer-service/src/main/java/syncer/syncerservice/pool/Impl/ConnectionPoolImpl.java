@@ -69,7 +69,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
         this.timeBetweenEvictionRunsMillis=timeBetweenEvictionRunsMillis;
         freeResourceMonitor();
     }
-
+    @Override
     public RedisClient borrowResource() throws Exception {
         RedisClient redisClient = null;
         long now = System.currentTimeMillis();//获取连接的开始时间
@@ -96,7 +96,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
                     //获取password
                     if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
                         Object auth = redisClient.send(AUTH, tconfig.getAuthPassword().getBytes());
-                        log.info("AUTH:" + auth);
+                        log.info("AUTH:{}" , auth);
                     }
 
                     createCounter.incrementAndGet();
@@ -142,7 +142,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
         }
         return redisClient;
     }
-
+    @Override
     public void release(RedisClient client) throws Exception {
         if(null == client ) {
             log.info("释放的redisClient为空");
@@ -156,7 +156,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
             throw new Exception("释放redisClient异常");
         }
     }
-
+    @Override
     public void close() {
 
         if(isClosed.compareAndSet(false, true)){

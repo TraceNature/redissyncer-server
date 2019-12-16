@@ -52,8 +52,11 @@ public class ByteArrayMap implements Map<byte[], byte[]>, Serializable {
     }
     
     public ByteArrayMap(boolean ordered, int initialCapacity, float loadFactor) {
-        if (ordered) map = new LinkedHashMap<>(initialCapacity, loadFactor);
-        else map = new HashMap<>(initialCapacity, loadFactor);
+        if (ordered) {
+            map = new LinkedHashMap<>(initialCapacity, loadFactor);
+        } else{
+            map = new HashMap<>(initialCapacity, loadFactor);
+        }
     }
     
     @Override
@@ -68,19 +71,25 @@ public class ByteArrayMap implements Map<byte[], byte[]>, Serializable {
     
     @Override
     public boolean containsKey(Object key) {
-        if (key != null && !(key instanceof byte[])) return false;
+        if (key != null && !(key instanceof byte[])) {
+            return false;
+        }
         return map.containsKey(new Element((byte[]) key));
     }
     
     @Override
     public boolean containsValue(Object value) {
-        if (value != null && !(value instanceof byte[])) return false;
+        if (value != null && !(value instanceof byte[])) {
+            return false;
+        }
         return map.containsValue(new Element((byte[]) value));
     }
     
     @Override
     public byte[] get(Object key) {
-        if (key != null && !(key instanceof byte[])) return null;
+        if (key != null && !(key instanceof byte[])) {
+            return null;
+        }
         return map.get(new Element((byte[]) key)).bytes;
     }
     
@@ -92,7 +101,9 @@ public class ByteArrayMap implements Map<byte[], byte[]>, Serializable {
     
     @Override
     public void putAll(Map<? extends byte[], ? extends byte[]> m) {
-        if (m == null) return;
+        if (m == null) {
+            return;
+        }
         for (Entry<? extends byte[], ? extends byte[]> entry : m.entrySet()) {
             put(entry.getKey(), entry.getValue());
         }
@@ -100,7 +111,9 @@ public class ByteArrayMap implements Map<byte[], byte[]>, Serializable {
 
     @Override
     public byte[] remove(Object key) {
-        if (key != null && !(key instanceof byte[])) return null;
+        if (key != null && !(key instanceof byte[])){
+            return null;
+        }
         return map.remove(new Element((byte[]) key)).bytes;
     }
 
@@ -135,8 +148,12 @@ public class ByteArrayMap implements Map<byte[], byte[]>, Serializable {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o){
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
             Element key = (Element) o;
             return Arrays.equals(bytes, key.bytes);
         }
@@ -166,33 +183,51 @@ public class ByteArrayMap implements Map<byte[], byte[]>, Serializable {
 
         @Override
         public final boolean contains(Object o) {
-            if (!(o instanceof Map.Entry)) return false;
+            if (!(o instanceof Map.Entry)){
+                return false;
+            }
             Entry<?, ?> e = (Entry<?, ?>) o;
             Object k = e.getKey();
             Object v = e.getValue();
-            if (k != null && !(k instanceof byte[])) return false;
-            if (v != null && !(v instanceof byte[])) return false;
+            if (k != null && !(k instanceof byte[])) {
+                return false;
+            }
+            if (v != null && !(v instanceof byte[])) {
+                return false;
+            }
             byte[] key = (byte[]) k;
             byte[] value = (byte[]) v;
-            if (!ByteArrayMap.this.containsKey(key)) return false;
+            if (!ByteArrayMap.this.containsKey(key)) {
+                return false;
+            }
             byte[] val = ByteArrayMap.this.get(key);
             return Arrays.equals(val, value);
         }
 
         @Override
         public final boolean remove(Object o) {
-            if (!(o instanceof Map.Entry)) return false;
+            if (!(o instanceof Map.Entry)) {
+                return false;
+            }
             Entry<?, ?> e = (Entry<?, ?>) o;
             Object k = e.getKey();
             Object v = e.getValue();
-            if (k != null && !(k instanceof byte[])) return false;
-            if (v != null && !(v instanceof byte[])) return false;
+            if (k != null && !(k instanceof byte[])) {
+                return false;
+            }
+            if (v != null && !(v instanceof byte[])) {
+                return false;
+            }
             byte[] key = (byte[]) k;
             byte[] value = (byte[]) v;
-            if (!ByteArrayMap.this.containsKey(key)) return false;
+            if (!ByteArrayMap.this.containsKey(key)) {
+                return false;
+            }
             byte[] val = ByteArrayMap.this.get(key);
-            if (Arrays.equals(val, value))
+            if (Arrays.equals(val, value)){
                 return ByteArrayMap.this.remove(key) != null;
+            }
+
             return false;
         }
     }
@@ -340,8 +375,12 @@ public class ByteArrayMap implements Map<byte[], byte[]>, Serializable {
         
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
             Node node = (Node) o;
             return Arrays.equals(value, node.value) &&
                     Arrays.equals(key, node.key);

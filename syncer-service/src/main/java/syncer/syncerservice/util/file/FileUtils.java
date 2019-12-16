@@ -134,8 +134,9 @@ public class FileUtils {
             StringBuilder builder = new StringBuilder();
             String string;
             while ((string = bufferedReader.readLine()) != null) {
-                string = string + "\n";
+//                string = string + "\n";
                 builder.append(string);
+                builder.append("\n");
             }
 
             return builder.toString();
@@ -282,7 +283,7 @@ public class FileUtils {
         //创建逆序列化流并关联文件
 //        Object!Input!Stream objectInputStream = new Object!Input!Stream(new FileInputStream(path));
 
-        ObjectInputStream objectInputStream = new SafeObjectInputStream(new FileInputStream(path));
+        SafeObjectInputStream objectInputStream = new SafeObjectInputStream(new FileInputStream(path));
 
 
         //实现逆序列化--读

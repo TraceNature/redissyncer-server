@@ -53,34 +53,37 @@ public class ByteArraySet extends AbstractCollection<byte[]> implements Set<byte
     }
     
     public ByteArraySet(boolean ordered, int initialCapacity, float loadFactor) {
-        if (ordered) set = new LinkedHashSet<>(initialCapacity, loadFactor);
-        else set = new HashSet<>(initialCapacity, loadFactor);
+        if (ordered) {
+            set = new LinkedHashSet<>(initialCapacity, loadFactor);
+        } else{
+            set = new HashSet<>(initialCapacity, loadFactor);
+        }
     }
-    
+    @Override
     public Iterator<byte[]> iterator() {
         return new Iter();
     }
-    
+    @Override
     public int size() {
         return set.size();
     }
-    
+    @Override
     public boolean isEmpty() {
         return set.isEmpty();
     }
-    
+    @Override
     public boolean contains(Object o) {
         return set.contains(new Element((byte[]) o));
     }
-    
+    @Override
     public boolean add(byte[] e) {
         return set.add(new Element(e));
     }
-    
+    @Override
     public boolean remove(Object o) {
         return set.remove(new Element((byte[]) o));
     }
-    
+    @Override
     public void clear() {
         set.clear();
     }

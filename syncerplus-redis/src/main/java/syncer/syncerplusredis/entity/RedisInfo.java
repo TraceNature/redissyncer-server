@@ -1,6 +1,7 @@
 package syncer.syncerplusredis.entity;
 
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.util.StringUtils;
@@ -8,7 +9,7 @@ import org.springframework.util.StringUtils;
 import java.io.Serializable;
 import java.net.URISyntaxException;
 
-
+@EqualsAndHashCode
 public class RedisInfo implements Serializable {
     @Getter@Setter
     private double redisVersion;

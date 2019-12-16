@@ -43,8 +43,9 @@ public class PeekableInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-        if (!this.peeked)
+        if (!this.peeked) {
             return in.read();
+        }
         this.peeked = false;
         return this.peek;
     }
@@ -56,12 +57,16 @@ public class PeekableInputStream extends InputStream {
 
     @Override
     public int read(byte[] b, int offset, int length) throws IOException {
-        if (length <= 0)
+        if (length <= 0) {
             return 0;
-        if (!this.peeked)
+        }
+        if (!this.peeked) {
             return in.read(b, offset, length);
+        }
         this.peeked = false;
-        if (this.peek < 0) return this.peek;
+        if (this.peek < 0){
+            return this.peek;
+        }
         int len = in.read(b, offset + 1, length - 1);
         b[offset] = (byte) this.peek;
         return len < 0 ? 1 : len + 1;
@@ -69,10 +74,12 @@ public class PeekableInputStream extends InputStream {
 
     @Override
     public long skip(long n) throws IOException {
-        if (n <= 0)
+        if (n <= 0) {
             return 0;
-        if (!this.peeked)
+        }
+        if (!this.peeked) {
             return this.in.skip(n);
+        }
         this.peeked = false;
         return this.in.skip(n - 1) + 1;
     }

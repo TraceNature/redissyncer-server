@@ -10,18 +10,18 @@ import java.util.regex.Pattern;
  * @created 2018-12-30 0:14
  **/
 public class RegexUtil {
-    public static void main(String[] args) {
-        String str = "<?xml version='1.0' encoding='UTF-8'?><ufinterface billtype='gl' filename='e:\1.xml' isexchange='Y' proc='add' receiver='1060337@1060337-003' replace='Y' roottag='sendresult' sender='01' successful='Y'><sendresult><billpk></billpk><bdocid>w764</bdocid><filename>e:\1.xml</filename><resultcode>1</resultcode><resultdescription>单据w764开始处理...单据w764处理完毕!</resultdescription><content>2017.09-记账凭证-1</content></sendresult><sendresult><billpk></billpk><bdocid>w1007</bdocid><filename>e:\1.xml</filename><resultcode>1</resultcode><resultdescription>单据w1007开始处理...单据w1007处理完毕!</resultdescription><content>2017.10-记账凭证-1</content></sendresult><sendresult><billpk></billpk><bdocid>w516</bdocid><filename>e:\1.xml</filename><resultcode>1</resultcode><resultdescription>单据w516开始处理...单据w516处理完毕!</resultdescription><content>2017.07-记账凭证-50</content></sendresult></ufinterface>";
-        //String str = "abc3443abcfgjhgabcgfjabc";
-        String rgex = "redis_version:(.*?)\n";
-
-        System.out.println((new RegexUtil()).getSubUtil(str,rgex));
-        List<String> lists = (new RegexUtil()).getSubUtil(str,rgex);
-        for (String string : lists) {
-            System.out.println(string);
-        }
-        System.out.println((new RegexUtil()).getSubUtilSimple(str, rgex));
-    }
+//    public static void main(String[] args) {
+//        String str = "<?xml version='1.0' encoding='UTF-8'?><ufinterface billtype='gl' filename='e:\1.xml' isexchange='Y' proc='add' receiver='1060337@1060337-003' replace='Y' roottag='sendresult' sender='01' successful='Y'><sendresult><billpk></billpk><bdocid>w764</bdocid><filename>e:\1.xml</filename><resultcode>1</resultcode><resultdescription>单据w764开始处理...单据w764处理完毕!</resultdescription><content>2017.09-记账凭证-1</content></sendresult><sendresult><billpk></billpk><bdocid>w1007</bdocid><filename>e:\1.xml</filename><resultcode>1</resultcode><resultdescription>单据w1007开始处理...单据w1007处理完毕!</resultdescription><content>2017.10-记账凭证-1</content></sendresult><sendresult><billpk></billpk><bdocid>w516</bdocid><filename>e:\1.xml</filename><resultcode>1</resultcode><resultdescription>单据w516开始处理...单据w516处理完毕!</resultdescription><content>2017.07-记账凭证-50</content></sendresult></ufinterface>";
+//        //String str = "abc3443abcfgjhgabcgfjabc";
+//        String rgex = "redis_version:(.*?)\n";
+//
+//        System.out.println((new RegexUtil()).getSubUtil(str,rgex));
+//        List<String> lists = (new RegexUtil()).getSubUtil(str,rgex);
+//        for (String string : lists) {
+//            System.out.println(string);
+//        }
+//        System.out.println((new RegexUtil()).getSubUtilSimple(str, rgex));
+//    }
     /**
      * 正则表达式匹配两个指定字符串中间的内容
      * @param soap

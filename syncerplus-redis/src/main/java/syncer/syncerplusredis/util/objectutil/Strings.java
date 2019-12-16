@@ -34,7 +34,9 @@ public class Strings {
     }
 
     public static String toString(Object object, Charset charset) {
-        if (object == null) return null;
+        if (object == null) {
+            return null;
+        }
         return new String((byte[]) object, charset);
     }
 

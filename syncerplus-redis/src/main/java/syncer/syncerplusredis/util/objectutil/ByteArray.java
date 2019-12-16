@@ -80,7 +80,9 @@ public class ByteArray implements Iterable<byte[]> {
     }
 
     public byte get(long idx) {
-        if (smallBytes != null) return smallBytes[(int) idx];
+        if (smallBytes != null){
+            return smallBytes[(int) idx];
+        }
         int x = (int) (idx >> BITS);
         int y = (int) (idx & MASK);
         return largeBytes[x][y];
@@ -114,7 +116,9 @@ public class ByteArray implements Iterable<byte[]> {
             int x2 = (int) (destPos >> BITS);
             int y2 = (int) (destPos & MASK);
             int min = Math.min(MAGIC - y1, MAGIC - y2);
-            if (length <= MAGIC) min = Math.min(min, (int) length);
+            if (length <= MAGIC) {
+                min = Math.min(min, (int) length);
+            }
             System.arraycopy(src.largeBytes[x1], y1, dest.largeBytes[x2], y2, min);
             srcPos += min;
             destPos += min;
@@ -128,7 +132,9 @@ public class ByteArray implements Iterable<byte[]> {
 
         @Override
         public boolean hasNext() {
-            if (smallBytes != null) return index < 1;
+            if (smallBytes != null) {
+                return index < 1;
+            }
             return index < largeBytes.length;
         }
 

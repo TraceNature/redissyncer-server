@@ -95,7 +95,7 @@ public class TaskController {
         }
 
 
-        HashMap msg=new HashMap();
+        HashMap msg=new HashMap(10);
         msg.put("taskids",taskids);
         return  ResultMap.builder().code("2000").msg("Task created successfully").data(msg);
     }

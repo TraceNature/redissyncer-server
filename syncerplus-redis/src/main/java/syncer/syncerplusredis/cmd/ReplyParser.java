@@ -54,7 +54,9 @@ public class ReplyParser {
         in.mark();
         Object rs = parse(handler);
         long len = in.unmark();
-        if (offsetHandler != null) offsetHandler.handle(len);
+        if (offsetHandler != null){
+            offsetHandler.handle(len);
+        }
         return rs;
     }
 
@@ -88,13 +90,17 @@ public class ReplyParser {
                         len = Long.parseLong(builder.toString());
                         // $-1\r\n. this is called null string.
                         // see http://redis.io/topics/protocol
-                        if (len == -1) return null;
+                        if (len == -1){
+                            return null;
+                        }
                     } else {
                         if (handler instanceof BulkReplyHandler.SimpleBulkReplyHandler) {
                             throw new AssertionError("Parse reply for disk-less replication can not use BulkReplyHandler.SimpleBulkReplyHandler.");
                         }
                     }
-                    if (handler != null) return handler.handle(len, in);
+                    if (handler != null) {
+                        return handler.handle(len, in);
+                    }
                     throw new AssertionError("Callback is null");
                 case COLON:
                     // RESP Integers
@@ -125,7 +131,9 @@ public class ReplyParser {
                         }
                     }
                     len = Long.parseLong(builder.toString());
-                    if (len == -1) return null;
+                    if (len == -1){
+                        return null;
+                    }
                     Object[] ary = new Object[(int) len];
                     for (int i = 0; i < len; i++) {
                         Object obj = parse(new BulkReplyHandler.SimpleBulkReplyHandler());

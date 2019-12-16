@@ -85,28 +85,36 @@ public class AbstractReplicatorListener implements ReplicatorListener {
     }
 
     protected void doEventListener(Replicator replicator, Event event) {
-        if (eventListeners.isEmpty()) return;
+        if (eventListeners.isEmpty()) {
+            return;
+        }
         for (EventListener listener : eventListeners) {
             listener.onEvent(replicator, event);
         }
     }
 
     protected void doCloseListener(Replicator replicator) {
-        if (closeListeners.isEmpty()) return;
+        if (closeListeners.isEmpty()){
+            return;
+        }
         for (CloseListener listener : closeListeners) {
             listener.handle(replicator);
         }
     }
 
     protected void doExceptionListener(Replicator replicator, Throwable throwable, Event event) {
-        if (exceptionListeners.isEmpty()) return;
+        if (exceptionListeners.isEmpty()) {
+            return;
+        }
         for (ExceptionListener listener : exceptionListeners) {
             listener.handle(replicator, throwable, event);
         }
     }
 
     protected void doStatusListener(Replicator replicator, Status status) {
-        if (statusListeners.isEmpty()) return;
+        if (statusListeners.isEmpty()) {
+            return;
+        }
         for (StatusListener listener : statusListeners) {
             listener.handle(replicator, status);
         }

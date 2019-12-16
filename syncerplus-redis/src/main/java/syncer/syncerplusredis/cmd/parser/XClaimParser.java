@@ -45,7 +45,9 @@ public class XClaimParser implements CommandParser<XClaimCommand> {
         List<byte[]> ids = new ArrayList<>();
         for (; idx < command.length; idx++) {
             byte[] id = CommandParsers.toBytes(command[idx]);
-            if (!validId(id)) break;
+            if (!validId(id)){
+                break;
+            }
             ids.add(id);
         }
         Long idle = null;
@@ -86,9 +88,13 @@ public class XClaimParser implements CommandParser<XClaimCommand> {
     }
 
     private boolean validId(byte[] bid) {
-        if (bid == null) return false;
+        if (bid == null) {
+            return false;
+        }
         String id = CommandParsers.toRune(bid);
-        if (Objects.equals(id, "+") || Objects.equals(id, "-")) return true;
+        if (Objects.equals(id, "+") || Objects.equals(id, "-")) {
+            return true;
+        }
         int idx = id.indexOf('-');
         try {
             Long.parseLong(id.substring(0, idx)); // ms

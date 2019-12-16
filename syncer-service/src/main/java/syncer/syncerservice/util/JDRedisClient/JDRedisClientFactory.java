@@ -18,6 +18,7 @@ public class JDRedisClientFactory {
             case SENTINEL:
 //                redisClient = new JDRedisJedisPipeLineClient(host,port,password,count,taskId);
                 break;
+             default:
 
         }
         return redisClient;

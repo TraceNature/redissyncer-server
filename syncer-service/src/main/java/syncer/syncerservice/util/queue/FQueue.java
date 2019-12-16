@@ -68,8 +68,8 @@ public class FQueue extends AbstractQueue<byte[]> {
 
     @Override
     public boolean offer(byte[] e) {
+        lock.lock();
         try {
-            lock.lock();
             fsQueue.add(e);
             return true;
         } catch (Exception ex) {
@@ -81,8 +81,8 @@ public class FQueue extends AbstractQueue<byte[]> {
 
     @Override
     public byte[] peek() {
+        lock.lock();
         try {
-            lock.lock();
             return fsQueue.readNext();
         } catch (IOException ex) {
             return null;
@@ -134,8 +134,8 @@ public class FQueue extends AbstractQueue<byte[]> {
 
     @Override
     public void clear() {
+        lock.lock();
         try {
-            lock.lock();
             fsQueue.clear();
         } catch (IOException ex) {
             throw new RuntimeException(ex);

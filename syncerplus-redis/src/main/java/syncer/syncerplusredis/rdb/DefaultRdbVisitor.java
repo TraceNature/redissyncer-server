@@ -59,7 +59,7 @@ public class DefaultRdbVisitor extends RdbVisitor {
     @Override
     public String applyMagic(RedisInputStream in) throws IOException {
         String magic = BaseRdbParser.StringHelper.str(in, 5);//REDIS
-        if (!magic.equals("REDIS")) {
+        if (!"REDIS".equals(magic)) {
             throw new UnsupportedOperationException("can't read MAGIC STRING [REDIS] ,value:" + magic);
         }
         return magic;
@@ -97,8 +97,12 @@ public class DefaultRdbVisitor extends RdbVisitor {
         long dbsize = parser.rdbLoadLen().len;
         long expiresSize = parser.rdbLoadLen().len;
         DB db = context.getDb();
-        if (db != null) db.setDbsize(dbsize);
-        if (db != null) db.setExpires(expiresSize);
+        if (db != null) {
+            db.setDbsize(dbsize);
+        }
+        if (db != null){
+            db.setExpires(expiresSize);
+        }
         return db;
     }
 
@@ -111,9 +115,15 @@ public class DefaultRdbVisitor extends RdbVisitor {
             if (logger.isInfoEnabled()) {
                 logger.info("RDB {}: {}", auxKey, auxValue);
             }
-            if (auxKey.equals("repl-id")) replicator.getConfiguration().setReplId(auxValue);
-            if (auxKey.equals("repl-offset")) replicator.getConfiguration().setReplOffset(parseLong(auxValue));
-            if (auxKey.equals("repl-stream-db")) replicator.getConfiguration().setReplStreamDB(parseInt(auxValue));
+            if ("repl-id".equals(auxKey)) {
+                replicator.getConfiguration().setReplId(auxValue);
+            }
+            if ("repl-offset".equals(auxKey)){
+                replicator.getConfiguration().setReplOffset(parseLong(auxValue));
+            }
+            if ("repl-stream-db".equals(auxKey)){
+                replicator.getConfiguration().setReplStreamDB(parseInt(auxValue));
+            }
             return new AuxField(auxKey, auxValue);
         } else {
             if (logger.isWarnEnabled()) {
@@ -140,7 +150,9 @@ public class DefaultRdbVisitor extends RdbVisitor {
          * 8 byte checksum             ## CRC 64 checksum of the entire file.
          * ----------------------------
          */
-        if (version >= 5) return in.readLong(8);
+        if (version >= 5){
+            return in.readLong(8);
+        }
         return 0L;
     }
 

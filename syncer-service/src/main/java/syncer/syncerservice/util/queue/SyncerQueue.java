@@ -5,10 +5,10 @@ import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
 public interface SyncerQueue<E>  extends Queue<E> {
-
+    @Override
     boolean add(E e);
 
-
+    @Override
     boolean offer(E e);
 
 
@@ -25,9 +25,9 @@ public interface SyncerQueue<E>  extends Queue<E> {
 
 
     int remainingCapacity();
-
+    @Override
     boolean remove(Object o);
-
+    @Override
     public boolean contains(Object o);
 
     int drainTo(Collection<? super E> c);

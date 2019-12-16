@@ -94,14 +94,24 @@ public class Tuple4<T1, T2, T3, T4> implements Iterable<Object>, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Tuple4<?, ?, ?, ?> tuple4 = (Tuple4<?, ?, ?, ?>) o;
 
-        if (v1 != null ? !v1.equals(tuple4.v1) : tuple4.v1 != null) return false;
-        if (v2 != null ? !v2.equals(tuple4.v2) : tuple4.v2 != null) return false;
-        if (v3 != null ? !v3.equals(tuple4.v3) : tuple4.v3 != null) return false;
+        if (v1 != null ? !v1.equals(tuple4.v1) : tuple4.v1 != null) {
+            return false;
+        }
+        if (v2 != null ? !v2.equals(tuple4.v2) : tuple4.v2 != null) {
+            return false;
+        }
+        if (v3 != null ? !v3.equals(tuple4.v3) : tuple4.v3 != null) {
+            return false;
+        }
         return v4 != null ? v4.equals(tuple4.v4) : tuple4.v4 == null;
     }
 
@@ -125,7 +135,9 @@ public class Tuple4<T1, T2, T3, T4> implements Iterable<Object>, Serializable {
     }
 
     public static <V> Tuple4<V, V, V, V> from(V... ary) {
-        if (ary == null || ary.length != 4) throw new IllegalArgumentException();
+        if (ary == null || ary.length != 4) {
+            throw new IllegalArgumentException();
+        }
         return new Tuple4<>(ary[0], ary[1], ary[2], ary[3]);
     }
 
@@ -151,13 +163,21 @@ public class Tuple4<T1, T2, T3, T4> implements Iterable<Object>, Serializable {
 
     public <T> T[] toArray(Class<T> clazz) {
         T[] ary = (T[]) Array.newInstance(clazz, 4);
-        if (!clazz.isInstance(getV1())) throw new UnsupportedOperationException();
+        if (!clazz.isInstance(getV1())) {
+            throw new UnsupportedOperationException();
+        }
         ary[0] = (T) getV1();
-        if (!clazz.isInstance(getV2())) throw new UnsupportedOperationException();
+        if (!clazz.isInstance(getV2())){
+            throw new UnsupportedOperationException();
+        }
         ary[1] = (T) getV2();
-        if (!clazz.isInstance(getV3())) throw new UnsupportedOperationException();
+        if (!clazz.isInstance(getV3())) {
+            throw new UnsupportedOperationException();
+        }
         ary[2] = (T) getV3();
-        if (!clazz.isInstance(getV4())) throw new UnsupportedOperationException();
+        if (!clazz.isInstance(getV4())) {
+            throw new UnsupportedOperationException();
+        }
         ary[3] = (T) getV4();
         return ary;
     }

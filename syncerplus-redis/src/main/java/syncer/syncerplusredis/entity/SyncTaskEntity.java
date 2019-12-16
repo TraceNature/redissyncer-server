@@ -17,8 +17,8 @@ public class SyncTaskEntity {
     private volatile List<EventEntity>keys =new ArrayList<>();
 
     public synchronized void addKey(EventEntity key){
+        lock.lock();
         try {
-            lock.lock();
             keys.add(key);
         }finally {
             lock.unlock();
@@ -27,8 +27,8 @@ public class SyncTaskEntity {
     }
 
     public List<EventEntity> getKeys() {
+        lock.lock();
         try {
-            lock.lock();
             return keys;
         }finally {
             lock.unlock();
@@ -53,8 +53,8 @@ public class SyncTaskEntity {
     }
 
     public synchronized void add(){
+        lock.lock();
         try {
-            lock.lock();
             this.syncNums++;
         }finally {
             lock.unlock();
@@ -65,16 +65,16 @@ public class SyncTaskEntity {
 
 
     public synchronized void add(int num){
+        lock.lock();
         try {
-            lock.lock();
             this.syncNums+=num;
         }finally {
             lock.unlock();
         }
     }
     public synchronized void clear(){
+        lock.lock();
         try {
-            lock.lock();
             this.syncNums=0;
         }finally {
             lock.unlock();

@@ -42,8 +42,9 @@ public class ThreadReturnMsgEntity {
         Set<String>sourceUri=new HashSet<>();
         for (String data:sourceUris
         ) {
-            if(!StringUtils.isEmpty(data))
-              sourceUri.add(data.split("\\?")[0]);
+            if(!StringUtils.isEmpty(data)) {
+                sourceUri.add(data.split("\\?")[0]);
+            }
         }
         return sourceUri;
     }
@@ -53,8 +54,9 @@ public class ThreadReturnMsgEntity {
         Set<String>targetUri=new HashSet<>();
         for (String data:targetUris
              ) {
-            if(!StringUtils.isEmpty(data))
-             targetUri.add(data.split("\\?")[0]);
+            if(!StringUtils.isEmpty(data)) {
+                targetUri.add(data.split("\\?")[0]);
+            }
         }
         return targetUri;
     }

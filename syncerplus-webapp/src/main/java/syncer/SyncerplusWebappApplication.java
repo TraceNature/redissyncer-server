@@ -56,7 +56,7 @@ public class SyncerplusWebappApplication {
                 data.put(entry.getKey(),msgEntity);
             }
             if(data==null){
-                data=new  ConcurrentHashMap<String,ThreadMsgEntity>();
+                data=new  ConcurrentHashMap<String,ThreadMsgEntity>(10);
             }
             TaskMsgUtils.setAliveThreadHashMap(data);
 

@@ -52,10 +52,11 @@ public class JDJedisClientPool{
         this.config = config;
         int timeout = 50000;
 
-        if (org.springframework.util.StringUtils.isEmpty(password))
+        if (org.springframework.util.StringUtils.isEmpty(password)) {
             jedisPool = new JDJedisPool(this.config, this.host, this.port, timeout);
-        else
+        } else {
             jedisPool = new JDJedisPool(this.config, this.host, this.port, timeout, password, db, null);
+        }
     }
 
 
@@ -120,8 +121,9 @@ public class JDJedisClientPool{
 
     public JDJedis selectDb(Integer index, JDJedis jedis) throws JedisException {
 
-        if (jedis == null)
+        if (jedis == null) {
             return null;
+        }
 
         try {
             jedis.select(index);
@@ -623,8 +625,9 @@ public class JDJedisClientPool{
 
     public static String restorebyteObject(byte[] key, byte[] value, Integer cacheSeconds, JDJedis jedis, boolean status) {
         String result = null;
-        if (jedis == null)
+        if (jedis == null) {
             return "error: jedis is null ";
+        }
         try {
             if (cacheSeconds == null) {
                 cacheSeconds = 0;
@@ -1484,8 +1487,9 @@ public class JDJedisClientPool{
 
 
     public  void closePool() {
-        if(jedisPool!=null)
+        if(jedisPool!=null) {
             jedisPool.close();
+        }
 
     }
 }

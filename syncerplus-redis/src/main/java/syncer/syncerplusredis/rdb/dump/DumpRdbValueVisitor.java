@@ -55,7 +55,9 @@ public class DumpRdbValueVisitor extends DefaultRdbValueVisitor {
 
         @Override
         public void handle(byte... rawBytes) {
-            for (byte b : rawBytes) this.builder.put(b);
+            for (byte b : rawBytes){
+                this.builder.put(b);
+            }
         }
 
         public byte[] getBytes() {

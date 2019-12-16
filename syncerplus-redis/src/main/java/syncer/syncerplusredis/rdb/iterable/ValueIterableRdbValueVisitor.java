@@ -220,7 +220,9 @@ public class ValueIterableRdbValueVisitor extends DefaultRdbValueVisitor {
         Iterator<byte[]> val = new Iter<byte[]>(zllen, null) {
             @Override
             public boolean hasNext() {
-                if (condition > 0) return true;
+                if (condition > 0) {
+                    return true;
+                }
                 try {
                     int zlend = BaseRdbParser.LenHelper.zlend(stream);
                     if (zlend != 255) {
@@ -305,7 +307,9 @@ public class ValueIterableRdbValueVisitor extends DefaultRdbValueVisitor {
         Iterator<ZSetEntry> val = new Iter<ZSetEntry>(zllen, null) {
             @Override
             public boolean hasNext() {
-                if (condition > 0) return true;
+                if (condition > 0) {
+                    return true;
+                }
                 try {
                     int zlend = BaseRdbParser.LenHelper.zlend(stream);
                     if (zlend != 255) {
@@ -348,7 +352,9 @@ public class ValueIterableRdbValueVisitor extends DefaultRdbValueVisitor {
         Iterator<Map.Entry<byte[], byte[]>> val = new Iter<Map.Entry<byte[], byte[]>>(zllen, null) {
             @Override
             public boolean hasNext() {
-                if (condition > 0) return true;
+                if (condition > 0) {
+                    return true;
+                }
                 try {
                     int zlend = BaseRdbParser.LenHelper.zlend(stream);
                     if (zlend != 255) {
@@ -468,7 +474,9 @@ public class ValueIterableRdbValueVisitor extends DefaultRdbValueVisitor {
                         zllen = -1;
                         condition--;
                     }
-                    if (hasNext()) return next();
+                    if (hasNext()) {
+                        return next();
+                    }
                     throw new IllegalStateException("end of iterator");
                 } else {
                     byte[] e = BaseRdbParser.StringHelper.zipListEntry(stream);
