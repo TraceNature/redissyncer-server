@@ -23,6 +23,9 @@ import java.util.Objects;
 
 import static syncer.syncerplusredis.util.type.Tuples.of;
 
+/**
+ * 在线混合文件
+ */
 @Slf4j
 public class RedisOnlineMixReplicator extends AbstractReplicator {
     protected ReplyParser replyParser;

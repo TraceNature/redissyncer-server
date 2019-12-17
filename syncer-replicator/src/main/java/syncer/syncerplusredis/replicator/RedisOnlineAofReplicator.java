@@ -40,7 +40,7 @@ import java.util.Objects;
 import static syncer.syncerplusredis.util.type.Tuples.of;
 
 /**
- * @since 4.0
+ * 在线AOF文件
  */
 
 @Slf4j
