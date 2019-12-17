@@ -20,29 +20,48 @@ import java.util.concurrent.atomic.AtomicLong;
 @EqualsAndHashCode
 public class KeyValueEventEntity implements Serializable {
     private Event event;
-    //映射之后的dbNum
+    /**
+     * 映射之后的dbNum
+     */
     private Long dbNum;
 
-    //剩余过期时间
+    /**
+     * 剩余过期时间
+     */
     private Long ms;
 
-    //db映射关系
+    /**
+     * db映射关系
+     */
     private Map<Integer,Integer> dbMapper;
 
-    //redis版本
+    /**
+     * redis版本
+     */
     private double redisVersion;
 
-    //类型
+    /**
+     * 类型
+     */
     private TaskRunTypeEnum taskRunTypeEnum;
 
-    //增量offset
+
+    /**
+     * 增量offset
+     */
     private OffSetEntity baseOffSet;
 
     //configuration
 //    private Configuration configuration;
 
+    /**
+     * 服务器id
+     */
     private String replId = "?";
 
+    /**
+     * offset
+     */
     private  Long replOffset = -1L;
 
 }
