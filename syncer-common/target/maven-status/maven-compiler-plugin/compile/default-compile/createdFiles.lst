@@ -1,8 +1,0 @@
-syncer/syncerpluscommon/util/common/Bytes.class
-syncer/syncerpluscommon/config/ValidatorConfiguration.class
-syncer/syncerpluscommon/util/common/TemplateUtils.class
-syncer/syncerpluscommon/entity/ResultMap.class
-syncer/App.class
-syncer/syncerpluscommon/entity/PoolConfig.class
-syncer/syncerpluscommon/config/ThreadPoolConfig.class
-syncer/syncerpluscommon/util/spring/SpringUtil.class
