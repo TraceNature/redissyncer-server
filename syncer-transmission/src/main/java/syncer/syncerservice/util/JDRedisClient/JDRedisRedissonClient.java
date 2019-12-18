@@ -20,6 +20,16 @@ public class JDRedisRedissonClient implements JDRedisClient {
     }
 
     @Override
+    public String get(final Long dbNum,byte[] key) {
+        return null;
+    }
+
+    @Override
+    public String get(final Long dbNum,String key) {
+        return null;
+    }
+
+    @Override
     public String set(Long dbNum, byte[] key, byte[] value) {
         return null;
     }

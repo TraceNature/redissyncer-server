@@ -8,6 +8,7 @@ import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerservice.cmd.ClusterProtocolCommand;
 import syncer.syncerservice.util.jedis.ObjectUtils;
+import syncer.syncerservice.util.jedis.StringUtils;
 import syncer.syncerservice.util.jedis.cluster.SyncJedisClusterClient;
 import syncer.syncerservice.util.jedis.cluster.extendCluster.JedisClusterPlus;
 import java.text.ParseException;
@@ -44,8 +45,20 @@ public class JDRedisJedisClusterClient implements JDRedisClient {
     }
 
     @Override
+    public String get(final Long dbNum,byte[] key) {
+        return  redisClient.get(StringUtils.toString(key));
+    }
+
+    @Override
+    public String get(final Long dbNum,String key) {
+        return  redisClient.get(key);
+    }
+
+    @Override
     public String set(Long dbNum, byte[] key, byte[] value) {
-        return redisClient.set(key,value);
+        String res=redisClient.set(key,value);
+
+        return res;
     }
 
     @Override
@@ -155,4 +168,5 @@ public class JDRedisJedisClusterClient implements JDRedisClient {
     public void select(Integer dbNum) {
 
     }
+
 }

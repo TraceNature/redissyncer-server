@@ -48,8 +48,18 @@ public class SendCommandTask implements Runnable{
                     }
                     break;
                 }
+                KeyValueEventEntity keyValueEventEntity=null;
+                keyValueEventEntity=queue.take();
 //                System.out.println(JSON.toJSONString(queue.take()));
-                filterChain.run(r,queue.take());
+                try {
+                    if(null!=keyValueEventEntity){
+                        filterChain.run(r,keyValueEventEntity);
+                    }
+
+                }catch (Exception e){
+                    log.warn("[{}]抛弃key:{}",taskId,JSON.toJSONString(keyValueEventEntity.getEvent()));
+                }
+
             }catch (Exception e){
                 try {
                     log.warn("[{}]key从队列拿出失败:{}",taskId,e.getMessage());

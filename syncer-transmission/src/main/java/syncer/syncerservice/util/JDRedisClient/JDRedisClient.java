@@ -13,7 +13,8 @@ public interface JDRedisClient {
 //    String set(final byte[]key,final byte[]value);
 //    String set(final byte[]key,final byte[]value,long ms);
 //    Long append(final byte[] key, final byte[] value);
-
+    String get(final Long dbNum,final byte[]key);
+    String get(final Long dbNum,final String key);
     String set(final Long dbNum,final byte[]key,final byte[]value);
     String set(final Long dbNum,final byte[]key,final byte[]value,long ms);
     Long append(final Long dbNum,final byte[] key, final byte[] value);

@@ -15,7 +15,7 @@
 
     <artifactId>syncer-replicator</artifactId>
 
-    <name>syncerplus-redis</name>
+    <name>syncer-replicator</name>
     <!-- FIXME change it to the project's website -->
     <url>http://www.example.com</url>
 

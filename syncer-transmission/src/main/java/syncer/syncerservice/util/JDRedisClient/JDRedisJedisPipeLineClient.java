@@ -13,6 +13,7 @@ import syncer.syncerplusredis.entity.EventEntity;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerservice.util.jedis.JDJedis;
 import syncer.syncerservice.util.jedis.ObjectUtils;
+import syncer.syncerservice.util.jedis.StringUtils;
 import syncer.syncerservice.util.jedis.cmd.JedisProtocolCommand;
 import syncer.syncerservice.util.jedis.pool.JDJedisPool;
 import syncer.syncerservice.util.taskutil.TaskMsgStatusUtils;
@@ -89,7 +90,40 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     }
 
 
+    @Override
+    public String get(final Long dbNum,byte[] key) {
+        JDJedis jdJedis=null;
+        String stringKey=StringUtils.toString(key);
+        try {
+            jdJedis = jedisPool.getResource();
+            if(!jdJedis.getDbNum().equals(dbNum)){
+                jdJedis.select(dbNum.intValue());
+            }
+            return jdJedis.get(stringKey);
+        }catch (Exception e){
+            log.warn("[{}]get key[{}]失败",taskId,stringKey);
+        }finally {
+            jdJedis.close();
+        }
+        return null;
+    }
 
+    @Override
+    public String get(final Long dbNum,String key) {
+        JDJedis jdJedis=null;
+        try {
+            if(!jdJedis.getDbNum().equals(dbNum)){
+                jdJedis.select(dbNum.intValue());
+            }
+            jdJedis = jedisPool.getResource();
+            return jdJedis.get(key);
+        }catch (Exception e){
+            log.warn("[{}]get key[{}]失败",taskId,key);
+        }finally {
+            jdJedis.close();
+        }
+        return null;
+    }
 
     @Override
     public String set(Long dbNum, byte[] key, byte[] value) {

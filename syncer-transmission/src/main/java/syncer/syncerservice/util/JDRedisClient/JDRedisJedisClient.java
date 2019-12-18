@@ -3,6 +3,7 @@ package syncer.syncerservice.util.JDRedisClient;
 
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerservice.util.jedis.ObjectUtils;
+import syncer.syncerservice.util.jedis.StringUtils;
 import syncer.syncerservice.util.jedis.pool.JDJedisClientPool;
 
 import java.util.List;
@@ -19,6 +20,16 @@ public class JDRedisJedisClient implements JDRedisClient {
         jdJedisClientPool=new JDJedisClientPool(host,port,null,password,0);
     }
 
+
+    @Override
+    public String get(final Long dbNum,byte[] key) {
+        return jdJedisClientPool.get(StringUtils.toString(key));
+    }
+
+    @Override
+    public String get(final Long dbNum,String key) {
+        return jdJedisClientPool.get(key);
+    }
 
     @Override
     public String set(Long dbNum, byte[] key, byte[] value) {

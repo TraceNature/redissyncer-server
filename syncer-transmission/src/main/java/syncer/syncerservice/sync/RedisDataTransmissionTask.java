@@ -174,6 +174,7 @@ public class RedisDataTransmissionTask implements Runnable {
                             .replOffset(r.getConfiguration().getReplOffset())
 //                            .configuration(r.getConfiguration())
                             .taskRunTypeEnum(TaskRunTypeEnum.valueOf(type.trim().toUpperCase()))
+                            .fileType(fileType)
                             .build();
 
 

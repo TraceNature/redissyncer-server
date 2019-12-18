@@ -17,6 +17,7 @@ import io.lettuce.core.protocol.CommandArgs;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerservice.util.EnumUtils;
 import syncer.syncerservice.util.common.Strings;
+import syncer.syncerservice.util.jedis.StringUtils;
 
 
 public class JDRedisLettuceClient implements JDRedisClient {
@@ -30,9 +31,17 @@ public class JDRedisLettuceClient implements JDRedisClient {
     }
 
 
+    @Override
+    public String get(final Long dbNum,byte[] key) {
+        selectDb(dbNum);
+        return syncCommands.get(StringUtils.toString(key));
+    }
 
-
-
+    @Override
+    public String get(final Long dbNum,String key) {
+        selectDb(dbNum);
+        return syncCommands.get(key);
+    }
 
     @Override
     public String set(Long dbNum, byte[] key, byte[] value) {

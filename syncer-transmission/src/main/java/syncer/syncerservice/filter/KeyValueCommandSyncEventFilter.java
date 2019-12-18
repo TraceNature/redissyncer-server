@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import syncer.syncerplusredis.cmd.impl.DefaultCommand;
 import syncer.syncerplusredis.entity.Configuration;
+import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.event.PostCommandSyncEvent;
 import syncer.syncerplusredis.event.PreCommandSyncEvent;
@@ -38,14 +39,39 @@ public class KeyValueCommandSyncEventFilter implements CommonFilter {
 
         //增量同步开始
         if(event instanceof PreCommandSyncEvent){
-            log.warn("taskId为[{}]的任务增量/AOF文件同步开始..",taskId);
-            SyncTaskUtils.editTaskMsg(taskId,"增量/AOF文件同步开始");
+
+            if(eventEntity.getFileType().equals(FileType.ONLINERDB)
+                    ||eventEntity.getFileType().equals(FileType.RDB)
+                    ||eventEntity.getFileType().equals(FileType.ONLINEAOF)
+                    ||eventEntity.getFileType().equals(FileType.AOF)
+                    ||eventEntity.getFileType().equals(FileType.ONLINEMIXED)
+                    ||eventEntity.getFileType().equals(FileType.MIXED)){
+                log.warn("taskId为[{}]的任务AOF文件同步开始..",taskId);
+                SyncTaskUtils.editTaskMsg(taskId,"AOF文件同步开始");
+            }else {
+                log.warn("taskId为[{}]的任务增量同步开始..",taskId);
+                SyncTaskUtils.editTaskMsg(taskId,"增量同步开始");
+            }
+
         }
 
         //增量同步结束（AOF文件）
         if (event instanceof PostCommandSyncEvent) {
-            log.warn("taskId为[{}]的任务增量/AOF文件同步结束..",taskId);
-            SyncTaskUtils.editTaskMsg(taskId,"增量/AOF文件同步结束");
+
+            if(eventEntity.getFileType().equals(FileType.ONLINERDB)
+                    ||eventEntity.getFileType().equals(FileType.RDB)
+                    ||eventEntity.getFileType().equals(FileType.ONLINEAOF)
+                    ||eventEntity.getFileType().equals(FileType.AOF)
+                    ||eventEntity.getFileType().equals(FileType.ONLINEMIXED)
+                    ||eventEntity.getFileType().equals(FileType.MIXED)){
+                log.warn("taskId为[{}]AOF文件同步结束..",taskId);
+                SyncTaskUtils.editTaskMsg(taskId,"AOF文件同步结束");
+                SyncTaskUtils.stopCreateThread(taskId);
+            }else {
+                log.warn("taskId为[{}]的任务增量同步结束..",taskId);
+                SyncTaskUtils.editTaskMsg(taskId,"增量/同步结束");
+            }
+
 
         }
 

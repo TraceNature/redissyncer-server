@@ -325,8 +325,8 @@ public class DtoCheckUtils {
             try {
                 redisVersion = RedisUrlCheckUtils.selectSyncerVersion(uri);
 
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                redisVersion=0L;
             }
             Integer rdbVersion = RedisUrlCheckUtils.getRdbVersion(redisClusterDto.getTargetRedisVersion());
             Integer integer = RedisUrlCheckUtils.getRdbVersion(redisVersion);

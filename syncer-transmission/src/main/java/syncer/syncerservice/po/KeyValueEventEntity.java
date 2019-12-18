@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import syncer.syncerplusredis.constant.TaskRunTypeEnum;
 import syncer.syncerplusredis.entity.Configuration;
+import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.entity.thread.OffSetEntity;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
@@ -63,5 +64,10 @@ public class KeyValueEventEntity implements Serializable {
      * offset
      */
     private  Long replOffset = -1L;
+
+    /**
+     * fileType
+     */
+    private FileType fileType=FileType.SYNC;
 
 }
