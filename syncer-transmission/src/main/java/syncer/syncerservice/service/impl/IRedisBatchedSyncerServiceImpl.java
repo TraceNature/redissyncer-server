@@ -46,6 +46,8 @@ public class IRedisBatchedSyncerServiceImpl implements IRedisSyncerService {
             } catch (URISyntaxException e) {
                 throw new TaskMsgException(e.getMessage());
             }
+        }else{
+            clusterDto.setSourceUris(clusterDto.getFileUris());
         }
 
         for (String targetUri : targetRedisUris) {
@@ -68,7 +70,7 @@ public class IRedisBatchedSyncerServiceImpl implements IRedisSyncerService {
             //单机 间或者往京东云集群迁移
             batchedSyncToSingle(clusterDto,taskId,afresh);
 
-        } else if (clusterDto.getSourceUris().size() == 1 && clusterDto.getTargetUris().size() > 1) {
+        } else if (null!=clusterDto.getSourceUris()&&clusterDto.getSourceUris().size() == 1 && clusterDto.getTargetUris().size() > 1) {
 
 
 
@@ -207,6 +209,8 @@ public class IRedisBatchedSyncerServiceImpl implements IRedisSyncerService {
             sourceRedisUris=clusterDto.getFileUris();
         }
         int i = 0;
+
+
         for (String source : sourceRedisUris
         ) {
             RedisSyncDataDto syncDataDto = new RedisSyncDataDto();
