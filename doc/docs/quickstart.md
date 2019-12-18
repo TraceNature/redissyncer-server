@@ -111,3 +111,7 @@ curl -X POST \
 }'
 ```
 删除任务状态能为"RUN"
+
+* API及详细参数请参阅[api](api.md)文档
+
+* 更多场景案例请参阅[scenecases](scenecases.md)

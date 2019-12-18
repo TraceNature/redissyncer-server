@@ -1,5 +1,4 @@
-# resdis同步服务
-## 一、目录结构
+
 #### 项目模块
 * redis-syncerplus   父模块
 * syncerplus-common  基础模块
