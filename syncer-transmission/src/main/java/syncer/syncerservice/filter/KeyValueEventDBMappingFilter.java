@@ -51,6 +51,9 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
         //分批格式数据
         if (event instanceof BatchedKeyValuePair<?, ?>) {
             BatchedKeyValuePair batchedKeyValuePair = (BatchedKeyValuePair) event;
+            if(batchedKeyValuePair.getBatch()==0&&null==batchedKeyValuePair.getValue()){
+                return;
+            }
             DB db = batchedKeyValuePair.getDb();
             try {
                 dbMapping(eventEntity,db);

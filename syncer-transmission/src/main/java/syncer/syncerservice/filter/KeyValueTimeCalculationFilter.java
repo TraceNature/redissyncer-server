@@ -45,6 +45,9 @@ public class KeyValueTimeCalculationFilter implements CommonFilter  {
 
         if (event instanceof BatchedKeyValuePair<?, ?>) {
             BatchedKeyValuePair batchedKeyValuePair = (BatchedKeyValuePair) event;
+            if(batchedKeyValuePair.getBatch()==0&&null==batchedKeyValuePair.getValue()){
+                return;
+            }
             Long time=batchedKeyValuePair.getExpiredMs();
             try {
                 timeCalculation(eventEntity,time);
