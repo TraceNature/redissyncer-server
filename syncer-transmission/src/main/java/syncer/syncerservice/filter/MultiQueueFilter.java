@@ -94,7 +94,6 @@ public class MultiQueueFilter implements CommonFilter {
             String key = KVUtils.getKey(event);
             try {
                 queueMap.get(HashUtils.getHash(key, 3)).put(node);
-                System.out.println("加入队列：" + queueMap.get(HashUtils.getHash(key, 3)).size());
             } catch (InterruptedException e) {
                 log.warn("【{}】中的key[{}]加入队列失败", taskId, KVUtils.getKey(event));
             }

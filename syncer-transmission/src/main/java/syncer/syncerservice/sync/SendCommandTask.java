@@ -26,6 +26,7 @@ public class SendCommandTask implements Runnable{
         this.queue = queue;
         this.taskId = taskId;
         this.status = status;
+        new Thread(new SendCommandTask.AliveMonitorThread()).start();
     }
 
     @Override
@@ -33,21 +34,7 @@ public class SendCommandTask implements Runnable{
 
         while (true){
             try {
-                if (SyncTaskUtils.doThreadisCloseCheckTask(taskId)) {
-                    //判断任务是否关闭
-                    try {
-                        r.close();
-                        if (status) {
-                            Thread.currentThread().interrupt();
-                            status = false;
-                            System.out.println(" 线程正准备关闭..." + Thread.currentThread().getName());
-                        }
 
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                }
                 KeyValueEventEntity keyValueEventEntity=null;
                 keyValueEventEntity=queue.take();
 //                System.out.println(JSON.toJSONString(queue.take()));
@@ -72,6 +59,43 @@ public class SendCommandTask implements Runnable{
 
     }
 
+    class AliveMonitorThread implements Runnable{
 
+        @Override
+        public void run() {
+            while (true){
+                if (SyncTaskUtils.doThreadisCloseCheckTask(taskId)) {
+                    int i=3;
+                    if(i>0&&queue.isEmpty()){
+                        i--;
+                        return;
+                    }
+                    if(i<0&&queue.isEmpty()){
+                        //判断任务是否关闭
+                        try {
+                            r.close();
+                            if (status) {
+                                Thread.currentThread().interrupt();
+                                status = false;
+                                System.out.println(" 线程正准备关闭..." + Thread.currentThread().getName());
+                            }
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                    }
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        }
+    }
 
 }
+
+

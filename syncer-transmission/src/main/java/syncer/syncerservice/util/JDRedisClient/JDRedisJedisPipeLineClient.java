@@ -351,6 +351,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                 pipelined.sync();
                 syncTaskEntity.clear();
                 log.info("[{}]PING->{}",taskId, r.get());
+                date = new Date();
             }else if(syncTaskEntity.syncNums>0 && time > 3000){
                 System.out.println("提交："+syncTaskEntity.syncNums);
                 List<Object> resultList = pipelined.syncAndReturnAll();
@@ -376,7 +377,12 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
             while (true){
                 submitCommandNum();
                 if (TaskMsgStatusUtils.doThreadisCloseCheckTask(taskId)&&taskId!=null) {
+                    Date time =new Date(date.getTime());
                     if (status) {
+                        while (System.currentTimeMillis()-time.getTime()<1000*60*2){
+                            submitCommandNum();
+                        }
+
                         Thread.currentThread().interrupt();
                         status = false;
                         addCommandNum();
