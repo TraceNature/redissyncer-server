@@ -19,10 +19,14 @@
 *.zip
 *.tar.gz
 *.rar
+# go ignore
+**/vendor
 
 #idea ignore
-.idea
+**/.idea
 
+# vscode
+**/.vscode
 # rust ignore
 Cargo.lock
 rscli/target

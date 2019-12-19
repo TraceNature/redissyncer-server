@@ -1,6 +1,6 @@
 # RedisSyncer
 
-RedisSyncer是一个redis同步工具，应用redis单实例及集群同步
+RedisSyncer是一个redis同步工具，应用于redis单实例及集群同步
 
 ## 项目目标
 * 基于java编写服务化的redis同步服务；

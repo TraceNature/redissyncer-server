@@ -2,7 +2,7 @@
 
 ### 创建任务接口
 
-    http://10.0.0.90:8080/api/v1/creattask
+    http://10.0.0.90:8080/api/v1/createtask
     
     Method:POST
     
