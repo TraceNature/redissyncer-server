@@ -112,16 +112,19 @@ public class FQueue extends AbstractQueue<byte[]> {
 
     public byte[] take() throws InterruptedException {
         try {
-            try {
-                while (size() <= 0){
-                    System.out.println("队列元素为空，进入阻塞...");
-                }
-                } catch (Exception ie) {
-                System.out.println("出现异常，唤醒阻塞线程conditionNull");
-                throw ie;
-            }
+//            try {
+//                while (size() <= 0){
+//
+//                }
+//                } catch (Exception ie) {
+//                System.out.println("出现异常，唤醒阻塞线程conditionNull");
+//                throw ie;
+//            }
 
             byte[]x = poll();
+            while (x==null){
+                x = poll();
+            }
             return x;
 
         } catch (Exception e) {

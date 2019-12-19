@@ -19,6 +19,7 @@ import syncer.syncerservice.util.jedis.pool.JDJedisPool;
 import syncer.syncerservice.util.taskutil.TaskMsgStatusUtils;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -44,7 +45,8 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     private String taskId;
     static ThreadPoolConfig threadPoolConfig;
     static ThreadPoolTaskExecutor threadPoolTaskExecutor;
-
+    private Lock commitLock=new ReentrantLock();
+    private AtomicInteger commandNums=new AtomicInteger();
     static {
         threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
         threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
@@ -306,58 +308,126 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         addCommandNum();
     }
 
-    synchronized void selectDb(Long dbNum){
+     void selectDb(Long dbNum){
         if(dbNum!=null&&!currentDbNum.equals(dbNum.intValue())){
             currentDbNum=dbNum.intValue();
             pipelined.select(dbNum.intValue());
         }
     }
 
-    synchronized  void addCommandNum() {
-        syncTaskEntity.add();
-//        commandNum.incrementAndGet();
-
-        if (syncTaskEntity.syncNums >= count) {
-            System.out.println("提交："+syncTaskEntity.syncNums);
-
-            List<Object> resultList = pipelined.syncAndReturnAll();
-            //补偿机制
-//            List<EventEntity>eventEntities=new ArrayList<>();
-//            eventEntities.clear();
-//            eventEntities.addAll(taskEntity.getKeys());
-//            taskEntity.getKeys().clear();
-//            threadPoolTaskExecutor.execute(new  PipelineCompensator(new ArrayList<>(resultList),eventEntities,suri,turi,pipelineLock.getTaskId()));
-//            PipelineCompensator.singleCompensator(resultList,eventEntities,suri,turi,pipelineLock.getTaskId());
-//            resultList.clear();
-            syncTaskEntity.clear();
-            date = new Date();
+      void addCommandNum() {
+        commitLock.lock();
+        try {
+            int num=commandNums.incrementAndGet();
+            if (num>= count) {
+                System.out.println("提交："+num);
+                List<Object> resultList = pipelined.syncAndReturnAll();
+                syncTaskEntity.clear();
+                date = new Date();
+                commandNums.set(0);
+            }
+        }finally {
+            commitLock.unlock();
         }
+
+
+//        syncTaskEntity.add();
+//
+//        if (syncTaskEntity.syncNums >= count) {
+//            System.out.println("提交："+syncTaskEntity.syncNums);
+//                  List<Object> resultList = pipelined.syncAndReturnAll();
+//                  syncTaskEntity.clear();
+//                  date = new Date();
+//
+//            //补偿机制
+////            List<EventEntity>eventEntities=new ArrayList<>();
+////            eventEntities.clear();
+////            eventEntities.addAll(taskEntity.getKeys());
+////            taskEntity.getKeys().clear();
+////            threadPoolTaskExecutor.execute(new  PipelineCompensator(new ArrayList<>(resultList),eventEntities,suri,turi,pipelineLock.getTaskId()));
+////            PipelineCompensator.singleCompensator(resultList,eventEntities,suri,turi,pipelineLock.getTaskId());
+////            resultList.clear();
+//
+//        }
+
+
     }
 
 
-    synchronized void submitCommandNum() {
+     void submitCommandNum() {
+         commitLock.lock();
 
-            long time = System.currentTimeMillis() - date.getTime();
-            if (syncTaskEntity.syncNums >= count && time > 5000) {
-                //pipelined.sync();
-                List<Object> resultList = pipelined.syncAndReturnAll();
-                resultList.clear();
-                syncTaskEntity.clear();
-                // log.info("将管道中超过 {} 个值提交",taskEntity.getSyncNums());
+         try {
+             int num=commandNums.get();
+             long time = System.currentTimeMillis() - date.getTime();
+             if (num >= count && time > 5000) {
+                 //pipelined.sync();
 
-                date = new Date();
-            } else if (syncTaskEntity.syncNums == 0 && time > 4000) {
-                Response<String> r = pipelined.ping();
-                pipelined.sync();
-                syncTaskEntity.clear();
-                log.info("[{}]PING->{}",taskId, r.get());
-                date = new Date();
-            }else if(syncTaskEntity.syncNums>0 && time > 3000){
-                System.out.println("提交："+syncTaskEntity.syncNums);
-                List<Object> resultList = pipelined.syncAndReturnAll();
-                syncTaskEntity.clear();
-                date = new Date();
-            }
+
+                 List<Object> resultList = pipelined.syncAndReturnAll();
+                 resultList.clear();
+                 syncTaskEntity.clear();
+                 // log.info("将管道中超过 {} 个值提交",taskEntity.getSyncNums());
+
+                 date = new Date();
+                 commandNums.set(0);
+
+
+
+             } else if (num <= 0 && time > 4000) {
+                 Response<String> r = pipelined.ping();
+                 pipelined.sync();
+                 syncTaskEntity.clear();
+                 log.info("[{}]PING->{}",taskId, r.get());
+                 date = new Date();
+                 commandNums.set(0);
+
+
+             }else if(num>0 && time > 3000){
+                 System.out.println("提交："+commandNums.get());
+                 List<Object> resultList = pipelined.syncAndReturnAll();
+                 syncTaskEntity.clear();
+                 date = new Date();
+
+                 commandNums.set(0);
+             }
+         }finally {
+             commitLock.unlock();
+         }
+
+
+
+//            long time = System.currentTimeMillis() - date.getTime();
+//            if (syncTaskEntity.syncNums >= count && time > 5000) {
+//                //pipelined.sync();
+//
+//
+//                    List<Object> resultList = pipelined.syncAndReturnAll();
+//                    resultList.clear();
+//                    syncTaskEntity.clear();
+//                    // log.info("将管道中超过 {} 个值提交",taskEntity.getSyncNums());
+//
+//                date = new Date();
+//
+//
+//
+//
+//            } else if (syncTaskEntity.syncNums == 0 && time > 4000) {
+//                Response<String> r = pipelined.ping();
+//                pipelined.sync();
+//                syncTaskEntity.clear();
+//                log.info("[{}]PING->{}",taskId, r.get());
+//                date = new Date();
+//
+//
+//
+//            }else if(syncTaskEntity.syncNums>0 && time > 3000){
+//                System.out.println("提交："+syncTaskEntity.syncNums);
+//                List<Object> resultList = pipelined.syncAndReturnAll();
+//                syncTaskEntity.clear();
+//                date = new Date();
+//            }
+
     }
 
 

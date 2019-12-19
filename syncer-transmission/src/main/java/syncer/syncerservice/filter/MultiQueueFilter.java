@@ -16,6 +16,7 @@ import syncer.syncerservice.util.HashUtils;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClientFactory;
 import syncer.syncerservice.util.KVUtils;
+import syncer.syncerservice.util.queue.LocalDiskMemoryQueue;
 import syncer.syncerservice.util.queue.LocalMemoryQueue;
 import syncer.syncerservice.util.queue.SyncerQueue;
 
@@ -39,7 +40,7 @@ public class MultiQueueFilter implements CommonFilter {
     static ThreadPoolConfig threadPoolConfig;
     static ThreadPoolTaskExecutor threadPoolTaskExecutor;
     private volatile Map<Integer, SyncerQueue<KeyValueEventEntity>> queueMap = new ConcurrentHashMap<>();
-
+    private final Integer QUEUE_SIZE=3;
     static {
         threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
         threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
@@ -52,7 +53,7 @@ public class MultiQueueFilter implements CommonFilter {
         this.r = r;
         this.taskId = taskId;
         this.batchSize=batchSize;
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < QUEUE_SIZE; i++) {
             //Configuration sourceCon = Configuration.valueOf(turi);
             JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, syncDataDto.getTargetHost(), syncDataDto.getTargetPort(), syncDataDto.getTargetPassword(), batchSize, taskId);
             //JDRedisClient client=new JDRedisJedisPipeLineClient(turi.getHost(),turi.getPort(),sourceCon.getAuthPassword(),batchSize,taskId);
@@ -61,11 +62,17 @@ public class MultiQueueFilter implements CommonFilter {
             //根据type生成相对节点List [List顺序即为filter节点执行顺序]
             assemble_the_list(commonFilterList, type, taskId, syncDataDto, client);
 
-            KeyValueRunFilterChain filterChain = KeyValueRunFilterChain.builder().commonFilterList(commonFilterList).build();
+//            KeyValueRunFilterChain filterChain = KeyValueRunFilterChain.builder().commonFilterList(commonFilterList).build();
 
             SyncerQueue<KeyValueEventEntity> queue = new LocalMemoryQueue<>(taskId, i);
             queueMap.put(i, queue);
-            threadPoolTaskExecutor.execute(SendCommandTask.builder().r(r).filterChain(filterChain).taskId(taskId).queue(queue).build());
+            threadPoolTaskExecutor.execute(SendCommandTask
+                    .builder()
+                    .r(r)
+                    .filterChain(KeyValueRunFilterChain.builder().commonFilterList(commonFilterList).build())
+                    .taskId(taskId)
+                    .queue(queue)
+                    .build());
         }
 
     }
@@ -77,23 +84,25 @@ public class MultiQueueFilter implements CommonFilter {
         if (event instanceof DefaultCommand) {
             try {
                 DefaultCommand defaultCommand = (DefaultCommand) event;
-                if(Arrays.equals(defaultCommand.getCommand(),"SELECT".getBytes())||Arrays.equals(defaultCommand.getCommand(),"FLUSHALL".getBytes())||Arrays.equals(defaultCommand.getCommand(),"FLUSHDB".getBytes())) {
+                if(Arrays.equals(defaultCommand.getCommand(),"SELECT".getBytes())
+                        ||Arrays.equals(defaultCommand.getCommand(),"FLUSHALL".getBytes())
+                        ||Arrays.equals(defaultCommand.getCommand(),"FLUSHDB".getBytes())) {
                     for (Map.Entry<Integer,SyncerQueue<KeyValueEventEntity>>queue:queueMap.entrySet()
                     ) {
                         queue.getValue().put(node);
                     }
                 }else {
                     String key = KVUtils.getKey(event);
-                    queueMap.get(HashUtils.getHash(key, 3)).put(node);
+                    queueMap.get(HashUtils.getHash(key, QUEUE_SIZE)).put(node);
                 }
-                queueMap.get(0).put(node);
+//                queueMap.get(0).put(node);
             } catch (InterruptedException e) {
                 log.warn("【{}】中的key[{}]加入队列失败", taskId, KVUtils.getKey(event));
             }
         } else {
             String key = KVUtils.getKey(event);
             try {
-                queueMap.get(HashUtils.getHash(key, 3)).put(node);
+                queueMap.get(HashUtils.getHash(key, QUEUE_SIZE)).put(node);
 //                System.out.println("加入队列：" + queueMap.get(HashUtils.getHash(key, 3)).size());
             } catch (InterruptedException e) {
                 log.warn("【{}】中的key[{}]加入队列失败", taskId, KVUtils.getKey(event));
