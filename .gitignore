@@ -25,6 +25,8 @@
 #idea ignore
 **/.idea
 
+# vscode
+**/.vscode
 # rust ignore
 Cargo.lock
 rscli/target
