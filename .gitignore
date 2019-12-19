@@ -19,9 +19,11 @@
 *.zip
 *.tar.gz
 *.rar
+# go ignore
+**/vendor
 
 #idea ignore
-.idea
+**/.idea
 
 # rust ignore
 Cargo.lock
