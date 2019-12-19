@@ -49,7 +49,7 @@ public class TaskController {
      * @return
      * @throws TaskMsgException
      */
-    @RequestMapping(value = "/creattask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    @RequestMapping(value = "/createtask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap createTask(@RequestBody @Validated RedisClusterDto redisClusterDto) throws TaskMsgException {
 
         List<RedisClusterDto> redisClusterDtoList=DtoCheckUtils.loadingRedisClusterDto(redisClusterDto);
@@ -175,8 +175,8 @@ public class TaskController {
         return  ResultMap.builder().code("2000").msg("The request is successful").data(msg);
     }
 
-    @RequestMapping(value = "/test")
-    public String getMap(){
-        return JSON.toJSONString( TaskMsgUtils.getAliveThreadHashMap(), SerializerFeature.DisableCircularReferenceDetect);
-    }
+//    @RequestMapping(value = "/test")
+//    public String getMap(){
+//        return JSON.toJSONString( TaskMsgUtils.getAliveThreadHashMap(), SerializerFeature.DisableCircularReferenceDetect);
+//    }
 }

@@ -34,7 +34,7 @@ public class RedisFileReplicatorController {
     @Autowired
     IRedisSyncerService redisBatchedSyncerService;
 
-    @RequestMapping(value = "/creattask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    @RequestMapping(value = "/createtask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap creattask(@RequestBody @Validated  RedisFileDataDto redisFileDataDto) throws TaskMsgException {
 
         redisFileDataDto.setRedisFileDataDto(redisPoolProps.getMinPoolSize(),
