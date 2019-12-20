@@ -95,8 +95,8 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
                 SyncTaskUtils.stopCreateThread(taskId);
             }else {
                 if(eventEntity.getTaskRunTypeEnum().equals(TaskRunTypeEnum.TOTAL)){
-                    log.warn("taskId为[{}]的任务全量同步结束..进入增量同步模式",taskId);
-                    System.out.println((System.currentTimeMillis()-date.getTime())/(1000)+":ms");
+                    String time=(System.currentTimeMillis()-date.getTime())/(1000)+":s";
+                    log.warn("taskId为[{}]的任务全量同步结束..进入增量同步模式 time:[{}] ",taskId,time);
                     SyncTaskUtils.editTaskMsg(taskId,"全量同步结束进入增量同步 时间(ms)： 进入增量状态");
                 }else if(eventEntity.getTaskRunTypeEnum().equals(TaskRunTypeEnum.STOCKONLY)){
                     log.warn("taskId为[{}]的任务全量同步结束[任务完成]..",taskId);

@@ -40,7 +40,7 @@ public class MultiQueueFilter implements CommonFilter {
     static ThreadPoolConfig threadPoolConfig;
     static ThreadPoolTaskExecutor threadPoolTaskExecutor;
     private volatile Map<Integer, SyncerQueue<KeyValueEventEntity>> queueMap = new ConcurrentHashMap<>();
-    private final Integer QUEUE_SIZE=3;
+    private final Integer QUEUE_SIZE=1;
     static {
         threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
         threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
@@ -93,7 +93,8 @@ public class MultiQueueFilter implements CommonFilter {
                     }
                 }else {
                     String key = KVUtils.getKey(event);
-                    queueMap.get(HashUtils.getHash(key, QUEUE_SIZE)).put(node);
+                    queueMap.get(0).put(node);
+//                    queueMap.get(HashUtils.getHash(key, QUEUE_SIZE)).put(node);
                 }
 //                queueMap.get(0).put(node);
             } catch (InterruptedException e) {
@@ -102,7 +103,8 @@ public class MultiQueueFilter implements CommonFilter {
         } else {
             String key = KVUtils.getKey(event);
             try {
-                queueMap.get(HashUtils.getHash(key, QUEUE_SIZE)).put(node);
+                queueMap.get(0).put(node);
+//                queueMap.get(HashUtils.getHash(key, QUEUE_SIZE)).put(node);
 //                System.out.println("加入队列：" + queueMap.get(HashUtils.getHash(key, 3)).size());
             } catch (InterruptedException e) {
                 log.warn("【{}】中的key[{}]加入队列失败", taskId, KVUtils.getKey(event));

@@ -127,6 +127,59 @@ public class RedisUrlCheckUtils {
     }
 
 
+    /**
+     * 查询redisKey数量
+     * @param host
+     * @param port
+     * @param password
+     * @return
+     * @throws TaskMsgException
+     */
+    public static List<String> getRedisClientKeyNum(String host,Integer port, String password) throws TaskMsgException {
+        RedisClient target = null;
+        try {
+            target = new RedisClient(host, port);
+            //获取password
+            if (!StringUtils.isEmpty(password)) {
+                Object auth = target.send(AUTH, password.getBytes());
+            }
+
+            //重试三次
+            int i = 3;
+            while (i > 0) {
+                try {
+                    String png = (String) target.send("PING".getBytes());
+
+                    if ("PONG".equals(png)) {
+
+                    }
+                    i--;
+                } catch (Exception e) {
+                    throw  e;
+                }
+
+            }
+            String infoRes = (String) target.send("INFO".getBytes(),"Keyspace".getBytes());
+            String rgex = ":keys=(.*?),";
+            List<String>res=RegexUtil.getSubUtilSimpleList(infoRes,rgex,1);
+            return res;
+
+        } catch (JedisDataException e) {
+            //TaskMsgException(name + ":" + e.getMessage());
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,host+":"+port +  ":" + e.getMessage()));
+        } catch (TaskRestoreException e) {
+            //TaskMsgException(name + ":error:" + e.getMessage());
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,host+":"+port + ":" + e.getMessage()));
+        } catch (Exception e) {
+            // TaskMsgException(name + ":error:" + e.getMessage());
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,host+":"+port + ":" + e.getMessage()));
+        } finally {
+            if (null != target) {
+                target.close();
+            }
+        }
+
+    }
 
     /**
      * 获取redis版本号

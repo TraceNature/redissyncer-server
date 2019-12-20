@@ -7,6 +7,7 @@ import syncer.syncerpluscommon.util.common.TemplateUtils;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
 import syncer.syncerplusredis.entity.RedisPoolProps;
 import syncer.syncerplusredis.entity.dto.RedisClusterDto;
+import syncer.syncerplusredis.entity.dto.RedisSyncNumCheckDto;
 import syncer.syncerplusredis.entity.dto.task.EditRedisClusterDto;
 import syncer.syncerplusredis.entity.dto.task.ListTaskMsgDto;
 import syncer.syncerplusredis.entity.dto.task.TaskMsgDto;
@@ -25,12 +26,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import syncer.syncerservice.service.IRedisSyncerService;
+import syncer.syncerservice.util.RedisUrlCheckUtils;
 import syncer.syncerservice.util.SyncTaskUtils;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping(value = "/api/v1")
@@ -179,4 +183,91 @@ public class TaskController {
 //    public String getMap(){
 //        return JSON.toJSONString( TaskMsgUtils.getAliveThreadHashMap(), SerializerFeature.DisableCircularReferenceDetect);
 //    }
+
+
+    @RequestMapping(value = "/checktask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    public ResultMap checkTask(@RequestBody @Validated RedisSyncNumCheckDto redisSyncNumCheckDto) throws TaskMsgException {
+        Map<String,Long>sourceNumMap=new ConcurrentHashMap<>();
+        Map<String,Long>targetNumMap=new ConcurrentHashMap<>();
+        Map<String,String>resMap=new ConcurrentHashMap<>();
+        String sum="sum";
+        System.out.println(JSON.toJSONString(redisSyncNumCheckDto));
+        redisSyncNumCheckDto.getSourceRedisAddressSet().forEach(data->{
+            try {
+                if(StringUtils.isEmpty(data)){
+                    return;
+                }
+                String[] hostAndPort=data.split(":");
+                List<String>dbSource= RedisUrlCheckUtils.getRedisClientKeyNum(hostAndPort[0], Integer.valueOf(hostAndPort[1]),redisSyncNumCheckDto.getSourcePassword());
+                for (int i=0;i<dbSource.size();i++){
+                    if(sourceNumMap.containsKey(i)){
+                        sourceNumMap.put(i+"",(sourceNumMap.get(i)+Long.valueOf(dbSource.get(i))));
+                    }else {
+                        sourceNumMap.put(i+"",Long.valueOf(dbSource.get(i)));
+                    }
+                    if(sourceNumMap.containsKey(sum)){
+                        Long num=sourceNumMap.get(sum)+Long.valueOf(dbSource.get(i));
+                        sourceNumMap.put(sum,num);
+                    }else {
+                        sourceNumMap.put(sum,Long.valueOf(dbSource.get(i)));
+                    }
+                }
+            } catch (TaskMsgException e) {
+                e.printStackTrace();
+            }
+        });
+
+        redisSyncNumCheckDto.getTargetRedisAddressSet().forEach(data->{
+            try {
+                if(StringUtils.isEmpty(data)){
+                    return;
+                }
+                String[] hostAndPort=data.split(":");
+                List<String>targetDbSource= RedisUrlCheckUtils.getRedisClientKeyNum(hostAndPort[0], Integer.valueOf(hostAndPort[1]),redisSyncNumCheckDto.getTargetPassword());
+                for (int i=0;i<targetDbSource.size();i++){
+                    if(targetNumMap.containsKey(i)){
+                        targetNumMap.put(i+"",(targetNumMap.get(i)+Long.valueOf(targetDbSource.get(i))));
+                    }else {
+                        targetNumMap.put(i+"",Long.valueOf(targetDbSource.get(i)));
+                    }
+                    if(targetNumMap.containsKey(sum)){
+                        targetNumMap.put(sum,(targetNumMap.get(sum)+Long.valueOf(targetDbSource.get(i))));
+                    }else {
+                        targetNumMap.put(sum,Long.valueOf(targetDbSource.get(i)));
+                    }
+                }
+            } catch (TaskMsgException e) {
+                e.printStackTrace();
+            }
+        });
+
+
+        resMap.put("源总key数量：", String.valueOf(sourceNumMap.get(sum)));
+        resMap.put("目标key数量：", String.valueOf(targetNumMap.get(sum)));
+        resMap.put("源总key数量：", String.valueOf(sourceNumMap.get(sum)));
+        DecimalFormat df = new DecimalFormat("0.00");//格式化小数
+        String num = df.format((float)targetNumMap.get(sum)/sourceNumMap.get(sum));//返回的是String类型
+
+        resMap.put("目标/源key比例：", num);
+        for (Map.Entry<String,Long>source:sourceNumMap.entrySet()
+             ) {
+            if(!source.getKey().equalsIgnoreCase(sum)){
+                resMap.put("源Db"+source.getKey(), String.valueOf(source.getValue()));
+            }
+        }
+
+        for (Map.Entry<String,Long>target:targetNumMap.entrySet()
+        ) {
+            if(!target.getKey().equalsIgnoreCase(sum)){
+                resMap.put("目标Db"+target.getKey(), String.valueOf(target.getValue()));
+            }
+        }
+//        List<ThreadReturnMsgEntity> listCreateThread=TaskMsgUtils.listCreateThread(listTaskMsgDto);
+        return  ResultMap.builder().code("2000").msg("The request is successful").data(resMap);
+    }
+
+    public static void main(String[] args) throws TaskMsgException {
+
+        System.out.println(JSON.toJSONString( RedisUrlCheckUtils.getRedisClientKeyNum("114.67.100.238",6379,"redistest0102")));
+    }
 }

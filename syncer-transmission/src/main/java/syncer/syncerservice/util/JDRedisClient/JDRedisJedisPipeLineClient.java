@@ -320,7 +320,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         try {
             int num=commandNums.incrementAndGet();
             if (num>= count) {
-                System.out.println("提交："+num);
+//                System.out.println("提交："+num);
                 List<Object> resultList = pipelined.syncAndReturnAll();
                 syncTaskEntity.clear();
                 date = new Date();
@@ -384,7 +384,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
 
              }else if(num>0 && time > 3000){
-                 System.out.println("提交："+commandNums.get());
+//                 System.out.println("提交："+commandNums.get());
                  List<Object> resultList = pipelined.syncAndReturnAll();
                  syncTaskEntity.clear();
                  date = new Date();
