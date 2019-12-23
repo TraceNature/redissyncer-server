@@ -191,25 +191,24 @@ public class TaskController {
         Map<String,Long>targetNumMap=new ConcurrentHashMap<>();
         Map<String,String>resMap=new ConcurrentHashMap<>();
         String sum="sum";
-        System.out.println(JSON.toJSONString(redisSyncNumCheckDto));
         redisSyncNumCheckDto.getSourceRedisAddressSet().forEach(data->{
             try {
                 if(StringUtils.isEmpty(data)){
                     return;
                 }
                 String[] hostAndPort=data.split(":");
-                List<String>dbSource= RedisUrlCheckUtils.getRedisClientKeyNum(hostAndPort[0], Integer.valueOf(hostAndPort[1]),redisSyncNumCheckDto.getSourcePassword());
+                List<List<String>>dbSource= RedisUrlCheckUtils.getRedisClientKeyNum(hostAndPort[0], Integer.valueOf(hostAndPort[1]),redisSyncNumCheckDto.getSourcePassword());
                 for (int i=0;i<dbSource.size();i++){
-                    if(sourceNumMap.containsKey(i)){
-                        sourceNumMap.put(i+"",(sourceNumMap.get(i)+Long.valueOf(dbSource.get(i))));
+                    if(sourceNumMap.containsKey(dbSource.get(i).get(0))){
+                        sourceNumMap.put(dbSource.get(i).get(0),(sourceNumMap.get(i)+Long.valueOf(dbSource.get(i).get(1))));
                     }else {
-                        sourceNumMap.put(i+"",Long.valueOf(dbSource.get(i)));
+                        sourceNumMap.put(dbSource.get(i).get(0),Long.valueOf(dbSource.get(i).get(1)));
                     }
                     if(sourceNumMap.containsKey(sum)){
-                        Long num=sourceNumMap.get(sum)+Long.valueOf(dbSource.get(i));
+                        Long num=sourceNumMap.get(sum)+Long.valueOf(dbSource.get(i).get(1));
                         sourceNumMap.put(sum,num);
                     }else {
-                        sourceNumMap.put(sum,Long.valueOf(dbSource.get(i)));
+                        sourceNumMap.put(sum,Long.valueOf(dbSource.get(i).get(1)));
                     }
                 }
             } catch (TaskMsgException e) {
@@ -223,17 +222,17 @@ public class TaskController {
                     return;
                 }
                 String[] hostAndPort=data.split(":");
-                List<String>targetDbSource= RedisUrlCheckUtils.getRedisClientKeyNum(hostAndPort[0], Integer.valueOf(hostAndPort[1]),redisSyncNumCheckDto.getTargetPassword());
+                List<List<String>>targetDbSource= RedisUrlCheckUtils.getRedisClientKeyNum(hostAndPort[0], Integer.valueOf(hostAndPort[1]),redisSyncNumCheckDto.getTargetPassword());
                 for (int i=0;i<targetDbSource.size();i++){
-                    if(targetNumMap.containsKey(i)){
-                        targetNumMap.put(i+"",(targetNumMap.get(i)+Long.valueOf(targetDbSource.get(i))));
+                    if(targetNumMap.containsKey(targetDbSource.get(i).get(0))){
+                        targetNumMap.put(targetDbSource.get(i).get(0),(targetNumMap.get(i)+Long.valueOf(targetDbSource.get(i).get(1))));
                     }else {
-                        targetNumMap.put(i+"",Long.valueOf(targetDbSource.get(i)));
+                        targetNumMap.put(targetDbSource.get(i).get(0),Long.valueOf(targetDbSource.get(i).get(1)));
                     }
                     if(targetNumMap.containsKey(sum)){
-                        targetNumMap.put(sum,(targetNumMap.get(sum)+Long.valueOf(targetDbSource.get(i))));
+                        targetNumMap.put(sum,(targetNumMap.get(sum)+Long.valueOf(targetDbSource.get(i).get(1))));
                     }else {
-                        targetNumMap.put(sum,Long.valueOf(targetDbSource.get(i)));
+                        targetNumMap.put(sum,Long.valueOf(targetDbSource.get(i).get(1)));
                     }
                 }
             } catch (TaskMsgException e) {
@@ -242,24 +241,55 @@ public class TaskController {
         });
 
 
-        resMap.put("源总key数量：", String.valueOf(sourceNumMap.get(sum)));
-        resMap.put("目标key数量：", String.valueOf(targetNumMap.get(sum)));
-        resMap.put("源总key数量：", String.valueOf(sourceNumMap.get(sum)));
+        resMap.put("目标总key数量：源总key数量", new StringBuilder(loadingValue(String.valueOf(targetNumMap.get(sum)))).append(":").append(loadingValue(String.valueOf(sourceNumMap.get(sum)))).toString());
         DecimalFormat df = new DecimalFormat("0.00");//格式化小数
-        String num = df.format((float)targetNumMap.get(sum)/sourceNumMap.get(sum));//返回的是String类型
+        if(null==sourceNumMap.get(sum)||0==sourceNumMap.get(sum)){
+            resMap.put("目标/源key比例：", "源redis没有数据无法比较");
+        }else {
+            String num="[有库无数据]无法比较";
+            if((targetNumMap.get(sum)==null||targetNumMap.get(sum)==0)||(sourceNumMap.get(sum)==null||sourceNumMap.get(sum)==0)){
+                if(targetNumMap.get(sum)!=null&&sourceNumMap.get(sum)!=null&&targetNumMap.get(sum)==0&&sourceNumMap.get(sum)==0){
+                    num="1.00";
+                }
+            }else {
+                 num = df.format((float)targetNumMap.get(sum)/(float)sourceNumMap.get(sum));//返回的是String类型
+            }
 
-        resMap.put("目标/源key比例：", num);
+            resMap.put("目标/源key比例：", num);
+        }
+
         for (Map.Entry<String,Long>source:sourceNumMap.entrySet()
              ) {
             if(!source.getKey().equalsIgnoreCase(sum)){
-                resMap.put("源Db"+source.getKey(), String.valueOf(source.getValue()));
+              String key=new StringBuilder("目标:源 Db")
+                      .append("[")
+                      .append(source.getKey())
+                      .append("]")
+                      .toString();
+              String value=new StringBuilder()
+                      .append(getTargetMapValue(source.getKey(),targetNumMap))
+                      .append(":")
+                      .append(source.getValue())
+                      .toString();
+                resMap.put(key, value);
             }
         }
 
         for (Map.Entry<String,Long>target:targetNumMap.entrySet()
         ) {
-            if(!target.getKey().equalsIgnoreCase(sum)){
-                resMap.put("目标Db"+target.getKey(), String.valueOf(target.getValue()));
+            if(!target.getKey().equalsIgnoreCase(sum)&&!sourceNumMap.containsKey(target.getKey())){
+                String key=new StringBuilder("目标:源 Db")
+                        .append("[")
+                        .append(target.getKey())
+                        .append("]")
+                        .toString();
+                String value=new StringBuilder()
+                        .append(target.getValue())
+                        .append(":")
+                        .append(getTargetMapValue(target.getKey(),sourceNumMap))
+                        .toString();
+                resMap.put(key, value);
+                resMap.put(key, value);
             }
         }
 //        List<ThreadReturnMsgEntity> listCreateThread=TaskMsgUtils.listCreateThread(listTaskMsgDto);
@@ -269,5 +299,20 @@ public class TaskController {
     public static void main(String[] args) throws TaskMsgException {
 
         System.out.println(JSON.toJSONString( RedisUrlCheckUtils.getRedisClientKeyNum("114.67.100.238",6379,"redistest0102")));
+    }
+
+
+    String getTargetMapValue(String key,Map<String,Long>map){
+        if(map.containsKey(key)){
+            return String.valueOf(map.get(key));
+        }
+        return "无数据";
+    }
+
+    String loadingValue(String key){
+        if(StringUtils.isEmpty(key)||"null".equals(key)){
+            return "无数据";
+        }
+        return key;
     }
 }

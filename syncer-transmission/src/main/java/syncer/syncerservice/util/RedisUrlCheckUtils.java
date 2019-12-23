@@ -135,7 +135,7 @@ public class RedisUrlCheckUtils {
      * @return
      * @throws TaskMsgException
      */
-    public static List<String> getRedisClientKeyNum(String host,Integer port, String password) throws TaskMsgException {
+    public static List<List<String>> getRedisClientKeyNum(String host,Integer port, String password) throws TaskMsgException {
         RedisClient target = null;
         try {
             target = new RedisClient(host, port);
@@ -157,11 +157,10 @@ public class RedisUrlCheckUtils {
                 } catch (Exception e) {
                     throw  e;
                 }
-
             }
             String infoRes = (String) target.send("INFO".getBytes(),"Keyspace".getBytes());
-            String rgex = ":keys=(.*?),";
-            List<String>res=RegexUtil.getSubUtilSimpleList(infoRes,rgex,1);
+            String rgex = "db(.*?):keys=(.*?),";
+            List<List<String>>res=RegexUtil.getSubListUtil(infoRes,rgex,2);
             return res;
 
         } catch (JedisDataException e) {
@@ -180,6 +179,7 @@ public class RedisUrlCheckUtils {
         }
 
     }
+
 
     /**
      * 获取redis版本号
