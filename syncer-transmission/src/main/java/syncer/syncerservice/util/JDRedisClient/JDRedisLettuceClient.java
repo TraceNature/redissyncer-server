@@ -206,6 +206,11 @@ public class JDRedisLettuceClient implements JDRedisClient {
 
     }
 
+    @Override
+    public Long pexpire(Long dbNum, byte[] key, long ms) {
+        return null;
+    }
+
     void selectDb(Long dbNum){
         if(dbNum!=null&&!currentDbNum.equals(dbNum.intValue())){
             currentDbNum=dbNum.intValue();

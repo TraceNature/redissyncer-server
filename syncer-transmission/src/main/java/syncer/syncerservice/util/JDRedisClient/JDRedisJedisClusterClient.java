@@ -169,4 +169,9 @@ public class JDRedisJedisClusterClient implements JDRedisClient {
 
     }
 
+    @Override
+    public Long pexpire(Long dbNum, byte[] key, long ms) {
+        return redisClient.pexpire(key,ms);
+    }
+
 }

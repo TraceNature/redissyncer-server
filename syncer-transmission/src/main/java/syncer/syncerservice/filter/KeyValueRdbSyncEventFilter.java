@@ -185,23 +185,50 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
 
 
         if (event instanceof DumpKeyValuePair) {
+
             DumpKeyValuePair valueDump = (DumpKeyValuePair) event;
             Long ms=eventEntity.getMs();
             DB db=valueDump.getDb();
             Long duNum=db.getDbNumber();
-            Integer ttl= Math.toIntExact(ms);
+            Integer ttl=Integer.MAX_VALUE;
+            if(ms>=Long.valueOf(Integer.MAX_VALUE)){
+                ttl=Integer.MAX_VALUE;
+            }else {
+                ttl= Math.toIntExact(ms);
+            }
+
+
             if (valueDump.getValue() != null) {
                     if (ms == null || ms <= 0L) {
                         if (redisVersion< 3.0) {
-                            client.restoreReplace(duNum,valueDump.getKey(), 0, valueDump.getValue(),false);
+                           String res= client.restoreReplace(duNum,valueDump.getKey(), 0, valueDump.getValue(),false);
                         } else {
                             client.restoreReplace(duNum,valueDump.getKey(), 0, valueDump.getValue());
                         }
                     }else {
                         if (redisVersion< 3.0) {
-                            client.restoreReplace(duNum,valueDump.getKey(),  ttl, valueDump.getValue(),false);
+                            String res=client.restoreReplace(duNum,valueDump.getKey(),  ttl, valueDump.getValue(),false);
+                            if(null!=res&&res.equalsIgnoreCase("OK")){
+                                if(ms>=Long.valueOf(Integer.MAX_VALUE)){
+                                    client.pexpire(duNum,valueDump.getKey(),ms);
+                                }
+                            }else {
+                                if(ms>=Long.valueOf(Integer.MAX_VALUE)){
+                                    client.pexpire(duNum,valueDump.getKey(),ms);
+                                }
+                            }
                         } else {
-                            client.restoreReplace(duNum,valueDump.getKey(), ttl, valueDump.getValue());
+                            String res=client.restoreReplace(duNum,valueDump.getKey(), ttl, valueDump.getValue());
+                            System.out.println(res);
+                            if(res.equalsIgnoreCase("OK")){
+                                if(ms>=Long.valueOf(Integer.MAX_VALUE)){
+                                    client.pexpire(duNum,valueDump.getKey(),ms);
+                                }
+                            }else {
+                                if(ms>=Long.valueOf(Integer.MAX_VALUE)){
+                                    client.pexpire(duNum,valueDump.getKey(),ms);
+                                }
+                            }
                         }
                     }
             }
