@@ -33,7 +33,7 @@ redissyncer为多任务服务端程序,用户通过curl请求方式实现下列�
 
 ```shell script
 curl -X POST \
-  http://10.0.0.100:8080/api/v1/creattask \
+  http://10.0.0.100:8080/api/v1/createtask \
   -H 'Content-Type: application/json' \
   -d '{
     "sourcePassword": "xxxxxx",
