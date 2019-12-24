@@ -123,7 +123,7 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
             if(typeEnum.equals(RedisCommandTypeEnum.STRING)){
 
                 BatchedKeyStringValueString valueString = (BatchedKeyStringValueString) event;
-                if (ms == null || ms == 0L) {
+                if (ms == null || ms <= 0L) {
                     if (valueString.getBatch() == 0) {
                         client.set(duNum,valueString.getKey(), valueString.getValue());
                     } else {
@@ -142,7 +142,7 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
 
                 //list类型
                 BatchedKeyStringValueList valueList = (BatchedKeyStringValueList) event;
-                if (ms == null || ms == 0L) {
+                if (ms == null || ms <= 0L) {
                     client.lpush(duNum,valueList.getKey(), valueList.getValue());
                 }else {
                     client.lpush(duNum,valueList.getKey(),ms, valueList.getValue());
@@ -153,7 +153,7 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
 
                 //set类型
                 BatchedKeyStringValueSet valueSet = (BatchedKeyStringValueSet) event;
-                if (ms == null || ms == 0L) {
+                if (ms == null || ms<=  0L) {
                     client.sadd(duNum,valueSet.getKey(), valueSet.getValue());
                 }else {
                     client.sadd(duNum,valueSet.getKey(),ms, valueSet.getValue());
@@ -163,7 +163,7 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
                 //zset类型
 
                 BatchedKeyStringValueZSet valueZSet = (BatchedKeyStringValueZSet) event;
-                if (ms == null || ms == 0L) {
+                if (ms == null || ms <=  0L) {
                     client.zadd(duNum,valueZSet.getKey(), valueZSet.getValue());
                 }else {
                     client.zadd(duNum,valueZSet.getKey(), valueZSet.getValue(),ms);
@@ -173,7 +173,7 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
                 //hash类型
 
                 BatchedKeyStringValueHash valueHash = (BatchedKeyStringValueHash) event;
-                if (ms == null || ms == 0L) {
+                if (ms == null || ms <= 0L) {
                     client.hmset(duNum,valueHash.getKey(), valueHash.getValue());
                 }else {
                     client.hmset(duNum,valueHash.getKey(), valueHash.getValue(),ms);
@@ -189,9 +189,9 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
             Long ms=eventEntity.getMs();
             DB db=valueDump.getDb();
             Long duNum=db.getDbNumber();
-            Integer ttl= Math.toIntExact(ms / 1000);
+            Integer ttl= Math.toIntExact(ms);
             if (valueDump.getValue() != null) {
-                    if (ms == null || ms == 0L) {
+                    if (ms == null || ms <= 0L) {
                         if (redisVersion< 3.0) {
                             client.restoreReplace(duNum,valueDump.getKey(), 0, valueDump.getValue(),false);
                         } else {
@@ -199,7 +199,7 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
                         }
                     }else {
                         if (redisVersion< 3.0) {
-                            client.restoreReplace(duNum,valueDump.getKey(), ttl, valueDump.getValue(),false);
+                            client.restoreReplace(duNum,valueDump.getKey(),  ttl, valueDump.getValue(),false);
                         } else {
                             client.restoreReplace(duNum,valueDump.getKey(), ttl, valueDump.getValue());
                         }

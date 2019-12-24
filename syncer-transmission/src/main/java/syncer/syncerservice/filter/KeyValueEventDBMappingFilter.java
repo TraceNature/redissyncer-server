@@ -54,6 +54,7 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
             if(batchedKeyValuePair.getBatch()==0&&null==batchedKeyValuePair.getValue()){
                 return;
             }
+
             DB db = batchedKeyValuePair.getDb();
             try {
                 dbMapping(eventEntity,db);

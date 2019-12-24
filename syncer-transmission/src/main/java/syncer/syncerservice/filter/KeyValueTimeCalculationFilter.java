@@ -41,6 +41,7 @@ public class KeyValueTimeCalculationFilter implements CommonFilter  {
                 //抛弃此kv
                 return;
             }
+
         }
 
         if (event instanceof BatchedKeyValuePair<?, ?>) {
@@ -78,6 +79,7 @@ public class KeyValueTimeCalculationFilter implements CommonFilter  {
 
     void timeCalculation(KeyValueEventEntity eventEntity,Long time) throws KeyWeed0utException {
         Long ms=0L;
+
         if (null==time) {
             ms = 0L;
         } else {
