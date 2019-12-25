@@ -152,7 +152,10 @@ public class JDRedisLettuceClient implements JDRedisClient {
         return res;
     }
 
-
+    @Override
+    public Long pexpire(Long dbNum, byte[] key, long ms) {
+        return null;
+    }
 
     @Override
     public String restore(Long dbNum, byte[] key, int ttl, byte[] serializedValue) {

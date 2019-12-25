@@ -71,4 +71,7 @@ public interface JDRedisClient {
     Object send(final byte[] cmd, final byte[]... args);
 
     void select(final Integer dbNum);
+
+    Long pexpire(Long dbNum,byte[]key,long ms);
+
 }

@@ -133,4 +133,9 @@ public class JDRedisRedissonClient implements JDRedisClient {
     public void select(Integer dbNum) {
 
     }
+
+    @Override
+    public Long pexpire(Long dbNum, byte[] key, long ms) {
+        return null;
+    }
 }

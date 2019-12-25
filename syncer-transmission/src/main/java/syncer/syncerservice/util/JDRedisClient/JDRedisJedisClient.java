@@ -144,4 +144,9 @@ public class JDRedisJedisClient implements JDRedisClient {
 
     }
 
+    @Override
+    public Long pexpire(Long dbNum, byte[] key, long ms) {
+        return jdJedisClientPool.pexpire(new String(key),ms);
+    }
+
 }
