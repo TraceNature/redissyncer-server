@@ -3,9 +3,10 @@ package syncer.syncerservice.pool;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import redis.clients.jedis.Client;
-import redis.clients.jedis.Protocol;
-import redis.clients.jedis.exceptions.JedisDataException;
+
+import syncer.syncerjedis.Client;
+import syncer.syncerjedis.Protocol;
+import syncer.syncerjedis.exceptions.JedisDataException;
 import syncer.syncerplusredis.exception.TaskRestoreException;
 import syncer.syncerservice.util.jedis.IJedisClient;
 
@@ -13,9 +14,9 @@ import syncer.syncerservice.util.jedis.IJedisClient;
 import java.util.Date;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static redis.clients.jedis.Protocol.Command.RESTORE;
-import static redis.clients.jedis.Protocol.Command.SELECT;
-import static redis.clients.jedis.Protocol.toByteArray;
+import static syncer.syncerjedis.Protocol.Command.RESTORE;
+import static syncer.syncerjedis.Protocol.Command.SELECT;
+import static syncer.syncerjedis.Protocol.toByteArray;
 
 
 /**
@@ -45,7 +46,7 @@ public class RedisClient extends Client {
         try{
              r = getOne();
         }catch (Exception e){
-            if(e instanceof  JedisDataException) {
+            if(e instanceof JedisDataException) {
                 throw  new TaskRestoreException(e.getMessage());
             }
 

@@ -29,14 +29,14 @@ public class RedisSyncNumCheckDto {
     private Set<String>targetRedisAddressSet;
 
     public Set<String> getSourceRedisAddressSet() {
-        if(null==sourceRedisAddressSet){
+        if(null==sourceRedisAddressSet||sourceRedisAddressSet.size()==0){
             sourceRedisAddressSet=new HashSet<>(Arrays.asList(sourceRedisAddress.split(";")));
         }
         return sourceRedisAddressSet;
     }
 
     public Set<String> getTargetRedisAddressSet() {
-        if(null==targetRedisAddressSet){
+        if(null==targetRedisAddressSet||targetRedisAddressSet.size()==0){
             targetRedisAddressSet=new HashSet<>(Arrays.asList(targetRedisAddress.split(";")));
         }
         return targetRedisAddressSet;

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerservice.compensator.ISyncerCompensator;
 import syncer.syncerservice.filter.KeyValueRunFilterChain;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.SyncTaskUtils;
@@ -19,13 +20,16 @@ public class SendCommandTask implements Runnable{
     private SyncerQueue<KeyValueEventEntity> queue;
     private String taskId;
     private boolean status = true;
+    private ISyncerCompensator syncerCompensator;
 
-    public SendCommandTask(Replicator r, KeyValueRunFilterChain filterChain, SyncerQueue<KeyValueEventEntity> queue, String taskId, boolean status) {
+    public SendCommandTask(Replicator r, KeyValueRunFilterChain filterChain, SyncerQueue<KeyValueEventEntity> queue, String taskId, boolean status, ISyncerCompensator syncerCompensator) {
         this.r = r;
         this.filterChain = filterChain;
         this.queue = queue;
         this.taskId = taskId;
         this.status = status;
+        this.syncerCompensator = syncerCompensator;
+
         new Thread(new SendCommandTask.AliveMonitorThread()).start();
     }
 
@@ -37,6 +41,7 @@ public class SendCommandTask implements Runnable{
 
                 KeyValueEventEntity keyValueEventEntity=null;
                 keyValueEventEntity=queue.take();
+                keyValueEventEntity.setISyncerCompensator(syncerCompensator);
 //                System.out.println(JSON.toJSONString(queue.take()));
                 try {
                     if(null!=keyValueEventEntity){
@@ -44,6 +49,7 @@ public class SendCommandTask implements Runnable{
                     }
 
                 }catch (Exception e){
+                    System.out.println(keyValueEventEntity.getEvent().getClass());
                     log.warn("[{}]抛弃key:{}:原因[{}]",taskId,JSON.toJSONString(keyValueEventEntity.getEvent()),e.getMessage());
                 }
 

@@ -5,11 +5,12 @@ import com.beust.jcommander.internal.Maps;
 import com.beust.jcommander.internal.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.exceptions.JedisDataException;
-import redis.clients.jedis.exceptions.JedisException;
+
+import syncer.syncerjedis.Jedis;
+import syncer.syncerjedis.JedisPool;
+import syncer.syncerjedis.JedisPoolConfig;
+import syncer.syncerjedis.exceptions.JedisDataException;
+import syncer.syncerjedis.exceptions.JedisException;
 import syncer.syncerservice.util.regex.RegexUtil;
 
 
@@ -124,21 +125,7 @@ public class TestJedisClient implements IJedisClient {
         }
         return jedis;
     }
-    public JDJedis selectDb(Integer index, JDJedis jedis) throws JedisException {
 
-        if (jedis == null) {
-            return null;
-        }
-
-        try {
-            jedis.select(index);
-        } catch (JedisException e) {
-            logger.warn("selectDb.", e);
-            returnBrokenResource(jedis);
-            throw e;
-        }
-        return jedis;
-    }
 
     /**
      * 归还资源

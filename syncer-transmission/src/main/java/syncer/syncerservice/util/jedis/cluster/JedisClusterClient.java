@@ -2,9 +2,9 @@ package syncer.syncerservice.util.jedis.cluster;
 
 
 import lombok.extern.slf4j.Slf4j;
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.JedisPoolConfig;
-import syncer.syncerservice.util.jedis.cluster.extendCluster.JedisClusterPlus;
+import syncer.syncerjedis.HostAndPort;
+import syncer.syncerjedis.JedisCluster;
+import syncer.syncerjedis.JedisPoolConfig;
 
 
 import java.text.ParseException;
@@ -21,7 +21,7 @@ import java.util.Set;
 
 @Slf4j
 public class JedisClusterClient {
-    private JedisClusterPlus jedis;
+    private JedisCluster jedis;
     private Set<String> jedisClusterNodes=null;
     public JedisClusterClient(String jedisaddress, String password, Integer maxTotal, Integer minIdle, long timeOut, int connectTimeout) throws ParseException {
         // 添加集群的服务节点Set集合
@@ -67,10 +67,10 @@ public class JedisClusterClient {
         jedisPoolConfig.setTestOnBorrow(true);
         Map<String,String>nodesMap=new HashMap<>();
         ClusterNodesUtil.builderMap(nodesMap,hostAndPortsSet,password);
-        jedis = new JedisClusterPlus(hostAndPortsSet, jedisPoolConfig,nodesMap);
+        jedis = new JedisCluster(hostAndPortsSet, jedisPoolConfig,nodesMap);
     }
 
-    public JedisClusterPlus getJedis() {
+    public JedisCluster getJedis() {
         return jedis;
     }
 

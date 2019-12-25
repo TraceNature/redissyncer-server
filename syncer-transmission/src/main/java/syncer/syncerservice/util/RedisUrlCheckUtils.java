@@ -2,8 +2,8 @@ package syncer.syncerservice.util;
 
 import com.alibaba.fastjson.JSON;
 import org.springframework.util.StringUtils;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.exceptions.JedisDataException;
+import syncer.syncerjedis.Jedis;
+import syncer.syncerjedis.exceptions.JedisDataException;
 import syncer.syncerpluscommon.util.common.TemplateUtils;
 import syncer.syncerplusredis.constant.KeyValueEnum;
 import syncer.syncerplusredis.constant.RedisVersion;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static redis.clients.jedis.Protocol.Command.AUTH;
+import static syncer.syncerjedis.Protocol.Command.AUTH;
 
 public class RedisUrlCheckUtils {
     //rdb版本和redis版本映射关系

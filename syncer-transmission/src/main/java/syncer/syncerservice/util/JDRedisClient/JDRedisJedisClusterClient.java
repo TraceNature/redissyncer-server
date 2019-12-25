@@ -2,7 +2,8 @@ package syncer.syncerservice.util.JDRedisClient;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import redis.clients.jedis.params.SetParams;
+import syncer.syncerjedis.JedisCluster;
+import syncer.syncerjedis.params.SetParams;
 import syncer.syncerpluscommon.config.ThreadPoolConfig;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
@@ -10,7 +11,6 @@ import syncer.syncerservice.cmd.ClusterProtocolCommand;
 import syncer.syncerservice.util.jedis.ObjectUtils;
 import syncer.syncerservice.util.jedis.StringUtils;
 import syncer.syncerservice.util.jedis.cluster.SyncJedisClusterClient;
-import syncer.syncerservice.util.jedis.cluster.extendCluster.JedisClusterPlus;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
@@ -25,11 +25,13 @@ public class JDRedisJedisClusterClient implements JDRedisClient {
     private String host;
     //任务id
     private String taskId;
-    private JedisClusterPlus redisClient;
+    private JedisCluster redisClient;
     static {
         threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
         threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
     }
+
+
 
 
     public JDRedisJedisClusterClient(String host,  String password,String taskId) {
@@ -39,6 +41,7 @@ public class JDRedisJedisClusterClient implements JDRedisClient {
         try {
             SyncJedisClusterClient pool=new SyncJedisClusterClient( host,password,10,5000,5000,5000);
             redisClient=pool.jedisCluster();
+
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -145,17 +148,17 @@ public class JDRedisJedisClusterClient implements JDRedisClient {
     }
 
     @Override
-    public String restore(Long dbNum, byte[] key, int ttl, byte[] serializedValue) {
+    public String restore(Long dbNum, byte[] key, long ttl, byte[] serializedValue) {
         return redisClient.restore(key,ttl,serializedValue);
     }
 
     @Override
-    public String restoreReplace(Long dbNum, byte[] key, int ttl, byte[] serializedValue) {
+    public String restoreReplace(Long dbNum, byte[] key, long ttl, byte[] serializedValue) {
         return redisClient.restoreReplace(key,ttl,serializedValue);
     }
 
     @Override
-    public String restoreReplace(Long dbNum, byte[] key, int ttl, byte[] serializedValue, boolean highVersion) {
+    public String restoreReplace(Long dbNum, byte[] key, long ttl, byte[] serializedValue, boolean highVersion) {
         return redisClient.restoreReplace(key,ttl,serializedValue);
     }
 

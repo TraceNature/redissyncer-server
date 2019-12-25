@@ -200,7 +200,8 @@ public class TaskController {
                 List<List<String>>dbSource= RedisUrlCheckUtils.getRedisClientKeyNum(hostAndPort[0], Integer.valueOf(hostAndPort[1]),redisSyncNumCheckDto.getSourcePassword());
                 for (int i=0;i<dbSource.size();i++){
                     if(sourceNumMap.containsKey(dbSource.get(i).get(0))){
-                        sourceNumMap.put(dbSource.get(i).get(0),(sourceNumMap.get(i)+Long.valueOf(dbSource.get(i).get(1))));
+                        Long numData=sourceNumMap.get(dbSource.get(i).get(0))+Long.valueOf(dbSource.get(i).get(1));
+                        sourceNumMap.put(dbSource.get(i).get(0),numData);
                     }else {
                         sourceNumMap.put(dbSource.get(i).get(0),Long.valueOf(dbSource.get(i).get(1)));
                     }
@@ -216,6 +217,9 @@ public class TaskController {
             }
         });
 
+
+
+
         redisSyncNumCheckDto.getTargetRedisAddressSet().forEach(data->{
             try {
                 if(StringUtils.isEmpty(data)){
@@ -223,11 +227,16 @@ public class TaskController {
                 }
                 String[] hostAndPort=data.split(":");
                 List<List<String>>targetDbSource= RedisUrlCheckUtils.getRedisClientKeyNum(hostAndPort[0], Integer.valueOf(hostAndPort[1]),redisSyncNumCheckDto.getTargetPassword());
+
                 for (int i=0;i<targetDbSource.size();i++){
                     if(targetNumMap.containsKey(targetDbSource.get(i).get(0))){
-                        targetNumMap.put(targetDbSource.get(i).get(0),(targetNumMap.get(i)+Long.valueOf(targetDbSource.get(i).get(1))));
+
+                        Long numData=targetNumMap.get(targetDbSource.get(i).get(0))+Long.valueOf(targetDbSource.get(i).get(1));
+
+                        targetNumMap.put(targetDbSource.get(i).get(0),numData);
                     }else {
                         targetNumMap.put(targetDbSource.get(i).get(0),Long.valueOf(targetDbSource.get(i).get(1)));
+
                     }
                     if(targetNumMap.containsKey(sum)){
                         targetNumMap.put(sum,(targetNumMap.get(sum)+Long.valueOf(targetDbSource.get(i).get(1))));
@@ -235,9 +244,13 @@ public class TaskController {
                         targetNumMap.put(sum,Long.valueOf(targetDbSource.get(i).get(1)));
                     }
                 }
+
+
             } catch (TaskMsgException e) {
                 e.printStackTrace();
             }
+
+
         });
 
 
@@ -297,7 +310,9 @@ public class TaskController {
     }
 
     public static void main(String[] args) throws TaskMsgException {
-
+        List<String>list=new ArrayList<>();
+        list.add("wdw");
+        System.out.println(list.get(0));
         System.out.println(JSON.toJSONString( RedisUrlCheckUtils.getRedisClientKeyNum("114.67.100.238",6379,"redistest0102")));
     }
 

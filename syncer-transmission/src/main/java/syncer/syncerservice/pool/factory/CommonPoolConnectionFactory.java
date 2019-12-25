@@ -9,7 +9,8 @@ import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.entity.RedisURI;
 import syncer.syncerservice.pool.RedisClient;
 
-import static redis.clients.jedis.Protocol.Command.AUTH;
+import static syncer.syncerjedis.Protocol.Command.AUTH;
+
 
 @Slf4j
 public class CommonPoolConnectionFactory extends BasePoolableObjectFactory {

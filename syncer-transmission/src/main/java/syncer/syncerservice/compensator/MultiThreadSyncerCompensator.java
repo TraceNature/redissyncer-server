@@ -2,12 +2,15 @@ package syncer.syncerservice.compensator;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
+import syncer.syncerpluscommon.util.common.Bytes;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerservice.constant.CmdEnum;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.po.StringCompensatorEntity;
 import syncer.syncerservice.util.CompensatorUtils;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
+import syncer.syncerservice.util.common.Strings;
+import syncer.syncerservice.util.jedis.ObjectUtils;
 import syncer.syncerservice.util.jedis.StringUtils;
 import syncer.syncerservice.util.queue.LocalMemoryQueue;
 import syncer.syncerservice.util.queue.SyncerQueue;
@@ -25,11 +28,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MultiThreadSyncerCompensator implements ISyncerCompensator{
 
    private  String taskId;
-   private Map<String,Long>incrMap=new ConcurrentHashMap<>();
+   private Map<String,Double>incrMap=new ConcurrentHashMap<>();
    private Map<String, StringCompensatorEntity>appendMap=new ConcurrentHashMap<>();
    private CompensatorUtils compensatorUtils=new CompensatorUtils();
    private JDRedisClient client;
-
+   private Long dbNum=0L;
     public MultiThreadSyncerCompensator(String taskId, JDRedisClient client) {
         this.taskId = taskId;
         this.client = client;
@@ -68,7 +71,7 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
     }
 
     @Override
-    public void append(Long dbNum, byte[] key, byte[] value, String res) {
+    public void append(Long dbNum, byte[] key, byte[] value, Long res) {
         String stringKey=StringUtils.toString(key);
         if(appendMap.containsKey(stringKey)){
             appendMap.get(stringKey).getValue().append(StringUtils.toString(value));
@@ -84,7 +87,7 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
 //            appendMap.put(stringKey,new StringBuilder(StringUtils.toString(value)));
         }
 
-        if(compensatorUtils.isStringSuccess(res)){
+        if(compensatorUtils.isLongSuccess(res)){
             return;
         }
 
@@ -293,7 +296,7 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
     }
 
     @Override
-    public void restore(Long dbNum, byte[] key, int ttl, byte[] serializedValue, String res) {
+    public void restore(Long dbNum, byte[] key, long ttl, byte[] serializedValue, String res) {
         if(compensatorUtils.isStringSuccess(res)){
             return;
         }
@@ -309,7 +312,7 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
     }
 
     @Override
-    public void restoreReplace(Long dbNum, byte[] key, int ttl, byte[] serializedValue, String res) {
+    public void restoreReplace(Long dbNum, byte[] key, long ttl, byte[] serializedValue, String res) {
         if(compensatorUtils.isStringSuccess(res)){
             return;
         }
@@ -325,7 +328,7 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
     }
 
     @Override
-    public void restoreReplace(Long dbNum, byte[] key, int ttl, byte[] serializedValue, boolean highVersion, String res) {
+    public void restoreReplace(Long dbNum, byte[] key, long ttl, byte[] serializedValue, boolean highVersion, String res) {
         if(compensatorUtils.isStringSuccess(res)){
             return;
         }
@@ -342,15 +345,113 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
 
     @Override
     public void send(byte[] cmd, Object res, byte[]... args) {
+        if(isIdempotentCommand(cmd)){
+
+            retryIdempotentCommand(cmd,res,args);
+            return;
+        }
+        if(compensatorUtils.isObjectSuccess(res)){
+            return;
+        }
+        int i=3;
+        while (i-->0){
+            if(compensatorUtils.isObjectSuccess(client.send(cmd,args))){
+                break;
+            }
+        }
+        if(i<=0){
+            log.warn("[{}]中key[{}]同步失败type[restoreReplace - restore]---->value{}",taskId, StringUtils.toString(cmd), JSON.toJSONString(args));
+        }
 
     }
 
     @Override
     public void select(Integer dbNum) {
-
+        this.dbNum= Long.valueOf(dbNum);
     }
 
 
+    boolean isIdempotentCommand(byte[]cmd){
+        String stringCmd= Strings.byteToString(cmd);
+        CmdEnum cmdEnum=CmdEnum.valueOf(stringCmd);
+        if(cmdEnum.equals(CmdEnum.INCR)){
+            return true;
+        }else if(cmdEnum.equals(CmdEnum.INCRBY)){
+            return true;
+        }else if (cmdEnum.equals(CmdEnum.INCRBYFLOAT)){
+            return true;
+        }else if(cmdEnum.equals(CmdEnum.DECR)){
+            return true;
+        }else if(cmdEnum.equals(CmdEnum.DECRBY)){
+            return true;
+        }else if(cmdEnum.equals(CmdEnum.APPEND)){
+            return true;
+        }
+        return false;
+    }
+
+
+    void retryIdempotentCommand(byte[] cmd, Object res, byte[]... args){
+        String stringCmd= Strings.byteToString(cmd);
+        CmdEnum cmdEnum=CmdEnum.valueOf(stringCmd);
+        String key=Strings.byteToString(args[0]);
+        if(cmdEnum.equals(CmdEnum.APPEND)){
+            if(!appendMap.containsKey(key)){
+                appendMap.put(key,StringCompensatorEntity.builder().key(cmd).stringKey(key).value(new StringBuilder()).build());
+            }
+        }else {
+            if(!incrMap.containsKey(key)){
+                incrMap.put(key, Double.valueOf(client.get(dbNum,cmd)));
+            }
+        }
+
+
+        if(cmdEnum.equals(CmdEnum.INCR)){
+            incrMap.put(key,incrMap.get(key)+1);
+        }else if(cmdEnum.equals(CmdEnum.INCRBY)){
+            incrMap.put(key,incrMap.get(key)+Integer.valueOf(String.valueOf(args[1])));
+        }else if(cmdEnum.equals(CmdEnum.INCRBYFLOAT)){
+            incrMap.put(key,incrMap.get(key)+Integer.valueOf(String.valueOf(args[1])));
+        }else if(cmdEnum.equals(CmdEnum.DECR)){
+            incrMap.put(key,incrMap.get(key)-1);
+        }else if(cmdEnum.equals(CmdEnum.DECRBY)){
+            incrMap.put(key,incrMap.get(key)+Integer.valueOf(String.valueOf(args[1])));
+        }else if(cmdEnum.equals(CmdEnum.APPEND)){
+            appendMap.get(key).getValue().append(Strings.byteToString(args[1]));
+
+        }
+
+
+        if(compensatorUtils.isObjectSuccess(res)){
+            return;
+        }
+
+        int i=3;
+        while (i-->0){
+            if(cmdEnum.equals(CmdEnum.INCRBYFLOAT)){
+                String data= String.valueOf(incrMap.get(key));
+                if(compensatorUtils.isStringSuccess(client.set(dbNum,cmd, data.getBytes()))){
+                    break;
+                }
+            }else if(cmdEnum.equals(CmdEnum.APPEND)){
+                String data= appendMap.get(key).getValue().toString();
+                if(compensatorUtils.isStringSuccess(client.set(dbNum,cmd, data.getBytes()))){
+                    break;
+                }
+
+            }else {
+                String data= String.valueOf(incrMap.get(key).intValue());
+                if(compensatorUtils.isStringSuccess(client.set(dbNum,cmd, data.getBytes()))){
+                    break;
+                }
+            }
+
+        }
+        if(i<=0){
+            log.warn("[{}]中key[{}]同步失败type[restoreReplace - restore]---->value{}",taskId, StringUtils.toString(cmd), JSON.toJSONString(args));
+        }
+
+    }
 
 }
 

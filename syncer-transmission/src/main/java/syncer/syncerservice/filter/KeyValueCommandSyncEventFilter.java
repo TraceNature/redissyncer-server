@@ -72,7 +72,7 @@ public class KeyValueCommandSyncEventFilter implements CommonFilter {
                 SyncTaskUtils.editTaskMsg(taskId,"增量/同步结束");
             }
 
-
+            return;
         }
 
         //命令解析器

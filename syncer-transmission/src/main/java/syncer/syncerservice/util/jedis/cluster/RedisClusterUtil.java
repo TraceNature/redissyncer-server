@@ -1,8 +1,10 @@
 package syncer.syncerservice.util.jedis.cluster;
 
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.JedisPoolConfig;
+
+
+import syncer.syncerjedis.HostAndPort;
+import syncer.syncerjedis.JedisCluster;
+import syncer.syncerjedis.JedisPoolConfig;
 
 import java.util.HashSet;
 import java.util.Set;

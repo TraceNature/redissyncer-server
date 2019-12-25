@@ -1,6 +1,7 @@
 package syncer.syncerservice.util.jedis;
 
 
+import syncer.syncerjedis.Jedis;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerservice.util.file.SafeObjectInputStream;
 
@@ -155,7 +156,7 @@ public class ObjectUtils {
     }
 
 
-    public synchronized static Map<byte[], Double> zsetByteP(Set<byte[]> datas,JDJedis source,byte[]key){
+    public synchronized static Map<byte[], Double> zsetByteP(Set<byte[]> datas, Jedis source, byte[]key){
         Map<byte[], Double> map = new HashMap<>();
         datas.forEach(zset -> {
             try {

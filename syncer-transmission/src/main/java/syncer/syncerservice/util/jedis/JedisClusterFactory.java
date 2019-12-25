@@ -2,13 +2,10 @@ package syncer.syncerservice.util.jedis;
 
 
 import org.springframework.beans.factory.FactoryBean;
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.JedisPoolConfig;
+import syncer.syncerjedis.HostAndPort;
+import syncer.syncerjedis.JedisCluster;
+import syncer.syncerjedis.JedisPoolConfig;
 import syncer.syncerservice.util.jedis.cluster.ClusterNodesUtil;
-import syncer.syncerservice.util.jedis.cluster.extendCluster.JedisClusterPlus;
-
-
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,13 +16,13 @@ import java.util.Set;
  * @author 平行时空
  * @created 2018-06-14 22:15
  **/
-public class JedisClusterFactory implements FactoryBean<JedisClusterPlus> {
+public class JedisClusterFactory implements FactoryBean<JedisCluster> {
 
     //连接池参数 spring 注入
 
     private JedisPoolConfig jedisPoolConfig = null;
     //
-    private JedisClusterPlus jedisCluster=null;
+    private JedisCluster jedisCluster=null;
     private int connectionTimeout = 2000;
     private int soTimeout = 3000;
     private String passWord="";
@@ -43,7 +40,7 @@ public class JedisClusterFactory implements FactoryBean<JedisClusterPlus> {
     }
 
     @Override
-    public JedisClusterPlus getObject() throws Exception {
+    public JedisCluster getObject() throws Exception {
         return jedisCluster;
     }
 
@@ -67,7 +64,7 @@ public class JedisClusterFactory implements FactoryBean<JedisClusterPlus> {
         this.jedisPoolConfig = jedisPoolConfig;
     }
 
-    public JedisClusterPlus getJedisCluster() throws ParseException {
+    public JedisCluster getJedisCluster() throws ParseException {
         //判断地址是否为空
         if(jedisClusterNodes == null || jedisClusterNodes.size() == 0){
             throw new NullPointerException("jedisClusterNodes is null.");
@@ -86,16 +83,16 @@ public class JedisClusterFactory implements FactoryBean<JedisClusterPlus> {
         ClusterNodesUtil.builderMap(nodesMap,haps,passWord);
 
         if(passWord==null||"".equals(passWord.trim())){
-            jedisCluster = new JedisClusterPlus(haps, connectionTimeout, soTimeout, maxRedirections,jedisPoolConfig,nodesMap);
+            jedisCluster = new JedisCluster(haps, connectionTimeout, soTimeout, maxRedirections,jedisPoolConfig,nodesMap);
         }else {
-            jedisCluster = new JedisClusterPlus(haps, connectionTimeout, soTimeout, maxRedirections, passWord,jedisPoolConfig,nodesMap);
+            jedisCluster = new JedisCluster(haps, connectionTimeout, soTimeout, maxRedirections, passWord,jedisPoolConfig,nodesMap);
         }
 
 
         return jedisCluster;
     }
 
-    public void setJedisCluster(JedisClusterPlus jedisCluster) {
+    public void setJedisCluster(JedisCluster jedisCluster) {
         this.jedisCluster = jedisCluster;
     }
 

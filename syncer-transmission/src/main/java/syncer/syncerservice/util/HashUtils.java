@@ -26,6 +26,9 @@ public class HashUtils {
 
     //使用FNV1_32_HASH算法计算服务器的Hash值,这里不使用重写hashCode的方法，最终效果没区别
     public synchronized static int getHash(String str,int count) {
+        if(count==1){
+            return 0;
+        }
         if(StringUtils.isEmpty(str)) {
             return 0;
         }

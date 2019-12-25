@@ -155,19 +155,19 @@ public class JDRedisLettuceClient implements JDRedisClient {
 
 
     @Override
-    public String restore(Long dbNum, byte[] key, int ttl, byte[] serializedValue) {
+    public String restore(Long dbNum, byte[] key, long ttl, byte[] serializedValue) {
         selectDb(dbNum);
         return restoreReplace(dbNum,key,ttl,serializedValue,true);
     }
 
     @Override
-    public String restoreReplace(Long dbNum, byte[] key, int ttl, byte[] serializedValue) {
+    public String restoreReplace(Long dbNum, byte[] key, long ttl, byte[] serializedValue) {
         selectDb(dbNum);
         return null;
     }
 
     @Override
-    public String restoreReplace(Long dbNum, byte[] key, int ttl, byte[] serializedValue, boolean highVersion) {
+    public String restoreReplace(Long dbNum, byte[] key, long ttl, byte[] serializedValue, boolean highVersion) {
         selectDb(dbNum);
         Lock lock=new ReentrantLock();
         lock.lock();

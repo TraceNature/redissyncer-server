@@ -5,13 +5,13 @@ import com.beust.jcommander.internal.Maps;
 import com.beust.jcommander.internal.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.exceptions.JedisDataException;
-import redis.clients.jedis.exceptions.JedisException;
-import redis.clients.jedis.params.SetParams;
+import syncer.syncerjedis.Jedis;
+import syncer.syncerjedis.JedisPool;
+import syncer.syncerjedis.JedisPoolConfig;
+import syncer.syncerjedis.exceptions.JedisDataException;
+import syncer.syncerjedis.exceptions.JedisException;
+import syncer.syncerjedis.params.SetParams;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
-import syncer.syncerservice.util.jedis.JDJedis;
 import syncer.syncerservice.util.jedis.JeUtil;
 import syncer.syncerservice.util.jedis.ObjectUtils;
 import syncer.syncerservice.util.jedis.StringUtils;
@@ -30,7 +30,7 @@ public class JDJedisClientPool{
     private static Logger logger = LoggerFactory.getLogger(JDJedisClientPool.class);
     private String host;
     private Integer port;
-    private JDJedisPool jedisPool;
+    private JedisPool jedisPool;
     private JedisPoolConfig config;
 
     public JDJedisClientPool(String host, Integer port, JedisPoolConfig config, String password, Integer db) {
@@ -53,9 +53,9 @@ public class JDJedisClientPool{
         int timeout = 50000;
 
         if (org.springframework.util.StringUtils.isEmpty(password)) {
-            jedisPool = new JDJedisPool(this.config, this.host, this.port, timeout);
+            jedisPool = new JedisPool(this.config, this.host, this.port, timeout);
         } else {
-            jedisPool = new JDJedisPool(this.config, this.host, this.port, timeout, password, db, null);
+            jedisPool = new JedisPool(this.config, this.host, this.port, timeout, password, db, null);
         }
     }
 
@@ -93,8 +93,8 @@ public class JDJedisClientPool{
      * @return
      * @throws JedisException
      */
-    public JDJedis getResource() throws JedisException {
-        JDJedis jedis = null;
+    public Jedis getResource() throws JedisException {
+        Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
         } catch (JedisException e) {
@@ -105,8 +105,8 @@ public class JDJedisClientPool{
         return jedis;
     }
 
-    public JDJedis getResource(Integer index) throws JedisException {
-        JDJedis jedis = null;
+    public Jedis getResource(Integer index) throws JedisException {
+        Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
             jedis.select(index);
@@ -119,7 +119,7 @@ public class JDJedisClientPool{
     }
 
 
-    public JDJedis selectDb(Integer index, JDJedis jedis) throws JedisException {
+    public Jedis selectDb(Integer index, Jedis jedis) throws JedisException {
 
         if (jedis == null) {
             return null;
@@ -141,14 +141,14 @@ public class JDJedisClientPool{
      * @param jedis
      * @param
      */
-    public void returnBrokenResource(JDJedis jedis) {
+    public void returnBrokenResource(Jedis jedis) {
         if (jedis != null) {
             jedis.close();
         }
     }
 
 
-    public static void returnStaticBrokenResource(JDJedis jedis) {
+    public static void returnStaticBrokenResource(Jedis jedis) {
         if (jedis != null) {
             jedis.close();
         }
@@ -160,7 +160,7 @@ public class JDJedisClientPool{
      * @param jedis
      * @param
      */
-    public void returnResource(JDJedis jedis) {
+    public void returnResource(Jedis jedis) {
         if (jedis != null && jedisPool != null) {
             jedis.close();
         }
@@ -210,7 +210,7 @@ public class JDJedisClientPool{
 
     public String get(String key) {
         String value = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -235,7 +235,7 @@ public class JDJedisClientPool{
 
     public Object getObject(String key) {
         Object value = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -260,7 +260,7 @@ public class JDJedisClientPool{
      */
     public String set(String key, String value, int cacheSeconds) {
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.set(key, value);
@@ -279,7 +279,7 @@ public class JDJedisClientPool{
 
     public String set(byte[] key, byte[] value) {
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.set(key, value);
@@ -294,7 +294,7 @@ public class JDJedisClientPool{
 
     public String set(byte[] key, byte[] value,long ms) {
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.set(key, value, SetParams.setParams().px(ms));
@@ -310,7 +310,7 @@ public class JDJedisClientPool{
 
     public Long append(byte[] key, byte[] value){
         Long result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.append(key, value);
@@ -325,7 +325,7 @@ public class JDJedisClientPool{
 
     public Long lpush(byte[] key, byte[]... value){
         Long result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.lpush(key, value);
@@ -340,7 +340,7 @@ public class JDJedisClientPool{
 
     public Long lpush(byte[] key,long ms, byte[]... value){
         Long result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.lpush(key, value);
@@ -357,7 +357,7 @@ public class JDJedisClientPool{
 
     public Long sadd(byte[] key, byte[]... members){
         Long result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.sadd(key, members);
@@ -373,7 +373,7 @@ public class JDJedisClientPool{
 
     public Long sadd(byte[] key, long ms, byte[]... members){
         Long result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.sadd(key, members);
@@ -389,7 +389,7 @@ public class JDJedisClientPool{
 
     public Long zadd(byte[] key, Set<ZSetEntry> value){
         Long result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.zadd(key, ObjectUtils.zsetBytes(value));
@@ -404,7 +404,7 @@ public class JDJedisClientPool{
 
     public Long zadd(byte[] key, long ms,Set<ZSetEntry> value){
         Long result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.zadd(key, ObjectUtils.zsetBytes(value));
@@ -421,7 +421,7 @@ public class JDJedisClientPool{
 
     public String hmset(byte[] key, Map<byte[], byte[]> hash){
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.hmset(key,hash);
@@ -436,7 +436,7 @@ public class JDJedisClientPool{
 
     public String hmset(byte[] key, long ms,Map<byte[], byte[]> hash){
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.hmset(key,hash);
@@ -450,9 +450,9 @@ public class JDJedisClientPool{
         return result;
     }
 
-    public String restore(byte[] key, int ttl, byte[] serializedValue){
+    public String restore(byte[] key, long ttl, byte[] serializedValue){
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.restore(key,ttl,serializedValue);
@@ -466,9 +466,9 @@ public class JDJedisClientPool{
     }
 
 
-    public String restoreReplace(byte[] key, int ttl, byte[] serializedValue,boolean highVersion){
+    public String restoreReplace(byte[] key, long ttl, byte[] serializedValue,boolean highVersion){
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if(highVersion){
@@ -490,13 +490,13 @@ public class JDJedisClientPool{
         return result;
     }
 
-    public String restoreReplace(byte[] key, int ttl, byte[] serializedValue){
+    public String restoreReplace(byte[] key, long ttl, byte[] serializedValue){
         return restoreReplace(key,ttl,serializedValue,true);
     }
 
     public Object send(byte[] cmd, byte[]... args){
         Object result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.sendCommand(JedisProtocolCommand.builder().raw(cmd).build(),args);
@@ -518,7 +518,7 @@ public class JDJedisClientPool{
 
     public List<String> keys(String key) {
         List<String> result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             Set<String> keyList = jedis.keys(key);
@@ -542,7 +542,7 @@ public class JDJedisClientPool{
 
     public String setObject(String key, Object value, int cacheSeconds) {
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.set(getBytesKey(key), toBytes(value));
@@ -561,7 +561,7 @@ public class JDJedisClientPool{
 
     public String setbyteObject(byte[] key, byte[] value, Integer cacheSeconds) {
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.set(key, value);
@@ -581,7 +581,7 @@ public class JDJedisClientPool{
 
     public String selectDb(Integer db) {
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (db == null) {
@@ -601,7 +601,7 @@ public class JDJedisClientPool{
 
     public String restorebyteObject(String key, byte[] value, Integer cacheSeconds) {
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (cacheSeconds == null) {
@@ -623,7 +623,7 @@ public class JDJedisClientPool{
     }
 
 
-    public static String restorebyteObject(byte[] key, byte[] value, Integer cacheSeconds, JDJedis jedis, boolean status) {
+    public static String restorebyteObject(byte[] key, byte[] value, Integer cacheSeconds, Jedis jedis, boolean status) {
         String result = null;
         if (jedis == null) {
             return "error: jedis is null ";
@@ -662,7 +662,7 @@ public class JDJedisClientPool{
      */
     public List<String> getList(String key) {
         List<String> value = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -686,7 +686,7 @@ public class JDJedisClientPool{
 
     public List<Object> getObjectList(String key) {
         List<Object> value = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -716,7 +716,7 @@ public class JDJedisClientPool{
 
     public long setList(String key, List<String> value, int cacheSeconds) {
         long result = 0;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -746,7 +746,7 @@ public class JDJedisClientPool{
 
     public long setObjectList(String key, List<Object> value, int cacheSeconds) {
         long result = 0;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -778,7 +778,7 @@ public class JDJedisClientPool{
      */
     public long listAdd(String key, String... value) {
         long result = 0;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.rpush(key, value);
@@ -801,7 +801,7 @@ public class JDJedisClientPool{
 
     public long listObjectAdd(String key, Object... value) {
         long result = 0;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             List<byte[]> list = Lists.newArrayList();
@@ -828,7 +828,7 @@ public class JDJedisClientPool{
 
     public Set<String> getSet(String key) {
         Set<String> value = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -846,7 +846,7 @@ public class JDJedisClientPool{
 
     public Set<Object> getObjectSet(String key) {
         Set<Object> value = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -868,7 +868,7 @@ public class JDJedisClientPool{
 
     public long setSet(String key, Set<String> value, int cacheSeconds) {
         long result = 0;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -890,7 +890,7 @@ public class JDJedisClientPool{
 
     public long setObjectSet(String key, Set<Object> value, int cacheSeconds) {
         long result = 0;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -916,7 +916,7 @@ public class JDJedisClientPool{
 
     public long setSetAdd(String key, String... value) {
         long result = 0;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.sadd(key, value);
@@ -932,7 +932,7 @@ public class JDJedisClientPool{
 
     public long setSetObjectAdd(String key, Object... value) {
         long result = 0;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             Set<byte[]> set = Sets.newHashSet();
@@ -952,7 +952,7 @@ public class JDJedisClientPool{
 
     public Map<String, String> getMap(String key) {
         Map<String, String> value = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -970,7 +970,7 @@ public class JDJedisClientPool{
 
     public Map<String, Object> getObjectMap(String key) {
         Map<String, Object> value = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -992,7 +992,7 @@ public class JDJedisClientPool{
 
     public String setMap(String key, Map<String, String> value, int cacheSeconds) {
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -1014,7 +1014,7 @@ public class JDJedisClientPool{
 
     public String setObjectMap(String key, Map<String, Object> value, int cacheSeconds) {
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -1040,7 +1040,7 @@ public class JDJedisClientPool{
 
     public String mapPut(String key, Map<String, String> value) {
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.hmset(key, value);
@@ -1056,7 +1056,7 @@ public class JDJedisClientPool{
 
     public String mapObjectPut(String key, Map<String, Object> value) {
         String result = null;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             Map<byte[], byte[]> map = Maps.newHashMap();
@@ -1082,7 +1082,7 @@ public class JDJedisClientPool{
      */
     public long mapRemove(String key, String mapKey) {
         long result = 0;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.hdel(key, mapKey);
@@ -1104,7 +1104,7 @@ public class JDJedisClientPool{
      */
     public long mapObjectRemove(String key, String mapKey) {
         long result = 0;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.hdel(getBytesKey(key), getBytesKey(mapKey));
@@ -1126,7 +1126,7 @@ public class JDJedisClientPool{
      */
     public boolean mapExists(String key, String mapKey) {
         boolean result = false;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.hexists(key, mapKey);
@@ -1148,7 +1148,7 @@ public class JDJedisClientPool{
      */
     public boolean mapObjectExists(String key, String mapKey) {
         boolean result = false;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.hexists(getBytesKey(key), getBytesKey(mapKey));
@@ -1169,7 +1169,7 @@ public class JDJedisClientPool{
      */
     public long del(String key) {
         long result = 0;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(key)) {
@@ -1194,7 +1194,7 @@ public class JDJedisClientPool{
      */
     public long delObject(String key) {
         long result = 0;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             if (jedis.exists(getBytesKey(key))) {
@@ -1219,7 +1219,7 @@ public class JDJedisClientPool{
      */
     public boolean exists(String key) {
         boolean result = false;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.exists(key);
@@ -1240,7 +1240,7 @@ public class JDJedisClientPool{
      */
     public boolean existsObject(String key) {
         boolean result = false;
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             result = jedis.exists(getBytesKey(key));
@@ -1255,7 +1255,7 @@ public class JDJedisClientPool{
 
 
     public void flushlikekey(String key) {
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             Set<String> keysList = jedis.keys(key + "*");
@@ -1284,7 +1284,7 @@ public class JDJedisClientPool{
      */
 
     public void flushlikekey(String... keys) {
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             if (keys.length > 0) {
                 jedis = getResource();
@@ -1306,7 +1306,7 @@ public class JDJedisClientPool{
      */
 
     public void flushlikekey_foreach(String key) {
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = getResource();
             Set<String> keysList = jedis.keys(key + "*");
@@ -1329,7 +1329,7 @@ public class JDJedisClientPool{
      */
 
     public long pttl(String key) {
-        JDJedis jedis = null;
+        Jedis jedis = null;
         long time = -1;
         try {
             jedis = jedisPool.getResource();
@@ -1350,7 +1350,7 @@ public class JDJedisClientPool{
      */
 
     public long ttl(String key) {
-        JDJedis jedis = null;
+        Jedis jedis = null;
         long time = -1;
         try {
             jedis = jedisPool.getResource();
@@ -1372,7 +1372,7 @@ public class JDJedisClientPool{
      */
 
     public long expire(String key, int seconds) {
-        JDJedis jedis = null;
+        Jedis jedis = null;
         long status = 0;
         try {
             jedis = jedisPool.getResource();
@@ -1393,7 +1393,7 @@ public class JDJedisClientPool{
      */
 
     public long pexpire(String key, long milliseconds) {
-        JDJedis jedis = null;
+        Jedis jedis = null;
         long status = 0;
         try {
             jedis = jedisPool.getResource();
@@ -1408,7 +1408,7 @@ public class JDJedisClientPool{
 
 
     public Set<String> allkeys(String redisKeyStartWith) {
-        JDJedis jedis = null;
+        Jedis jedis = null;
         Set<String> set = null;
         try {
             jedis = jedisPool.getResource();
@@ -1423,7 +1423,7 @@ public class JDJedisClientPool{
 
 
     public void deleteRedisKeyStartWith(String redisKeyStartWith) {
-        JDJedis jedis = null;
+        Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
 
@@ -1451,7 +1451,7 @@ public class JDJedisClientPool{
 
 
     public double getRedisVersion() {
-        JDJedis jedis = null;
+        Jedis jedis = null;
         double version = 0.0;
         try {
             jedis = jedisPool.getResource();

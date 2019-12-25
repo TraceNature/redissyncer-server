@@ -10,6 +10,8 @@ import syncer.syncerplusredis.constant.TaskRunTypeEnum;
 import syncer.syncerplusredis.entity.dto.RedisSyncDataDto;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerservice.compensator.ISyncerCompensator;
+import syncer.syncerservice.compensator.ISyncerCompensatorFactory;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.sync.SendCommandTask;
 import syncer.syncerservice.util.HashUtils;
@@ -40,6 +42,8 @@ public class MultiQueueFilter implements CommonFilter {
     static ThreadPoolConfig threadPoolConfig;
     static ThreadPoolTaskExecutor threadPoolTaskExecutor;
     private volatile Map<Integer, SyncerQueue<KeyValueEventEntity>> queueMap = new ConcurrentHashMap<>();
+
+    private volatile Map<Integer, ISyncerCompensator> iSyncerCompensatorMap = new ConcurrentHashMap<>();
     private final Integer QUEUE_SIZE=1;
     static {
         threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
@@ -57,6 +61,7 @@ public class MultiQueueFilter implements CommonFilter {
             //Configuration sourceCon = Configuration.valueOf(turi);
             JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, syncDataDto.getTargetHost(), syncDataDto.getTargetPort(), syncDataDto.getTargetPassword(), batchSize, taskId);
             //JDRedisClient client=new JDRedisJedisPipeLineClient(turi.getHost(),turi.getPort(),sourceCon.getAuthPassword(),batchSize,taskId);
+
             List<CommonFilter> commonFilterList = new ArrayList<>();
 
             //根据type生成相对节点List [List顺序即为filter节点执行顺序]
@@ -66,12 +71,15 @@ public class MultiQueueFilter implements CommonFilter {
 
             SyncerQueue<KeyValueEventEntity> queue = new LocalMemoryQueue<>(taskId, i);
             queueMap.put(i, queue);
+            ISyncerCompensator syncerCompensator=ISyncerCompensatorFactory.createJDRedisClient(branchTypeEnum,taskId,client);
+            iSyncerCompensatorMap.put(i,syncerCompensator);
             threadPoolTaskExecutor.execute(SendCommandTask
                     .builder()
                     .r(r)
                     .filterChain(KeyValueRunFilterChain.builder().commonFilterList(commonFilterList).build())
                     .taskId(taskId)
                     .queue(queue)
+                    .syncerCompensator(syncerCompensator)
                     .build());
         }
 
@@ -93,8 +101,8 @@ public class MultiQueueFilter implements CommonFilter {
                     }
                 }else {
                     String key = KVUtils.getKey(event);
-                    queueMap.get(0).put(node);
-//                    queueMap.get(HashUtils.getHash(key, QUEUE_SIZE)).put(node);
+//                    queueMap.get(0).put(node);
+                    queueMap.get(HashUtils.getHash(key, QUEUE_SIZE)).put(node);
                 }
 //                queueMap.get(0).put(node);
             } catch (InterruptedException e) {
@@ -103,8 +111,8 @@ public class MultiQueueFilter implements CommonFilter {
         } else {
             String key = KVUtils.getKey(event);
             try {
-                queueMap.get(0).put(node);
-//                queueMap.get(HashUtils.getHash(key, QUEUE_SIZE)).put(node);
+//                queueMap.get(0).put(node);
+                queueMap.get(HashUtils.getHash(key, QUEUE_SIZE)).put(node);
 //                System.out.println("加入队列：" + queueMap.get(HashUtils.getHash(key, 3)).size());
             } catch (InterruptedException e) {
                 log.warn("【{}】中的key[{}]加入队列失败", taskId, KVUtils.getKey(event));

@@ -1,7 +1,7 @@
 package syncer.syncerservice.util.jedis.cmd;
 
 import lombok.Builder;
-import redis.clients.jedis.commands.ProtocolCommand;
+import syncer.syncerjedis.commands.ProtocolCommand;
 
 @Builder
 public class JedisProtocolCommand implements ProtocolCommand {

@@ -1,8 +1,9 @@
 package syncer.syncerservice.util.jedis;
 
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.ScanParams;
-import redis.clients.jedis.ScanResult;
+
+import syncer.syncerjedis.Jedis;
+import syncer.syncerjedis.ScanParams;
+import syncer.syncerjedis.ScanResult;
 
 import java.util.ArrayList;
 import java.util.HashSet;

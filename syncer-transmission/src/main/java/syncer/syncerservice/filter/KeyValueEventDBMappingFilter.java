@@ -1,8 +1,10 @@
 package syncer.syncerservice.filter;
 
+import com.alibaba.fastjson.JSON;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import syncer.syncerplusredis.cmd.impl.DefaultCommand;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.rdb.datatype.DB;
@@ -21,6 +23,7 @@ import java.util.Arrays;
 @Builder
 @Getter
 @Setter
+@Slf4j
 public class KeyValueEventDBMappingFilter implements CommonFilter {
     private CommonFilter next;
     private JDRedisClient client;
@@ -39,6 +42,10 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
         Event event=eventEntity.getEvent();
         if (event instanceof DumpKeyValuePair) {
             DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
+
+            if(null==dumpKeyValuePair.getValue()){
+                return;
+            }
             DB db = dumpKeyValuePair.getDb();
             try {
                 dbMapping(eventEntity,db);
@@ -51,14 +58,17 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
         //分批格式数据
         if (event instanceof BatchedKeyValuePair<?, ?>) {
             BatchedKeyValuePair batchedKeyValuePair = (BatchedKeyValuePair) event;
-            if(batchedKeyValuePair.getBatch()==0&&null==batchedKeyValuePair.getValue()){
+            if((batchedKeyValuePair.getBatch()==0&&null==batchedKeyValuePair.getValue())||null==batchedKeyValuePair.getValue()){
                 return;
             }
+
+
 
             DB db = batchedKeyValuePair.getDb();
             try {
                 dbMapping(eventEntity,db);
             } catch (KeyWeed0utException e) {
+                log.info("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
                 //抛弃此kv
                 return;
             }
@@ -73,6 +83,7 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
                     commanddbMapping(eventEntity,commDbNum,defaultCommand);
                 } catch (KeyWeed0utException e) {
                     //抛弃此kv
+                    log.info("增量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
                     return;
                 }
             }
@@ -110,6 +121,7 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
                 dbbnum = eventEntity.getDbMapper().get((int) db.getDbNumber());
             } else {
                 //忽略本key
+
                 throw new KeyWeed0utException("key抛弃");
 
             }

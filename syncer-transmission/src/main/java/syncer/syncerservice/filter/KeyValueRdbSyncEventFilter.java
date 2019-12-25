@@ -15,6 +15,8 @@ import syncer.syncerplusredis.rdb.datatype.DB;
 import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.*;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerservice.compensator.ISyncerCompensator;
+import syncer.syncerservice.compensator.MultiThreadSyncerCompensator;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.RedisCommandTypeUtils;
@@ -37,8 +39,8 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
     private JDRedisClient client;
     private String taskId;
     private double redisVersion;
-
     private Date date;
+
 
     public KeyValueRdbSyncEventFilter(CommonFilter next, JDRedisClient client, String taskId, double redisVersion, Date date) {
         this.next = next;
@@ -48,19 +50,14 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
         this.date = new Date();
     }
 
-    public KeyValueRdbSyncEventFilter(CommonFilter next, JDRedisClient client, String taskId, double redisVersion) {
-        this.next = next;
-        this.client = client;
-        this.taskId = taskId;
-        this.redisVersion = redisVersion;
-    }
+
 
     @Override
     public void run(Replicator replicator, KeyValueEventEntity eventEntity) {
         Event event=eventEntity.getEvent();
         //全量同步开始
 
-
+        ISyncerCompensator iSyncerCompensator=eventEntity.getISyncerCompensator();
 
         if (event instanceof PreRdbSyncEvent) {
             if(eventEntity.getFileType().equals(FileType.ONLINERDB)
@@ -105,7 +102,7 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
                 }
             }
 
-
+                   return;
         }
 
         if (event instanceof BatchedKeyValuePair<?, ?>) {
@@ -124,17 +121,14 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
 
                 BatchedKeyStringValueString valueString = (BatchedKeyStringValueString) event;
                 if (ms == null || ms <= 0L) {
-                    if (valueString.getBatch() == 0) {
-                        client.set(duNum,valueString.getKey(), valueString.getValue());
-                    } else {
-                        client.append(duNum,valueString.getKey(), valueString.getValue());
-                    }
+
+                    Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
+                    iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+
                 }else {
-                    if (valueString.getBatch() == 0) {
-                        client.set(duNum,valueString.getKey(), valueString.getValue(),ms);
-                    } else {
-                        client.append(duNum,valueString.getKey(), valueString.getValue());
-                    }
+                    Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
+                    iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+
                 }
 
 
@@ -143,9 +137,11 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
                 //list类型
                 BatchedKeyStringValueList valueList = (BatchedKeyStringValueList) event;
                 if (ms == null || ms <= 0L) {
-                    client.lpush(duNum,valueList.getKey(), valueList.getValue());
+                    Long res=client.lpush(duNum,valueList.getKey(), valueList.getValue());
+                    iSyncerCompensator.lpush(duNum,valueList.getKey(), valueList.getValue(),res);
                 }else {
-                    client.lpush(duNum,valueList.getKey(),ms, valueList.getValue());
+                    Long res= client.lpush(duNum,valueList.getKey(),ms, valueList.getValue());
+                    iSyncerCompensator.lpush(duNum,valueList.getKey(), ms,valueList.getValue(),res);
                 }
 
 
@@ -154,9 +150,11 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
                 //set类型
                 BatchedKeyStringValueSet valueSet = (BatchedKeyStringValueSet) event;
                 if (ms == null || ms<=  0L) {
-                    client.sadd(duNum,valueSet.getKey(), valueSet.getValue());
+                    Long res= client.sadd(duNum,valueSet.getKey(), valueSet.getValue());
+                    iSyncerCompensator.sadd(duNum,valueSet.getKey(), valueSet.getValue(),res);
                 }else {
-                    client.sadd(duNum,valueSet.getKey(),ms, valueSet.getValue());
+                    Long res= client.sadd(duNum,valueSet.getKey(),ms, valueSet.getValue());
+                    iSyncerCompensator.sadd(duNum,valueSet.getKey(), ms,valueSet.getValue(),res);
                 }
 
             }else if (typeEnum.equals(RedisCommandTypeEnum.ZSET)) {
@@ -164,9 +162,11 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
 
                 BatchedKeyStringValueZSet valueZSet = (BatchedKeyStringValueZSet) event;
                 if (ms == null || ms <=  0L) {
-                    client.zadd(duNum,valueZSet.getKey(), valueZSet.getValue());
+                    Long res=client.zadd(duNum,valueZSet.getKey(), valueZSet.getValue());
+                    iSyncerCompensator.zadd(duNum,valueZSet.getKey(), valueZSet.getValue(),res);
                 }else {
-                    client.zadd(duNum,valueZSet.getKey(), valueZSet.getValue(),ms);
+                    Long res=client.zadd(duNum,valueZSet.getKey(), valueZSet.getValue(),ms);
+                    iSyncerCompensator.zadd(duNum,valueZSet.getKey(), valueZSet.getValue(),ms,res);
                 }
 
             }else if(typeEnum.equals(RedisCommandTypeEnum.HASH)){
@@ -174,9 +174,11 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
 
                 BatchedKeyStringValueHash valueHash = (BatchedKeyStringValueHash) event;
                 if (ms == null || ms <= 0L) {
-                    client.hmset(duNum,valueHash.getKey(), valueHash.getValue());
+                    String res=client.hmset(duNum,valueHash.getKey(), valueHash.getValue());
+                    iSyncerCompensator.hmset(duNum,valueHash.getKey(), valueHash.getValue(),res);
                 }else {
-                    client.hmset(duNum,valueHash.getKey(), valueHash.getValue(),ms);
+                    String res= client.hmset(duNum,valueHash.getKey(), valueHash.getValue(),ms);
+                    iSyncerCompensator.hmset(duNum,valueHash.getKey(), valueHash.getValue(),ms,res);
                 }
 
             }
@@ -189,19 +191,23 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
             Long ms=eventEntity.getMs();
             DB db=valueDump.getDb();
             Long duNum=db.getDbNumber();
-            Integer ttl= Math.toIntExact(ms);
+            long ttl=ms;
             if (valueDump.getValue() != null) {
                     if (ms == null || ms <= 0L) {
                         if (redisVersion< 3.0) {
-                            client.restoreReplace(duNum,valueDump.getKey(), 0, valueDump.getValue(),false);
+                            String res=client.restoreReplace(duNum,valueDump.getKey(), 0, valueDump.getValue(),false);
+                            iSyncerCompensator.restoreReplace(duNum,valueDump.getKey(), 0, valueDump.getValue(),false,res);
                         } else {
-                            client.restoreReplace(duNum,valueDump.getKey(), 0, valueDump.getValue());
+                            String res=client.restoreReplace(duNum,valueDump.getKey(), 0, valueDump.getValue());
+                            iSyncerCompensator.restoreReplace(duNum,valueDump.getKey(), 0, valueDump.getValue(),res);
                         }
                     }else {
                         if (redisVersion< 3.0) {
-                            client.restoreReplace(duNum,valueDump.getKey(),  ttl, valueDump.getValue(),false);
+                            String res= client.restoreReplace(duNum,valueDump.getKey(),  ttl, valueDump.getValue(),false);
+                            iSyncerCompensator.restoreReplace(duNum,valueDump.getKey(),  ttl, valueDump.getValue(),false,res);
                         } else {
-                            client.restoreReplace(duNum,valueDump.getKey(), ttl, valueDump.getValue());
+                            String res=client.restoreReplace(duNum,valueDump.getKey(), ttl, valueDump.getValue());
+                            iSyncerCompensator.restoreReplace(duNum,valueDump.getKey(), ttl, valueDump.getValue(),res);
                         }
                     }
             }

@@ -29,10 +29,15 @@
             <scope>test</scope>
         </dependency>
 
+<!--        <dependency>-->
+<!--            <groupId>redis.clients</groupId>-->
+<!--            <artifactId>jedis</artifactId>-->
+<!--            <version>3.1.0-m4</version>-->
+<!--        </dependency>-->
         <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-            <version>3.1.0-m4</version>
+            <artifactId>syncer-jedis</artifactId>
+            <groupId>syncer</groupId>
+            <version>1.0</version>
         </dependency>
         <!--        <dependency>-->
         <!--            <groupId>redis.clients</groupId>-->

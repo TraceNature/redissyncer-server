@@ -9,6 +9,7 @@ import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.entity.thread.OffSetEntity;
 import syncer.syncerplusredis.event.Event;
+import syncer.syncerservice.compensator.ISyncerCompensator;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 
 import java.io.Serializable;
@@ -69,5 +70,7 @@ public class KeyValueEventEntity implements Serializable {
      * fileType
      */
     private FileType fileType=FileType.SYNC;
+
+    private ISyncerCompensator iSyncerCompensator;
 
 }

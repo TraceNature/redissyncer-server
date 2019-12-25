@@ -3,19 +3,15 @@ package syncer.syncerservice.util.JDRedisClient;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.Pipeline;
-import redis.clients.jedis.Response;
-import redis.clients.jedis.params.SetParams;
+import syncer.syncerjedis.*;
+import syncer.syncerjedis.params.SetParams;
 import syncer.syncerpluscommon.config.ThreadPoolConfig;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.entity.EventEntity;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
-import syncer.syncerservice.util.jedis.JDJedis;
 import syncer.syncerservice.util.jedis.ObjectUtils;
 import syncer.syncerservice.util.jedis.StringUtils;
 import syncer.syncerservice.util.jedis.cmd.JedisProtocolCommand;
-import syncer.syncerservice.util.jedis.pool.JDJedisPool;
 import syncer.syncerservice.util.taskutil.TaskMsgStatusUtils;
 
 import java.util.*;
@@ -32,7 +28,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
     private String host;
     private Integer port;
-    private JDJedisPool jedisPool;
+    private JedisPool jedisPool;
     private JedisPoolConfig config;
     private Pipeline pipelined;
     private Integer currentDbNum=0;
@@ -76,13 +72,13 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         }
         int timeout = 50000;
         if (org.springframework.util.StringUtils.isEmpty(password)) {
-            jedisPool = new JDJedisPool(this.config, this.host, this.port, timeout);
+            jedisPool = new JedisPool(this.config, this.host, this.port, timeout);
         } else{
-            jedisPool = new JDJedisPool(this.config, this.host, this.port, timeout, password, 0, null);
+            jedisPool = new JedisPool(this.config, this.host, this.port, timeout, password, 0, null);
 
         }
 
-        JDJedis jdJedis = jedisPool.getResource();
+        Jedis jdJedis = jedisPool.getResource();
         pipelined = jdJedis.pipelined();
 
         //定时回收线程
@@ -94,7 +90,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
     @Override
     public String get(final Long dbNum,byte[] key) {
-        JDJedis jdJedis=null;
+        Jedis jdJedis=null;
         String stringKey=StringUtils.toString(key);
         try {
             jdJedis = jedisPool.getResource();
@@ -112,7 +108,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
     @Override
     public String get(final Long dbNum,String key) {
-        JDJedis jdJedis=null;
+        Jedis jdJedis=null;
         try {
             if(!jdJedis.getDbNum().equals(dbNum)){
                 jdJedis.select(dbNum.intValue());
@@ -264,7 +260,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
 
     @Override
-    public String restore(Long dbNum, byte[] key, int ttl, byte[] serializedValue) {
+    public String restore(Long dbNum, byte[] key, long ttl, byte[] serializedValue) {
         selectDb(dbNum);
         pipelined.restore(key, ttl, serializedValue);
         addCommandNum();
@@ -272,7 +268,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     }
 
     @Override
-    public String restoreReplace(Long dbNum, byte[] key, int ttl, byte[] serializedValue) {
+    public String restoreReplace(Long dbNum, byte[] key, long ttl, byte[] serializedValue) {
         selectDb(dbNum);
         pipelined.restoreReplace(key, ttl, serializedValue);
         addCommandNum();
@@ -281,7 +277,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     }
 
     @Override
-    public String restoreReplace(Long dbNum, byte[] key, int ttl, byte[] serializedValue, boolean highVersion) {
+    public String restoreReplace(Long dbNum, byte[] key, long ttl, byte[] serializedValue, boolean highVersion) {
         selectDb(dbNum);
 
         if (highVersion) {

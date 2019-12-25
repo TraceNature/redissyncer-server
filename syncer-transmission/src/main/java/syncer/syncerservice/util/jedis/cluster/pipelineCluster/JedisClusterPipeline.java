@@ -3,15 +3,11 @@ package syncer.syncerservice.util.jedis.cluster.pipelineCluster;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.Client;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.PipelineBase;
-import redis.clients.jedis.exceptions.JedisMovedDataException;
-import redis.clients.jedis.exceptions.JedisRedirectionException;
-import redis.clients.jedis.util.JedisClusterCRC16;
-import redis.clients.jedis.util.SafeEncoder;
-import syncer.syncerservice.util.jedis.cluster.extendCluster.*;
+import syncer.syncerjedis.*;
+import syncer.syncerjedis.exceptions.JedisMovedDataException;
+import syncer.syncerjedis.exceptions.JedisRedirectionException;
+import syncer.syncerjedis.util.JedisClusterCRC16;
+import syncer.syncerjedis.util.SafeEncoder;
 
 import java.io.Closeable;
 import java.lang.reflect.Field;
@@ -28,18 +24,18 @@ public class JedisClusterPipeline extends PipelineBase implements Closeable {
     private static final Field FIELD_CACHE;
 
     static {
-        FIELD_CONNECTION_HANDLER = getField(BinaryJedisClusterPlus.class, "connectionHandler");
-        FIELD_CACHE = getField(JedisClusterConnectionHandlerPlus.class, "cache");
+        FIELD_CONNECTION_HANDLER = getField(BinaryJedisCluster.class, "connectionHandler");
+        FIELD_CACHE = getField(BinaryJedisCluster.class, "cache");
     }
 
-    private JedisSlotBasedConnectionHandlerPlus connectionHandler;
-    private JedisClusterInfoCachePlus clusterInfoCache;
+    private JedisSlotBasedConnectionHandler connectionHandler;
+    private JedisClusterInfoCache clusterInfoCache;
     private Queue<Client> clients = new LinkedList<Client>();   // 根据顺序存储每个命令对应的Client
     private Map<JedisPool, Map<Long, Jedis>> jedisMap = new HashMap<JedisPool, Map<Long, Jedis>>();   // 用于缓存连接
     private boolean hasDataInBuf = false;   // 是否有数据在缓存区
 
 
-    public JedisClusterPipeline(JedisClusterPlus jedisCluster) {
+    public JedisClusterPipeline(JedisCluster jedisCluster) {
         setJedisCluster(jedisCluster);
     }
 
@@ -88,7 +84,7 @@ public class JedisClusterPipeline extends PipelineBase implements Closeable {
         return responseList;
     }
 
-    private void setJedisCluster(JedisClusterPlus jedis) {
+    private void setJedisCluster(JedisCluster jedis) {
         connectionHandler = getValue(jedis, FIELD_CONNECTION_HANDLER);
         clusterInfoCache = getValue(connectionHandler, FIELD_CACHE);
     }

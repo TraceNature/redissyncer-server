@@ -2,13 +2,13 @@ package syncer.syncerservice.util.jedis.cluster;
 
 
 import org.springframework.util.StringUtils;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+import syncer.syncerjedis.Jedis;
+import syncer.syncerjedis.JedisCluster;
+import syncer.syncerjedis.JedisPool;
+import syncer.syncerjedis.JedisPoolConfig;
 import syncer.syncerservice.util.jedis.IJedisClient;
 import syncer.syncerservice.util.jedis.JeUtil;
 import syncer.syncerservice.util.jedis.JedisClusterFactory;
-import syncer.syncerservice.util.jedis.cluster.extendCluster.JedisClusterPlus;
 
 
 import java.text.ParseException;
@@ -29,7 +29,7 @@ public class SyncJedisClusterClient implements IJedisClient {
     private long timeOut;
     private long connectTimeout;
 
-    private JedisClusterPlus jedisCluster=null;
+    private JedisCluster jedisCluster=null;
 
     public SyncJedisClusterClient(String jedisaddress, String password, Integer maxTotal, Integer minIdle, long timeOut, int connectTimeout) throws ParseException {
         this.jedisaddress = jedisaddress;
@@ -64,7 +64,7 @@ public class SyncJedisClusterClient implements IJedisClient {
     }
 
     //    @Bean
-    public JedisClusterPlus jedisCluster() throws ParseException {
+    public JedisCluster jedisCluster() throws ParseException {
         if(jedisClusterFactory!=null){
             return jedisClusterFactory.getJedisCluster();
         }
@@ -110,7 +110,7 @@ public class SyncJedisClusterClient implements IJedisClient {
         return allkey;
     }
 
-    public JedisClusterPlus getJedisCluster(){
+    public JedisCluster getJedisCluster(){
         if(jedisCluster!=null){
             return jedisCluster;
         }

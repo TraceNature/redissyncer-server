@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static redis.clients.jedis.Protocol.Command.AUTH;
+import static syncer.syncerjedis.Protocol.Command.AUTH;
 
 
 /**

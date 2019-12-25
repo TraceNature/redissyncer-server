@@ -2,8 +2,9 @@ package syncer.syncerservice.util.jedis.cluster;
 
 
 import org.springframework.util.StringUtils;
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
+import syncer.syncerjedis.HostAndPort;
+import syncer.syncerjedis.Jedis;
+
 
 import java.util.*;
 

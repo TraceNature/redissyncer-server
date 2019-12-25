@@ -2,7 +2,7 @@ package syncer.syncerservice.cmd;
 
 
 import lombok.Builder;
-import redis.clients.jedis.commands.ProtocolCommand;
+import syncer.syncerjedis.commands.ProtocolCommand;
 
 /**
  * 命令模块
@@ -20,4 +20,10 @@ public class ClusterProtocolCommand implements ProtocolCommand {
     public byte[] getRaw() {
         return this.raw;
     }
+
+//    public static void main(String[] args) {
+//        int a=1589777460000;
+//    }
 }
+
+
