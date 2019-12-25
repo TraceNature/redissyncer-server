@@ -49,13 +49,7 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
         this.redisVersion = redisVersion;
         this.date = new Date();
     }
-
-    public KeyValueRdbSyncEventFilter(CommonFilter next, JDRedisClient client, String taskId, double redisVersion) {
-        this.next = next;
-        this.client = client;
-        this.taskId = taskId;
-        this.redisVersion = redisVersion;
-    }
+    
 
     @Override
     public void run(Replicator replicator, KeyValueEventEntity eventEntity) {

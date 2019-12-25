@@ -50,6 +50,7 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
             try {
                 dbMapping(eventEntity,db);
             } catch (KeyWeed0utException e) {
+                log.info("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
                 //抛弃此kv
                 return;
             }
