@@ -304,7 +304,15 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         addCommandNum();
     }
 
-     void selectDb(Long dbNum){
+    @Override
+    public Long pexpire(Long dbNum,byte[] key, long ms) {
+        selectDb(dbNum);
+        pipelined.pexpire(key, ms);
+        addCommandNum();
+        return null;
+    }
+
+    void selectDb(Long dbNum){
         if(dbNum!=null&&!currentDbNum.equals(dbNum.intValue())){
             currentDbNum=dbNum.intValue();
             pipelined.select(dbNum.intValue());
@@ -518,6 +526,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
             } finally {
                 lock.unlock();
             }
+
 
         }
 
