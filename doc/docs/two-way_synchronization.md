@@ -1,6 +1,10 @@
-# 双向同步
+# 双向同步 Two-way synchronization
 双向同步是指在两个实例都有存量数据和写流量的情况下进行两实例同步，最终达到两实例数据动态一致的过程。
 双向同步的难点是。由于redis本身没有实例id,在双向同步时形成数据回环。破环的主要方式是利用数据缓冲进行冲销
+
+Redis two-way synchronization is a process to make two redis instance when which provide services sync each other，and keep data  dynamic consistency.
+the difficulty for this is ,redis is a system without instance id.when sync two instance data will form a sync ring and data will transfor between two instance Endless.
+How to break the ring? We can use cache to write off the write back data. 
 
 假设我们有两个redis实例redis1和redis2,再分别定义两个冲销池set1和set2。
 1. 启动redis1->redis2的全量同步任务
