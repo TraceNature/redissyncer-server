@@ -5,7 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 )
+
+var lock sync.Mutex
 
 //YamlFileToMap Convert yaml fil to map
 func YamlFileToMap(configfile string) *map[interface{}]interface{} {
@@ -25,6 +28,8 @@ func YamlFileToMap(configfile string) *map[interface{}]interface{} {
 
 //MapToYamlString conver map to yaml
 func MapToYamlString(yamlmap map[string]interface{}) string {
+	lock.Lock()
+	defer lock.Unlock()
 	d, err := yaml.Marshal(&yamlmap)
 	if err != nil {
 		log.Fatalf("error: %v", err)
