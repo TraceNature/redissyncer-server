@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -173,10 +175,14 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
             //
             while (this.ringBuffer.isEmpty()) {
                 if (this.exception != null){
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    logger.warn("同步线程异常 时间：{}",sdf.format(new Date()));
                     throw this.exception;
                 }
                 this.bufferNotEmpty.awaitUninterruptibly();
                 if (this.closed.get()){
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    logger.warn("同步线程异常 时间：{}",sdf.format(new Date()));
                     throw new EOFException();
                 }
             }

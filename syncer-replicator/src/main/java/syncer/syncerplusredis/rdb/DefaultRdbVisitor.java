@@ -243,6 +243,7 @@ public class DefaultRdbVisitor extends RdbVisitor {
         o0.setValueRdbType(RDB_TYPE_STRING);
         o0.setValue(val);
         o0.setKey(key);
+
         return context.valueOf(o0);
     }
 

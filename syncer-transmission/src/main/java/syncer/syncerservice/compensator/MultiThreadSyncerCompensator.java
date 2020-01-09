@@ -2,23 +2,17 @@ package syncer.syncerservice.compensator;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
-import syncer.syncerpluscommon.util.common.Bytes;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerservice.constant.CmdEnum;
-import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.po.StringCompensatorEntity;
 import syncer.syncerservice.util.CompensatorUtils;
+import syncer.syncerservice.util.EliminationAlgorithm.lru.LruCache;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.common.Strings;
-import syncer.syncerservice.util.jedis.ObjectUtils;
 import syncer.syncerservice.util.jedis.StringUtils;
-import syncer.syncerservice.util.queue.LocalMemoryQueue;
-import syncer.syncerservice.util.queue.SyncerQueue;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 多线程补偿
@@ -28,8 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MultiThreadSyncerCompensator implements ISyncerCompensator{
 
    private  String taskId;
-   private Map<String,Double>incrMap=new ConcurrentHashMap<>();
-   private Map<String, StringCompensatorEntity>appendMap=new ConcurrentHashMap<>();
+   private Map<String,Double>incrMap=new LruCache<>(1000);
+   private Map<String, StringCompensatorEntity>appendMap=new LruCache<>(1000);
    private CompensatorUtils compensatorUtils=new CompensatorUtils();
    private JDRedisClient client;
    private Long dbNum=0L;

@@ -1,23 +1,33 @@
 package syncer.syncerservice.util.JDRedisClient;
 
 
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import syncer.syncerjedis.*;
 import syncer.syncerjedis.params.SetParams;
 import syncer.syncerpluscommon.config.ThreadPoolConfig;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
+import syncer.syncerplusredis.constant.PipeLineCompensatorEnum;
+import syncer.syncerplusredis.constant.RedisCommandTypeEnum;
 import syncer.syncerplusredis.entity.EventEntity;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
+import syncer.syncerservice.po.KVPersistenceDataEntity;
+import syncer.syncerservice.po.StringCompensatorEntity;
+import syncer.syncerservice.util.CompensatorUtils;
+import syncer.syncerservice.util.EliminationAlgorithm.lru.LruCache;
+import syncer.syncerservice.util.common.Strings;
 import syncer.syncerservice.util.jedis.ObjectUtils;
 import syncer.syncerservice.util.jedis.StringUtils;
 import syncer.syncerservice.util.jedis.cmd.JedisProtocolCommand;
 import syncer.syncerservice.util.taskutil.TaskMsgStatusUtils;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Stream;
 
 
 /**
@@ -36,7 +46,6 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     private Integer count = 1000;
     //上一次pipeline提交时间记录
     private Date date = new Date();
-    private JDRedisJedisPipeLineClient.SyncTaskEntity syncTaskEntity = new JDRedisJedisPipeLineClient.SyncTaskEntity();
     //任务id
     private String taskId;
     static ThreadPoolConfig threadPoolConfig;
@@ -47,6 +56,14 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
         threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
     }
+
+    //补偿存储
+    private KVPersistenceDataEntity kvPersistence=new KVPersistenceDataEntity();
+    private CompensatorUtils compensatorUtils=new CompensatorUtils();
+    //内存非幂等命令转幂等命令
+    private Map<String,Double>incrMap= new LruCache<>(1000);
+    private Map<String, StringCompensatorEntity>appendMap=new LruCache<>(1000);
+
 
 
     public JDRedisJedisPipeLineClient(String host, Integer port, String password, int count,String taskId) {
@@ -126,6 +143,14 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     @Override
     public String set(Long dbNum, byte[] key, byte[] value) {
         selectDb(dbNum);
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .value(value)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SET)
+                .dbNum(dbNum)
+                .build());
         pipelined.set(key, value);
         addCommandNum();
 
@@ -135,7 +160,17 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     @Override
     public String set(Long dbNum, byte[] key, byte[] value, long ms) {
         selectDb(dbNum);
+
         pipelined.set(key, value, SetParams.setParams().px(ms));
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .value(value)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SET_WITH_TIME)
+                .dbNum(dbNum)
+                .ms(ms)
+                .build());
         addCommandNum();
         return null;
     }
@@ -146,6 +181,14 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         selectDb(dbNum);
 
         pipelined.append(key, value);
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .value(value)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.APPAND)
+                .dbNum(dbNum)
+                .build());
         addCommandNum();
         return null;
     }
@@ -154,15 +197,37 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     @Override
     public Long lpush(Long dbNum, byte[] key, byte[]... value) {
         selectDb(dbNum);
+
         pipelined.lpush(key, value);
+
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .valueList(value)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH)
+                .dbNum(dbNum)
+                .build());
         return null;
     }
 
     @Override
     public Long lpush(Long dbNum, byte[] key, long ms, byte[]... value) {
         selectDb(dbNum);
+
+
         pipelined.lpush(key, value);
-        pipelined.pexpire(key, ms);
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .valueList(value)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH_WITH_TIME)
+                .dbNum(dbNum)
+                .ms(ms)
+                .build());
+
+        pexpire(dbNum,key,ms);
         addCommandNum();
         return null;
     }
@@ -170,7 +235,19 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     @Override
     public Long lpush(Long dbNum, byte[] key, List<byte[]> value) {
         selectDb(dbNum);
+
+
         pipelined.lpush(key, ObjectUtils.listBytes(value));
+
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .lpush_value(value)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH_LIST)
+                .dbNum(dbNum)
+                .build());
+
         addCommandNum();
         return null;
     }
@@ -178,8 +255,19 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     @Override
     public Long lpush(Long dbNum, byte[] key, long ms, List<byte[]> value) {
         selectDb(dbNum);
+
         pipelined.lpush(key, ObjectUtils.listBytes(value));
-        pipelined.pexpire(key, ms);
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .lpush_value(value)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH_LIST)
+                .dbNum(dbNum)
+                .ms(ms)
+                .build());
+
+        pexpire(dbNum,key,ms);
         addCommandNum();
         return null;
     }
@@ -189,7 +277,19 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     public Long sadd(Long dbNum, byte[] key, byte[]... members) {
 
         selectDb(dbNum);
+
+
+
         pipelined.sadd(key, members);
+
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .valueList(members)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SADD)
+                .dbNum(dbNum)
+                .build());
         addCommandNum();
         return null;
     }
@@ -198,8 +298,20 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     public Long sadd(Long dbNum, byte[] key, long ms, byte[]... members) {
         selectDb(dbNum);
 
+
+
         pipelined.sadd(key, members);
-        pipelined.pexpire(key, ms);
+
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .valueList(members)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SADD_WITH_TIME)
+                .dbNum(dbNum)
+                .ms(ms)
+                .build());
+        pexpire(dbNum,key,ms);
         addCommandNum();
         return null;
     }
@@ -208,6 +320,15 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     public Long sadd(Long dbNum, byte[] key, Set<byte[]> members) {
         selectDb(dbNum);
         pipelined.sadd(key, ObjectUtils.setBytes(members));
+
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .members(members)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SADD_SET)
+                .dbNum(dbNum)
+                .build());
         addCommandNum();
         return null;
     }
@@ -215,8 +336,18 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     @Override
     public Long sadd(Long dbNum, byte[] key, long ms, Set<byte[]> members) {
         selectDb(dbNum);
+
         pipelined.sadd(key, ObjectUtils.setBytes(members));
-        pipelined.pexpire(key, ms);
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .members(members)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SADD_WITH_TIME_SET)
+                .dbNum(dbNum)
+                .ms(ms)
+                .build());
+        pexpire(dbNum,key,ms);
         addCommandNum();
         return null;
     }
@@ -226,7 +357,17 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     public Long zadd(Long dbNum, byte[] key, Set<ZSetEntry> value) {
 
         selectDb(dbNum);
+
         pipelined.zadd(key, ObjectUtils.zsetBytes(value));
+
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .zaddValue(value)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.ZADD)
+                .dbNum(dbNum)
+                .build());
         addCommandNum();
         return null;
     }
@@ -235,8 +376,19 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     public Long zadd(Long dbNum, byte[] key, Set<ZSetEntry> value, long ms) {
 
         selectDb(dbNum);
+
         pipelined.zadd(key, ObjectUtils.zsetBytes(value));
-        pipelined.pexpire(key, ms);
+
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .zaddValue(value)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.ZADD)
+                .dbNum(dbNum)
+                .ms(ms)
+                .build());
+        pexpire(dbNum,key,ms);
         addCommandNum();
         return null;
     }
@@ -244,7 +396,19 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     @Override
     public String hmset(Long dbNum, byte[] key, Map<byte[], byte[]> hash) {
         selectDb(dbNum);
+
+
+
         pipelined.hmset(key, hash);
+
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .hash_value(hash)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.HMSET)
+                .dbNum(dbNum)
+                .build());
         addCommandNum();
         return null;
     }
@@ -252,8 +416,19 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     @Override
     public String hmset(Long dbNum, byte[] key, Map<byte[], byte[]> hash, long ms) {
         selectDb(dbNum);
+
         pipelined.hmset(key, hash);
-        pipelined.pexpire(key, ms);
+
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .hash_value(hash)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.HMSET)
+                .dbNum(dbNum)
+                .ms(ms)
+                .build());
+        pexpire(dbNum,key,ms);
         addCommandNum();
         return null;
     }
@@ -262,7 +437,19 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     @Override
     public String restore(Long dbNum, byte[] key, long ttl, byte[] serializedValue) {
         selectDb(dbNum);
+
+
+
         pipelined.restore(key, ttl, serializedValue);
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .value(serializedValue)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.RESTORE)
+                .dbNum(dbNum)
+                .ms(ttl)
+                .build());
         addCommandNum();
         return null;
     }
@@ -270,7 +457,19 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     @Override
     public String restoreReplace(Long dbNum, byte[] key, long ttl, byte[] serializedValue) {
         selectDb(dbNum);
+
+
         pipelined.restoreReplace(key, ttl, serializedValue);
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .key(key)
+                .value(serializedValue)
+                .stringKey(Strings.byteToString(key))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.RESTORREPLCE)
+                .dbNum(dbNum)
+                .ms(ttl)
+                .build());
+
         addCommandNum();
 
         return null;
@@ -282,9 +481,40 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
         if (highVersion) {
             pipelined.restoreReplace(key, ttl, serializedValue);
+            kvPersistence.addKey(EventEntity
+                    .builder()
+                    .key(key)
+                    .value(serializedValue)
+                    .stringKey(Strings.byteToString(key))
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.RESTORREPLCE)
+                    .dbNum(dbNum)
+                    .ms(ttl)
+                    .highVersion(highVersion)
+                    .build());
         } else {
             pipelined.del(key);
             pipelined.restore(key, ttl, serializedValue);
+            kvPersistence.addKey(EventEntity
+                    .builder()
+                    .key(key)
+                    .stringKey(Strings.byteToString(key))
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.DEL)
+                    .dbNum(dbNum)
+                    .ms(ttl)
+                    .highVersion(highVersion)
+                    .build());
+
+            kvPersistence.addKey(EventEntity
+                    .builder()
+                    .key(key)
+                    .value(serializedValue)
+                    .stringKey(Strings.byteToString(key))
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.RESTORREPLCE)
+                    .dbNum(dbNum)
+                    .ms(ttl)
+                    .highVersion(highVersion)
+                    .build());
+
         }
         addCommandNum();
         return null;
@@ -293,7 +523,28 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
     @Override
     public Object send(byte[] cmd, byte[]... args) {
+
+
+
         pipelined.sendCommand(JedisProtocolCommand.builder().raw(cmd).build(), args);
+        if(args==null||args.length==0){
+            kvPersistence.addKey(EventEntity
+                    .builder()
+                    .cmd(cmd)
+                    .valueList(args)
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.COMMAND)
+                    .build());
+        }else {
+            kvPersistence.addKey(EventEntity
+                    .builder()
+                    .key(args[0])
+                    .cmd(cmd)
+                    .valueList(args)
+                    .stringKey(Strings.byteToString(args[0]))
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.COMMAND)
+                    .build());
+        }
+
         addCommandNum();
         return null;
     }
@@ -301,6 +552,11 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     @Override
     public void select(Integer dbNum) {
         pipelined.select(dbNum);
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .dbNum(Long.valueOf(dbNum))
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SELECT)
+                .build());
         addCommandNum();
     }
 
@@ -308,6 +564,12 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     public Long pexpire(Long dbNum,byte[] key, long ms) {
         selectDb(dbNum);
         pipelined.pexpire(key, ms);
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .dbNum(Long.valueOf(dbNum))
+                .ms(ms)
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.PEXPIRE)
+                .build());
         addCommandNum();
         return null;
     }
@@ -316,6 +578,13 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         if(dbNum!=null&&!currentDbNum.equals(dbNum.intValue())){
             currentDbNum=dbNum.intValue();
             pipelined.select(dbNum.intValue());
+            kvPersistence.addKey(EventEntity
+                    .builder()
+                    .dbNum(Long.valueOf(dbNum))
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SELECT)
+                    .build());
+            addCommandNum();
+
         }
     }
 
@@ -326,7 +595,20 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
             if (num>= count) {
 //                System.out.println("提交："+num);
                 List<Object> resultList = pipelined.syncAndReturnAll();
-                syncTaskEntity.clear();
+//                System.out.println(resultList.size()+":内存： "+kvPersistence.size());
+
+//                Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
+//                    Object data = resultList.get(index);
+//                    if(!compensatorUtils.isObjectSuccess(data)){
+//
+//                        System.out.println(compensatorUtils.getRes(data));
+//
+//
+//                    }
+//                });
+
+                resultList.clear();
+                kvPersistence.clear();
                 date = new Date();
                 commandNums.set(0);
             }
@@ -358,6 +640,83 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     }
 
 
+
+    void compensator(EventEntity eventEntity){
+        Jedis client=null;
+
+        try {
+            client=jedisPool.getResource();
+            if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SET)){
+                client.set(eventEntity.getKey(),eventEntity.getValue());
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SET_WITH_TIME)){
+                client.set(eventEntity.getKey(),eventEntity.getValue(),SetParams.setParams().px(eventEntity.getMs()));
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.LPUSH)){
+                client.lpush(eventEntity.getKey(),eventEntity.getValue());
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.LPUSH_LIST)){
+                client.lpush(eventEntity.getKey(),ObjectUtils.listBytes(eventEntity.getLpush_value()));
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.LPUSH_WITH_TIME)){
+                client.lpush(eventEntity.getKey(),eventEntity.getValue());
+                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.LPUSH_WITH_TIME_LIST)){
+                client.lpush(eventEntity.getKey(),ObjectUtils.listBytes(eventEntity.getLpush_value()));
+                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.HMSET)){
+                client.hmset(eventEntity.getKey(),eventEntity.getHash_value());
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.HMSET_WITH_TIME)){
+                client.hmset(eventEntity.getKey(),eventEntity.getHash_value());
+                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SADD)){
+                client.sadd(eventEntity.getKey(),eventEntity.getValue());
+
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SADD_SET)){
+                client.sadd(eventEntity.getKey(),ObjectUtils.setBytes(eventEntity.getMembers()));
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SADD_WITH_TIME)){
+                client.sadd(eventEntity.getKey(),eventEntity.getValue());
+                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SADD_WITH_TIME_SET)){
+                client.sadd(eventEntity.getKey(),ObjectUtils.setBytes(eventEntity.getMembers()));
+                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.ZADD)){
+                client.zadd(eventEntity.getKey(),ObjectUtils.zsetBytes(eventEntity.getZaddValue()));
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.ZADD_WITH_TIME)){
+                client.zadd(eventEntity.getKey(),ObjectUtils.zsetBytes(eventEntity.getZaddValue()));
+                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.PEXPIRE)){
+                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.RESTORE)){
+                client.restore(eventEntity.getKey(),eventEntity.getMs(),eventEntity.getValue());
+
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.RESTORREPLCE)){
+                if(eventEntity.isHighVersion()){
+                    client.restoreReplace(eventEntity.getKey(),eventEntity.getMs(),eventEntity.getValue());
+                }else {
+                    client.del(eventEntity.getKey());
+                    client.restore(eventEntity.getKey(),eventEntity.getMs(),eventEntity.getValue());
+                }
+
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.COMMAND)){
+                client.sendCommand(JedisProtocolCommand.builder().raw(eventEntity.getCmd()).build(), eventEntity.getValueList());
+
+                //非幂等性命令
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.APPAND)){
+
+                client.set(eventEntity.getStringKey(),appendMap.get(eventEntity.getStringKey()).getValue().toString());
+            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.APPAND)){
+
+            }
+
+
+
+        }catch (Exception e){
+            log.warn("key[{}]同步失败被抛弃",eventEntity.getStringKey());
+
+        }finally {
+            client.close();
+        }
+
+    }
+
+
      void submitCommandNum() {
          commitLock.lock();
 
@@ -369,8 +728,19 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
 
                  List<Object> resultList = pipelined.syncAndReturnAll();
+
+
+//                 System.out.println(resultList.size()+":内存： "+kvPersistence.size());
+//
+//                 resultList.forEach(data->{
+//                     if(!compensatorUtils.isObjectSuccess(data)){
+//                         System.out.println(compensatorUtils.getRes(data));
+//                     }
+//                 });
+
+
                  resultList.clear();
-                 syncTaskEntity.clear();
+                 kvPersistence.clear();
                  // log.info("将管道中超过 {} 个值提交",taskEntity.getSyncNums());
 
                  date = new Date();
@@ -381,7 +751,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
              } else if (num <= 0 && time > 4000) {
                  Response<String> r = pipelined.ping();
                  pipelined.sync();
-                 syncTaskEntity.clear();
+                 kvPersistence.clear();
                  log.info("[{}]PING->{}",taskId, r.get());
                  date = new Date();
                  commandNums.set(0);
@@ -390,7 +760,13 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
              }else if(num>0 && time > 3000){
 //                 System.out.println("提交："+commandNums.get());
                  List<Object> resultList = pipelined.syncAndReturnAll();
-                 syncTaskEntity.clear();
+//                 resultList.forEach(data->{
+//                     if(!compensatorUtils.isObjectSuccess(data)){
+//                         System.out.println(compensatorUtils.getRes(data));
+//                     }
+//                 });
+//                 System.out.println(resultList.size()+":内存： "+kvPersistence.size());
+                 kvPersistence.clear();
                  date = new Date();
 
                  commandNums.set(0);

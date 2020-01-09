@@ -65,38 +65,37 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
                     ||eventEntity.getFileType().equals(FileType.AOF)
                     ||eventEntity.getFileType().equals(FileType.ONLINEMIXED)
                     ||eventEntity.getFileType().equals(FileType.MIXED)){
-
+                log.warn("taskId为[{}]的全量数据到达同步程序同步开始..",taskId);
                 log.warn("taskId为[{}]的文件任务全量同步开始..",taskId);
                 SyncTaskUtils.editTaskMsg(taskId,"文件全量同步开始[同步任务启动]");
             }else{
                 log.warn("taskId为[{}]的任务全量同步开始..",taskId);
                 SyncTaskUtils.editTaskMsg(taskId,"全量同步开始[同步任务启动]");
             }
-
-
         }
 
         //全量同步结束
         if (event instanceof PostRdbSyncEvent) {
-
+            String time=(System.currentTimeMillis()-date.getTime())/(1000)+":s";
             if(eventEntity.getFileType().equals(FileType.ONLINERDB)
                     ||eventEntity.getFileType().equals(FileType.RDB)
                     ||eventEntity.getFileType().equals(FileType.ONLINEAOF)
                     ||eventEntity.getFileType().equals(FileType.AOF)
                     ||eventEntity.getFileType().equals(FileType.ONLINEMIXED)
                     ||eventEntity.getFileType().equals(FileType.MIXED)){
-                log.warn("taskId为[{}]的文件任务全量同步结束[任务完成]..",taskId);
+                log.warn("taskId为[{}]的文件任务全量同步结束[任务完成]..时间为:"+time,taskId);
 
-                SyncTaskUtils.editTaskMsg(taskId,"文件同步结束[任务完成] 时间(ms)：");
+                SyncTaskUtils.editTaskMsg(taskId,"文件同步结束[任务完成] 时间(ms)："+time);
                 SyncTaskUtils.stopCreateThread(taskId);
             }else {
+
                 if(eventEntity.getTaskRunTypeEnum().equals(TaskRunTypeEnum.TOTAL)){
-                    String time=(System.currentTimeMillis()-date.getTime())/(1000)+":s";
+
                     log.warn("taskId为[{}]的任务全量同步结束..进入增量同步模式 time:[{}] ",taskId,time);
-                    SyncTaskUtils.editTaskMsg(taskId,"全量同步结束进入增量同步 时间(ms)： 进入增量状态");
+                    SyncTaskUtils.editTaskMsg(taskId,"全量同步结束进入增量同步 时间(ms)："+time+" 进入增量状态");
                 }else if(eventEntity.getTaskRunTypeEnum().equals(TaskRunTypeEnum.STOCKONLY)){
                     log.warn("taskId为[{}]的任务全量同步结束[任务完成]..",taskId);
-                    SyncTaskUtils.editTaskMsg(taskId,"全量同步结束[任务完成] 时间(ms)：");
+                    SyncTaskUtils.editTaskMsg(taskId,"全量同步结束[任务完成] 时间(ms)："+time);
                     SyncTaskUtils.stopCreateThread(taskId);
                 }
             }

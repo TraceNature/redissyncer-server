@@ -39,6 +39,7 @@ public class KeyValuePairs implements Serializable {
         KeyStringValueString kv = new KeyStringValueString();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.STRING);
         return kv;
     }
 
@@ -46,6 +47,7 @@ public class KeyValuePairs implements Serializable {
         KeyStringValueModule kv = new KeyStringValueModule();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.MODULE);
         return kv;
     }
 
@@ -53,6 +55,7 @@ public class KeyValuePairs implements Serializable {
         KeyStringValueHash kv = new KeyStringValueHash();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.HASH);
         return kv;
     }
 
@@ -60,6 +63,7 @@ public class KeyValuePairs implements Serializable {
         KeyStringValueList kv = new KeyStringValueList();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.LIST);
         return kv;
     }
 
@@ -67,6 +71,7 @@ public class KeyValuePairs implements Serializable {
         KeyStringValueSet kv = new KeyStringValueSet();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.SET);
         return kv;
     }
 
@@ -74,6 +79,7 @@ public class KeyValuePairs implements Serializable {
         KeyStringValueZSet kv = new KeyStringValueZSet();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.ZSET);
         return kv;
     }
 
@@ -81,6 +87,7 @@ public class KeyValuePairs implements Serializable {
         KeyStringValueStream kv = new KeyStringValueStream();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.STREAM);
         return kv;
     }
 
@@ -91,6 +98,7 @@ public class KeyValuePairs implements Serializable {
         KeyStringValueMapEntryIterator kv = new KeyStringValueMapEntryIterator();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.HASH);
         return kv;
     }
 
@@ -105,6 +113,7 @@ public class KeyValuePairs implements Serializable {
         KeyStringValueByteArrayIterator kv = new KeyStringValueByteArrayIterator();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.SET);
         return kv;
     }
 
@@ -112,6 +121,7 @@ public class KeyValuePairs implements Serializable {
         KeyStringValueZSetEntryIterator kv = new KeyStringValueZSetEntryIterator();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.ZSET);
         return kv;
     }
 
@@ -129,6 +139,7 @@ public class KeyValuePairs implements Serializable {
         BatchedKeyStringValueModule kv = new BatchedKeyStringValueModule();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.MODULE);
         return kv;
     }
 
@@ -136,6 +147,7 @@ public class KeyValuePairs implements Serializable {
         BatchedKeyStringValueHash kv = new BatchedKeyStringValueHash();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.HASH);
         return kv;
     }
 
@@ -143,6 +155,7 @@ public class KeyValuePairs implements Serializable {
         BatchedKeyStringValueList kv = new BatchedKeyStringValueList();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.LIST);
         return kv;
     }
 
@@ -150,6 +163,7 @@ public class KeyValuePairs implements Serializable {
         BatchedKeyStringValueSet kv = new BatchedKeyStringValueSet();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.SET);
         return kv;
     }
 
@@ -157,6 +171,7 @@ public class KeyValuePairs implements Serializable {
         BatchedKeyStringValueZSet kv = new BatchedKeyStringValueZSet();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.ZSET);
         return kv;
     }
 
@@ -164,6 +179,7 @@ public class KeyValuePairs implements Serializable {
         BatchedKeyStringValueStream kv = new BatchedKeyStringValueStream();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.STREAM);
         return kv;
     }
 
@@ -179,6 +195,7 @@ public class KeyValuePairs implements Serializable {
         target.setEvictValue(source.getEvictValue());
         target.setValueRdbType(source.getValueRdbType());
         target.setKey(source.getKey());
+        target.setSize(source.getSize());
     }
 
     private static void copy(KeyValuePair<byte[], ?> source, BatchedKeyValuePair<byte[], ?> target, int batch, boolean last) {
@@ -192,5 +209,6 @@ public class KeyValuePairs implements Serializable {
         target.setKey(source.getKey());
         target.setBatch(batch);
         target.setLast(last);
+        target.setSize(source.getSize());
     }
 }

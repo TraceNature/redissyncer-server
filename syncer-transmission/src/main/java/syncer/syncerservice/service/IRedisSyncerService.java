@@ -8,4 +8,5 @@ import syncer.syncerplusredis.exception.TaskMsgException;
 public interface IRedisSyncerService {
     void batchedSync(RedisClusterDto clusterDto, String taskId, boolean afresh) throws TaskMsgException;
     void filebatchedSync(RedisClusterDto clusterDto, String taskId) throws TaskMsgException;
+    void fileCommandBackUpSync(RedisClusterDto clusterDto, String taskId) throws TaskMsgException;
 }

@@ -15,6 +15,7 @@ import syncer.syncerplusredis.entity.dto.RedisClusterDto;
 import syncer.syncerplusredis.entity.dto.RedisSyncDataDto;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerservice.service.IRedisSyncerService;
+import syncer.syncerservice.sync.RedisCommandBackUpTransmissionTask;
 import syncer.syncerservice.sync.RedisDataTransmissionTask;
 import syncer.syncerservice.util.RedisUrlCheckUtils;
 
@@ -41,11 +42,11 @@ public class IRedisBatchedSyncerServiceImpl implements IRedisSyncerService {
             /**
              * 存在dbMap时检查是否超出数据库大小
              */
-            try {
-                RedisUrlCheckUtils.doCheckDbNum(sourceRedisUris, clusterDto.getDbMapper(), KeyValueEnum.KEY);
-            } catch (URISyntaxException e) {
-                throw new TaskMsgException(e.getMessage());
-            }
+//            try {
+//                RedisUrlCheckUtils.doCheckDbNum(sourceRedisUris, clusterDto.getDbMapper(), KeyValueEnum.KEY);
+//            } catch (URISyntaxException e) {
+//                throw new TaskMsgException(e.getMessage());
+//            }
         }else{
             clusterDto.setSourceUris(clusterDto.getFileUris());
         }
@@ -57,11 +58,11 @@ public class IRedisBatchedSyncerServiceImpl implements IRedisSyncerService {
 
 
 
-        try {
-            RedisUrlCheckUtils.doCheckDbNum(targetRedisUris, clusterDto.getDbMapper(), KeyValueEnum.VALUE);
-        } catch (URISyntaxException e) {
-            throw new TaskMsgException(e.getMessage());
-        }
+//        try {
+//            RedisUrlCheckUtils.doCheckDbNum(targetRedisUris, clusterDto.getDbMapper(), KeyValueEnum.VALUE);
+//        } catch (URISyntaxException e) {
+//            throw new TaskMsgException(e.getMessage());
+//        }
 
 
 
@@ -186,7 +187,25 @@ public class IRedisBatchedSyncerServiceImpl implements IRedisSyncerService {
 
     }
 
+    //备份数据
+    @Override
+    public void fileCommandBackUpSync(RedisClusterDto clusterDto, String taskId) throws TaskMsgException {
+        /**
+         * 获取所有地址并处理新建线程进行同步
+         */
+        Set<String> sourceRedisUris =clusterDto.getSourceUris();
+        String fileAddress=clusterDto.getFileAddress();
 
+
+        RedisUrlCheckUtils.checkRedisUrl((String) sourceRedisUris.toArray()[0], " sourceUri: " + sourceRedisUris.toArray()[0]);
+
+
+
+            //进行数据同步
+        threadPoolTaskExecutor.execute(new RedisCommandBackUpTransmissionTask(taskId,fileAddress, (String) sourceRedisUris.toArray()[0]));
+
+
+    }
 
 
     /**

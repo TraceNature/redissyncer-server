@@ -1,7 +1,8 @@
 package syncer.syncerplusredis.extend.replicator.listener;
 
 import syncer.syncerplusredis.event.Event;
-
+import syncer.syncerplusredis.event.EventListener;
+import syncer.syncerplusredis.rdb.datatype.*;
 import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueByteArrayIterator;
 import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueMapEntryIterator;
@@ -11,32 +12,26 @@ import syncer.syncerplusredis.util.objectutil.ByteArrayList;
 import syncer.syncerplusredis.util.objectutil.ByteArrayMap;
 import syncer.syncerplusredis.util.objectutil.ByteArraySet;
 
-import syncer.syncerplusredis.event.EventListener;
-
-import syncer.syncerplusredis.rdb.datatype.*;
-
-
 import java.util.*;
 
-import static syncer.syncerplusredis.rdb.datatype.KeyValuePairs.zset;
 import static syncer.syncerplusredis.replicator.Constants.RDB_TYPE_SET;
 import static syncer.syncerplusredis.replicator.Constants.RDB_TYPE_SET_INTSET;
 
-public class ValueDumpIterableEventListener implements syncer.syncerplusredis.event.EventListener {
+public class ValueCommondIterableEventListener implements EventListener {
 
     private final int batchSize;
     private final boolean order;
     private final EventListener listener;
 
-    public ValueDumpIterableEventListener(syncer.syncerplusredis.event.EventListener listener) {
+    public ValueCommondIterableEventListener(EventListener listener) {
         this(64, listener);
     }
 
-    public ValueDumpIterableEventListener(int batchSize, syncer.syncerplusredis.event.EventListener listener) {
+    public ValueCommondIterableEventListener(int batchSize, EventListener listener) {
         this(true, batchSize, listener);
     }
 
-    public ValueDumpIterableEventListener(boolean order, int batchSize, EventListener listener) {
+    public ValueCommondIterableEventListener(boolean order, int batchSize, EventListener listener) {
         if (batchSize <= 0){
             throw new IllegalArgumentException(String.valueOf(batchSize));
         }

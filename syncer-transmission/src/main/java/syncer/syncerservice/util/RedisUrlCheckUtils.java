@@ -29,7 +29,7 @@ import static syncer.syncerjedis.Protocol.Command.AUTH;
 
 public class RedisUrlCheckUtils {
     //rdb版本和redis版本映射关系
-    static Map<Double,Integer> rdbVersion=null;
+    static Map<String,Integer> rdbVersion=null;
 
 
     /**
@@ -77,7 +77,7 @@ public class RedisUrlCheckUtils {
      * @return
      * @throws TaskMsgException
      */
-    public static boolean getRedisClientConnectState(String url, String name) throws TaskMsgException {
+    public synchronized static boolean getRedisClientConnectState(String url, String name) throws TaskMsgException {
         RedisURI turi = null;
         RedisClient target = null;
         try {
@@ -94,8 +94,9 @@ public class RedisUrlCheckUtils {
             while (i > 0) {
                 try {
                     String png = (String) target.send("PING".getBytes());
-                    System.out.println("------:"+png);
-                    if ("PONG".equals(png)) {
+                    System.out.println(url+"------:"+png);
+                    if ("PONG".equalsIgnoreCase(png)) {
+                        System.out.println("og");
                         return true;
                     }
                     i--;
@@ -104,6 +105,11 @@ public class RedisUrlCheckUtils {
                 }
 
             }
+
+            if(i > 0){
+                return true;
+            }
+            System.out.println(url+"------:del");
             //TaskMsgException("无法连接该reids");
             throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR));
         } catch (URISyntaxException e) {
@@ -188,14 +194,14 @@ public class RedisUrlCheckUtils {
      * @return
      * @throws URISyntaxException
      */
-    public static double selectSyncerVersion( String targetUri) throws URISyntaxException, TaskMsgException {
+    public static String selectSyncerVersion( String targetUri) throws URISyntaxException, TaskMsgException {
 
         RedisURI targetUriplus = new RedisURI(targetUri);
         /**
          * 源目标
          */
         Jedis target = null;
-        double targetVersion = 0.0;
+        String targetVersion = null;
         try {
             target = new Jedis(targetUriplus.getHost(), targetUriplus.getPort());
             Configuration targetConfig = Configuration.valueOf(targetUriplus);
@@ -206,7 +212,7 @@ public class RedisUrlCheckUtils {
             }
             String info=target.info();
 
-            targetVersion = TestJedisClient.getRedisVersion(info);
+            targetVersion = TestJedisClient.getRedisVersionString(info);
 
         } catch (Exception e) {
             throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,e.getMessage()));
@@ -284,7 +290,7 @@ public class RedisUrlCheckUtils {
      * @param redisVersion
      * @return
      */
-    public static synchronized  Integer getRdbVersion(Double redisVersion){
+    public static synchronized  Integer getRdbVersion(String redisVersion){
         Object lock=new Object();
         //单例模式
         if(rdbVersion==null){
@@ -426,22 +432,41 @@ public class RedisUrlCheckUtils {
         try {
             String firstRgex = "repl_backlog_first_byte_offset:(.*?)\r\n";
             String endRrgex = "master_repl_offset:(.*?)\r\n";
+
             String replid="master_replid:(.*?)\r\n";
+
+            String jimDb_shard_id="shard_id:(.*?)\r\n";
+
             String runIdRrgex = "run_id:(.*?)\r\n";
-            if("endbuf".equals(type.trim())){
+
+            if("endbuf".equalsIgnoreCase(type.trim())){
                 if(RegexUtil.getSubUtilSimple(info, endRrgex).length()>0){
                     version[0] = RegexUtil.getSubUtilSimple(info, endRrgex);
                 }
+
+
             }else {
-                if(RegexUtil.getSubUtilSimple(info, firstRgex).length()>0){
-                    version[0] = RegexUtil.getSubUtilSimple(info, firstRgex);
+
+                if(RegexUtil.getSubUtilSimple(info, endRrgex).length()>0){
+                    version[0] = RegexUtil.getSubUtilSimple(info, endRrgex);
                 }
+
+                //从头部开始
+//                if(RegexUtil.getSubUtilSimple(info, firstRgex).length()>0){
+//                    version[0] = RegexUtil.getSubUtilSimple(info, firstRgex);
+//                }
             }
             String runid1=RegexUtil.getSubUtilSimple(info, replid);
+
             if(!StringUtils.isEmpty(runid1.trim())){
                 version[1]=runid1;
             }else {
-                version[1]=RegexUtil.getSubUtilSimple(info, runIdRrgex);
+                if(RegexUtil.getSubUtilSimple(info, jimDb_shard_id).length()>0){
+                    version[1]=RegexUtil.getSubUtilSimple(info, jimDb_shard_id);
+                }else {
+                    version[1]=RegexUtil.getSubUtilSimple(info, runIdRrgex);
+                }
+
             }
 
         } catch (Exception e) {

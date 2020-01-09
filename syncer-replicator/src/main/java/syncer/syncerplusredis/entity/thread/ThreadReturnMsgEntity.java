@@ -33,7 +33,7 @@ public class ThreadReturnMsgEntity {
     private Set<String> sourceUris=new HashSet<>();
     @Builder.Default
     private Set<String>targetUris=new HashSet<>();
-    private double targetRedisVersion;
+    private String targetRedisVersion;
 
     @Builder.Default
     private FileType fileType=FileType.SYNC;

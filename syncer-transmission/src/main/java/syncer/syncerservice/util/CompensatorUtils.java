@@ -1,5 +1,7 @@
 package syncer.syncerservice.util;
 
+import syncer.syncerservice.util.common.Strings;
+
 /**
  * 补偿机制相关工具
  */
@@ -14,7 +16,10 @@ public class CompensatorUtils {
         if(!"OK".equalsIgnoreCase(res)||res.indexOf("error")>=0){
             return false;
         }
-        return true;
+        if("OK".equalsIgnoreCase(res)){
+            return true;
+        }
+        return false;
     }
 
 
@@ -42,13 +47,63 @@ public class CompensatorUtils {
             return isLongSuccess((Long) res);
         }else if(res instanceof Integer){
             return isLongSuccess((Long) res);
+        }else if(res instanceof byte[]){
+            return isByteSuccess((byte[]) res);
+        }
+        System.out.println(res.getClass());
+        return false;
+    }
+
+    private boolean isByteSuccess(byte[] res) {
+        String data=Strings.byteToString(res);
+        if(!"OK".equalsIgnoreCase(data)||data.indexOf("error")>=0){
+            return false;
+        }
+
+        try {
+            int  a= Integer.parseInt(data);
+            if(a>=0){
+                return true;
+            }
+        }catch (Exception e){
+
+        }
+
+        try {
+            long  a= Long.valueOf(data);
+            if(a>=0L){
+                return true;
+            }
+        }catch (Exception e){
+
+        }
+
+        if("OK".equalsIgnoreCase(data)){
+            return true;
         }
         return false;
+    }
+
+
+    public String getRes(Object res){
+        if(res instanceof String){
+            return String.valueOf(res);
+        }else if(res instanceof Long){
+            return String.valueOf(res);
+        }else if(res instanceof Integer){
+            return String.valueOf(res);
+        }else if(res instanceof  byte[]){
+            return Strings.byteToString((byte[]) res);
+        }
+        return "";
     }
 
     public static void main(String[] args) {
         CompensatorUtils compensatorUtils=new CompensatorUtils();
         System.out.println(compensatorUtils.isObjectSuccess(1L));
     }
+
+
+
 
 }

@@ -10,7 +10,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <version>1.1</version>
+    <version>2.0.8</version>
 
 
     <artifactId>syncer-replicator</artifactId>
@@ -36,7 +36,7 @@
         <dependency>
             <groupId>syncer</groupId>
             <artifactId>syncer-common</artifactId>
-            <version>1.0.3</version>
+            <version>2.0.8</version>
             <scope>compile</scope>
         </dependency>
 

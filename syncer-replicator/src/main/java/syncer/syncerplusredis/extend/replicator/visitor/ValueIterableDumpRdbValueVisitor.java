@@ -178,6 +178,7 @@ public class ValueIterableDumpRdbValueVisitor extends DefaultRdbValueVisitor {
 
         /* rdb version 8*/
         long len = parser.rdbLoadLen().len;
+
         Iterator<ZSetEntry> val = new Iter<ZSetEntry>(len, parser) {
             @Override
             public boolean hasNext() {

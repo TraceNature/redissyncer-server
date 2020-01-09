@@ -18,6 +18,7 @@ import syncer.syncerservice.util.HashUtils;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClientFactory;
 import syncer.syncerservice.util.KVUtils;
+import syncer.syncerservice.util.queue.DbMapLocalDiskMemoryQueue;
 import syncer.syncerservice.util.queue.LocalDiskMemoryQueue;
 import syncer.syncerservice.util.queue.LocalMemoryQueue;
 import syncer.syncerservice.util.queue.SyncerQueue;
@@ -70,6 +71,8 @@ public class MultiQueueFilter implements CommonFilter {
 //            KeyValueRunFilterChain filterChain = KeyValueRunFilterChain.builder().commonFilterList(commonFilterList).build();
 
             SyncerQueue<KeyValueEventEntity> queue = new LocalMemoryQueue<>(taskId, i);
+//            SyncerQueue<KeyValueEventEntity> queue = new DbMapLocalDiskMemoryQueue<>(taskId, i);
+//            SyncerQueue<KeyValueEventEntity> queue = new LocalDiskMemoryQueue<>(taskId, i);
             queueMap.put(i, queue);
             ISyncerCompensator syncerCompensator=ISyncerCompensatorFactory.createJDRedisClient(branchTypeEnum,taskId,client);
             iSyncerCompensatorMap.put(i,syncerCompensator);
@@ -145,6 +148,7 @@ public class MultiQueueFilter implements CommonFilter {
         //全量
         if (TaskRunTypeEnum.valueOf(type.trim().toUpperCase()).equals(TaskRunTypeEnum.STOCKONLY)) {
             commonFilterList.add(KeyValueTimeCalculationFilter.builder().taskId(taskId).client(client).build());
+            commonFilterList.add(KeyValueDataAnalysisFilter.builder().taskId(taskId).client(client).build());
             commonFilterList.add(KeyValueEventDBMappingFilter.builder().taskId(taskId).client(client).build());
             commonFilterList.add(KeyValueRdbSyncEventFilter.builder().taskId(taskId).client(client).redisVersion(syncDataDto.getRedisVersion()).build());
         }
@@ -159,6 +163,7 @@ public class MultiQueueFilter implements CommonFilter {
         //全量+增量
         if (TaskRunTypeEnum.valueOf(type.trim().toUpperCase()).equals(TaskRunTypeEnum.TOTAL)) {
             commonFilterList.add(KeyValueTimeCalculationFilter.builder().taskId(taskId).client(client).build());
+            commonFilterList.add(KeyValueDataAnalysisFilter.builder().taskId(taskId).client(client).build());
             commonFilterList.add(KeyValueEventDBMappingFilter.builder().taskId(taskId).client(client).build());
             commonFilterList.add(KeyValueRdbSyncEventFilter.builder().taskId(taskId).client(client).redisVersion(syncDataDto.getRedisVersion()).build());
             commonFilterList.add(KeyValueCommandSyncEventFilter.builder().taskId(taskId).client(client).build());
@@ -166,4 +171,6 @@ public class MultiQueueFilter implements CommonFilter {
 
 
     }
+
+
 }

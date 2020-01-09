@@ -56,6 +56,8 @@ public class SyncTaskUtils {
                 if(entity.getRedisClusterDto().getFileType().equals(FileType.ONLINERDB)||entity.getRedisClusterDto().getFileType().equals(FileType.ONLINEAOF)
                         ||entity.getRedisClusterDto().getFileType().equals(FileType.AOF)||entity.getRedisClusterDto().getFileType().equals(FileType.RDB)){
                     redisBatchedReplicatorService.filebatchedSync(entity.getRedisClusterDto(),taskId);
+                }else if(entity.getRedisClusterDto().getFileType().equals(FileType.COMMANDDUMPUP)){
+                    redisBatchedReplicatorService.fileCommandBackUpSync(entity.getRedisClusterDto(),taskId);
                 }else {
                     redisBatchedReplicatorService.batchedSync(entity.getRedisClusterDto(),taskId,afresh);
                 }

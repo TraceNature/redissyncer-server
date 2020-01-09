@@ -43,7 +43,7 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
         if (event instanceof DumpKeyValuePair) {
             DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
 
-            if(null==dumpKeyValuePair.getValue()){
+            if(null==dumpKeyValuePair.getValue()||null==dumpKeyValuePair.getKey()){
                 return;
             }
             DB db = dumpKeyValuePair.getDb();

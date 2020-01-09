@@ -132,6 +132,7 @@ public class RdbParser {
         while (this.replicator.getStatus() == CONNECTED) {
             Event event = null;
             in.mark();
+
             int type = rdbVisitor.applyType(in);
             ContextKeyValuePair kv = new ContextKeyValuePair();
             kv.setDb(db);
