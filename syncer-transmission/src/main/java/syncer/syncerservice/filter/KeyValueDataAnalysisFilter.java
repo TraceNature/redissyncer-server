@@ -15,6 +15,7 @@ import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
 import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerservice.constant.RedisDataTypeAnalysisConstant;
+import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.common.Strings;
@@ -52,7 +53,10 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
     }
 
     @Override
-    public void run(Replicator replicator, KeyValueEventEntity eventEntity) {
+    public void run(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
+
+        try {
+
 
         Event event=eventEntity.getEvent();
 
@@ -96,10 +100,19 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
         }
         //继续执行下一Filter节点
         toNext(replicator,eventEntity);
+
+        }catch (Exception e){
+            if(analysisMap.containsKey(RedisDataTypeAnalysisConstant.EROR_KEY)){
+                analysisMap.put(RedisDataTypeAnalysisConstant.EROR_KEY,analysisMap.get(RedisDataTypeAnalysisConstant.EROR_KEY)+1);
+            }else {
+                analysisMap.put(RedisDataTypeAnalysisConstant.EROR_KEY,1L);
+            }
+            throw new FilterNodeException(e.getMessage()+"->KeyValueDataAnalysisFilter",e.getCause());
+        }
     }
 
     @Override
-    public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) {
+    public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
         if(null!=next) {
             next.run(replicator,eventEntity);
         }

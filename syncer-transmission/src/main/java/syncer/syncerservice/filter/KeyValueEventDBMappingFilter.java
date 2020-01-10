@@ -11,6 +11,7 @@ import syncer.syncerplusredis.rdb.datatype.DB;
 import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.exception.KeyWeed0utException;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
@@ -36,7 +37,9 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
     }
 
     @Override
-    public void run(Replicator replicator, KeyValueEventEntity eventEntity) {
+    public void run(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
+        try {
+
 
         //DUMP格式数据
         Event event=eventEntity.getEvent();
@@ -93,11 +96,13 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
 
         //继续执行下一Filter节点
         toNext(replicator,eventEntity);
-
+        }catch (Exception e){
+            throw new FilterNodeException(e.getMessage()+"->KeyValueEventDBMappingFilter",e.getCause());
+        }
     }
 
     @Override
-    public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) {
+    public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
         if(null!=next) {
             next.run(replicator,eventEntity);
         }

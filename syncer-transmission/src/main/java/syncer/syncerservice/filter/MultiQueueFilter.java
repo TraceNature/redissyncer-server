@@ -12,6 +12,7 @@ import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerservice.compensator.ISyncerCompensator;
 import syncer.syncerservice.compensator.ISyncerCompensatorFactory;
+import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.sync.SendCommandTask;
 import syncer.syncerservice.util.HashUtils;
@@ -89,7 +90,11 @@ public class MultiQueueFilter implements CommonFilter {
     }
 
     @Override
-    public void run(Replicator replicator, KeyValueEventEntity eventEntity) {
+    public void run(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
+
+        try {
+
+
         Event event=eventEntity.getEvent();
         KeyValueEventEntity node=eventEntity;
         if (event instanceof DefaultCommand) {
@@ -121,10 +126,14 @@ public class MultiQueueFilter implements CommonFilter {
                 log.warn("【{}】中的key[{}]加入队列失败", taskId, KVUtils.getKey(event));
             }
         }
+
+        }catch (Exception e){
+            throw new FilterNodeException(e.getMessage()+"->MultiQueueFilter",e.getCause());
+        }
     }
 
     @Override
-    public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) {
+    public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
         if(null!=next){
             next.run(replicator,eventEntity);
         }

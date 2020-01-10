@@ -60,9 +60,9 @@ public class RedisFileReplicatorController {
 
 
 
-//    @RequestMapping(value = "/createCommandDumpUpTask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
-//    public ResultMap stopAll() throws TaskMsgException {
-////        SyncTaskUtils.stopCreateThread(Arr)
-//    }
+    @RequestMapping(value = "/stopAndDeleteAll",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    public ResultMap stopAll() throws TaskMsgException {
+        return ResultMap.builder().code("200").data(SyncTaskUtils.stopAnddelAllCreateThread());
+    }
 
 }

@@ -94,7 +94,7 @@ public class RedisUrlCheckUtils {
             while (i > 0) {
                 try {
                     String png = (String) target.send("PING".getBytes());
-                    System.out.println(url+"------:"+png);
+                    System.out.println(url.split("\\?")[0]+"------:"+png);
                     if ("PONG".equalsIgnoreCase(png)) {
                         System.out.println("og");
                         return true;
@@ -304,17 +304,42 @@ public class RedisUrlCheckUtils {
 
         }
 
+        Object rdb=0;
+        if(rdbVersion.containsKey(redisVersion)){
+            rdb=rdbVersion.get(redisVersion);
 
-        Object rdb=rdbVersion.get(redisVersion);
+             return  Integer.valueOf((String) rdb);
+        }else {
+            if(redisVersion.indexOf("jimdb")>=0){
+                rdb=6;
+                return  Integer.valueOf((String) rdb);
+            }else {
+                if(redisVersion!=null&&redisVersion.length()>1){
+                    String newVersion=redisVersion.substring(0, 1);
+                    if(rdbVersion.containsKey(newVersion)){
+                        rdb=rdbVersion.get(redisVersion);
+                        return  Integer.valueOf((String) rdb);
+                    }
+                }
+
+            }
+        }
+
+
 
         if(rdb!=null){
+
+            if(rdb instanceof  String){
+                return  Integer.valueOf((String) rdb);
+            }else if(rdb instanceof  Integer){
+                return (Integer) rdb;
+            }
             return  Integer.valueOf((String) rdb);
-        }
-        if(rdb instanceof  Integer){
-            return (Integer) rdb;
         }else {
             return 0;
         }
+
+
 
 
     }

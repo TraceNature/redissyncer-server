@@ -54,7 +54,7 @@ public class TaskCheckUtils {
             }
             Integer rdbVersion = RedisUrlCheckUtils.getRdbVersion(redisFileDataDto.getTargetRedisVersion());
             Integer integer = RedisUrlCheckUtils.getRdbVersion(redisVersion);
-            log.warn("版本号获取：{}",uri);
+            log.warn("版本号获取：{}",uri.split("\\?")[0]);
             log.warn("自动获取redis版本号：{} ,对应rdb版本号：{},手动输入版本号：{}，对应rdb版本号：{}",redisVersion,integer,redisFileDataDto.getTargetRedisVersion(),rdbVersion);
             if(FileType.AOF.equals(redisFileDataDto.getFileType())||FileType.ONLINEAOF.equals(redisFileDataDto.getFileType())){
                 redisFileDataDto.addRedisInfo(new RedisInfo(redisVersion, uri, RedisUrlCheckUtils.getRdbVersion(redisVersion)));

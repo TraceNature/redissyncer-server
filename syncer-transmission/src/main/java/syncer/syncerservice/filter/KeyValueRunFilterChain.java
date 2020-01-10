@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import java.util.List;
 
@@ -33,7 +34,7 @@ public class KeyValueRunFilterChain {
     }
 
 
-    public void  run(Replicator replicator,KeyValueEventEntity eventEntity){
+    public void  run(Replicator replicator,KeyValueEventEntity eventEntity) throws FilterNodeException {
         if(null!=commonFilter){
             commonFilter.run(replicator,eventEntity);
         }

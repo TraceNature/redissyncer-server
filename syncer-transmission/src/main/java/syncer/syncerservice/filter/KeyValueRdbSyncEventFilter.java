@@ -17,11 +17,13 @@ import syncer.syncerplusredis.rdb.iterable.datatype.*;
 import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerservice.compensator.ISyncerCompensator;
 import syncer.syncerservice.compensator.MultiThreadSyncerCompensator;
+import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.RedisCommandTypeUtils;
 import syncer.syncerservice.util.SyncTaskUtils;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
@@ -52,20 +54,28 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
     
 
     @Override
-    public void run(Replicator replicator, KeyValueEventEntity eventEntity) {
+    public void run(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
+
+        try {
+
+
         Event event=eventEntity.getEvent();
         //全量同步开始
 
         ISyncerCompensator iSyncerCompensator=eventEntity.getISyncerCompensator();
 
         if (event instanceof PreRdbSyncEvent) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日 HH时mm分ss秒");
+
+
+            log.warn("taskId为[{}]的全量数据到达同步程序同步开始..，当前时间：{}",taskId,sdf.format(new Date()));
             if(eventEntity.getFileType().equals(FileType.ONLINERDB)
                     ||eventEntity.getFileType().equals(FileType.RDB)
                     ||eventEntity.getFileType().equals(FileType.ONLINEAOF)
                     ||eventEntity.getFileType().equals(FileType.AOF)
                     ||eventEntity.getFileType().equals(FileType.ONLINEMIXED)
                     ||eventEntity.getFileType().equals(FileType.MIXED)){
-                log.warn("taskId为[{}]的全量数据到达同步程序同步开始..",taskId);
+
                 log.warn("taskId为[{}]的文件任务全量同步开始..",taskId);
                 SyncTaskUtils.editTaskMsg(taskId,"文件全量同步开始[同步任务启动]");
             }else{
@@ -213,11 +223,13 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
 
         //继续执行下一Filter节点
         toNext(replicator,eventEntity);
-
+        }catch (Exception e){
+            throw new FilterNodeException(e.getMessage()+"->KeyValueRdbSyncEventFilter",e.getCause());
+        }
     }
 
     @Override
-    public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) {
+    public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
         if(null!=next){
             next.run(replicator,eventEntity);
         }
