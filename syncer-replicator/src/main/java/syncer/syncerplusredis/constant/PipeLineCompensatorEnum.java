@@ -17,10 +17,7 @@ public enum PipeLineCompensatorEnum {
      */
     SET_WITH_TIME,
 
-    /**
-     * appand command
-     */
-    APPAND,
+
 
     LPUSH,
 
@@ -53,5 +50,30 @@ public enum PipeLineCompensatorEnum {
     DEL,
     COMMAND,
     SELECT,
-    PEXPIRE
+    PEXPIRE,
+
+
+    //////////////////////////////////////////非幂等性命令
+
+    /**
+     * String类型
+     */
+    APPEND,
+
+    /**
+     *自增
+     */
+    INCR,
+
+    INCRBY,
+
+    INCRBYFLOAT,
+
+    /**
+     * 自减
+     */
+
+    DECR,
+
+    DECRBY
 }
