@@ -119,7 +119,7 @@ public class CompensatorUtils {
 
     public  boolean isIdempotentCommand(byte[]cmd){
         String stringCmd= Strings.byteToString(cmd);
-        PipeLineCompensatorEnum cmdEnum=PipeLineCompensatorEnum.valueOf(stringCmd);
+        PipeLineCompensatorEnum cmdEnum=PipeLineCompensatorEnum.valueOf(stringCmd.toUpperCase());
         if(cmdEnum.equals(PipeLineCompensatorEnum.INCR)){
             return true;
         }else if(cmdEnum.equals(PipeLineCompensatorEnum.INCRBY)){
@@ -140,7 +140,7 @@ public class CompensatorUtils {
 
    public PipeLineCompensatorEnum getIdempotentCommand(byte[]cmd){
         String stringCmd= Strings.byteToString(cmd);
-        PipeLineCompensatorEnum cmdEnum=PipeLineCompensatorEnum.valueOf(stringCmd);
+        PipeLineCompensatorEnum cmdEnum=PipeLineCompensatorEnum.valueOf(stringCmd.toUpperCase());
         if(cmdEnum.equals(PipeLineCompensatorEnum.INCR)){
             return PipeLineCompensatorEnum.INCR;
         }else if(cmdEnum.equals(PipeLineCompensatorEnum.INCRBY)){
