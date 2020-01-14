@@ -367,7 +367,15 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
 
     boolean isIdempotentCommand(byte[]cmd){
         String stringCmd= Strings.byteToString(cmd);
-        CmdEnum cmdEnum=CmdEnum.valueOf(stringCmd);
+        CmdEnum cmdEnum=null;
+        try{
+            cmdEnum= CmdEnum.valueOf(stringCmd.toUpperCase());
+            if(null==cmd){
+                cmdEnum=CmdEnum.SEND;
+            }
+        }catch (Exception e){
+            cmdEnum=CmdEnum.SEND;
+        }
         if(cmdEnum.equals(CmdEnum.INCR)){
             return true;
         }else if(cmdEnum.equals(CmdEnum.INCRBY)){
@@ -387,7 +395,16 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
 
     void retryIdempotentCommand(byte[] cmd, Object res, byte[]... args){
         String stringCmd= Strings.byteToString(cmd);
-        CmdEnum cmdEnum=CmdEnum.valueOf(stringCmd);
+        CmdEnum cmdEnum=null;
+        try{
+            cmdEnum= CmdEnum.valueOf(stringCmd.toUpperCase());
+            if(null==cmd){
+                cmdEnum=CmdEnum.SEND;
+            }
+        }catch (Exception e){
+            cmdEnum=CmdEnum.SEND;
+        }
+
         String key=Strings.byteToString(args[0]);
         if(cmdEnum.equals(CmdEnum.APPEND)){
             if(!appendMap.containsKey(key)){

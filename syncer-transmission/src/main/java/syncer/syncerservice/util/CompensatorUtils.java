@@ -119,7 +119,15 @@ public class CompensatorUtils {
 
     public  boolean isIdempotentCommand(byte[]cmd){
         String stringCmd= Strings.byteToString(cmd);
-        PipeLineCompensatorEnum cmdEnum=PipeLineCompensatorEnum.valueOf(stringCmd.toUpperCase());
+        PipeLineCompensatorEnum cmdEnum=null;
+        try{
+            cmdEnum= PipeLineCompensatorEnum.valueOf(stringCmd.toUpperCase());
+            if(null==cmd){
+                cmdEnum=PipeLineCompensatorEnum.COMMAND;
+            }
+        }catch (Exception e){
+            cmdEnum=PipeLineCompensatorEnum.COMMAND;
+        }
         if(cmdEnum.equals(PipeLineCompensatorEnum.INCR)){
             return true;
         }else if(cmdEnum.equals(PipeLineCompensatorEnum.INCRBY)){
@@ -140,7 +148,18 @@ public class CompensatorUtils {
 
    public PipeLineCompensatorEnum getIdempotentCommand(byte[]cmd){
         String stringCmd= Strings.byteToString(cmd);
-        PipeLineCompensatorEnum cmdEnum=PipeLineCompensatorEnum.valueOf(stringCmd.toUpperCase());
+
+        PipeLineCompensatorEnum cmdEnum=null;
+        try{
+            cmdEnum= PipeLineCompensatorEnum.valueOf(stringCmd.toUpperCase());
+            if(null==cmd){
+                cmdEnum=PipeLineCompensatorEnum.COMMAND;
+            }
+        }catch (Exception e){
+            cmdEnum=PipeLineCompensatorEnum.COMMAND;
+        }
+
+
         if(cmdEnum.equals(PipeLineCompensatorEnum.INCR)){
             return PipeLineCompensatorEnum.INCR;
         }else if(cmdEnum.equals(PipeLineCompensatorEnum.INCRBY)){
