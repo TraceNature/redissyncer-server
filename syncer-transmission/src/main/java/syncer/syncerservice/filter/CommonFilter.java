@@ -12,4 +12,5 @@ public interface CommonFilter {
     void toNext(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException;
 
     void setNext(CommonFilter nextFilter);
+
 }

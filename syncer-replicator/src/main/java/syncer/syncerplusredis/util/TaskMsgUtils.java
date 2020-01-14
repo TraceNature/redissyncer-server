@@ -88,27 +88,31 @@ public class TaskMsgUtils {
     public synchronized  static  boolean checkFileThreadMsg(ThreadMsgEntity threadMsgEntity){
         AtomicBoolean status= new AtomicBoolean(false);
         TaskMsgUtils.aliveThreadHashMap.entrySet().forEach(alive->{
-            String fileAddress= new File(alive.getValue().getRedisClusterDto().getFileAddress()).getParent();
-            String fileAddressFromEntity= new File(threadMsgEntity.getRedisClusterDto().getFileAddress()).getParent();
+
+            if(null!=alive.getValue().getRedisClusterDto().getFileAddress()){
+                String fileAddress= new File(alive.getValue().getRedisClusterDto().getFileAddress()).getParent();
+                String fileAddressFromEntity= new File(threadMsgEntity.getRedisClusterDto().getFileAddress()).getParent();
 
 
-            if(fileAddress.equalsIgnoreCase(fileAddressFromEntity)
-            &&
-                    alive.getValue().getRedisClusterDto().getSourceRedisAddress().equalsIgnoreCase(threadMsgEntity.getRedisClusterDto().getSourceRedisAddress())
-                    &&
-                    alive.getValue().getRedisClusterDto().getSourcePassword().equals(threadMsgEntity.getRedisClusterDto().getSourcePassword())
-                    &&
-                    alive.getValue().getRedisClusterDto().getTaskName().equalsIgnoreCase(threadMsgEntity.getRedisClusterDto().getTaskName())
+                if(fileAddress.equalsIgnoreCase(fileAddressFromEntity)
+                        &&
+                        alive.getValue().getRedisClusterDto().getSourceRedisAddress().equalsIgnoreCase(threadMsgEntity.getRedisClusterDto().getSourceRedisAddress())
+                        &&
+                        alive.getValue().getRedisClusterDto().getSourcePassword().equals(threadMsgEntity.getRedisClusterDto().getSourcePassword())
+                        &&
+                        alive.getValue().getRedisClusterDto().getTaskName().equalsIgnoreCase(threadMsgEntity.getRedisClusterDto().getTaskName())
 
-            ){
-                status.set(true);
-                return;
+                ){
+                    status.set(true);
+                    return;
+                }
+
+                if(alive.getValue().getRedisClusterDto().equals(threadMsgEntity.getRedisClusterDto())){
+                    status.set(true);
+                    return;
+                }
             }
 
-            if(alive.getValue().getRedisClusterDto().equals(threadMsgEntity.getRedisClusterDto())){
-                status.set(true);
-                return;
-            }
         });
         return status.get();
     }

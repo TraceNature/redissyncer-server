@@ -56,10 +56,7 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
     public void run(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
 
         try {
-
-
         Event event=eventEntity.getEvent();
-
 
         //全量同步结束
         if (event instanceof PostRdbSyncEvent) {
@@ -69,7 +66,6 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
 
         if (event instanceof DumpKeyValuePair) {
             DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
-
             addAnalysisMap(dumpKeyValuePair.getDataType());
         }
 
@@ -79,8 +75,6 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
             if(batchedKeyValuePair.isLast()){
                 addAnalysisMap(batchedKeyValuePair.getDataType());
             }
-
-
 
             //计算分片数量
             if(batchedKeyValuePair.getBatch()==0){

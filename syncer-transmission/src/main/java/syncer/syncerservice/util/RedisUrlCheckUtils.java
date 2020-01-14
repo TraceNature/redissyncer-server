@@ -304,12 +304,17 @@ public class RedisUrlCheckUtils {
 
         }
 
+        if(null==redisVersion){
+            return 0;
+        }
+
         Object rdb=0;
         if(rdbVersion.containsKey(redisVersion)){
             rdb=rdbVersion.get(redisVersion);
 
              return  Integer.valueOf((String) rdb);
         }else {
+
             if(redisVersion.indexOf("jimdb")>=0){
                 rdb=6;
                 return  Integer.valueOf((String) rdb);

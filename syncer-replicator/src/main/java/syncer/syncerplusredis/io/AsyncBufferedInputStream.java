@@ -41,6 +41,8 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
     private static final Logger logger = LoggerFactory.getLogger(AsyncBufferedInputStream.class);
 
     //
+//    private static final int DEFAULT_CAPACITY = 1024 * 1024 * 1024*2;
+
     private static final int DEFAULT_CAPACITY = 2 * 1024 * 1024;
 
     //
@@ -83,11 +85,15 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
     @Override
     public void run() {
         try {
+//            final byte[] buffer = new byte[512 * 1024];
             final byte[] buffer = new byte[512 * 1024];
             while (!this.closed.get()) {
                 //
                 int r = this.is.read(buffer, 0, buffer.length);
+
                 if (r < 0) {
+                    System.out.println("r的值："+r);
+
                     throw new EOFException();
                 }
 
@@ -266,6 +272,7 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
             final int r = Math.min(this.size, len);
             if (this.head > this.tail) {
                 System.arraycopy(this.buffer, this.tail, b, off, r);
+
             } else {
                 final int r1 = Math.min(this.buffer.length - this.tail, r);
                 System.arraycopy(this.buffer, this.tail, b, off, r1);
