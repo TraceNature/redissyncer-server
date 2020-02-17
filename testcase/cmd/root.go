@@ -16,96 +16,148 @@ limitations under the License.
 package cmd
 
 import (
-  "fmt"
-  "github.com/go-redis/redis/v7"
-  "os"
-  "github.com/spf13/cobra"
-  "testcase/common"
-  "testcase/generatedata"
+	//"encoding/json"
+	//"github.com/tidwall/gjson"
+	"fmt"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"io/ioutil"
+	"log"
+	"testcase/synctaskhandle"
 
-  homedir "github.com/mitchellh/go-homedir"
-  "github.com/spf13/viper"
-
+	//"io/ioutil"
+	"os"
+	"testcase/global"
+	//"testcase/synctaskhandle"
 )
 
-
 var cfgFile string
+var logger *logrus.Logger
 
+func init() {
+	logger = global.GetInstance()
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-  Use:   "testcase",
-  Short: "A brief description of your application",
-  Long: `A longer description that spans multiple lines and likely contains
+	Use:   "testcase",
+	Short: "A brief description of your application",
+	Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
 
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-  // Uncomment the following line if your bare application
-  // has an action associated with it:
-  	Run: func(cmd *cobra.Command, args []string) {
-      opt:=&redis.Options{
-        Addr:     "114.67.100.239:6379",
-        Password: "redistest0102", // no password set
-        DB:       0,  // use default DB
-      }
-  	  client:=common.GetGoRedisClient(opt)
-  	  defer client.Close()
-  	  //generatedata.GenerateBase(client)
-  	  generatedata.GenerateIncrement(client)
+	// Uncomment the following line if your bare application
+	// has an action associated with it:
+	Run: func(cmd *cobra.Command, args []string) {
+		//	sourceopt := &redis.Options{
+		//		//Addr: "114.67.100.239:6379",
+		//		//Addr:     "10.0.0.10:6379",
+		//		Addr: viper.GetViper().GetString("sourceRedisAddress"),
+		//		//Password: "redistest0102", // no password set
+		//		DB: 0, // use default DB
+		//	}
+		//
+		//	targetopt := &redis.Options{
+		//		//Addr: "114.67.100.239:6379",
+		//		//Addr:     "10.0.0.10:6379",
+		//		Addr: viper.GetViper().GetString("targetRedisAddress"),
+		//		//Password: "redistest0102", // no password set
+		//		DB: 0, // use default DB
+		//	}
+		//	sourceopt.Password = viper.GetViper().GetString("sourcePassword")
+		//	targetopt.Password = viper.GetViper().GetString("targetPassword")
+		//	sourceclient := common.GetGoRedisClient(sourceopt)
+		//	targetclient := common.GetGoRedisClient(targetopt)
+		//	defer sourceclient.Close()
+		//	defer targetclient.Close()
+		//
+		//	_, serr := sourceclient.Ping().Result()
+		//	_, terr := targetclient.Ping().Result()
+		//	if serr != nil {
+		//		logger.Error("source error:", serr)
+		//		os.Exit(0)
+		//	}
+		//	if terr != nil {
+		//		logger.Error("target error:", terr)
+		//		os.Exit(0)
+		//	}
+		//
+		//	sourceclient.FlushAll()
+		//	targetclient.FlushAll()
+		//
+		//	generatedata.GenerateBase(sourceclient, int64(100))
+		//
+		//
+		//
+		//	os.Exit(0)
+		//
 
-    },
+		execfile := "./tasks/listtasks.json"
+
+		jsonFile, err := os.Open(execfile)
+		defer jsonFile.Close()
+
+		if err != nil {
+			log.Println(err)
+
+			os.Exit(1)
+		}
+
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+
+		req := &synctaskhandle.Request{
+			Server: viper.GetViper().GetString("syncserver"),
+			Api:    synctaskhandle.ListTasksPath,
+			Body:   string(byteValue),
+		}
+		resp := req.ExecRequest()
+		fmt.Println(viper.GetViper().GetString("syncserver"))
+		fmt.Println(resp)
+
+		cmd.Help()
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-  if err := rootCmd.Execute(); err != nil {
-    fmt.Println(err)
-    os.Exit(1)
-  }
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
 
 func init() {
-  cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initConfig)
 
-  // Here you will define your flags and configuration settings.
-  // Cobra supports persistent flags, which, if defined here,
-  // will be global for your application.
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/config.yml)")
+	rootCmd.MarkFlagRequired("config")
 
-  rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.testcase.yaml)")
-
-
-  // Cobra also supports local flags, which will only run
-  // when this action is called directly.
-  rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-  if cfgFile != "" {
-    // Use config file from the flag.
-    viper.SetConfigFile(cfgFile)
-  } else {
-    // Find home directory.
-    home, err := homedir.Dir()
-    if err != nil {
-      fmt.Println(err)
-      os.Exit(1)
-    }
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		// Find home directory.
+		viper.AddConfigPath(".")
+		viper.SetConfigName("config.yml")
+	}
 
-    // Search config in home directory with name ".testcase" (without extension).
-    viper.AddConfigPath(home)
-    viper.SetConfigName(".testcase")
-  }
+	viper.AutomaticEnv() // read in environment variables that match
 
-  viper.AutomaticEnv() // read in environment variables that match
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err == nil {
+		logger.Println("Using config file:", viper.ConfigFileUsed())
+	} else {
+		logger.Println(err)
+		os.Exit(1)
+	}
 
-  // If a config file is found, read it in.
-  if err := viper.ReadInConfig(); err == nil {
-    fmt.Println("Using config file:", viper.ConfigFileUsed())
-  }
 }
-

@@ -1,0 +1,11 @@
+{
+  "sourcePassword": "redistest0102",
+  "sourceRedisAddress": "114.67.100.239:6379",
+  "targetRedisAddress": "114.67.100.240:6379",
+  "targetPassword": "redistest0102",
+  "taskName": "迁移任务1",
+  "targetRedisVersion": 4.0,
+  "autostart": true,
+  "afresh": true,
+  "batchSize": 1000
+}
