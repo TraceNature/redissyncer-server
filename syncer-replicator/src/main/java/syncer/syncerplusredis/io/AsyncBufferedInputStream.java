@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,6 +41,8 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
     private static final Logger logger = LoggerFactory.getLogger(AsyncBufferedInputStream.class);
 
     //
+//    private static final int DEFAULT_CAPACITY = 1024 * 1024 * 1024*2;
+
     private static final int DEFAULT_CAPACITY = 2 * 1024 * 1024;
 
     //
@@ -81,11 +85,15 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
     @Override
     public void run() {
         try {
+//            final byte[] buffer = new byte[512 * 1024];
             final byte[] buffer = new byte[512 * 1024];
             while (!this.closed.get()) {
                 //
                 int r = this.is.read(buffer, 0, buffer.length);
+
                 if (r < 0) {
+                    System.out.println("r的值："+r);
+
                     throw new EOFException();
                 }
 
@@ -173,10 +181,14 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
             //
             while (this.ringBuffer.isEmpty()) {
                 if (this.exception != null){
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    logger.warn("同步线程异常 时间：{}",sdf.format(new Date()));
                     throw this.exception;
                 }
                 this.bufferNotEmpty.awaitUninterruptibly();
                 if (this.closed.get()){
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    logger.warn("同步线程异常 时间：{}",sdf.format(new Date()));
                     throw new EOFException();
                 }
             }
@@ -260,6 +272,7 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
             final int r = Math.min(this.size, len);
             if (this.head > this.tail) {
                 System.arraycopy(this.buffer, this.tail, b, off, r);
+
             } else {
                 final int r1 = Math.min(this.buffer.length - this.tail, r);
                 System.arraycopy(this.buffer, this.tail, b, off, r1);

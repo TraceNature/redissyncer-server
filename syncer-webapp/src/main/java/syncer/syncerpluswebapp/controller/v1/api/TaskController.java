@@ -2,9 +2,12 @@ package syncer.syncerpluswebapp.controller.v1.api;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import syncer.syncerjedis.Jedis;
 import syncer.syncerpluscommon.entity.ResultMap;
 import syncer.syncerpluscommon.util.common.TemplateUtils;
+import syncer.syncerplusredis.cmd.impl.DefaultCommand;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
+import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.entity.RedisPoolProps;
 import syncer.syncerplusredis.entity.dto.RedisClusterDto;
 import syncer.syncerplusredis.entity.dto.RedisSyncNumCheckDto;
@@ -26,9 +29,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import syncer.syncerservice.service.IRedisSyncerService;
+import syncer.syncerservice.service.ISyncerTaskService;
 import syncer.syncerservice.util.RedisUrlCheckUtils;
 import syncer.syncerservice.util.SyncTaskUtils;
+import syncer.syncerservice.util.common.Strings;
+import syncer.syncerservice.util.regex.RegexUtil;
 
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,7 +53,8 @@ public class TaskController {
     RedisPoolProps redisPoolProps;
     @Autowired
     IRedisSyncerService redisBatchedSyncerService;
-
+    @Autowired
+    ISyncerTaskService syncerTaskService;
     /**
      * 创建同步任务
      * @param redisClusterDto
@@ -55,53 +63,7 @@ public class TaskController {
      */
     @RequestMapping(value = "/createtask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap createTask(@RequestBody @Validated RedisClusterDto redisClusterDto) throws TaskMsgException {
-
-        List<RedisClusterDto> redisClusterDtoList=DtoCheckUtils.loadingRedisClusterDto(redisClusterDto);
-        List<String>taskids=new ArrayList<>();
-        for (RedisClusterDto dto:redisClusterDtoList
-             ) {
-            DtoCheckUtils.checkRedisClusterDto(redisClusterDto);
-
-
-            dto= (RedisClusterDto) DtoCheckUtils.ckeckRedisClusterDto(dto,redisPoolProps);
-
-            String threadId= TemplateUtils.uuid();
-            String threadName=redisClusterDto.getTaskName();
-            if(StringUtils.isEmpty(threadName)){
-                threadName=threadId;
-                dto.setTaskName(threadId);
-            }
-
-            ThreadMsgEntity  msgEntity=ThreadMsgEntity.builder().id(threadId)
-                    .status(ThreadStatusEnum.CREATE)
-                    .taskName(threadName)
-                    .redisClusterDto(dto)
-                    .build();
-
-
-            try {
-                TaskMsgUtils.addAliveThread(threadId, msgEntity);
-
-            }catch (TaskMsgException ex){
-                throw ex;
-            } catch (Exception e){
-                return  ResultMap.builder().code("1000").msg("Failed to create task");
-            }
-
-
-            if(dto.isAutostart()){
-                redisBatchedSyncerService.batchedSync(dto,threadId,dto.isAfresh());
-                msgEntity.setStatus(ThreadStatusEnum.RUN);
-            }else {
-                msgEntity.getRedisClusterDto().setAfresh(true);
-            }
-            taskids.add(threadId);
-        }
-
-
-        HashMap msg=new HashMap(10);
-        msg.put("taskids",taskids);
-        return  ResultMap.builder().code("2000").msg("Task created successfully").data(msg);
+        return syncerTaskService.createRedisToRedisTask(redisClusterDto);
     }
 
 
@@ -230,13 +192,10 @@ public class TaskController {
 
                 for (int i=0;i<targetDbSource.size();i++){
                     if(targetNumMap.containsKey(targetDbSource.get(i).get(0))){
-
                         Long numData=targetNumMap.get(targetDbSource.get(i).get(0))+Long.valueOf(targetDbSource.get(i).get(1));
-
                         targetNumMap.put(targetDbSource.get(i).get(0),numData);
                     }else {
                         targetNumMap.put(targetDbSource.get(i).get(0),Long.valueOf(targetDbSource.get(i).get(1)));
-
                     }
                     if(targetNumMap.containsKey(sum)){
                         targetNumMap.put(sum,(targetNumMap.get(sum)+Long.valueOf(targetDbSource.get(i).get(1))));
@@ -256,6 +215,10 @@ public class TaskController {
 
         resMap.put("目标总key数量：源总key数量", new StringBuilder(loadingValue(String.valueOf(targetNumMap.get(sum)))).append(":").append(loadingValue(String.valueOf(sourceNumMap.get(sum)))).toString());
         DecimalFormat df = new DecimalFormat("0.00");//格式化小数
+        df.setMaximumFractionDigits(2);
+        df.setGroupingSize(0);
+        df.setRoundingMode(RoundingMode.FLOOR);
+
         if(null==sourceNumMap.get(sum)||0==sourceNumMap.get(sum)){
             resMap.put("目标/源key比例：", "源redis没有数据无法比较");
         }else {
@@ -265,6 +228,8 @@ public class TaskController {
                     num="1.00";
                 }
             }else {
+
+
                  num = df.format((float)targetNumMap.get(sum)/(float)sourceNumMap.get(sum));//返回的是String类型
             }
 
@@ -309,12 +274,12 @@ public class TaskController {
         return  ResultMap.builder().code("2000").msg("The request is successful").data(resMap);
     }
 
-    public static void main(String[] args) throws TaskMsgException {
-        List<String>list=new ArrayList<>();
-        list.add("wdw");
-        System.out.println(list.get(0));
-        System.out.println(JSON.toJSONString( RedisUrlCheckUtils.getRedisClientKeyNum("114.67.100.238",6379,"redistest0102")));
-    }
+//    public static void main(String[] args) throws TaskMsgException {
+//        List<String>list=new ArrayList<>();
+//        list.add("wdw");
+//        System.out.println(list.get(0));
+//        System.out.println(JSON.toJSONString( RedisUrlCheckUtils.getRedisClientKeyNum("114.67.100.238",6379,"redistest0102")));
+//    }
 
 
     String getTargetMapValue(String key,Map<String,Long>map){
@@ -330,4 +295,42 @@ public class TaskController {
         }
         return key;
     }
+
+
+    public static void main(String[] args) {
+
+        //        Jedis target = new Jedis("114.67.100.239",8002);
+//
+////
+//        Object targetAuth = target.auth("redistest0102");
+//        System.out.println(targetAuth);
+//        String clusternodes=target.clusterNodes();
+//        System.out.println();
+
+//        String nodes1="a6f467f245fd4172a42cb7038fcae129590bebd4 10.0.16.3:6380 master - 0 1577951370037 2 connected 5461-10922\n" +
+//                "7388fa0db0e438c2b5f06d36d36ef3ee58f39239 10.0.16.3:6381 master - 0 1577951369036 3 connected 10923-16383\n" +
+//                "423cdb8b5f4272a7a1bdd049b95b9c16cb36d8ee 10.0.16.3:6379 myself,master - 0 0 1 connected 0-5460";
+//
+//
+//
+//        String nodes="1607a71be306ab53a477fab5559c969d3079014e 114.67.100.238:8002@18002 master - 0 1577946889000 15 connected 10923-16383\n" +
+//                "1bb3c372b59acf3c52437c11c21ac0fb39e8f4e7 10.0.1.45:8002@18002 myself,slave ea26f2dff87889b1c4be6c9cfcc9f8b8bdabcdf1 0 1577946888000 16 connected\n" +
+//                "aa7107f9f155f0d595c8400cef55ba0fce442b97 114.67.100.240:8002@18002 master - 0 1577946889000 1 connected 0-5460\n" +
+//                "e0608f2c7eb70197ec8ce238f1054cb48549cdac 114.67.105.55:8002@18002 slave,fail aa7107f9f155f0d595c8400cef55ba0fce442b97 1573011196875 1573011194000 12 connected\n" +
+//                "ea26f2dff87889b1c4be6c9cfcc9f8b8bdabcdf1 114.67.83.163:8002@18002 master - 0 1577946887000 17 connected 5461-10922\n" +
+//                "bda5e75bf3c65f9acf76cf408a34513f901ae413 114.67.83.131:8002@18002 slave 1607a71be306ab53a477fab5559c969d3079014e 0 1577946889959 15 connected";
+//
+//        List<List<String>>list=RegexUtil.getSubListUtil(nodes,"\\w+\\s+(.*?) master -",1);
+//        System.out.println( list.get(2).get(0).split("@")[0]);
+////        System.out.println(JSON.toJSONString(RegexUtil.getSubListUtil(nodes1,"\\w+\\s+(.*?) master -",1)));
+//
+//        DecimalFormat df = new DecimalFormat("0.00");//格式化小数
+//        df.setMaximumFractionDigits(2);
+//        df.setGroupingSize(0);
+//        df.setRoundingMode(RoundingMode.FLOOR);
+//
+//        System.out.println( df.format((float) 188874189/(float) 189213005));
+//
+    }
+
 }

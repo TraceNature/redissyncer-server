@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Data
@@ -52,4 +53,24 @@ public class ThreadMsgEntity implements Serializable {
     }
 
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o){
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ThreadMsgEntity that = (ThreadMsgEntity) o;
+        return Objects.equals(taskName, that.taskName) &&
+                status == that.status &&
+                Objects.equals(redisClusterDto, that.redisClusterDto) &&
+                Objects.equals(taskMsg, that.taskMsg) &&
+                Objects.equals(offsetMap, that.offsetMap);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(taskName, status, redisClusterDto, taskMsg, offsetMap);
+    }
 }

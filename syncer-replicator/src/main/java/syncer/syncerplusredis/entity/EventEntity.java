@@ -1,45 +1,32 @@
 package syncer.syncerplusredis.entity;
 
-import syncer.syncerplusredis.cmd.impl.DefaultCommand;
-import syncer.syncerplusredis.constant.RedisCommandTypeEnum;
-import syncer.syncerplusredis.rdb.datatype.DB;
-
-import syncer.syncerplusredis.entity.thread.EventTypeEntity;
-
+import lombok.Builder;
+import syncer.syncerplusredis.constant.PipeLineCompensatorEnum;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Getter@Setter
 @EqualsAndHashCode
+@Builder
 public class EventEntity implements Serializable {
     private byte[]key;
-    private long ms;
-    private DB db;
-    private EventTypeEntity typeEntity;
-    private RedisCommandTypeEnum redisCommandTypeEnum;
-    private DefaultCommand command;
-    public EventEntity(byte[] key, long ms,DB db, EventTypeEntity typeEntity,RedisCommandTypeEnum redisCommandTypeEnum) {
-        this.key = key;
-        this.ms = ms;
-        this.db=db;
-        this.typeEntity = typeEntity;
-        this.redisCommandTypeEnum =redisCommandTypeEnum;
-    }
-
-//    public EventEntity(byte[] key,DB db, EventTypeEntity typeEntity,RedisCommandTypeEnum redisCommandTypeEnum) {
-//        this.key = key;
-//        this.db=db;
-//        this.typeEntity = typeEntity;
-//        this.redisCommandTypeEnum =redisCommandTypeEnum;
-//    }
-
-    public EventEntity(DB db, EventTypeEntity typeEntity, RedisCommandTypeEnum redisCommandTypeEnum, DefaultCommand command) {
-        this.db = db;
-        this.typeEntity = typeEntity;
-        this.redisCommandTypeEnum = redisCommandTypeEnum;
-        this.command = command;
-    }
+    private byte[][]valueList;
+    private byte[]cmd;
+    private List<byte[]> lpush_value;
+    private Set<byte[]> members;
+    private  Set<ZSetEntry> zaddValue;
+    private Map<byte[], byte[]> hash_value;
+    private byte[]value;
+    private long ms=-1;
+    private String stringKey;
+    private Long dbNum;
+    private PipeLineCompensatorEnum pipeLineCompensatorEnum;
+    private boolean highVersion;
 }

@@ -1,12 +1,17 @@
 package syncer.syncerpluswebapp.util;
 
 import com.alibaba.fastjson.JSON;
+import lombok.extern.slf4j.Slf4j;
+import syncer.syncerjedis.Jedis;
+import syncer.syncerjedis.exceptions.JedisDataException;
 import syncer.syncerpluscommon.entity.ResultMap;
+import syncer.syncerplusredis.constant.RedisType;
 import syncer.syncerplusredis.constant.TaskMsgConstant;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
 import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.entity.RedisInfo;
 import syncer.syncerplusredis.entity.RedisPoolProps;
+import syncer.syncerplusredis.entity.dto.FileCommandBackupDataDto;
 import syncer.syncerplusredis.entity.dto.RedisClusterDto;
 import syncer.syncerplusredis.entity.dto.RedisFileDataDto;
 import syncer.syncerplusredis.entity.dto.RedisSyncDataDto;
@@ -21,10 +26,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.util.StringUtils;
 import syncer.syncerpluswebapp.constant.CodeConstant;
 import syncer.syncerservice.util.RedisUrlCheckUtils;
+import syncer.syncerservice.util.regex.RegexUtil;
 
 import java.net.URISyntaxException;
 import java.util.*;
 
+@Slf4j
 public class DtoCheckUtils {
 
     /**
@@ -198,7 +205,7 @@ public class DtoCheckUtils {
                 dto.getDiffVersion(),
                 dto.getPipeline());
 
-        if(syncDataDto.getTargetRedisVersion()!=0L){
+        if(!StringUtils.isEmpty(syncDataDto.getTargetRedisVersion())){
             newDto.setTargetRedisVersion(syncDataDto.getTargetRedisVersion());
         }else {
             newDto.setTargetRedisVersion(dto.getTargetRedisVersion());
@@ -255,7 +262,7 @@ public class DtoCheckUtils {
         RedisClusterDto dto=data.getRedisClusterDto();
 
 
-        if(syncDataDto.getTargetRedisVersion()!=0L){
+        if(!StringUtils.isEmpty(syncDataDto.getTargetRedisVersion())){
             dto.setTargetRedisVersion(syncDataDto.getTargetRedisVersion());
         }
 
@@ -321,15 +328,16 @@ public class DtoCheckUtils {
 
         for (String uri : redisClusterDto.getTargetUris()
         ) {
-            double redisVersion = 0L;
+            String redisVersion = null;
             try {
                 redisVersion = RedisUrlCheckUtils.selectSyncerVersion(uri);
 
             } catch (Exception e) {
-                redisVersion=0L;
+                redisVersion="0";
             }
             Integer rdbVersion = RedisUrlCheckUtils.getRdbVersion(redisClusterDto.getTargetRedisVersion());
             Integer integer = RedisUrlCheckUtils.getRdbVersion(redisVersion);
+            log.warn("自动获取redis版本号：{} ,对应rdb版本号：{},手动输入版本号：{}，对应rdb版本号：{}",redisVersion,integer,redisClusterDto.getTargetRedisVersion(),rdbVersion);
             if (integer == 0) {
                 if (rdbVersion == 0) {
 //                    throw new TaskMsgException("targetRedisVersion can not be empty /targetRedisVersion error");
@@ -347,21 +355,31 @@ public class DtoCheckUtils {
 
     }
 
+
+    public static void updateFileCommandBackUpUri(FileCommandBackupDataDto redisFileDataDto) throws TaskMsgException {
+
+        redisFileDataDto.setSourceUris(getUrlList(redisFileDataDto.getSourceRedisAddress(), redisFileDataDto.getSourcePassword()));
+
+    }
+
+
+
     public static void updateUri(RedisFileDataDto redisFileDataDto) throws TaskMsgException {
 
         redisFileDataDto.setTargetUris(getUrlList(redisFileDataDto.getTargetRedisAddress(), redisFileDataDto.getTargetPassword()));
 
         for (String uri : redisFileDataDto.getTargetUris()
         ) {
-            double redisVersion = 0L;
+            String redisVersion = null;
             try {
                 redisVersion = RedisUrlCheckUtils.selectSyncerVersion(uri);
 
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                redisVersion="0";
             }
             Integer rdbVersion = RedisUrlCheckUtils.getRdbVersion(redisFileDataDto.getTargetRedisVersion());
             Integer integer = RedisUrlCheckUtils.getRdbVersion(redisVersion);
+            log.warn("自动获取redis版本号：{} ,对应rdb版本号：{},手动输入版本号：{}，对应rdb版本号：{}",redisVersion,integer,redisFileDataDto.getTargetRedisVersion(),rdbVersion);
             if (integer == 0) {
                 if (rdbVersion == 0) {
 //                    throw new TaskMsgException("targetRedisVersion can not be empty /targetRedisVersion error");
@@ -385,15 +403,16 @@ public class DtoCheckUtils {
 
         for (String uri : redisFileDataDto.getTargetUris()
         ) {
-            double redisVersion = 0L;
+            String redisVersion = null;
             try {
                 redisVersion = RedisUrlCheckUtils.selectSyncerVersion(uri);
 
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                redisVersion="0";
             }
             Integer rdbVersion = RedisUrlCheckUtils.getRdbVersion(redisFileDataDto.getTargetRedisVersion());
             Integer integer = RedisUrlCheckUtils.getRdbVersion(redisVersion);
+            log.warn("自动获取redis版本号：{} ,对应rdb版本号：{},手动输入版本号：{}，对应rdb版本号：{}",redisVersion,integer,redisFileDataDto.getTargetRedisVersion(),rdbVersion);
             if (integer == 0) {
                 if (rdbVersion == 0) {
 //                    throw new TaskMsgException("targetRedisVersion can not be empty /targetRedisVersion error");
@@ -446,9 +465,81 @@ public class DtoCheckUtils {
 
     public synchronized static List<RedisClusterDto> loadingRedisClusterDto(RedisClusterDto redisClusterDto) throws TaskMsgException {
         String sourceAddress=redisClusterDto.getSourceRedisAddress();
+
+
+
         String[]sourceAdd=sourceAddress.split(";");
         List<RedisClusterDto>res=new ArrayList<>();
+
+        if(RedisType.CLUSTER.equals(RedisType.valueOf(redisClusterDto.getRedistype().toUpperCase()))){
+
+
+            //        Jedis target = new Jedis("114.67.100.240",8002);
+
+
+            //获取password
+//
+//        Object targetAuth = target.auth("redistest0102");
+//        String clusternodes=target.clusterNodes();
+
+            for (String data:sourceAdd){
+                String[]redisSata=data.split(":");
+                Jedis client=new Jedis(redisSata[0], Integer.parseInt(redisSata[1]));
+
+                if(!StringUtils.isEmpty(redisClusterDto.getSourcePassword())){
+                    try {
+                        Object targetAuth = client.auth(redisClusterDto.getSourcePassword());
+                    }catch (JedisDataException e){
+                        throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_CONNECT_ERROR_CODE,"源redis链接失败:"+e.getMessage()));
+                    }
+
+                }
+                try {
+                    String remsg=client.clusterNodes();
+                    //\w+\s+(.*?)@(.*?)master -
+                    List<List<String>>redisDataList= RegexUtil.getSubListUtil(remsg,"\\w+\\s+(.*?)master -",1);
+                    System.out.println(JSON.toJSONString(redisDataList));
+                    String[]resdata=new String[redisDataList.size()];
+                    for (int i = 0; i <redisDataList.size() ; i++) {
+                        List<String>oneData=redisDataList.get(i);
+                        String[] splitData=oneData.get(0).split(" ");
+
+                        if(splitData.length>=2){
+                            resdata[i]=splitData[1].split("@")[0].trim();
+                        }else if(splitData.length==1){
+                            resdata[i]=splitData[0].trim();
+                        }else {
+                            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,"计算集群节点失败:"));
+
+                        }
+
+                    }
+
+                    sourceAdd=resdata;
+                }catch (JedisDataException e){
+                    throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,"获取集群节点失败(请检查当前节点是否为集群节点):"+e.getMessage()));
+
+                }catch (Exception e){
+                    throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,"获取集群节点失败:"+e.getMessage()));
+
+                }finally {
+                    client.close();
+                }
+
+                break;
+
+            }
+
+        }
+
+
+        for (int i = 0; i < sourceAdd.length; i++) {
+            if(sourceAdd[i].indexOf("@")>0){
+                sourceAdd[i]=sourceAdd[i].split("@")[0].trim();
+            }
+        }
         for (String data:sourceAdd){
+
             if(!StringUtils.isEmpty(data)){
                 RedisClusterDto dto = new RedisClusterDto( 100
                         , 110, 10000
@@ -458,10 +549,17 @@ public class DtoCheckUtils {
                 res.add(dto);
             }
         }
+
+
         if(res.size()==0){
             throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_URI_ERROR,"sourceRedisAddress存在错误"));
         }
         return res;
+    }
+
+
+    public static void main(String[] args) {
+
     }
 
 

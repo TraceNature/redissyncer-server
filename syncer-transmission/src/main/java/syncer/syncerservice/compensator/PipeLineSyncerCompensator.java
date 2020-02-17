@@ -1,7 +1,7 @@
 package syncer.syncerservice.compensator;
 
+import syncer.syncerjedis.Jedis;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +12,10 @@ import java.util.Set;
  * @Date 2019/12/24
  */
 public class PipeLineSyncerCompensator implements ISyncerCompensator {
+
+
+    private Jedis client;
+
     @Override
     public void set(Long dbNum, byte[] key, byte[] value, String res) {
 

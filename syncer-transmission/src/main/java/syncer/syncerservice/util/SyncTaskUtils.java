@@ -56,6 +56,8 @@ public class SyncTaskUtils {
                 if(entity.getRedisClusterDto().getFileType().equals(FileType.ONLINERDB)||entity.getRedisClusterDto().getFileType().equals(FileType.ONLINEAOF)
                         ||entity.getRedisClusterDto().getFileType().equals(FileType.AOF)||entity.getRedisClusterDto().getFileType().equals(FileType.RDB)){
                     redisBatchedReplicatorService.filebatchedSync(entity.getRedisClusterDto(),taskId);
+                }else if(entity.getRedisClusterDto().getFileType().equals(FileType.COMMANDDUMPUP)){
+                    redisBatchedReplicatorService.fileCommandBackUpSync(entity.getRedisClusterDto(),taskId);
                 }else {
                     redisBatchedReplicatorService.batchedSync(entity.getRedisClusterDto(),taskId,afresh);
                 }
@@ -135,6 +137,7 @@ public class SyncTaskUtils {
 
         return taskMap;
     }
+
 
 
     public synchronized  static  Map<String,String> editTaskMsg(String taskId,String msg)  {
@@ -417,6 +420,43 @@ public class SyncTaskUtils {
         return taskMap;
     }
 
+
+    public synchronized  static  Map<String,String> stopAnddelAllCreateThread() throws TaskMsgException {
+        Map<String,String>taskMap=new HashMap<>(10);
+
+
+        for (Map.Entry<String, ThreadMsgEntity> data:TaskMsgUtils.getAliveThreadHashMap().entrySet()
+             ) {
+            try {
+                ThreadMsgEntity ds=data.getValue();
+                if(null!=data.getValue()){
+                    //运行中
+                    if(ds.getStatus().equals(ThreadStatusEnum.RUN)){
+                        if(null!=ds.getRList()&&ds.getRList().size()>0){
+                            try {
+                                for (Replicator r:ds.getRList()
+                                ) {
+                                    r.close();
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        data.getValue().setStatus(ThreadStatusEnum.STOP);
+                        TaskMsgUtils.getAliveThreadHashMap().put(data.getKey(),ds);
+
+                    }
+                }
+                TaskMsgUtils.getAliveThreadHashMap().remove(data.getKey());
+                taskMap.put(data.getKey(),"success");
+            }catch (Exception e){
+
+            }
+
+        }
+
+        return taskMap;
+    }
 
 
 

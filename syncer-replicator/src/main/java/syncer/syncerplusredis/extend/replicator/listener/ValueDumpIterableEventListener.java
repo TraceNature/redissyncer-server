@@ -26,7 +26,7 @@ public class ValueDumpIterableEventListener implements syncer.syncerplusredis.ev
 
     private final int batchSize;
     private final boolean order;
-    private final syncer.syncerplusredis.event.EventListener listener;
+    private final EventListener listener;
 
     public ValueDumpIterableEventListener(syncer.syncerplusredis.event.EventListener listener) {
         this(64, listener);

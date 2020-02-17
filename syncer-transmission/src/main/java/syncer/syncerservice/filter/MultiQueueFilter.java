@@ -12,12 +12,14 @@ import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerservice.compensator.ISyncerCompensator;
 import syncer.syncerservice.compensator.ISyncerCompensatorFactory;
+import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.sync.SendCommandTask;
 import syncer.syncerservice.util.HashUtils;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClientFactory;
 import syncer.syncerservice.util.KVUtils;
+import syncer.syncerservice.util.queue.DbMapLocalDiskMemoryQueue;
 import syncer.syncerservice.util.queue.LocalDiskMemoryQueue;
 import syncer.syncerservice.util.queue.LocalMemoryQueue;
 import syncer.syncerservice.util.queue.SyncerQueue;
@@ -70,6 +72,8 @@ public class MultiQueueFilter implements CommonFilter {
 //            KeyValueRunFilterChain filterChain = KeyValueRunFilterChain.builder().commonFilterList(commonFilterList).build();
 
             SyncerQueue<KeyValueEventEntity> queue = new LocalMemoryQueue<>(taskId, i);
+//            SyncerQueue<KeyValueEventEntity> queue = new DbMapLocalDiskMemoryQueue<>(taskId, i);
+//            SyncerQueue<KeyValueEventEntity> queue = new LocalDiskMemoryQueue<>(taskId, i);
             queueMap.put(i, queue);
             ISyncerCompensator syncerCompensator=ISyncerCompensatorFactory.createJDRedisClient(branchTypeEnum,taskId,client);
             iSyncerCompensatorMap.put(i,syncerCompensator);
@@ -86,7 +90,11 @@ public class MultiQueueFilter implements CommonFilter {
     }
 
     @Override
-    public void run(Replicator replicator, KeyValueEventEntity eventEntity) {
+    public void run(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
+
+        try {
+
+
         Event event=eventEntity.getEvent();
         KeyValueEventEntity node=eventEntity;
         if (event instanceof DefaultCommand) {
@@ -118,10 +126,14 @@ public class MultiQueueFilter implements CommonFilter {
                 log.warn("【{}】中的key[{}]加入队列失败", taskId, KVUtils.getKey(event));
             }
         }
+
+        }catch (Exception e){
+            throw new FilterNodeException(e.getMessage()+"->MultiQueueFilter",e.getCause());
+        }
     }
 
     @Override
-    public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) {
+    public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
         if(null!=next){
             next.run(replicator,eventEntity);
         }
@@ -145,6 +157,7 @@ public class MultiQueueFilter implements CommonFilter {
         //全量
         if (TaskRunTypeEnum.valueOf(type.trim().toUpperCase()).equals(TaskRunTypeEnum.STOCKONLY)) {
             commonFilterList.add(KeyValueTimeCalculationFilter.builder().taskId(taskId).client(client).build());
+            commonFilterList.add(KeyValueDataAnalysisFilter.builder().taskId(taskId).client(client).build());
             commonFilterList.add(KeyValueEventDBMappingFilter.builder().taskId(taskId).client(client).build());
             commonFilterList.add(KeyValueRdbSyncEventFilter.builder().taskId(taskId).client(client).redisVersion(syncDataDto.getRedisVersion()).build());
         }
@@ -159,6 +172,7 @@ public class MultiQueueFilter implements CommonFilter {
         //全量+增量
         if (TaskRunTypeEnum.valueOf(type.trim().toUpperCase()).equals(TaskRunTypeEnum.TOTAL)) {
             commonFilterList.add(KeyValueTimeCalculationFilter.builder().taskId(taskId).client(client).build());
+            commonFilterList.add(KeyValueDataAnalysisFilter.builder().taskId(taskId).client(client).build());
             commonFilterList.add(KeyValueEventDBMappingFilter.builder().taskId(taskId).client(client).build());
             commonFilterList.add(KeyValueRdbSyncEventFilter.builder().taskId(taskId).client(client).redisVersion(syncDataDto.getRedisVersion()).build());
             commonFilterList.add(KeyValueCommandSyncEventFilter.builder().taskId(taskId).client(client).build());
@@ -166,4 +180,6 @@ public class MultiQueueFilter implements CommonFilter {
 
 
     }
+
+
 }

@@ -1,5 +1,6 @@
 package syncer.syncerservice.sync;
 
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -18,28 +19,26 @@ import syncer.syncerplusredis.entity.dto.RedisSyncDataDto;
 import syncer.syncerplusredis.entity.thread.OffSetEntity;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.event.EventListener;
-import syncer.syncerplusredis.exception.IncrementException;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.extend.replicator.listener.ValueDumpIterableEventListener;
 import syncer.syncerplusredis.extend.replicator.service.JDRedisReplicator;
 import syncer.syncerplusredis.extend.replicator.visitor.ValueDumpIterableRdbVisitor;
 import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerplusredis.util.TaskMsgUtils;
+import syncer.syncerservice.compensator.ISyncerCompensator;
+import syncer.syncerservice.compensator.ISyncerCompensatorFactory;
 import syncer.syncerservice.filter.*;
 import syncer.syncerservice.po.KeyValueEventEntity;
+import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
+import syncer.syncerservice.util.JDRedisClient.JDRedisClientFactory;
 import syncer.syncerservice.util.JDRedisClient.RedisMigrator;
 import syncer.syncerservice.util.RedisUrlCheckUtils;
 import syncer.syncerservice.util.SyncTaskUtils;
-import java.io.EOFException;
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.NoRouteToHostException;
-import java.net.SocketException;
-import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class RedisDataTransmissionTask implements Runnable {
@@ -58,7 +57,7 @@ public class RedisDataTransmissionTask implements Runnable {
     private RedisBranchTypeEnum branchTypeEnum;
     private boolean status = true;
     private FileType fileType;
-
+    private int bigKeySize;
 
     public RedisDataTransmissionTask(RedisSyncDataDto syncDataDto, RedisInfo info, String taskId, int batchSize, boolean afresh, RedisBranchTypeEnum branchTypeEnum) {
 
@@ -76,6 +75,7 @@ public class RedisDataTransmissionTask implements Runnable {
         this.type = syncDataDto.getTasktype();
         this.fileType = syncDataDto.getFileType();
         this.fileAddress = syncDataDto.getFileAddress();
+        this.bigKeySize=syncDataDto.getBigKeySize();
     }
 
 
@@ -96,7 +96,10 @@ public class RedisDataTransmissionTask implements Runnable {
 
             final Replicator r = RedisMigrator.newBacthedCommandDress(replicator);
             TaskMsgUtils.getThreadMsgEntity(taskId).addReplicator(r);
-            r.setRdbVisitor(new ValueDumpIterableRdbVisitor(r, info.getRdbVersion()));
+
+            System.out.println("bigKeySize:"+bigKeySize);
+            r.setRdbVisitor(new ValueDumpIterableRdbVisitor(r, info.getRdbVersion(),bigKeySize));
+
             OffSetEntity offset = TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().get(sourceUri);
             if (offset == null) {
                 offset = new OffSetEntity();
@@ -113,13 +116,19 @@ public class RedisDataTransmissionTask implements Runnable {
                 }
             }
 
+
             //只增量相关代码
-            if (type.trim().toUpperCase().equals(TaskRunTypeEnum.INCREMENTONLY)) {
+            if (TaskRunTypeEnum.valueOf(type.trim().toUpperCase()).equals(TaskRunTypeEnum.INCREMENTONLY)) {
+
                 String[] data = RedisUrlCheckUtils.selectSyncerBuffer(sourceUri, offsetPlace);
+                System.out.println(JSON.toJSONString(data));
+
                 long offsetNum = 0L;
                 try {
                     offsetNum = Long.parseLong(data[0]);
                     offsetNum -= 1;
+                    //offsetNum -= 1;
+
                 } catch (Exception e) {
 
                 }
@@ -131,12 +140,28 @@ public class RedisDataTransmissionTask implements Runnable {
 
             final OffSetEntity baseOffSet = TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().get(sourceUri);
 
-            MultiQueueFilter multiQueueFilter=new MultiQueueFilter(branchTypeEnum,syncDataDto,type,r,taskId,batchSize);
+//            MultiQueueFilter multiQueueFilter=new MultiQueueFilter(branchTypeEnum,syncDataDto,type,r,taskId,batchSize);
+
+
+
+            List<CommonFilter> commonFilterList = new ArrayList<>();
+            JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, syncDataDto.getTargetHost(), syncDataDto.getTargetPort(), syncDataDto.getTargetPassword(), batchSize, taskId);
+
+            //根据type生成相对节点List [List顺序即为filter节点执行顺序]
+            assemble_the_list(commonFilterList, type, taskId, syncDataDto, client);
+            ISyncerCompensator syncerCompensator= ISyncerCompensatorFactory.createJDRedisClient(branchTypeEnum,taskId,client);
+
+            SendCommandWithOutQueue sendCommandWithOutQueue=SendCommandWithOutQueue.builder()
+                    .filterChain(KeyValueRunFilterChain.builder().commonFilterList(commonFilterList).build())
+                    .r(r)
+                    .taskId(taskId)
+                    .syncerCompensator(syncerCompensator)
+                    .build();
 
             r.addEventListener(new ValueDumpIterableEventListener(batchSize, new EventListener() {
                 @Override
                 public void onEvent(Replicator replicator, Event event) {
-
+//                    System.out.println(JSON.toJSONString(event));
                     if (SyncTaskUtils.doThreadisCloseCheckTask(taskId)) {
                         //判断任务是否关闭
                         try {
@@ -153,7 +178,6 @@ public class RedisDataTransmissionTask implements Runnable {
                         return;
                     }
 
-
                     KeyValueEventEntity node = KeyValueEventEntity.builder()
                             .event(event)
                             .dbMapper(syncDataDto.getDbMapper())
@@ -161,81 +185,70 @@ public class RedisDataTransmissionTask implements Runnable {
                             .baseOffSet(baseOffSet)
                             .replId(r.getConfiguration().getReplId())
                             .replOffset(r.getConfiguration().getReplOffset())
-//                            .configuration(r.getConfiguration())
+                            //.configuration(r.getConfiguration())
                             .taskRunTypeEnum(TaskRunTypeEnum.valueOf(type.trim().toUpperCase()))
                             .fileType(fileType)
                             .build();
 
 
-                    multiQueueFilter.run(r,node);
+                    //多队列接入
+//                    multiQueueFilter.run(r,node);
+
+                    sendCommandWithOutQueue.run(node);
 
                 }
             }));
 
             r.open(taskId);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        } catch (EOFException ex) {
+        } catch (Exception e) {
             try {
-                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId), ex.getMessage());
-            } catch (TaskMsgException e) {
-                e.printStackTrace();
+                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId), e.getMessage());
+            } catch (TaskMsgException ex) {
+                log.warn("任务Id【{}】异常结束任务失败 ，失败原因【{}】", taskId, e.getMessage());
+                ex.printStackTrace();
             }
-            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, ex.getMessage());
-        } catch (NoRouteToHostException p) {
-            try {
-                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId), p.getMessage());
-            } catch (TaskMsgException e) {
-                e.printStackTrace();
-            }
-            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, p.getMessage());
-        } catch (ConnectException cx) {
-            try {
-                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId), cx.getMessage());
-            } catch (TaskMsgException e) {
-                e.printStackTrace();
-            }
-            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, cx.getMessage());
-        } catch (AssertionError er) {
-            try {
-                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId), er.getMessage());
-            } catch (TaskMsgException e) {
-                e.printStackTrace();
-            }
-            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, er.getMessage());
-        } catch (JedisConnectionException ty) {
-            try {
-                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId), ty.getMessage());
-            } catch (TaskMsgException e) {
-                e.printStackTrace();
-            }
-            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, ty.getMessage());
-        } catch (SocketException ii) {
-            try {
-                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId), ii.getMessage());
-            } catch (TaskMsgException e) {
-                e.printStackTrace();
-            }
-            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, ii.getMessage());
-        } catch (IOException et) {
-            try {
-                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId), et.getMessage());
-            } catch (TaskMsgException e) {
-                e.printStackTrace();
-            }
-            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, et.getMessage());
-        } catch (IncrementException et) {
-            try {
-                Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(taskId), et.getMessage());
-            } catch (TaskMsgException e) {
-                e.printStackTrace();
-            }
-            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, et.getMessage());
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, e.getMessage());
         }
     }
 
 
 
+    /**
+     * 按照Type组装List节点
+     *
+     * @param commonFilterList
+     * @param type
+     * @param taskId
+     * @param syncDataDto
+     * @param client
+     */
+    public void assemble_the_list(List<CommonFilter> commonFilterList, String type, String taskId, RedisSyncDataDto syncDataDto, JDRedisClient client) {
+        //全量
+        if (TaskRunTypeEnum.valueOf(type.trim().toUpperCase()).equals(TaskRunTypeEnum.STOCKONLY)) {
+            commonFilterList.add(KeyValueTimeCalculationFilter.builder().taskId(taskId).client(client).build());
+            commonFilterList.add(KeyValueDataAnalysisFilter.builder().taskId(taskId).client(client).build());
+            commonFilterList.add(KeyValueEventDBMappingFilter.builder().taskId(taskId).client(client).build());
+            commonFilterList.add(KeyValueRdbSyncEventFilter.builder().taskId(taskId).client(client).redisVersion(syncDataDto.getRedisVersion()).build());
+        }
+
+        //增量
+        if (TaskRunTypeEnum.valueOf(type.trim().toUpperCase()).equals(TaskRunTypeEnum.INCREMENTONLY)) {
+            commonFilterList.add(KeyValueEventDBMappingFilter.builder().taskId(taskId).client(client).build());
+            commonFilterList.add(KeyValueCommandSyncEventFilter.builder().taskId(taskId).client(client).build());
+        }
+
+
+        //全量+增量
+        if (TaskRunTypeEnum.valueOf(type.trim().toUpperCase()).equals(TaskRunTypeEnum.TOTAL)) {
+            commonFilterList.add(KeyValueTimeCalculationFilter.builder().taskId(taskId).client(client).build());
+            commonFilterList.add(KeyValueDataAnalysisFilter.builder().taskId(taskId).client(client).build());
+            commonFilterList.add(KeyValueEventDBMappingFilter.builder().taskId(taskId).client(client).build());
+            commonFilterList.add(KeyValueRdbSyncEventFilter.builder().taskId(taskId).client(client).redisVersion(syncDataDto.getRedisVersion()).build());
+            commonFilterList.add(KeyValueCommandSyncEventFilter.builder().taskId(taskId).client(client).build());
+        }
+
+
+    }
 
 
 }

@@ -3,6 +3,7 @@ package syncer.syncerservice.sync;
 import com.alibaba.fastjson.JSON;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import syncer.syncerplusredis.cmd.impl.DefaultCommand;
 import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerservice.compensator.ISyncerCompensator;
 import syncer.syncerservice.filter.KeyValueRunFilterChain;
@@ -44,6 +45,8 @@ public class SendCommandTask implements Runnable{
                 keyValueEventEntity.setISyncerCompensator(syncerCompensator);
 //                System.out.println(JSON.toJSONString(queue.take()));
                 try {
+
+
                     if(null!=keyValueEventEntity){
                         filterChain.run(r,keyValueEventEntity);
                     }
@@ -102,6 +105,11 @@ public class SendCommandTask implements Runnable{
         }
     }
 
+
+    public static void main(String[] args) {
+        DefaultCommand command=   JSON.parseObject("{\"args\":[],\"command\":\"Zmx1c2hhbGw=\",\"context\":{\"offsets\":{\"v1\":0,\"v2\":18}}}", DefaultCommand.class);
+        System.out.println(new String(command.getCommand()));
+    }
 }
 
 

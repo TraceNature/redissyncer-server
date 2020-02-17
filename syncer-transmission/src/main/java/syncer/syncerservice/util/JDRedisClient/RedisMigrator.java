@@ -3,6 +3,7 @@ package syncer.syncerservice.util.JDRedisClient;
 
 import syncer.syncerplusredis.cmd.CommandName;
 import syncer.syncerplusredis.cmd.parser.DefaultCommandParser;
+import syncer.syncerplusredis.cmd.parser.JimDbDefaultCommandParser;
 import syncer.syncerplusredis.cmd.parser.PingParser;
 import syncer.syncerplusredis.cmd.parser.ReplConfParser;
 import syncer.syncerplusredis.rdb.dump.DumpRdbVisitor;
@@ -83,6 +84,7 @@ public class RedisMigrator {
         r.addCommandParser(CommandName.name("SMOVE"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("PFADD"), new DefaultCommandParser());
 
+
 //        r.addCommandParser(CommandName.name("PFADD"), new PFAddParser());
         r.addCommandParser(CommandName.name("PFCOUNT"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("PFMERGE"), new DefaultCommandParser());
@@ -126,6 +128,9 @@ public class RedisMigrator {
         r.addCommandParser(CommandName.name("XGROUP"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("XTRIM"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("XSETID"), new DefaultCommandParser());
+
+        //jimdb解析
+        r.addCommandParser(CommandName.name("TRANSMIT"),new JimDbDefaultCommandParser());
         return r;
     }
 }

@@ -12,21 +12,21 @@ import java.net.URISyntaxException;
 @EqualsAndHashCode
 public class RedisInfo implements Serializable {
     @Getter@Setter
-    private double redisVersion;
+    private String redisVersion;
     @Getter@Setter
     private String uri;
     @Getter@Setter
     private int rdbVersion;
     private RedisURI redisURI;
 
-    public RedisInfo(double redisVersion, String uri, int rdbVersion, RedisURI redisURI) {
+    public RedisInfo(String redisVersion, String uri, int rdbVersion, RedisURI redisURI) {
         this.redisVersion = redisVersion;
         this.uri = uri;
         this.rdbVersion = rdbVersion;
         this.redisURI = redisURI;
     }
 
-    public RedisInfo(double redisVersion, String uri, int rdbVersion) {
+    public RedisInfo(String redisVersion, String uri, int rdbVersion) {
         this.redisVersion = redisVersion;
         this.uri = uri;
         this.rdbVersion = rdbVersion;

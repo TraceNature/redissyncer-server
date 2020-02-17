@@ -17,6 +17,8 @@
 package syncer.syncerplusredis.rdb.datatype;
 
 
+import lombok.Getter;
+import lombok.Setter;
 import syncer.syncerplusredis.event.AbstractEvent;
 
 import java.io.Serializable;
@@ -25,6 +27,9 @@ import java.io.Serializable;
  * @author Leon Chen
  * @since 2.1.0
  */
+
+@Getter
+@Setter
 public class KeyValuePair<K, V> extends AbstractEvent implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -38,6 +43,8 @@ public class KeyValuePair<K, V> extends AbstractEvent implements Serializable {
     protected K key;
     protected V value;
 
+    protected DataType dataType;
+    protected  Long size;
     public int getValueRdbType() {
         return valueRdbType;
     }

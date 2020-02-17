@@ -1241,8 +1241,16 @@ public class TestJedisClient implements IJedisClient {
         double version = 0.0;
         try {
             String rgex = "redis_version:(.*?)\r\n";
-            if(RegexUtil.getSubUtilSimple(info, rgex).length()>=3){
-                version = Double.parseDouble(RegexUtil.getSubUtilSimple(info, rgex).substring(0, 3));
+            String version_res=RegexUtil.getSubUtilSimple(info, rgex);
+            if(version_res.length()>=3){
+                String jimdbVersion="jimdb-4.1.15";
+                if(version_res.trim().toLowerCase().indexOf("jimdb")>=0){
+                    System.out.println(RegexUtil.getSubUtilSimple(info, rgex).substring(6, 9));
+                    version= Double.parseDouble(RegexUtil.getSubUtilSimple(info, rgex).substring(6, 9));
+                }else {
+                    version = Double.parseDouble(RegexUtil.getSubUtilSimple(info, rgex).substring(0, 3));
+                }
+
             }else {
                 version=0.0;
             }
@@ -1260,6 +1268,36 @@ public class TestJedisClient implements IJedisClient {
     }
 
 
+    public static String getRedisVersionString(String info) {
+        String version = null;
+        try {
+            String rgex = "redis_version:(.*?)\r\n";
+            String version_res=RegexUtil.getSubUtilSimple(info, rgex);
+            if(version_res.length()>=3){
+                String jimdbVersion="jimdb-4.1.15";
+                if(version_res.trim().toLowerCase().indexOf("jimdb")>=0){
+                    System.out.println("jimdb_"+RegexUtil.getSubUtilSimple(info, rgex).substring(6, 9));
+                    version="jimdb_"+RegexUtil.getSubUtilSimple(info, rgex).substring(6, 9);
+
+                }else {
+                    version = RegexUtil.getSubUtilSimple(info, rgex).substring(0, 3);
+                }
+
+            }else {
+                version="0.0";
+            }
+
+        } catch (Exception e) {
+            logger.warn("getRedisVersion.", e);
+        } finally {
+//            if(jedisClient!=null){
+//                jedisClient.close();
+//            }
+
+        }
+        return version;
+
+    }
 
 
     public  void closePool() {

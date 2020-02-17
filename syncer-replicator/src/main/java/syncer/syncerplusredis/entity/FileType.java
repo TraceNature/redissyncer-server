@@ -21,7 +21,7 @@ package syncer.syncerplusredis.entity;
  */
 public enum FileType {
     //AOF REB MIXED 分别对应 aof rdb mixed混合文件
-    AOF, RDB, MIXED,ONLINEAOF,ONLINERDB,SYNC,ONLINEMIXED;
+    AOF, RDB, MIXED,ONLINEAOF,ONLINERDB,SYNC,ONLINEMIXED,COMMANDDUMPUP;
 
     /**
      * @param type string type
@@ -43,7 +43,9 @@ public enum FileType {
             return ONLINERDB;
         } else if ("onelineaof".equalsIgnoreCase(type)) {
             return ONLINEAOF;
-        }else {
+        }else if("commanddumpup".equalsIgnoreCase(type)){
+            return COMMANDDUMPUP;
+        } else {
             return null;
         }
     }

@@ -22,6 +22,7 @@ import syncer.syncerplusredis.io.RedisInputStream;
 import syncer.syncerplusredis.rdb.BaseRdbParser;
 import syncer.syncerplusredis.rdb.DefaultRdbVisitor;
 import syncer.syncerplusredis.rdb.datatype.ContextKeyValuePair;
+import syncer.syncerplusredis.rdb.datatype.DataType;
 import syncer.syncerplusredis.rdb.datatype.KeyValuePair;
 import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.replicator.Replicator;
@@ -62,6 +63,9 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o0.setValueRdbType(RDB_TYPE_STRING);
         o0.setKey(key);
         o0.setValue(valueVisitor.applyString(in, version));
+        o0.setDataType(DataType.STRING);
+
+
         return context.valueOf(o0);
     }
 
@@ -74,6 +78,9 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o1.setValueRdbType(RDB_TYPE_LIST);
         o1.setKey(key);
         o1.setValue(valueVisitor.applyList(in, version));
+        o1.setDataType(DataType.LIST);
+
+
         return context.valueOf(o1);
     }
 
@@ -86,6 +93,9 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o2.setValueRdbType(RDB_TYPE_SET);
         o2.setKey(key);
         o2.setValue(valueVisitor.applySet(in, version));
+        o2.setDataType(DataType.SET);
+
+
         return context.valueOf(o2);
     }
 
@@ -98,6 +108,9 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o3.setValueRdbType(RDB_TYPE_ZSET);
         o3.setKey(key);
         o3.setValue(valueVisitor.applyZSet(in, version));
+        o3.setDataType(DataType.ZSET);
+
+
         return context.valueOf(o3);
     }
 
@@ -110,6 +123,9 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o5.setValueRdbType(RDB_TYPE_ZSET_2);
         o5.setKey(key);
         o5.setValue(valueVisitor.applyZSet2(in, version));
+        o5.setDataType(DataType.ZSET);
+
+
         return context.valueOf(o5);
     }
 
@@ -122,6 +138,9 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o4.setValueRdbType(RDB_TYPE_HASH);
         o4.setKey(key);
         o4.setValue(valueVisitor.applyHash(in, version));
+        o4.setDataType(DataType.HASH);
+
+
         return context.valueOf(o4);
     }
 
@@ -134,6 +153,8 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o9.setValueRdbType(RDB_TYPE_HASH_ZIPMAP);
         o9.setKey(key);
         o9.setValue(valueVisitor.applyHashZipMap(in, version));
+        o9.setDataType(DataType.HASH);
+
         return context.valueOf(o9);
     }
 
@@ -146,6 +167,8 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o10.setValueRdbType(RDB_TYPE_LIST_ZIPLIST);
         o10.setKey(key);
         o10.setValue(valueVisitor.applyListZipList(in, version));
+        o10.setDataType(DataType.LIST);
+
         return context.valueOf(o10);
     }
 
@@ -158,6 +181,8 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o11.setValueRdbType(RDB_TYPE_SET_INTSET);
         o11.setKey(key);
         o11.setValue(valueVisitor.applySetIntSet(in, version));
+        o11.setDataType(DataType.SET);
+
         return context.valueOf(o11);
     }
 
@@ -170,6 +195,8 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o12.setValueRdbType(RDB_TYPE_ZSET_ZIPLIST);
         o12.setKey(key);
         o12.setValue(valueVisitor.applyZSetZipList(in, version));
+        o12.setDataType(DataType.ZSET);
+
         return context.valueOf(o12);
     }
 
@@ -182,6 +209,9 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o13.setValueRdbType(RDB_TYPE_HASH_ZIPLIST);
         o13.setKey(key);
         o13.setValue(valueVisitor.applyHashZipList(in, version));
+        o13.setDataType(DataType.HASH);
+
+
         return context.valueOf(o13);
     }
 
@@ -194,6 +224,9 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o14.setValueRdbType(RDB_TYPE_LIST_QUICKLIST);
         o14.setKey(key);
         o14.setValue(valueVisitor.applyListQuickList(in, version));
+        o14.setDataType(DataType.LIST);
+
+
         return context.valueOf(o14);
     }
 
@@ -206,6 +239,7 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o6.setValueRdbType(RDB_TYPE_MODULE);
         o6.setKey(key);
         o6.setValue(valueVisitor.applyModule(in, version));
+        o6.setDataType(DataType.MODULE);
         return context.valueOf(o6);
     }
 
@@ -218,6 +252,8 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o7.setValueRdbType(RDB_TYPE_MODULE_2);
         o7.setKey(key);
         o7.setValue(valueVisitor.applyModule2(in, version));
+        o7.setDataType(DataType.MODULE);
+
         return context.valueOf(o7);
     }
 
@@ -230,6 +266,8 @@ public class DumpRdbVisitor extends DefaultRdbVisitor {
         o15.setValueRdbType(RDB_TYPE_STREAM_LISTPACKS);
         o15.setKey(key);
         o15.setValue(valueVisitor.applyStreamListPacks(in, version));
+        o15.setDataType(DataType.STREAM);
+
         return context.valueOf(o15);
     }
 }

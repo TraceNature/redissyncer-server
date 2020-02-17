@@ -1,5 +1,6 @@
 package syncer.syncerservice.filter;
 
+import com.alibaba.fastjson.JSON;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,6 +12,7 @@ import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.event.PostCommandSyncEvent;
 import syncer.syncerplusredis.event.PreCommandSyncEvent;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.SyncTaskUtils;
@@ -34,7 +36,10 @@ public class KeyValueCommandSyncEventFilter implements CommonFilter {
     }
 
     @Override
-    public void run(Replicator replicator, KeyValueEventEntity eventEntity) {
+    public void run(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
+        try {
+
+
         Event event=eventEntity.getEvent();
 
         //增量同步开始
@@ -89,10 +94,14 @@ public class KeyValueCommandSyncEventFilter implements CommonFilter {
 
         //继续执行下一Filter节点
         toNext(replicator,eventEntity);
+
+        }catch (Exception e){
+            throw new FilterNodeException(e.getMessage()+"->KeyValueCommandSyncEventFilter",e.getCause());
+        }
     }
 
     @Override
-    public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) {
+    public void toNext(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
         if(null!=next) {
             next.run(replicator,eventEntity);
         }

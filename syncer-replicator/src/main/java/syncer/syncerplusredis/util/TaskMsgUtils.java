@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.util.StringUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +56,18 @@ public class TaskMsgUtils {
 
     }
 
+
+    public synchronized static void addFileAliveThread(String threadId,ThreadMsgEntity threadMsgEntity) throws TaskMsgException {
+        if(checkFileThreadMsg(threadMsgEntity)){
+//            throw new TaskMsgException("相同配置任务已存在，请修改任务名");
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR));
+        }
+        if(!aliveThreadHashMap.containsKey(threadId)){
+            aliveThreadHashMap.put(threadId,threadMsgEntity);
+        }
+
+    }
+
     /**
      * 检查信息
      * @param threadMsgEntity
@@ -72,7 +85,37 @@ public class TaskMsgUtils {
     }
 
 
+    public synchronized  static  boolean checkFileThreadMsg(ThreadMsgEntity threadMsgEntity){
+        AtomicBoolean status= new AtomicBoolean(false);
+        TaskMsgUtils.aliveThreadHashMap.entrySet().forEach(alive->{
 
+            if(null!=alive.getValue().getRedisClusterDto().getFileAddress()){
+                String fileAddress= new File(alive.getValue().getRedisClusterDto().getFileAddress()).getParent();
+                String fileAddressFromEntity= new File(threadMsgEntity.getRedisClusterDto().getFileAddress()).getParent();
+
+
+                if(fileAddress.equalsIgnoreCase(fileAddressFromEntity)
+                        &&
+                        alive.getValue().getRedisClusterDto().getSourceRedisAddress().equalsIgnoreCase(threadMsgEntity.getRedisClusterDto().getSourceRedisAddress())
+                        &&
+                        alive.getValue().getRedisClusterDto().getSourcePassword().equals(threadMsgEntity.getRedisClusterDto().getSourcePassword())
+                        &&
+                        alive.getValue().getRedisClusterDto().getTaskName().equalsIgnoreCase(threadMsgEntity.getRedisClusterDto().getTaskName())
+
+                ){
+                    status.set(true);
+                    return;
+                }
+
+                if(alive.getValue().getRedisClusterDto().equals(threadMsgEntity.getRedisClusterDto())){
+                    status.set(true);
+                    return;
+                }
+            }
+
+        });
+        return status.get();
+    }
 
 
 
