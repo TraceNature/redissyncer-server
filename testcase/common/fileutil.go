@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
@@ -19,6 +20,11 @@ func AppendLineToFile(line bytes.Buffer, filename string) {
 	w := bufio.NewWriter(f)
 	fmt.Fprintln(w, line.String())
 	w.Flush()
+}
+
+func WriteFile(content []byte) error {
+	err := ioutil.WriteFile("output.txt", content, 0666)
+	return err
 }
 
 // Exists 用于判断所给路径文件或文件夹是否存在
