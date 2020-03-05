@@ -36,11 +36,13 @@ java -Xms4096m -Xmx4096m -jar ${jarpath}/${jarname}  \
 
 proc=`jps | grep ${jarname} `
 
+sleep 2
+
 if  [ "" = "${proc}" ] ;then
     echo "${jarname} start failure!"
 else
     echo "${jarname} start success!"
-    echo `jps -lvm|grep ${procnum}`
+    echo `jps -lvm|grep ${proc}`
 fi
 
 exit 0
