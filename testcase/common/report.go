@@ -2,7 +2,6 @@ package common
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"testcase/global"

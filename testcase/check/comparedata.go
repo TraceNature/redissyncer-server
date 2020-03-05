@@ -2,7 +2,7 @@ package check
 
 import (
 	"github.com/go-redis/redis/v7"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"testcase/global"
 )
 
@@ -10,7 +10,6 @@ var logger = global.GetInstance()
 
 func Comparedata(sourceclient *redis.Client, targetclient *redis.Client) (failkeys map[string]interface{}) {
 	cursor := uint64(0)
-	logger.SetFormatter(&log.JSONFormatter{})
 	logger.Info("Compare data begin")
 	failkeys = make(map[string]interface{})
 	for {
@@ -21,7 +20,7 @@ func Comparedata(sourceclient *redis.Client, targetclient *redis.Client) (failke
 			case keytype == "string":
 				compareresult := comparestring(v, sourceclient, targetclient)
 				if compareresult == false {
-					logger.WithFields(log.Fields{
+					logger.WithFields(logrus.Fields{
 						"key":            v,
 						"type":           "string",
 						"compare_result": compareresult,
@@ -31,7 +30,7 @@ func Comparedata(sourceclient *redis.Client, targetclient *redis.Client) (failke
 			case keytype == "list":
 				compareresult := comparelist(v, sourceclient, targetclient)
 				if compareresult == false {
-					logger.WithFields(log.Fields{
+					logger.WithFields(logrus.Fields{
 						"key":            v,
 						"type":           "list",
 						"compare_result": compareresult,
@@ -41,7 +40,7 @@ func Comparedata(sourceclient *redis.Client, targetclient *redis.Client) (failke
 			case keytype == "set":
 				compareresult := compareset(v, sourceclient, targetclient)
 				if compareresult == false {
-					logger.WithFields(log.Fields{
+					logger.WithFields(logrus.Fields{
 						"key":            v,
 						"type":           "set",
 						"compare_result": result,
@@ -51,7 +50,7 @@ func Comparedata(sourceclient *redis.Client, targetclient *redis.Client) (failke
 			case keytype == "zset":
 				compareresult := comparezset(v, sourceclient, targetclient)
 				if compareresult == false {
-					logger.WithFields(log.Fields{
+					logger.WithFields(logrus.Fields{
 						"key":            v,
 						"type":           "zset",
 						"compare_result": compareresult,
@@ -61,7 +60,7 @@ func Comparedata(sourceclient *redis.Client, targetclient *redis.Client) (failke
 			case keytype == "hash":
 				compareresult := comparehset(v, sourceclient, targetclient)
 				if compareresult == false {
-					logger.WithFields(log.Fields{
+					logger.WithFields(logrus.Fields{
 						"key":            v,
 						"type":           "hash",
 						"compare_result": compareresult,

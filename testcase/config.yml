@@ -1,1 +1,2 @@
 syncserver: "http://114.67.81.232:8080"
+#logjsonformat: "true"

@@ -43,6 +43,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("testall called")
+
 		report := &common.Report{ReportContent: make(map[string]interface{})}
 		//解析创建任务文件
 		execfile, _ := cmd.Flags().GetString("createjson")
@@ -127,7 +128,6 @@ to quickly create a Cobra application.`,
 			taskidsstrarray = append(taskidsstrarray, v.String())
 		}
 
-		fmt.Println(taskidsstrarray)
 		//校验任务是否启动，若没有启动则启动任务
 		taskerrors := gjson.Get(resp, "data.errors").Array()
 		if len(taskerrors) != 0 {
@@ -169,15 +169,6 @@ to quickly create a Cobra application.`,
 			report.ReportContent["FailKeys"] = failkeys
 			report.JsonToFile()
 		}
-
-		//req := &synctaskhandle.Request{
-		//	Server: viper.GetViper().GetString("syncserver"),
-		//	Api:    synctaskhandle.ListTasksPath,
-		//	Body:   string(byteValue),
-		//}
-		//resp := req.ExecRequest()
-		//fmt.Println(viper.GetViper().GetString("syncserver"))
-		//fmt.Println(resp)
 
 	},
 }

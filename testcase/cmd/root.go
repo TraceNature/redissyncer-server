@@ -132,10 +132,8 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/config.yml)")
 	rootCmd.MarkFlagRequired("config")
-
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
@@ -155,6 +153,9 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		logger.Println("Using config file:", viper.ConfigFileUsed())
+		if viper.GetViper().GetBool("logjsonformat") {
+			logger.SetFormatter(&logrus.JSONFormatter{})
+		}
 	} else {
 		logger.Println(err)
 		os.Exit(1)
