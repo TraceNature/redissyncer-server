@@ -14,4 +14,5 @@ public class ListTaskMsgDto {
     private List<String> tasknames;
     private String taskstatus;
     private List<String> taskids;
+    private String groupId;
 }

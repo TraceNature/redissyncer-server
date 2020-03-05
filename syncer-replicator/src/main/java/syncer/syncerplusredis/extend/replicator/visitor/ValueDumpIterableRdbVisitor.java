@@ -1,6 +1,5 @@
 package syncer.syncerplusredis.extend.replicator.visitor;
 
-import com.alibaba.fastjson.JSON;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.io.RedisInputStream;
 import syncer.syncerplusredis.rdb.BaseRdbParser;
@@ -11,9 +10,7 @@ import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueByteArrayIterator;
 import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueMapEntryIterator;
 import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueZSetEntryIterator;
-import syncer.syncerplusredis.rdb.skip.SkipRdbParser;
 import syncer.syncerplusredis.replicator.Replicator;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
@@ -54,6 +51,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o1.setValue(valueVisitor.applyList(in, version));
         o1.setDataType(DataType.LIST);
 
+//        o1.setSize(parser.rdbLoadLen().len);
 
         return context.valueOf(o1);
     }
@@ -70,6 +68,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o2.setDataType(DataType.SET);
 
 //        o2.setSize(parser.rdbLoadLen().len);
+
         return context.valueOf(o2);
     }
 
@@ -84,7 +83,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o3.setValue(valueVisitor.applyZSet(in, version));
         o3.setDataType(DataType.ZSET);
 
-//        o3.setSize(parser.rdbLoadLen().len);
+        //    o3.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o3);
     }
 
@@ -99,7 +98,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o5.setValue(valueVisitor.applyZSet2(in, version));
         o5.setDataType(DataType.ZSET);
 
-//        o5.setSize(parser.rdbLoadLen().len);
+        //    o5.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o5);
     }
 
@@ -114,7 +113,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o4.setValue(valueVisitor.applyHash(in, version));
         o4.setDataType(DataType.HASH);
 
-//        o4.setSize(parser.rdbLoadLen().len);
+        //     o4.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o4);
     }
 
@@ -128,7 +127,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o9.setKey(key);
         o9.setValue(valueVisitor.applyHashZipMap(in, version));
         o9.setDataType(DataType.HASH);
-//        o9.setSize(parser.rdbLoadLen().len);
+        //      o9.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o9);
     }
 
@@ -143,7 +142,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o10.setValue(valueVisitor.applyListZipList(in, version));
         o10.setDataType(DataType.LIST);
 
-//        o10.setSize(parser.rdbLoadLen().len);
+        //   o10.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o10);
     }
 
@@ -158,7 +157,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o11.setValue(valueVisitor.applySetIntSet(in, version));
         o11.setDataType(DataType.SET);
 
-//        o11.setSize(parser.rdbLoadLen().len);
+        //  o11.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o11);
     }
 
@@ -173,7 +172,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o12.setValue(valueVisitor.applyZSetZipList(in, version));
         o12.setDataType(DataType.ZSET);
 
-//        o12.setSize(parser.rdbLoadLen().len);
+        //  o12.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o12);
     }
 
@@ -188,7 +187,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o13.setValue(valueVisitor.applyHashZipList(in, version));
         o13.setDataType(DataType.HASH);
 
-//        o13.setSize(parser.rdbLoadLen().len);
+        //    o13.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o13);
     }
 
@@ -203,7 +202,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o14.setValue(valueVisitor.applyListQuickList(in, version));
         o14.setDataType(DataType.LIST);
 
-//        o14.setSize(parser.rdbLoadLen().len);
+        // o14.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o14);
     }
 
@@ -228,7 +227,8 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o0.setValue(valueVisitor.applyString(in, version));
         o0.setDataType(DataType.STRING);
 //        System.out.println("++"+parser.rdbLoadLen().len);
-//        o0.setSize(Long.valueOf(o0.getValue().length+key.length));
+        //      o0.setSize(Long.valueOf(o0.getValue().length+key.length));
+
         return context.valueOf(o0);
     }
 
@@ -243,7 +243,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o6.setValue(valueVisitor.applyModule(in, version));
         o6.setDataType(DataType.MODULE);
 
-//        o6.setSize(parser.rdbLoadLen().len);
+   //     o6.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o6);
     }
 
@@ -258,7 +258,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o7.setValue(valueVisitor.applyModule2(in, version));
         o7.setDataType(DataType.MODULE);
 
-//        o7.setSize(parser.rdbLoadLen().len);
+        //     o7.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o7);
     }
 
@@ -272,7 +272,7 @@ public class ValueDumpIterableRdbVisitor  extends DefaultRdbVisitor {
         o15.setKey(key);
         o15.setValue(valueVisitor.applyStreamListPacks(in, version));
         o15.setDataType(DataType.STREAM);
-//        o15.setSize(parser.rdbLoadLen().len);
+        //  o15.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o15);
     }
 

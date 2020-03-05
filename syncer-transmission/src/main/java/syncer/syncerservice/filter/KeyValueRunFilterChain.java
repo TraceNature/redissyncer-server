@@ -10,6 +10,9 @@ import java.util.List;
 
 @Builder
 @Getter@Setter
+/**
+ * 责任链模式
+ */
 public class KeyValueRunFilterChain {
 
 

@@ -27,6 +27,7 @@ import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 import syncer.syncerservice.compensator.ISyncerCompensator;
 import syncer.syncerservice.compensator.ISyncerCompensatorFactory;
+import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.filter.*;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
@@ -97,7 +98,7 @@ public class RedisDataTransmissionTask implements Runnable {
             final Replicator r = RedisMigrator.newBacthedCommandDress(replicator);
             TaskMsgUtils.getThreadMsgEntity(taskId).addReplicator(r);
 
-            System.out.println("bigKeySize:"+bigKeySize);
+
             r.setRdbVisitor(new ValueDumpIterableRdbVisitor(r, info.getRdbVersion(),bigKeySize));
 
             OffSetEntity offset = TaskMsgUtils.getThreadMsgEntity(taskId).getOffsetMap().get(sourceUri);
@@ -121,6 +122,7 @@ public class RedisDataTransmissionTask implements Runnable {
             if (TaskRunTypeEnum.valueOf(type.trim().toUpperCase()).equals(TaskRunTypeEnum.INCREMENTONLY)) {
 
                 String[] data = RedisUrlCheckUtils.selectSyncerBuffer(sourceUri, offsetPlace);
+                System.out.println("offsetAllNum"+Long.parseLong(data[0]));
                 System.out.println(JSON.toJSONString(data));
 
                 long offsetNum = 0L;
@@ -192,7 +194,11 @@ public class RedisDataTransmissionTask implements Runnable {
 
 
                     //多队列接入
-//                    multiQueueFilter.run(r,node);
+//                    try {
+//                        multiQueueFilter.run(r,node);
+//                    } catch (FilterNodeException e) {
+//
+//                    }
 
                     sendCommandWithOutQueue.run(node);
 
@@ -225,15 +231,23 @@ public class RedisDataTransmissionTask implements Runnable {
     public void assemble_the_list(List<CommonFilter> commonFilterList, String type, String taskId, RedisSyncDataDto syncDataDto, JDRedisClient client) {
         //全量
         if (TaskRunTypeEnum.valueOf(type.trim().toUpperCase()).equals(TaskRunTypeEnum.STOCKONLY)) {
+
             commonFilterList.add(KeyValueTimeCalculationFilter.builder().taskId(taskId).client(client).build());
             commonFilterList.add(KeyValueDataAnalysisFilter.builder().taskId(taskId).client(client).build());
             commonFilterList.add(KeyValueEventDBMappingFilter.builder().taskId(taskId).client(client).build());
+
+//            commonFilterList.add(KeyValueSizeCalulationFilter.builder().taskId(taskId).client(client).build());
+
             commonFilterList.add(KeyValueRdbSyncEventFilter.builder().taskId(taskId).client(client).redisVersion(syncDataDto.getRedisVersion()).build());
         }
 
         //增量
         if (TaskRunTypeEnum.valueOf(type.trim().toUpperCase()).equals(TaskRunTypeEnum.INCREMENTONLY)) {
+
             commonFilterList.add(KeyValueEventDBMappingFilter.builder().taskId(taskId).client(client).build());
+
+//            commonFilterList.add(KeyValueSizeCalulationFilter.builder().taskId(taskId).client(client).build());
+
             commonFilterList.add(KeyValueCommandSyncEventFilter.builder().taskId(taskId).client(client).build());
         }
 
@@ -243,6 +257,9 @@ public class RedisDataTransmissionTask implements Runnable {
             commonFilterList.add(KeyValueTimeCalculationFilter.builder().taskId(taskId).client(client).build());
             commonFilterList.add(KeyValueDataAnalysisFilter.builder().taskId(taskId).client(client).build());
             commonFilterList.add(KeyValueEventDBMappingFilter.builder().taskId(taskId).client(client).build());
+
+//            commonFilterList.add(KeyValueSizeCalulationFilter.builder().taskId(taskId).client(client).build());
+
             commonFilterList.add(KeyValueRdbSyncEventFilter.builder().taskId(taskId).client(client).redisVersion(syncDataDto.getRedisVersion()).build());
             commonFilterList.add(KeyValueCommandSyncEventFilter.builder().taskId(taskId).client(client).build());
         }

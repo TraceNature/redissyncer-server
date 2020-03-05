@@ -53,6 +53,32 @@
         </dependency>
 
 
+        <!--系统使用率导包开始-->
+        <dependency>  <!--工具类 小数格式化 可以改为其他-->
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>4.0.9</version>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>4.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>4.5.0</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.github.oshi/oshi-json -->
+        <dependency>
+            <groupId>com.github.oshi</groupId>
+            <artifactId>oshi-json</artifactId>
+            <version>3.6.1</version>
+        </dependency>
+        <!--系统使用率导包结束-->
+
+
 <!--        <dependency>-->
 <!--            <groupId>org.apache.logging.log4j</groupId>-->
 <!--            <artifactId>log4j-core</artifactId>-->

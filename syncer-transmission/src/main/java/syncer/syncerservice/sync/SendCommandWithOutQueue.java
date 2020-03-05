@@ -48,6 +48,7 @@ public class SendCommandWithOutQueue {
                 }
 
             }catch (Exception e){
+
                 System.out.println(keyValueEventEntity.getEvent().getClass());
                 Event event=keyValueEventEntity.getEvent();
                 String keyName=null;
@@ -66,7 +67,7 @@ public class SendCommandWithOutQueue {
                     keyName=Strings.toString(batchedKeyValuePair.getKey());
                 }
 
-
+                e.printStackTrace();
                 log.warn("[{}]抛弃key:{} ,class:[{}]:原因[{}]",taskId, keyName,event.getClass().toString(),e.getMessage());
             }
 

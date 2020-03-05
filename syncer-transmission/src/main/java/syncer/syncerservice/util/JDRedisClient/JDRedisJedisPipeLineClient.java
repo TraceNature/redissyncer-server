@@ -736,7 +736,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
             if (num>= count) {
 //                System.out.println("提交："+num);
                 List<Object> resultList = pipelined.syncAndReturnAll();
-                System.out.println(resultList.size()+":内存： "+kvPersistence.size());
+//                System.out.println(resultList.size()+":内存： "+kvPersistence.size());
 
                 Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
                     Object data = resultList.get(index);
@@ -1016,7 +1016,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                  List<Object> resultList = pipelined.syncAndReturnAll();
 
 
-                 System.out.println(resultList.size()+":内存： "+kvPersistence.size());
+//                 System.out.println(resultList.size()+":内存： "+kvPersistence.size());
 
 
                  Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
@@ -1060,7 +1060,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                  });
 
                  kvPersistence.clear();
-                 log.info("[{}]PING->{}",taskId, r.get());
+//                 log.info("[{}]PING->{}",taskId, r.get());
                  date = new Date();
                  commandNums.set(0);
                  time = System.currentTimeMillis() - date.getTime();

@@ -59,7 +59,9 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
 
         if(redisFileDataDto.getFileAddress().indexOf(";")>0){
             addressList= Arrays.asList(redisFileDataDto.getFileAddress().split(";"));
-        }else {
+        } else if(redisFileDataDto.getFileAddress().startsWith("http://")||redisFileDataDto.getFileAddress().startsWith("https://")){
+            addressList.add(redisFileDataDto.getFileAddress());
+        }  else {
             File file=new File(redisFileDataDto.getFileAddress());
             if(file.isDirectory()){
                 addressList= FileUtils.getFiles(redisFileDataDto.getFileAddress());
@@ -67,6 +69,8 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
                 addressList.add(redisFileDataDto.getFileAddress());
             }
         }
+
+
         for (String fileAdress:addressList
              ) {
 
@@ -98,8 +102,6 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
 
 
         }
-
-
 
         HashMap msg=new HashMap(10);
         msg.put("taskids",taskIdList);
@@ -349,6 +351,7 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
             }
 
         }catch (TaskMsgException ex){
+            msgEntity.setStatus(ThreadStatusEnum.BROKEN);
             throw ex;
         }
 
@@ -362,7 +365,10 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
     public ResultMap createRedisToRedisTask(RedisClusterDto redisClusterDto) throws TaskMsgException {
 
         List<RedisClusterDto> redisClusterDtoList=TaskCheckUtils.loadingRedisClusterDto(redisClusterDto);
+
+
         List<String>taskIdList=new ArrayList<>();
+
         List<String>errorList=new ArrayList<>();
 
         for (RedisClusterDto dto:redisClusterDtoList
@@ -391,6 +397,8 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
         msg.put("taskids",taskIdList);
         msg.put("errors",errorList);
         return  ResultMap.builder().code("2000").msg("Task created successfully").data(msg);
+
+
     }
 
 
@@ -399,8 +407,6 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
      * 创建单个任务
      */
     public String createSingleRedisToRedisTask(RedisClusterDto dto) throws TaskMsgException{
-
-
 
         dto= (RedisClusterDto) TaskCheckUtils.ckeckRedisClusterDto(dto,redisPoolProps);
 
@@ -420,11 +426,12 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
 
         try {
             TaskMsgUtils.addAliveThread(threadId, msgEntity);
-
         } catch (Exception e){
+            msgEntity.setStatus(ThreadStatusEnum.BROKEN);
             try {
                 Map<String, String> msg = SyncTaskUtils.brokenCreateThread(Arrays.asList(threadId), e.getMessage());
             } catch (TaskMsgException ex) {
+
                 log.warn("任务Id【{}】任务创建失败 ，失败原因【{}】", threadId, e.getMessage());
                 ex.printStackTrace();
             }

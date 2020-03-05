@@ -7,6 +7,7 @@ import lombok.Setter;
 import syncer.syncerplusredis.constant.TaskRunTypeEnum;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.entity.FileType;
+import syncer.syncerplusredis.entity.RedisPoolProps;
 import syncer.syncerplusredis.entity.thread.OffSetEntity;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerservice.compensator.ISyncerCompensator;
@@ -71,6 +72,16 @@ public class KeyValueEventEntity implements Serializable {
      */
     private FileType fileType=FileType.SYNC;
 
+    /**
+     * 补偿机制
+     */
     private ISyncerCompensator iSyncerCompensator;
+
+    /**
+     * 批次总大小
+     */
+    private KeyValueSizeEntity keyValueSizeEntity;
+
+
 
 }
