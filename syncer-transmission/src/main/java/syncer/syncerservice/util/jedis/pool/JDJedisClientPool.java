@@ -1259,7 +1259,6 @@ public class JDJedisClientPool{
         try {
             jedis = getResource();
             Set<String> keysList = jedis.keys(key + "*");
-            System.out.println(keysList);
 
             if (keysList.size() > 0) {
                 String[] keys = new String[keysList.size()];
@@ -1431,11 +1430,6 @@ public class JDJedisClientPool{
 
             String[] allkeys = allKeys.toArray(new String[allKeys.size()]);
 
-            for (String str : allkeys) {
-
-                System.out.println(str);
-
-            }
 
             if (allKeys.size() > 0) {
                 jedis.del(allkeys);

@@ -8,10 +8,9 @@ import syncer.syncerplusredis.entity.dto.RedisClusterDto;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.exception.TaskRestoreException;
 import syncer.syncerplusredis.util.code.CodeUtils;
-import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.pool.RedisClient;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
-import syncer.syncerservice.util.RedisUrlCheckUtils;
+
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,7 +38,8 @@ public class RedisStartCheckRedisUrlStrategy implements IRedisStartCheckBaseStra
         RedisClusterDto clusterDto=eventEntity.getClusterDto();
 
         if(type.equals(RedisStartCheckTypeEnum.SINGLE_REDIS_TO_SINGLE_REDIS)
-                ||type.equals(RedisStartCheckTypeEnum.SINGLE_REDIS_TO_CLUSTER)){
+                ||type.equals(RedisStartCheckTypeEnum.SINGLE_REDIS_TO_CLUSTER)
+                ||type.equals(RedisStartCheckTypeEnum.SINGLE_REDIS_TO_FILE)){
 
             Set<String> sourceRedisUris = clusterDto.getSourceUris();
 
@@ -52,7 +52,13 @@ public class RedisStartCheckRedisUrlStrategy implements IRedisStartCheckBaseStra
             clusterDto.setSourceUris(clusterDto.getFileUris());
         }
 
-        Set<String> targetRedisUris = clusterDto.getTargetUris();
+
+        if(!type.equals(RedisStartCheckTypeEnum.SINGLE_REDIS_TO_FILE)){
+            Set<String> targetRedisUris = clusterDto.getTargetUris();
+            for (String targetUri : targetRedisUris) {
+                checkRedisUrl(targetUri, "targetUri : " + targetUri);
+            }
+        }
 
 
         /**
@@ -63,11 +69,6 @@ public class RedisStartCheckRedisUrlStrategy implements IRedisStartCheckBaseStra
 //            } catch (URISyntaxException e) {
 //                throw new TaskMsgException(e.getMessage());
 //          }
-
-
-        for (String targetUri : targetRedisUris) {
-            checkRedisUrl(targetUri, "targetUri : " + targetUri);
-        }
 
 
         //下一节点

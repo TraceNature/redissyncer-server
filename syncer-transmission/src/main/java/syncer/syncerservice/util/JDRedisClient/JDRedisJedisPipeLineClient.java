@@ -743,7 +743,6 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                     if(!compensatorUtils.isObjectSuccess(data)){
 
                         compensator(kvPersistence.getKey(index));
-                        System.out.println(compensatorUtils.getRes(data));
 
 
                     }
@@ -905,7 +904,8 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
 
         }catch (Exception e){
-            log.warn("key[{}]同步失败被抛弃",eventEntity.getStringKey());
+            log.warn("key[{}]同步失败被抛弃,原因：[{}]",eventEntity.getStringKey(),e.getMessage());
+//            log.warn("key[{}]同步失败被抛弃",eventEntity.getStringKey());
 
         }finally {
             if(null!=client){
@@ -991,7 +991,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
 
         }catch (Exception e){
-            log.warn("key[{}]同步失败被抛弃",eventEntity.getStringKey());
+            log.warn("key[{}]同步失败被抛弃,原因：[{}]",eventEntity.getStringKey(),e.getMessage());
 
         }finally {
             if(null!=client){
@@ -1024,7 +1024,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                      if(!compensatorUtils.isObjectSuccess(data)){
 
                          compensator(kvPersistence.getKey(index));
-                         System.out.println("---------------补偿"+data);
+                         System.out.println("补偿机制："+data);
 
 
 
@@ -1051,7 +1051,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                      Object data = resultList.get(index);
                      if(!compensatorUtils.isObjectSuccess(data)){
 
-                         System.out.println("---------------补偿"+data);
+                         System.out.println("补偿机制："+data);
                          compensator(kvPersistence.getKey(index));
                          System.out.println(compensatorUtils.getRes(data));
 
@@ -1073,7 +1073,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                  Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
                      Object data = resultList.get(index);
                      if(!compensatorUtils.isObjectSuccess(data)){
-                         System.out.println("---------------补偿"+data);
+                         System.out.println("补偿机制："+data);
                          compensator(kvPersistence.getKey(index));
                          System.out.println(compensatorUtils.getRes(data));
 

@@ -198,7 +198,6 @@ public class TaskCheckUtils {
                     String remsg=client.clusterNodes();
                     //\w+\s+(.*?)@(.*?)master -
                     List<List<String>>redisDataList= RegexUtil.getSubListUtil(remsg,"\\w+\\s+(.*?)master -",1);
-                    System.out.println(JSON.toJSONString(redisDataList));
                     String[]resdata=new String[redisDataList.size()];
                     for (int i = 0; i <redisDataList.size() ; i++) {
                         List<String>oneData=redisDataList.get(i);

@@ -11,6 +11,7 @@ public class JDRedisClientFactory {
         switch (branchTypeEnum) {
             case SINGLE:
                 redisClient = new JDRedisJedisPipeLineClient(host,port,password,count,taskId);
+//                redisClient = new JDRedisJedisClient(host,port,password);
                 break;
             case CLUSTER:
                 redisClient = new JDRedisJedisClusterClient(host,password,taskId);

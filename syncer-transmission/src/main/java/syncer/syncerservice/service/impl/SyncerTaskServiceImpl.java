@@ -164,7 +164,6 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
         redisClusterDto.setTargetUriData(redisFileDataDto.getTargetUriData());
         redisClusterDto.setTargetUris(redisFileDataDto.getTargetUris());
 
-        System.out.println(JSON.toJSONString(redisClusterDto.getTargetUris()));
         try{
 
             String threadName=redisFileDataDto.getTaskName();
@@ -441,8 +440,15 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
 
 
         if(dto.isAutostart()){
-            redisBatchedSyncerService.batchedSync(dto,threadId,dto.isAfresh());
-            msgEntity.setStatus(ThreadStatusEnum.RUN);
+            try{
+                redisBatchedSyncerService.batchedSync(dto,threadId,dto.isAfresh());
+                msgEntity.setStatus(ThreadStatusEnum.RUN);
+            }catch (Exception e){
+                msgEntity.setStatus(ThreadStatusEnum.BROKEN);
+                log.warn("任务Id【{}】任务启动失败 ，失败原因【{}】", threadId, e.getMessage());
+                e.printStackTrace();
+            }
+
         }else {
             msgEntity.getRedisClusterDto().setAfresh(true);
         }

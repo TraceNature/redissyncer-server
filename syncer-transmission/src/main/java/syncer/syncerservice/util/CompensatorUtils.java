@@ -56,7 +56,7 @@ public class CompensatorUtils {
         }else if(res instanceof byte[]){
             return isByteSuccess((byte[]) res);
         }
-        System.out.println(res.getClass());
+
         return false;
     }
 

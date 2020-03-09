@@ -59,6 +59,7 @@ public class RedisStartTaskTypeStrategy implements IRedisStartCheckBaseStrategy 
 
         }
 
+        toNext(client,eventEntity,redisPoolProps);
 
     }
 

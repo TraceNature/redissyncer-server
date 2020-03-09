@@ -138,20 +138,20 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
                 analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM,1L);
             }
 
-            if(analysisMap.containsKey(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM)){
-                analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM,analysisMap.get(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM)+1);
-            }else {
-                analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM,1L);
-            }
+//            if(analysisMap.containsKey(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM)){
+//                analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM,analysisMap.get(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM)+1);
+//            }else {
+//                analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM,1L);
+//            }
 
 
 
             if(analysisMap.containsKey(RedisDataTypeAnalysisConstant.KEY_VALUE_SUM)){
-                if(!dataType.equals(DataType.FRAGMENTATION)){
+                if(!dataType.equals(DataType.FRAGMENTATION)&&!dataType.equals(DataType.FRAGMENTATION_NUM)){
                     analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_SUM,analysisMap.get(RedisDataTypeAnalysisConstant.KEY_VALUE_SUM)+1);
                 }
             }else {
-                if(!dataType.equals(DataType.FRAGMENTATION)){
+                if(!dataType.equals(DataType.FRAGMENTATION)&&!dataType.equals(DataType.FRAGMENTATION_NUM)){
                     analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_SUM,1L);
                 }
 

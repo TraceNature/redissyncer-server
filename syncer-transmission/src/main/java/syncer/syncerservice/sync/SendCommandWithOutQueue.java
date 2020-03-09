@@ -48,8 +48,6 @@ public class SendCommandWithOutQueue {
                 }
 
             }catch (Exception e){
-
-                System.out.println(keyValueEventEntity.getEvent().getClass());
                 Event event=keyValueEventEntity.getEvent();
                 String keyName=null;
                 if(event instanceof DefaultCommand){

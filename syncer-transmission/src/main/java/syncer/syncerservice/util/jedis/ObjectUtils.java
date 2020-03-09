@@ -109,7 +109,6 @@ public class ObjectUtils {
             ois.close();
             bis.close();
         } catch (Exception ex) {
-            System.out.println("-----------------------");
            return null;
         }
         return obj;

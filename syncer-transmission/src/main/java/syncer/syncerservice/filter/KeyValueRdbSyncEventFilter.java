@@ -65,7 +65,7 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
         ISyncerCompensator iSyncerCompensator=eventEntity.getISyncerCompensator();
 
         if (event instanceof PreRdbSyncEvent) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日 HH时mm分ss秒");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 
             log.warn("taskId为[{}]的全量数据到达同步程序同步开始..，当前时间：{}",taskId,sdf.format(new Date()));

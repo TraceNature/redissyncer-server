@@ -92,7 +92,6 @@ public class IRedisBatchedSyncerServiceImpl implements IRedisSyncerService {
      * @param afresh
      */
     private void batchedSyncToCluster(RedisClusterDto clusterDto, String taskId, boolean afresh) throws TaskMsgException {
-        System.out.println("-----------------batchedSyncToCluster");
 
         Set<String> targetRedisUris = clusterDto.getTargetUris();
         Set<String> sourceRedisUris =null;

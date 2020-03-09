@@ -1,5 +1,6 @@
 package syncer.syncerservice.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.StringUtils;
 import syncer.syncerplusredis.constant.TaskMsgConstant;
@@ -17,7 +18,7 @@ import syncer.syncerservice.service.IRedisSyncerService;
 
 import java.io.IOException;
 import java.util.*;
-
+@Slf4j
 public class SyncTaskUtils {
 
     /**
@@ -53,18 +54,27 @@ public class SyncTaskUtils {
         if(!StringUtils.isEmpty(taskId)){
 
             if(null!=entity){
-                if(entity.getRedisClusterDto().getFileType().equals(FileType.ONLINERDB)||entity.getRedisClusterDto().getFileType().equals(FileType.ONLINEAOF)
-                        ||entity.getRedisClusterDto().getFileType().equals(FileType.AOF)||entity.getRedisClusterDto().getFileType().equals(FileType.RDB)){
-                    redisBatchedReplicatorService.filebatchedSync(entity.getRedisClusterDto(),taskId);
-                }else if(entity.getRedisClusterDto().getFileType().equals(FileType.COMMANDDUMPUP)){
-                    redisBatchedReplicatorService.fileCommandBackUpSync(entity.getRedisClusterDto(),taskId);
-                }else {
-                    redisBatchedReplicatorService.batchedSync(entity.getRedisClusterDto(),taskId,afresh);
+
+                try{
+                    if(entity.getRedisClusterDto().getFileType().equals(FileType.ONLINERDB)||entity.getRedisClusterDto().getFileType().equals(FileType.ONLINEAOF)
+                            ||entity.getRedisClusterDto().getFileType().equals(FileType.AOF)||entity.getRedisClusterDto().getFileType().equals(FileType.RDB)){
+                        redisBatchedReplicatorService.filebatchedSync(entity.getRedisClusterDto(),taskId);
+                    }else if(entity.getRedisClusterDto().getFileType().equals(FileType.COMMANDDUMPUP)){
+                        redisBatchedReplicatorService.fileCommandBackUpSync(entity.getRedisClusterDto(),taskId);
+                    }else {
+                        redisBatchedReplicatorService.batchedSync(entity.getRedisClusterDto(),taskId,afresh);
+                    }
+
+                    entity.setStatus(ThreadStatusEnum.RUN);
+                    TaskMsgUtils.getAliveThreadHashMap().put(taskId,entity);
+                    taskMap.put(taskId,"Task started successfully");
+                }catch (Exception e){
+                    entity.setStatus(ThreadStatusEnum.BROKEN);
+                    log.warn("任务Id【{}】任务启动失败 ，失败原因【{}】", taskId, e.getMessage());
+                    e.printStackTrace();
+
                 }
 
-                entity.setStatus(ThreadStatusEnum.RUN);
-                TaskMsgUtils.getAliveThreadHashMap().put(taskId,entity);
-                taskMap.put(taskId,"Task started successfully");
             }else {
                 taskMap.put(taskId,"The task does not exist. Please create the task first");
             }

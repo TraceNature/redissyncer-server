@@ -1030,7 +1030,6 @@ public class TestJedisClient implements IJedisClient {
         try {
             jedis = getResource();
             Set<String> keysList = jedis.keys(key + "*");
-            System.out.println(keysList);
 
             if (keysList.size() > 0) {
                 String[] keys = new String[keysList.size()];
@@ -1202,12 +1201,6 @@ public class TestJedisClient implements IJedisClient {
 
             String[] allkeys = allKeys.toArray(new String[allKeys.size()]);
 
-            for (String str : allkeys) {
-
-                System.out.println(str);
-
-            }
-
             if (allKeys.size() > 0) {
                 jedis.del(allkeys);
             }
@@ -1245,7 +1238,7 @@ public class TestJedisClient implements IJedisClient {
             if(version_res.length()>=3){
                 String jimdbVersion="jimdb-4.1.15";
                 if(version_res.trim().toLowerCase().indexOf("jimdb")>=0){
-                    System.out.println(RegexUtil.getSubUtilSimple(info, rgex).substring(6, 9));
+//                    System.out.println(RegexUtil.getSubUtilSimple(info, rgex).substring(6, 9));
                     version= Double.parseDouble(RegexUtil.getSubUtilSimple(info, rgex).substring(6, 9));
                 }else {
                     version = Double.parseDouble(RegexUtil.getSubUtilSimple(info, rgex).substring(0, 3));
@@ -1276,7 +1269,7 @@ public class TestJedisClient implements IJedisClient {
             if(version_res.length()>=3){
                 String jimdbVersion="jimdb-4.1.15";
                 if(version_res.trim().toLowerCase().indexOf("jimdb")>=0){
-                    System.out.println("jimdb_"+RegexUtil.getSubUtilSimple(info, rgex).substring(6, 9));
+//                    System.out.println("jimdb_"+RegexUtil.getSubUtilSimple(info, rgex).substring(6, 9));
                     version="jimdb_"+RegexUtil.getSubUtilSimple(info, rgex).substring(6, 9);
 
                 }else {

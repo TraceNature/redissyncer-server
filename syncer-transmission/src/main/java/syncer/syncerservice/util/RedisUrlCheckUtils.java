@@ -1,6 +1,7 @@
 package syncer.syncerservice.util;
 
 import com.alibaba.fastjson.JSON;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.syncerjedis.Jedis;
 import syncer.syncerjedis.exceptions.JedisDataException;
@@ -27,6 +28,7 @@ import java.util.Set;
 
 import static syncer.syncerjedis.Protocol.Command.AUTH;
 
+@Slf4j
 public class RedisUrlCheckUtils {
     //rdb版本和redis版本映射关系
     static Map<String,Integer> rdbVersion=null;
@@ -96,7 +98,7 @@ public class RedisUrlCheckUtils {
                     String png = (String) target.send("PING".getBytes());
                     System.out.println(url.split("\\?")[0]+"------:"+png);
                     if ("PONG".equalsIgnoreCase(png)) {
-                        System.out.println("og");
+                        log.info("心跳检测成功");
                         return true;
                     }
                     i--;
@@ -109,7 +111,6 @@ public class RedisUrlCheckUtils {
             if(i > 0){
                 return true;
             }
-            System.out.println(url+"------:del");
             //TaskMsgException("无法连接该reids");
             throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR));
         } catch (URISyntaxException e) {

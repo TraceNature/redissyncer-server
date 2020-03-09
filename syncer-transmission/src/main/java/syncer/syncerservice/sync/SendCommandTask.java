@@ -52,7 +52,6 @@ public class SendCommandTask implements Runnable{
                     }
 
                 }catch (Exception e){
-                    System.out.println(keyValueEventEntity.getEvent().getClass());
                     log.warn("[{}]抛弃key:{}:原因[{}]",taskId,JSON.toJSONString(keyValueEventEntity.getEvent()),e.getMessage());
                 }
 

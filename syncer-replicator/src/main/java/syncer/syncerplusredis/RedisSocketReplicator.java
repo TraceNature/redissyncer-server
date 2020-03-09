@@ -438,7 +438,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
             long replOffset = configuration.getReplOffset();
             logger.info("PSYNC {} {}", replId, String.valueOf(replOffset >= 0 ? replOffset + 1 : replOffset));
             send("PSYNC".getBytes(), replId.getBytes(), String.valueOf(replOffset >= 0 ? replOffset + 1 : replOffset).getBytes());
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日 HH时mm分ss秒");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
             logger.warn("同步命令发送..源redis全量数据开始打包，时间：{}",sdf.format(new Date()));
             final String reply = Strings.toString(reply());

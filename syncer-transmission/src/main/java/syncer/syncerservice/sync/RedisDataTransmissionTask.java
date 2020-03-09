@@ -122,9 +122,6 @@ public class RedisDataTransmissionTask implements Runnable {
             if (TaskRunTypeEnum.valueOf(type.trim().toUpperCase()).equals(TaskRunTypeEnum.INCREMENTONLY)) {
 
                 String[] data = RedisUrlCheckUtils.selectSyncerBuffer(sourceUri, offsetPlace);
-                System.out.println("offsetAllNum"+Long.parseLong(data[0]));
-                System.out.println(JSON.toJSONString(data));
-
                 long offsetNum = 0L;
                 try {
                     offsetNum = Long.parseLong(data[0]);
@@ -151,6 +148,7 @@ public class RedisDataTransmissionTask implements Runnable {
 
             //根据type生成相对节点List [List顺序即为filter节点执行顺序]
             assemble_the_list(commonFilterList, type, taskId, syncDataDto, client);
+
             ISyncerCompensator syncerCompensator= ISyncerCompensatorFactory.createJDRedisClient(branchTypeEnum,taskId,client);
 
             SendCommandWithOutQueue sendCommandWithOutQueue=SendCommandWithOutQueue.builder()
@@ -159,6 +157,8 @@ public class RedisDataTransmissionTask implements Runnable {
                     .taskId(taskId)
                     .syncerCompensator(syncerCompensator)
                     .build();
+//
+
 
             r.addEventListener(new ValueDumpIterableEventListener(batchSize, new EventListener() {
                 @Override
@@ -193,11 +193,11 @@ public class RedisDataTransmissionTask implements Runnable {
                             .build();
 
 
-                    //多队列接入
+//                    多队列接入
 //                    try {
 //                        multiQueueFilter.run(r,node);
 //                    } catch (FilterNodeException e) {
-//
+//                        log.info("FilterNodeException:[{}]",e.getMessage());
 //                    }
 
                     sendCommandWithOutQueue.run(node);
