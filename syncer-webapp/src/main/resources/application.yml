@@ -28,3 +28,11 @@ server:
 #  config: log/logback.xml
 #logging:
 #  config: config/logback.xml
+
+
+spring:
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:../data/syncer.db
+    username:
+    password:
