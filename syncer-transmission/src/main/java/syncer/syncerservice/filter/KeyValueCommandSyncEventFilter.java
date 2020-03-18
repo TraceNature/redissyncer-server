@@ -83,7 +83,8 @@ public class KeyValueCommandSyncEventFilter implements CommonFilter {
         //命令解析器
         if (event instanceof DefaultCommand) {
             DefaultCommand dc = (DefaultCommand) event;
-            client.send(dc.getCommand(),dc.getArgs());
+            Object result=client.send(dc.getCommand(),dc.getArgs());
+//            log.debug("增量命令 command:{} Args[0]:{}",dc.getCommand(),dc.getArgs());
 //            Configuration configuration=eventEntity.getConfiguration();
 //            eventEntity.getBaseOffSet().setReplId(configuration.getReplId());
 //            eventEntity.getBaseOffSet().getReplOffset().set(configuration.getReplOffset());
