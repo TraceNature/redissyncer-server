@@ -11,7 +11,7 @@
     <groupId>syncer</groupId>
     <artifactId>syncer-webapp</artifactId>
     <version>2.0.8</version>
-    <name>syncer-webapp</name>
+    <name>redissyncer-server</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
@@ -119,7 +119,7 @@
                             <type>${project.packaging}</type>
                             <overWrite>true</overWrite>
                             <outputDirectory>${project.basedir}</outputDirectory>
-                            <destFileName>${project.artifactId}-${project.version}.jar</destFileName>
+                            <destFileName>${project.name}-v${project.version}.jar</destFileName>
                         </artifactItem>
                     </artifactItems>
                 </configuration>
@@ -143,10 +143,10 @@
                     <!-- <repository>${project.artifactId}</repository> -->
                     <repository>redissyncer</repository>
                     <contextDirectory>../</contextDirectory>
-                    <dockerDirectory>../</dockerDirectory>
+<!--                <dockerDirectory>../</dockerDirectory>-->
                     <tag>v${project.version}</tag>
                     <buildArgs>
-                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+                        <JAR_FILE>${project.name}-v${project.version}.jar</JAR_FILE>
                     </buildArgs>
                 </configuration>
             </plugin>

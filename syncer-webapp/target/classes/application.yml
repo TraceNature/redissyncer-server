@@ -1,0 +1,30 @@
+
+syncerplus:
+  redispool:
+    #池中空闲链接回收线程执行间隔时间  例：每隔1000毫秒执行一次回收函数
+    timeBetweenEvictionRunsMillis: 200
+    #池中空闲连接回收未使用的时间  例：1800000毫秒未使用则回收  默认值是30分钟。1800000
+    idleTimeRunsMillis: 100000
+    #最小池大小
+    minPoolSize: 1
+    #最大池大小
+    maxPoolSize: 10
+    #连接超时时间
+    maxWaitTime: 10000
+
+  poolconfig:
+    #核心池大小
+    corePoolSize: 100
+    #最大池大小
+    maxPoolSize: 1500
+    #队列最大长度
+    queueCapacity: 1600
+    #线程池维护线程所允许的空闲时间
+    keepAliveSeconds: 300
+
+#logging:
+server:
+  port: 8080
+#  config: log/logback.xml
+logging:
+  config: logback.xml

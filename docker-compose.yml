@@ -12,4 +12,5 @@ services:
         SPRING_ENV: "--server.port=80"
       volumes:
         - /etc/localtime:/etc/localtime:ro
+        - ./log:/opt/redissyncer/log
       container_name: redissyncer-server
