@@ -129,11 +129,22 @@
             <plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>dockerfile-maven-plugin</artifactId>
-                <version>1.4.10</version>
+                <version>1.4.13</version>
+                <executions>
+                    <execution>
+                        <id>default</id>
+                        <goals>
+                            <goal>build</goal>
+                            <goal>push</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
-                    <repository>${project.artifactId}</repository>
-                    <contextDirectory>./</contextDirectory>
-                    <tag>${project.version}</tag>
+                    <!-- <repository>${project.artifactId}</repository> -->
+                    <repository>redissyncer</repository>
+                    <contextDirectory>../</contextDirectory>
+                    <dockerDirectory>../</dockerDirectory>
+                    <tag>v${project.version}</tag>
                     <buildArgs>
                         <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
                     </buildArgs>

@@ -1,0 +1,15 @@
+# deploy local redissyncer service
+
+version: "2.4"
+
+services:
+  redissyncer-server:
+      image: jiashiwen/redissyncer:v2.0.8
+      ports:
+      - "8000:80"
+      mem_limit: 3g 
+      environment:
+        SPRING_ENV: "--server.port=80"
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+      container_name: redissyncer-server

@@ -126,4 +126,17 @@ curl -X POST \
 * redissyncer建议部署在单独空闲机器上,防止资源不足，比如内存，带宽，IOPS。
 * 注意RDB传输是否超时；
 * redis client buf中的slave项，设置足够大的buffer size和超时时间。
-* 动同步任务前，请确认redis源机器是否有足够的内存允许至少生成一个RDB文件。如果redis源机器有足够的内存允许所有的redis同时生成RDB文件
+* 动同步任务前，请确认redis源机器是否有足够的内存允许至少生成一个RDB文件。
+
+### docker启动
+构建docker镜像
+```
+cd syncer-webapp
+mvn clean dockerfile:build
+```
+
+启动容器
+```
+docker run -idt -m 2G -p 8000:80 --name redissyncer redissyncer:v2.0.8
+```
+docker run -idt --name redissyncer redissycer:v2.0.8
