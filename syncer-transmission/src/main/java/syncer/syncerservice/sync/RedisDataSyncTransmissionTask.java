@@ -92,7 +92,6 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                     offsetNum = Long.parseLong(data[0]);
                     offsetNum -= 1;
                     //offsetNum -= 1;
-
                 } catch (Exception e) {
 
                 }
@@ -105,8 +104,9 @@ public class RedisDataSyncTransmissionTask implements Runnable{
 
 
 
+
             List<CommonFilter> commonFilterList = new ArrayList<>();
-//            JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, syncDataDto.getTargetHost(), syncDataDto.getTargetPort(), syncDataDto.getTargetPassword(), batchSize, taskId);
+//            JDRedisClient client = JDRedisClientFactory.createJDRedisClient(SyncTypeUtils.getRedisBranchType(taskModel.getSourceRedisType()), syncDataDto.getTargetHost(), syncDataDto.getTargetPort(), syncDataDto.getTargetPassword(), batchSize, taskId);
 //
 //            //根据type生成相对节点List [List顺序即为filter节点执行顺序]
 //            assemble_the_list(commonFilterList, type, taskId, syncDataDto, client);

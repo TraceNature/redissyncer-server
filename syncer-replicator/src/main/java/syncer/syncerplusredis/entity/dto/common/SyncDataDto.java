@@ -1,6 +1,5 @@
 package syncer.syncerplusredis.entity.dto.common;
 
-import syncer.syncerplusredis.constant.RedisType;
 import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.entity.RedisInfo;
 import lombok.Builder;

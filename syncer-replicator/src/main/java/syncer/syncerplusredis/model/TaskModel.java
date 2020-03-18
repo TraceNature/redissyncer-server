@@ -123,7 +123,7 @@ public class TaskModel {
     /**
      * redis版本
      */
-    private  String redisVersion;
+    private  double redisVersion;
 
     /**
      * rdb版本
@@ -149,10 +149,11 @@ public class TaskModel {
 
 
     /**
-     * 源Redis类型
+     * 源Redis类型  RedisBranchType
      * 1 单机
      * 2 cluster
      * 3 file
+     * 4 哨兵
      */
     @Builder.Default
     private Integer sourceRedisType=1;

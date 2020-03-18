@@ -4,8 +4,6 @@ import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import syncer.syncerjedis.Jedis;
 import syncer.syncerjedis.exceptions.JedisDataException;
-import syncer.syncerpluscommon.entity.ResultMap;
-import syncer.syncerplusredis.constant.RedisType;
 import syncer.syncerplusredis.constant.TaskMsgConstant;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
 import syncer.syncerplusredis.entity.FileType;
@@ -24,11 +22,9 @@ import syncer.syncerplusredis.util.TaskMsgUtils;
 import syncer.syncerplusredis.util.code.CodeUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.StringUtils;
-import syncer.syncerpluswebapp.constant.CodeConstant;
 import syncer.syncerservice.util.RedisUrlCheckUtils;
 import syncer.syncerservice.util.regex.RegexUtil;
 
-import java.net.URISyntaxException;
 import java.util.*;
 
 @Slf4j

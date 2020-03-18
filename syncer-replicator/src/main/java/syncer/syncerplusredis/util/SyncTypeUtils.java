@@ -2,6 +2,7 @@ package syncer.syncerplusredis.util;
 
 import javafx.concurrent.Task;
 import syncer.syncerplusredis.constant.OffsetPlace;
+import syncer.syncerplusredis.constant.RedisBranchType;
 import syncer.syncerplusredis.constant.SyncType;
 import syncer.syncerplusredis.constant.TaskType;
 import syncer.syncerplusredis.entity.FileType;
@@ -23,6 +24,9 @@ public class SyncTypeUtils {
 
     public static final Map<Integer, OffsetPlace>offSetMap=new HashMap<>();
 
+
+    public static final Map<Integer, RedisBranchType>redisBranchTypeMap=new HashMap<>();
+
     static {
         syncTypeMap.put(SyncType.SYNC.getCode(),SyncType.SYNC);
         syncTypeMap.put(SyncType.RDB.getCode(),SyncType.RDB);
@@ -41,6 +45,10 @@ public class SyncTypeUtils {
         offSetMap.put(OffsetPlace.BEGINBUFFER.getCode(),OffsetPlace.BEGINBUFFER);
 
 
+        redisBranchTypeMap.put(RedisBranchType.SINGLE.getCode(),RedisBranchType.SINGLE);
+        redisBranchTypeMap.put(RedisBranchType.CLUSTER.getCode(),RedisBranchType.CLUSTER);
+        redisBranchTypeMap.put(RedisBranchType.FILE.getCode(),RedisBranchType.FILE);
+        redisBranchTypeMap.put(RedisBranchType.SENTINEL.getCode(),RedisBranchType.SENTINEL);
     }
 
     /**
@@ -78,5 +86,18 @@ public class SyncTypeUtils {
             return offSetMap.get(offsetPlaceCode);
         }
         return OffsetPlace.ENDBUFFER;
+    }
+
+
+    /**
+     * 通过code获取RedisBranchType
+     * @param sourceRedisType
+     * @return
+     */
+    public static RedisBranchType getRedisBranchType(int sourceRedisType){
+        if(redisBranchTypeMap.containsKey(sourceRedisType)){
+            return redisBranchTypeMap.get(sourceRedisType);
+        }
+        return RedisBranchType.SINGLE;
     }
 }
