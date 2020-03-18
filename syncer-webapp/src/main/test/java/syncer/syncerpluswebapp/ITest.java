@@ -9,10 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import org.springframework.test.context.junit4.SpringRunner;
-import syncer.syncerservice.dao.RdbVersionMapper;
-import syncer.syncerservice.dao.TaskMapper;
-import syncer.syncerservice.model.RdbVersionModel;
-import syncer.syncerservice.model.TaskModel;
+import syncer.syncerplusredis.dao.RdbVersionMapper;
+import syncer.syncerplusredis.dao.TaskMapper;
+import syncer.syncerplusredis.model.TaskModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,113 +33,130 @@ public class ITest {
     @Test
     public void testing() throws Exception {
         List<TaskModel>taskModelList=new ArrayList<>();
-        List<RdbVersionModel>rdbVersionModelList=new ArrayList<>();
-
-
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("2")
-                .rdb_version(6)
-                .build());
-
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("2.6")
-                .rdb_version(6)
-                .build());
-
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("2.8")
-                .rdb_version(6)
-                .build());
-
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("3")
-                .rdb_version(6)
-                .build());
-
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("3.0")
-                .rdb_version(6)
-                .build());
-
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("3.2")
-                .rdb_version(7)
-                .build());
-
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("4.0")
-                .rdb_version(8)
-                .build());
-
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("4")
-                .rdb_version(8)
-                .build());
-
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("5.0")
-                .rdb_version(9)
-                .build());
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("5")
-                .rdb_version(9)
-                .build());
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("jimdb_3.2")
-                .rdb_version(6)
-                .build());
-
-
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("jimdb_4.0")
-                .rdb_version(6)
-                .build());
-
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("jimdb_4.1")
-                .rdb_version(6)
-                .build());
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("jimdb_5.0")
-                .rdb_version(6)
-                .build());
-
-        rdbVersionModelList.add(RdbVersionModel.builder()
-                .redis_version("jimdb")
-                .rdb_version(6)
-                .build());
-
-
-//        taskModelList.add(TaskModel.builder()
-//                .id("testId")
-//                .groupId("groupId")
-//                .taskName("taskName")
-//                .afresh(false)
-//                .autostart(false)
-//                .batchSize(1000)
-//                .sourceRedisAddress("sourceAddress")
-//                .sourcePassword("sourcePassword")
-//                .targetRedisAddress("targetAddress")
-//                .targetPassword("targetPassword")
-//                .offset(1000L)
-//                .offsetPlace(5)
-//                .taskMsg("msg")
-//                .tasktype(10)
-//                .status(1)
+//        List<RdbVersionModel>rdbVersionModelList=new ArrayList<>();
+//
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("2")
+//                .rdb_version(6)
+//                .build());
+//
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("2.6")
+//                .rdb_version(6)
+//                .build());
+//
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("2.8")
+//                .rdb_version(6)
+//                .build());
+//
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("3")
+//                .rdb_version(6)
+//                .build());
+//
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("3.0")
+//                .rdb_version(6)
+//                .build());
+//
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("3.2")
+//                .rdb_version(7)
+//                .build());
+//
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("4.0")
+//                .rdb_version(8)
+//                .build());
+//
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("4")
+//                .rdb_version(8)
+//                .build());
+//
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("5.0")
+//                .rdb_version(9)
+//                .build());
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("5")
+//                .rdb_version(9)
+//                .build());
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("jimdb_3.2")
+//                .rdb_version(6)
 //                .build());
 //
 //
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("jimdb_4.0")
+//                .rdb_version(6)
+//                .build());
+//
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("jimdb_4.1")
+//                .rdb_version(6)
+//                .build());
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("jimdb_5.0")
+//                .rdb_version(6)
+//                .build());
+//
+//        rdbVersionModelList.add(RdbVersionModel.builder()
+//                .redis_version("jimdb")
+//                .rdb_version(6)
+//                .build());
+
+
+        taskModelList.add(TaskModel.builder()
+                .id("testId")
+                .groupId("pdategroupId")
+                .taskName("pdatetaskName")
+                .afresh(false)
+                .autostart(false)
+                .batchSize(5000)
+                .sourceRedisAddress("pdatesourceAddress")
+                .sourcePassword("pdatesourcePassword")
+                .targetRedisAddress("pdatetargetAddress")
+                .targetPassword("pdatetargetPassword")
+                .offset(3000L)
+                .offsetPlace(1000)
+                .taskMsg("pdatemsg")
+                .tasktype(11)
+                .status(2)
+                .build());
+
+
+        taskModelList.add(TaskModel.builder()
+                .id("testId1")
+                .groupId("pdategroupId")
+                .taskName("pdatetaskName")
+                .afresh(false)
+                .autostart(false)
+                .batchSize(5000)
+                .sourceRedisAddress("pdatesourceAddress")
+                .sourcePassword("pdatesourcePassword")
+                .targetRedisAddress("pdatetargetAddress")
+                .targetPassword("pdatetargetPassword")
+                .offset(3000L)
+                .offsetPlace(1000)
+                .taskMsg("pdatemsg")
+                .tasktype(11)
+                .status(2)
+                .build());
+
 //        taskModelList.add(TaskModel.builder()
 //                .id("testId1")
-//                .groupId("groupId1")
-//                .taskName("taskName")
+//                .groupId("updategroupId1")
+//                .taskName("updatetaskName")
 //                .afresh(false)
 //                .autostart(false)
-//                .batchSize(1000)
-//                .sourceRedisAddress("sourceAddress")
-//                .sourcePassword("sourcePassword")
-//                .targetRedisAddress("targetAddress")
-//                .targetPassword("targetPassword")
+//                .batchSize(2000)
+//                .sourceRedisAddress("updatesourceAddress")
+//                .sourcePassword("updatesourcePassword")
+//                .targetRedisAddress("updatetargetAddress")
+//                .targetPassword("updatetargetPassword")
 //                .offset(1000L)
 //                .offsetPlace(5)
 //                .taskMsg("msg")
@@ -149,21 +165,21 @@ public class ITest {
 //                .build());
 //        System.out.println(testMaapper.insertTask(TaskModel.builder()
 //                .id("testId")
-//                .groupId("groupId")
-//                .taskName("taskName")
+//                .groupId("updategroupId")
+//                .taskName("updatetaskName")
 //                .afresh(false)
 //                .autostart(false)
-//                .batchSize(1000)
-//                .sourceRedisAddress("sourceAddress")
-//                .sourcePassword("sourcePassword")
-//                .targetRedisAddress("targetAddress")
-//                .targetPassword("targetPassword")
+//                .batchSize(2500)
+//                .sourceRedisAddress("updatesourceAddress")
+//                .sourcePassword("updatesourcePassword")
+//                .targetRedisAddress("updatetargetAddress")
+//                .targetPassword("updatetargetPassword")
 //                .offset(1000L)
 //                .offsetPlace(5)
-//                .taskMsg("msg")
+//                .taskMsg("updatemsg")
 //                .tasktype(10)
 //                .status(1)
 //                .build()));
-        System.out.println(JSON.toJSONString(rdbVersionMapper.insertRdbVersionModelList(rdbVersionModelList)));
+        System.out.println(JSON.toJSONString(testMaapper.updateTaskList(taskModelList)));
     }
 }

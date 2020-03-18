@@ -1,6 +1,7 @@
 package syncer.syncerplusredis.constant;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 /**
  * @author zhanenqiang
@@ -38,8 +39,20 @@ public enum TaskStatusType {
     /**
      * 任务因异常而停止
      */
-    BROKEN(ThreadStatusEnum.BROKEN,5);
+    BROKEN(ThreadStatusEnum.BROKEN,5),
 
+    /**
+     * 全量任务进行中
+     */
+    RDBRUNING(ThreadStatusEnum.RDBRUNING,6),
+
+    /**
+     * 增量任务进行中
+     */
+    COMMANDRUNING(ThreadStatusEnum.COMMANDRUNING,7);
+
+    @Getter
     private ThreadStatusEnum status;
+    @Getter
     private int code;
 }

@@ -6,5 +6,5 @@ package syncer.syncerplusredis.constant;
  * @Date 2020/1/2
  */
 public enum RedisType {
-    SINGLE,CLUSTER
+    SINGLE,CLUSTER,FILE
 }

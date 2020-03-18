@@ -1,4 +1,4 @@
-package syncer.syncerservice.model;
+package syncer.syncerplusredis.model;
 
 import lombok.*;
 
@@ -46,6 +46,11 @@ public class TaskModel {
      * 目标Redis密码
      */
     private String targetPassword;
+
+    /**
+     * 文件地址
+     */
+    private String fileAddress;
 
     /**
      * 创建任务时是否自动启动
@@ -106,7 +111,74 @@ public class TaskModel {
      *  RUN         3      任务启动完成，进入运行状态
      *  PAUSE       4      任务暂停
      *  BROKEN      5      任务因异常停止
+     *  RDBRUNING   6      全量任务进行中
+     *  COMMANDRUNING 7    增量任务进行中
      */
     @Builder.Default
     private Integer status=0;
+
+
+
+
+    /**
+     * redis版本
+     */
+    private  String redisVersion;
+
+    /**
+     * rdb版本
+     */
+    @Builder.Default
+    private Integer rdbVersion=6;
+
+
+    /**
+     * 数据同步类型  ---->SyncType
+     * 1 sync
+     * 2 rdb
+     * 3 aof
+     * 4 mixed
+     * 5 onlineRdb
+     * 6 onlineAof
+     * 7 onlineMixed
+     * 8 commandDumpUp
+     */
+    @Builder.Default
+    private Integer syncType=1;
+
+
+
+    /**
+     * 源Redis类型
+     * 1 单机
+     * 2 cluster
+     * 3 file
+     */
+    @Builder.Default
+    private Integer sourceRedisType=1;
+
+    /**
+     * 目标Redis类型
+     * 1 单机
+     * 2 cluster
+     * 3 file
+     */
+    @Builder.Default
+    private Integer targetRedisType=1;
+
+
+
+    public String getSourceUri(){
+        return baseRedisUri(getSourceRedisAddress());
+    }
+
+    public String getTargetUri(){
+        return baseRedisUri(getTargetRedisAddress());
+    }
+
+    String baseRedisUri(String uri){
+
+        return "";
+    }
+
 }

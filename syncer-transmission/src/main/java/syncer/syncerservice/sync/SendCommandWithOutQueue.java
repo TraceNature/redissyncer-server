@@ -64,9 +64,9 @@ public class SendCommandWithOutQueue {
                     BatchedKeyValuePair batchedKeyValuePair= (BatchedKeyValuePair) event;
                     keyName=Strings.toString(batchedKeyValuePair.getKey());
                 }
-
-                e.printStackTrace();
                 log.warn("[{}]抛弃key:{} ,class:[{}]:原因[{}]",taskId, keyName,event.getClass().toString(),e.getMessage());
+                e.printStackTrace();
+
             }
 
 

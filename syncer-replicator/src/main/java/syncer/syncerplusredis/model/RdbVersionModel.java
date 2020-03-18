@@ -1,4 +1,4 @@
-package syncer.syncerservice.model;
+package syncer.syncerplusredis.model;
 
 import lombok.*;
 

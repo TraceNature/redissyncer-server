@@ -53,7 +53,6 @@ public class TaskMsgUtils {
         if(!aliveThreadHashMap.containsKey(threadId)){
             aliveThreadHashMap.put(threadId,threadMsgEntity);
         }
-
     }
 
 

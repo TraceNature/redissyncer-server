@@ -1,8 +1,9 @@
-package syncer.syncerservice.dao;
+package syncer.syncerplusredis.dao;
 
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Component;
-import syncer.syncerservice.model.RdbVersionModel;
+import syncer.syncerplusredis.model.RdbVersionModel;
+
 
 import java.util.List;
 

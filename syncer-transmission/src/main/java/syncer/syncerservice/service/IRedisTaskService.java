@@ -4,6 +4,7 @@ import syncer.syncerpluscommon.entity.ResultMap;
 import syncer.syncerplusredis.constant.RedisStartCheckTypeEnum;
 import syncer.syncerplusredis.entity.RedisStartCheckEntity;
 import syncer.syncerplusredis.exception.TaskMsgException;
+import syncer.syncerplusredis.model.TaskModel;
 
 /**
  * @author zhanenqiang
@@ -18,9 +19,10 @@ public interface IRedisTaskService {
      * @return
      * @throws TaskMsgException
      */
-    ResultMap runSyncerTask(RedisStartCheckEntity redisStartCheckEntity, RedisStartCheckTypeEnum redisStartCheckType) throws TaskMsgException;
+    String runSyncerTask(RedisStartCheckEntity redisStartCheckEntity, RedisStartCheckTypeEnum redisStartCheckType) throws Exception;
 
 
+    String runSyncerTask(TaskModel taskModel) throws Exception;
 
 
 }
