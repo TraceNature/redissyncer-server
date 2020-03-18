@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import syncer.syncerjedis.Jedis;
 import syncer.syncerjedis.exceptions.JedisDataException;
+import syncer.syncerplusredis.constant.RedisType;
 import syncer.syncerplusredis.constant.TaskMsgConstant;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
 import syncer.syncerplusredis.entity.FileType;
