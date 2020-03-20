@@ -184,5 +184,5 @@ curl -X POST \
 * 注意RDB传输是否超时；
 * redis client buf中的slave项，设置足够大的buffer size和超时时间。
 * 动同步任务前，请确认redis源机器是否有足够的内存允许至少生成一个RDB文件。
-
-
+* 双向同步不保证非幂等命令（INCR、HINCRBY）的数据一致性，除非业务保证不同时对同一个key做非幂等操作
+  

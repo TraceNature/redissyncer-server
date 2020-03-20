@@ -27,4 +27,4 @@ server:
   port: 8080
 #  config: log/logback.xml
 logging:
-  config: logback.xml
+  config: classpath:logback.xml
