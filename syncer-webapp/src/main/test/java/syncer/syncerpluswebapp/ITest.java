@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import org.springframework.test.context.junit4.SpringRunner;
+import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.dao.RdbVersionMapper;
 import syncer.syncerplusredis.dao.TaskMapper;
 import syncer.syncerplusredis.model.TaskModel;
@@ -28,8 +29,8 @@ public class ITest {
     @Autowired
     TaskMapper testMaapper;
 
-    @Autowired
-    RdbVersionMapper rdbVersionMapper;
+//    @Autowired
+//    RdbVersionMapper rdbVersionMapper;
     @Test
     public void testing() throws Exception {
         List<TaskModel>taskModelList=new ArrayList<>();
@@ -179,7 +180,10 @@ public class ITest {
 //                .taskMsg("updatemsg")
 //                .tasktype(10)
 //                .status(1)
-//                .build()));
-        System.out.println(JSON.toJSONString(testMaapper.updateTaskList(taskModelList)));
+//                .build()))
+//                sout;
+        RdbVersionMapper rdbVersionMapper= SpringUtil.getBean(RdbVersionMapper.class);
+        System.out.println(JSON.toJSONString(rdbVersionMapper.findRdbVersionModelByRedisVersion("4.0")));
+//        System.out.println(JSON.toJSONString(testMaapper.updateTaskList(taskModelList)));
     }
 }

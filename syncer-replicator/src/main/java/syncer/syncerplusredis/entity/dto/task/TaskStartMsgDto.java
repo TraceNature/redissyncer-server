@@ -14,8 +14,9 @@ public class TaskStartMsgDto {
 //    @NotEmpty(message = "taskids不能为空")
 //    private List<String> taskids;
 
-    @NotEmpty(message = "taskid不能为空")
+//    @NotEmpty(message = "taskid不能为空")
     private String taskid;
+    private String groupId;
     @Builder.Default
     private boolean afresh=true;
 }

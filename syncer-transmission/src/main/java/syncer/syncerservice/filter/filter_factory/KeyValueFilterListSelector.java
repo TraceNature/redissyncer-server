@@ -5,6 +5,7 @@ import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerservice.filter.CommonFilter;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,7 +20,12 @@ public class KeyValueFilterListSelector {
     private static final Map<TaskRunTypeEnum,KeyValueFilterListFactory>kvFilterListSelectorMap=new ConcurrentHashMap<>();
 
     public static List<CommonFilter> getStrategyList(TaskRunTypeEnum taskRunTypeEnum, TaskModel taskModel, JDRedisClient client){
-            if(!kvFilterListSelectorMap.containsKey(taskRunTypeEnum)){
+
+
+
+
+
+        if(!kvFilterListSelectorMap.containsKey(taskRunTypeEnum)){
                 if(taskRunTypeEnum.equals(TaskRunTypeEnum.TOTAL)){
                     kvFilterListSelectorMap.put(taskRunTypeEnum,TotalFilterListFactory.builder().build());
                 }else if(taskRunTypeEnum.equals(TaskRunTypeEnum.STOCKONLY)){

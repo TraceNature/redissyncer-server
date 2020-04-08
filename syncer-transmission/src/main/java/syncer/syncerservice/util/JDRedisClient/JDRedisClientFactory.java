@@ -20,7 +20,7 @@ public class JDRedisClientFactory {
 //                redisClient = new JDRedisJedisPipeLineClient(host,port,password,count,taskId);
                 break;
              default:
-
+                 break;
         }
         return redisClient;
     }

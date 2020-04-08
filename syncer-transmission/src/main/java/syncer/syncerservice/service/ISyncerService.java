@@ -4,6 +4,7 @@ import syncer.syncerpluscommon.entity.ResultMap;
 import syncer.syncerplusredis.entity.dto.FileCommandBackupDataDto;
 import syncer.syncerplusredis.entity.dto.RedisClusterDto;
 import syncer.syncerplusredis.entity.dto.RedisFileDataDto;
+import syncer.syncerplusredis.entity.dto.task.TaskStartMsgDto;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.model.TaskModel;
 
@@ -16,13 +17,7 @@ import java.util.List;
  */
 public interface ISyncerService {
 
-    /**
-     * 创建文件数据恢复任务
-     * @param taskModelList
-     * @return
-     * @throws TaskMsgException
-     */
-    ResultMap createFileToRedisTask(List<TaskModel> taskModelList) throws TaskMsgException;
+
 
 
     /**
@@ -34,7 +29,21 @@ public interface ISyncerService {
     ResultMap createCommandDumpUptask(List<TaskModel> taskModelList) throws TaskMsgException;
 
 
-
+    /**
+     * 创建redis数据同步/数据文件恢复
+     * @param taskModelList
+     * @return
+     * @throws TaskMsgException
+     */
     ResultMap createRedisToRedisTask(List<TaskModel> taskModelList) throws TaskMsgException;
 
+    /**
+     * 批量启动
+     * @param taskStartMsgDtoList
+     * @return
+     * @throws Exception
+     */
+    ResultMap startSyncerTask(List<TaskStartMsgDto> taskStartMsgDtoList) throws Exception;
+
+    ResultMap startSyncerTaskByGroupId(String groupId,boolean afresh) throws Exception;
 }

@@ -173,7 +173,7 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
             }
 
             ThreadMsgEntity msgEntity=ThreadMsgEntity.builder().id(threadId)
-                    .status(ThreadStatusEnum.CREATE)
+                    .status(ThreadStatusEnum.CREATED)
                     .taskName(threadName)
                     .redisClusterDto(redisClusterDto)
                     .build();
@@ -333,7 +333,7 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
         redisClusterDto.setTaskName(threadName+"【"+redisFileDataDto.getSourceRedisAddress()+"节点】");
         redisFileDataDto.setFileType(FileType.COMMANDDUMPUP);
         ThreadMsgEntity msgEntity=ThreadMsgEntity.builder().id(threadId)
-                .status(ThreadStatusEnum.CREATE)
+                .status(ThreadStatusEnum.CREATED)
                 .taskName(threadName+"【"+redisFileDataDto.getSourceRedisAddress()+"节点】")
 
                 .redisClusterDto(redisClusterDto)
@@ -417,7 +417,7 @@ public class SyncerTaskServiceImpl implements ISyncerTaskService {
         }
 
         ThreadMsgEntity  msgEntity=ThreadMsgEntity.builder().id(threadId)
-                .status(ThreadStatusEnum.CREATE)
+                .status(ThreadStatusEnum.CREATED)
                 .taskName(threadName+"【"+dto.getSourceRedisAddress()+"节点】")
                 .redisClusterDto(dto)
                 .build();

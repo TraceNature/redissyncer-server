@@ -127,6 +127,7 @@ public class Strings {
                 strContent = new String(data, "utf-8");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
+                e.printStackTrace();
             }
             res[i++]=strContent;
         }

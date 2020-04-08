@@ -1,5 +1,8 @@
 package syncer.syncerplusredis.constant;
 
-public enum ReplicatorVersionEnum {
+
+import java.io.Serializable;
+
+public enum ReplicatorVersionEnum implements Serializable {
     PSYNC,PSYNC2
 }

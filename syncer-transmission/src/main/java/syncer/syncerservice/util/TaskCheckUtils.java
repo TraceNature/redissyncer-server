@@ -5,6 +5,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.util.StringUtils;
 import syncer.syncerjedis.Jedis;
 import syncer.syncerjedis.exceptions.JedisDataException;
+import syncer.syncerplusredis.constant.RedisType;
 import syncer.syncerplusredis.constant.TaskMsgConstant;
 import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.entity.RedisInfo;

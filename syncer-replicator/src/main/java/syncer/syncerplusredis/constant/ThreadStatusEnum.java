@@ -1,5 +1,10 @@
 package syncer.syncerplusredis.constant;
 
-public enum  ThreadStatusEnum {
-    CREATING,CREATE,RUN,STOP,PAUSE,BROKEN,RDBRUNING,COMMANDRUNING
+
+
+import java.io.Serializable;
+
+
+public enum  ThreadStatusEnum implements Serializable {
+    CREATING,CREATED,RUN,STOP,PAUSE,BROKEN,RDBRUNING,COMMANDRUNING
 }

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import syncer.syncerplusredis.cmd.impl.DefaultCommand;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerservice.compensator.ISyncerCompensator;
 import syncer.syncerservice.filter.KeyValueRunFilterChain;
 import syncer.syncerservice.po.KeyValueEventEntity;
@@ -72,9 +73,9 @@ public class SendCommandTask implements Runnable{
         @Override
         public void run() {
             while (true){
-                if (SyncTaskUtils.doThreadisCloseCheckTask(taskId)) {
+                if (TaskDataManagerUtils.isTaskClose(taskId)) {
                     int i=3;
-                    if(i>0&&queue.isEmpty()){
+                    if(i>=0&&queue.isEmpty()){
                         i--;
                         return;
                     }

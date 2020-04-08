@@ -19,6 +19,7 @@ package syncer.syncerplusredis.io;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import syncer.syncerplusredis.util.TimeUtils;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -181,14 +182,13 @@ public final class AsyncBufferedInputStream extends InputStream implements Runna
             //
             while (this.ringBuffer.isEmpty()) {
                 if (this.exception != null){
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    logger.warn("同步线程异常 时间：{}",sdf.format(new Date()));
+
+                    logger.warn("同步线程异常 时间：{}", TimeUtils.getNowTimeString());
                     throw this.exception;
                 }
                 this.bufferNotEmpty.awaitUninterruptibly();
                 if (this.closed.get()){
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    logger.warn("同步线程异常 时间：{}",sdf.format(new Date()));
+                    logger.warn("同步线程异常 时间：{}",TimeUtils.getNowTimeString());
                     throw new EOFException();
                 }
             }

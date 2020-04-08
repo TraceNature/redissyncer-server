@@ -9,6 +9,7 @@
         <module>syncer-replicator</module>
         <module>syncer-transmission</module>
         <module>syncer-jedis</module>
+        <module>syncer-replication</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>

@@ -25,4 +25,6 @@ public interface IRedisTaskService {
     String runSyncerTask(TaskModel taskModel) throws Exception;
 
 
+
+    String createSyncerTask(TaskModel taskModel) throws Exception;
 }

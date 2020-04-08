@@ -32,6 +32,7 @@ import syncer.syncerplusredis.rdb.RdbParser;
 import syncer.syncerplusredis.replicator.AbstractReplicator;
 import syncer.syncerplusredis.replicator.AbstractReplicatorRetrier;
 import syncer.syncerplusredis.replicator.DefaultExceptionListener;
+import syncer.syncerplusredis.util.TimeUtils;
 import syncer.syncerplusredis.util.objectutil.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,7 +117,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
         try {
             new RedisSocketReplicatorRetrier().retry(this);
         }catch (EOFException e){
-            System.out.println(e.getMessage());
+            System.out.println("[EOFException]:"+e.getMessage());
         } finally {
             doClose();
             doCloseListener(this);
@@ -132,7 +133,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
         try {
             new RedisSocketReplicatorRetrier().retry(this,taskId);
         }catch (EOFException e){
-            System.out.println(e.getMessage());
+            System.out.println("[EOFException]:"+e.getMessage());
 
         } finally {
             doClose();
@@ -146,7 +147,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
         if (reply.startsWith("FULLRESYNC")) {
 
             if(!status){
-                throw new IncrementException("增量同步runId不存在..结束");
+                throw new IncrementException("增量同步runId不存在..结束,[请检查offset是否刷过/或者当前任务之前未进行过数据同步但afresh设置为false]");
             }else {
                 // reset db
                 this.db = -1;
@@ -438,9 +439,13 @@ public class RedisSocketReplicator extends AbstractReplicator {
             long replOffset = configuration.getReplOffset();
             logger.info("PSYNC {} {}", replId, String.valueOf(replOffset >= 0 ? replOffset + 1 : replOffset));
             send("PSYNC".getBytes(), replId.getBytes(), String.valueOf(replOffset >= 0 ? replOffset + 1 : replOffset).getBytes());
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-            logger.warn("同步命令发送..源redis全量数据开始打包，时间：{}",sdf.format(new Date()));
+            if(replOffset >= 0){
+                logger.warn("增量同步命令发送..增量数据同步初始化，时间：{}", TimeUtils.getNowTimeString());
+            }else{
+                logger.warn("同步命令发送..源redis全量数据开始打包，时间：{}",TimeUtils.getNowTimeString());
+            }
+
             final String reply = Strings.toString(reply());
 
             SyncMode mode = trySync(reply);

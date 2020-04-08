@@ -3,6 +3,8 @@ package syncer.syncerplusredis.constant;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.io.Serializable;
+
 /**
  * @author zhanenqiang
  * @Description 描述
@@ -10,7 +12,8 @@ import lombok.Getter;
  */
 @AllArgsConstructor
 @Getter
-public enum RedisBranchType {
+
+public enum RedisBranchType implements Serializable {
     /**
      * 单机
      */

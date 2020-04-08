@@ -11,6 +11,7 @@ import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerservice.compensator.ISyncerCompensator;
 import syncer.syncerservice.filter.KeyValueRunFilterChain;
 import syncer.syncerservice.po.KeyValueEventEntity;
+import syncer.syncerservice.util.DataCleanUtils;
 import syncer.syncerservice.util.common.Strings;
 
 /**
@@ -47,6 +48,8 @@ public class SendCommandWithOutQueue {
                     filterChain.run(r,keyValueEventEntity);
                 }
 
+                DataCleanUtils.cleanData(keyValueEventEntity);
+
             }catch (Exception e){
                 Event event=keyValueEventEntity.getEvent();
                 String keyName=null;
@@ -65,6 +68,7 @@ public class SendCommandWithOutQueue {
                     keyName=Strings.toString(batchedKeyValuePair.getKey());
                 }
                 log.warn("[{}]抛弃key:{} ,class:[{}]:原因[{}]",taskId, keyName,event.getClass().toString(),e.getMessage());
+                DataCleanUtils.cleanData(keyValueEventEntity,event);
                 e.printStackTrace();
 
             }

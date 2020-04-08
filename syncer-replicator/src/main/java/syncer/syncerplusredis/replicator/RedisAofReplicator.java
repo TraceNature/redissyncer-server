@@ -16,12 +16,14 @@
 
 package syncer.syncerplusredis.replicator;
 
+import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.event.PostCommandSyncEvent;
 import syncer.syncerplusredis.event.PreCommandSyncEvent;
 import syncer.syncerplusredis.exception.IncrementException;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.io.RedisInputStream;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 import syncer.syncerplusredis.util.objectutil.Strings;
 import syncer.syncerplusredis.util.type.Tuples;
@@ -72,8 +74,8 @@ public class RedisAofReplicator extends AbstractReplicator {
             in = new FileInputStream(filePath);
         } catch (FileNotFoundException e) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),"文件读取异常");
-            } catch (TaskMsgException ex) {
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"文件读取异常", TaskStatusType.BROKEN);
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, "文件下载异常");
@@ -199,8 +201,8 @@ public class RedisAofReplicator extends AbstractReplicator {
             }
         } catch (EOFException ignore) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),ignore.getMessage());
-            } catch (TaskMsgException ex) {
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,ignore.getMessage(), TaskStatusType.BROKEN);
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, ignore.getMessage());

@@ -1,8 +1,11 @@
 package syncer.syncerplusredis.constant;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import syncer.syncerplusredis.entity.FileType;
+
+import java.io.Serializable;
 
 /**
  * @author zhanenqiang
@@ -10,7 +13,8 @@ import syncer.syncerplusredis.entity.FileType;
  * @Date 2020/3/15
  */
 @AllArgsConstructor
-public enum TargetAndSourceRedisType {
+
+public enum TargetAndSourceRedisType implements Serializable {
     /**
      * 单机
      */

@@ -1,10 +1,7 @@
 package syncer.syncerplusredis.util;
 
 import javafx.concurrent.Task;
-import syncer.syncerplusredis.constant.OffsetPlace;
-import syncer.syncerplusredis.constant.RedisBranchType;
-import syncer.syncerplusredis.constant.SyncType;
-import syncer.syncerplusredis.constant.TaskType;
+import syncer.syncerplusredis.constant.*;
 import syncer.syncerplusredis.entity.FileType;
 
 import java.util.HashMap;
@@ -26,6 +23,8 @@ public class SyncTypeUtils {
 
 
     public static final Map<Integer, RedisBranchType>redisBranchTypeMap=new HashMap<>();
+
+    public static final Map<Integer, TaskStatusType>taskStatusTypeMap=new HashMap<>();
 
     static {
         syncTypeMap.put(SyncType.SYNC.getCode(),SyncType.SYNC);
@@ -49,6 +48,18 @@ public class SyncTypeUtils {
         redisBranchTypeMap.put(RedisBranchType.CLUSTER.getCode(),RedisBranchType.CLUSTER);
         redisBranchTypeMap.put(RedisBranchType.FILE.getCode(),RedisBranchType.FILE);
         redisBranchTypeMap.put(RedisBranchType.SENTINEL.getCode(),RedisBranchType.SENTINEL);
+
+        taskStatusTypeMap.put(TaskStatusType.RUN.getCode(),TaskStatusType.RUN);
+        taskStatusTypeMap.put(TaskStatusType.CREATING.getCode(),TaskStatusType.CREATING);
+        taskStatusTypeMap.put(TaskStatusType.CREATED.getCode(),TaskStatusType.CREATED);
+        taskStatusTypeMap.put(TaskStatusType.RUN.getCode(),TaskStatusType.RUN);
+        taskStatusTypeMap.put(TaskStatusType.RDBRUNING.getCode(),TaskStatusType.RDBRUNING);
+        taskStatusTypeMap.put(TaskStatusType.COMMANDRUNING.getCode(),TaskStatusType.COMMANDRUNING);
+        taskStatusTypeMap.put(TaskStatusType.BROKEN.getCode(),TaskStatusType.BROKEN);
+        taskStatusTypeMap.put(TaskStatusType.STOP.getCode(),TaskStatusType.STOP);
+
+
+
     }
 
     /**
@@ -63,6 +74,17 @@ public class SyncTypeUtils {
         return SyncType.SYNC;
     }
 
+    public static SyncType getSyncType(FileType fileType){
+        SyncType syncType=null;
+        for(Map.Entry<Integer,SyncType> entry : syncTypeMap.entrySet()){
+            if(entry.getValue().getFileType().equals(fileType)){
+                syncType=entry.getValue();
+                break;
+            }
+        }
+
+        return syncType;
+    }
 
     /**
      * 通过code获取SyncType
@@ -78,6 +100,19 @@ public class SyncTypeUtils {
 
     /**
      * 通过code获取TaskType
+     * @param taskStatusType
+     * @return
+     */
+    public static TaskStatusType getTaskStatusType(int taskStatusType){
+        if(taskStatusTypeMap.containsKey(taskStatusType)){
+            return taskStatusTypeMap.get(taskStatusType);
+        }
+        return TaskStatusType.STOP;
+    }
+
+
+    /**
+     * 通过code获取TaskType
      * @param offsetPlaceCode
      * @return
      */
@@ -87,6 +122,7 @@ public class SyncTypeUtils {
         }
         return OffsetPlace.ENDBUFFER;
     }
+
 
 
     /**

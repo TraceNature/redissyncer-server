@@ -33,6 +33,6 @@ server:
 spring:
   datasource:
     driver-class-name: org.sqlite.JDBC
-    url: jdbc:sqlite:../data/syncer.db
+    url: jdbc:sqlite:data/syncer.db
     username:
     password:

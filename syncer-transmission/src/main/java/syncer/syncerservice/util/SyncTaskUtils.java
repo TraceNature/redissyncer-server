@@ -358,7 +358,7 @@ public class SyncTaskUtils {
                     msgEntity.setTargetRedisVersion(thre.getValue().getRedisClusterDto().getTargetRedisVersion());
                     taskList.add(msgEntity);
                 }
-                if(statusEnum.equals(ThreadStatusEnum.CREATE)&&"stop".equals(listTaskMsgDto.getTaskstatus())){
+                if(statusEnum.equals(ThreadStatusEnum.CREATED)&&"stop".equals(listTaskMsgDto.getTaskstatus())){
                     ThreadReturnMsgEntity msgEntity=ThreadReturnMsgEntity.builder().build();
                     BeanUtils.copyProperties(thre.getValue(),msgEntity);
                     BeanUtils.copyProperties(thre.getValue().getRedisClusterDto(),msgEntity);

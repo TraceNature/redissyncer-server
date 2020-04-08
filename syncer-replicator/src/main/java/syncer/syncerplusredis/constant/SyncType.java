@@ -1,8 +1,11 @@
 package syncer.syncerplusredis.constant;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import syncer.syncerplusredis.entity.FileType;
+
+import java.io.Serializable;
 
 /**
  * @author zhanenqiang
@@ -10,13 +13,15 @@ import syncer.syncerplusredis.entity.FileType;
  * @Date 2020/3/17
  */
 @AllArgsConstructor
-public enum SyncType {
+
+
+public enum SyncType implements Serializable {
     /**
      * replication
      */
     SYNC(1,FileType.SYNC,"replication"),
 
-    RDB(1,FileType.RDB,"RDB文件解析"),
+    RDB(2,FileType.RDB,"RDB文件解析"),
 
     AOF(3,FileType.AOF,"AOF文件解析"),
 

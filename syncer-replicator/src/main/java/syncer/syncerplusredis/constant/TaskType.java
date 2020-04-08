@@ -1,7 +1,10 @@
 package syncer.syncerplusredis.constant;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import java.io.Serializable;
 
 /**
  * @author zhanenqiang
@@ -9,7 +12,8 @@ import lombok.Getter;
  * @Date 2020/3/17
  */
 @AllArgsConstructor
-public enum TaskType {
+
+public enum TaskType implements Serializable {
 
     /**
      *任务类型

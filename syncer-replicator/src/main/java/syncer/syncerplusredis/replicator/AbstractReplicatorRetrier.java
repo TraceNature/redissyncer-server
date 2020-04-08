@@ -16,10 +16,12 @@
 
 package syncer.syncerplusredis.replicator;
 
+import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.exception.IncrementException;
 import syncer.syncerplusredis.exception.TaskMsgException;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -114,15 +116,17 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
 
                 //待验证
                 try {
-                    Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),e.getMessage());
-                } catch (TaskMsgException ex) {
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
+
+                } catch (Exception ex) {
                     ex.printStackTrace();
                 }
                 log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,e.getMessage());
             } catch (IncrementException e) {
                 try {
-                    Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),e.getMessage());
-                } catch (TaskMsgException ex) {
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
+
+                } catch (Exception ex) {
                     ex.printStackTrace();
                 }
                 log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,e.getMessage());
@@ -132,11 +136,12 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
 
 
 
-        if(TaskMsgUtils.getThreadMsgEntity(taskId).getStatus().equals(ThreadStatusEnum.RUN)){
+        if(!TaskDataManagerUtils.isTaskClose(taskId)){
             System.out.println("-------------------------over");
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),exception.getMessage());
-            } catch (TaskMsgException e) {
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,exception.getMessage(), TaskStatusType.BROKEN);
+
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,exception);

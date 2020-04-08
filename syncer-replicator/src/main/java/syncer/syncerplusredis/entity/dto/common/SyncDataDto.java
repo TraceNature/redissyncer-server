@@ -1,5 +1,6 @@
 package syncer.syncerplusredis.entity.dto.common;
 
+import syncer.syncerplusredis.constant.RedisType;
 import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.entity.RedisInfo;
 import lombok.Builder;
@@ -8,10 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -37,7 +35,7 @@ public class SyncDataDto implements Serializable {
     @Builder.Default
     private  int bigKeySize=8192;
     @Builder.Default
-    private String redistype=RedisType.SINGLE.toString();
+    private String redistype= RedisType.SINGLE.toString();
 
     //迁移类型：psync/文件
     @Builder.Default
@@ -124,7 +122,10 @@ public class SyncDataDto implements Serializable {
     }
 
     public Map<Integer, Integer> getDbMapper() {
-        return dbMapper;
+        if(dbMapper!=null){
+            return dbMapper;
+        }
+        return new HashMap<Integer,Integer>();
     }
 
     public void setDbMapper(Map<Integer, Integer> dbMapper) {

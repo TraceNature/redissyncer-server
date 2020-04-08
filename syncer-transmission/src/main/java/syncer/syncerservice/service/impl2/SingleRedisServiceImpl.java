@@ -2,12 +2,13 @@ package syncer.syncerservice.service.impl2;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import syncer.syncerpluscommon.entity.ResultMap;
 import syncer.syncerpluscommon.util.common.TemplateUtils;
-import syncer.syncerplusredis.constant.RedisStartCheckTypeEnum;
-import syncer.syncerplusredis.constant.ThreadStatusEnum;
+import syncer.syncerplusredis.constant.*;
+import syncer.syncerplusredis.entity.RedisInfo;
 import syncer.syncerplusredis.entity.RedisPoolProps;
 import syncer.syncerplusredis.entity.RedisStartCheckEntity;
 import syncer.syncerplusredis.entity.TaskDataEntity;
@@ -16,15 +17,15 @@ import syncer.syncerplusredis.entity.thread.OffSetEntity;
 import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.model.TaskModel;
+import syncer.syncerplusredis.util.SyncTypeUtils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TaskErrorUtils;
-import syncer.syncerplusredis.util.TaskMsgUtils;
+import syncer.syncerservice.filter.redis_start_check_strategy.RedisTaskStrategyGroupSelecter;
+import syncer.syncerservice.filter.strategy_type.RedisTaskStrategyGroupType;
 import syncer.syncerservice.service.IRedisTaskService;
-import syncer.syncerservice.util.SyncTaskUtils;
-import syncer.syncerservice.util.TaskCheckUtils;
+import syncer.syncerservice.sync.RedisDataSyncTransmissionTask;
+import syncer.syncerservice.util.RedisUrlCheckUtils;
 
-import java.util.Arrays;
-import java.util.Map;
 
 /**
  * @author zhanenqiang
@@ -37,6 +38,10 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
     @Autowired
     RedisPoolProps redisPoolProps;
 
+    @Autowired
+    ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+
     @Override
     public String runSyncerTask(RedisStartCheckEntity redisStartCheckEntity, RedisStartCheckTypeEnum redisStartCheckType) throws TaskMsgException {
 
@@ -44,6 +49,7 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
     }
 
     /**
+     * 运行之前已经创建过任务
      * @param taskModel
      * @return
      * @throws TaskMsgException
@@ -55,42 +61,87 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
             taskModel.setTaskName(taskModel.getId()+"【"+taskModel.getSourceRedisAddress()+"节点】");
         }
 
+        TaskDataEntity dataEntity=null;
+        if(taskModel.getSyncType().equals(SyncType.SYNC.getCode())||taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())){
+            String[] data = RedisUrlCheckUtils.selectSyncerBuffer(taskModel.getSourceUri(), SyncTypeUtils.getOffsetPlace(taskModel.getOffsetPlace()).getOffsetPlace());
+
+            dataEntity=TaskDataEntity.builder()
+                    .taskModel(taskModel)
+                    .offSetEntity(OffSetEntity.builder().replId(data[1]).build())
+                    .build();
+            dataEntity.getOffSetEntity().getReplOffset().set(taskModel.getOffset());
+        }else {
+            dataEntity=TaskDataEntity.builder()
+                    .taskModel(taskModel)
+                    .offSetEntity(OffSetEntity.builder().replId("").build())
+                    .build();
+        }
+
+
+
+
+        TaskDataManagerUtils.addMemThread(taskModel.getId(),dataEntity);
+
+
+        //创建中
+        TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.CREATING);
+
+        try {
+
+            //校验
+            RedisTaskStrategyGroupSelecter.select(RedisTaskStrategyGroupType.NODISTINCT,null,taskModel,redisPoolProps).run(null,taskModel,redisPoolProps);
+
+        }catch (Exception e){
+            TaskDataManagerUtils.removeThread(taskModel.getId());
+            throw e;
+        }
+
+
+        //创建完成
+        TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.CREATED);
+
+        try{
+            threadPoolTaskExecutor.execute(new RedisDataSyncTransmissionTask(taskModel, true));
+        }catch (Exception e){
+            TaskErrorUtils.brokenStatusAndLog(e,this.getClass(),taskModel.getId());
+        }
+
+
+        return taskModel.getId();
+    }
+
+
+
+
+    /**
+     * 创建任务
+     * @param taskModel
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public String createSyncerTask(TaskModel taskModel) throws Exception {
+        if(StringUtils.isEmpty(taskModel.getTaskName())){
+            taskModel.setTaskName(taskModel.getId()+"【"+taskModel.getSourceRedisAddress()+"节点】");
+        }
+
         TaskDataEntity dataEntity=TaskDataEntity.builder()
                 .taskModel(taskModel)
                 .offSetEntity(OffSetEntity.builder().build())
                 .build();
 
+        //首次创建完成后不自动启动
         try {
-            TaskDataManagerUtils.addAliveThread(taskModel.getId(),dataEntity);
+            TaskDataManagerUtils.addDbThread(taskModel.getId(),dataEntity.getTaskModel());
         }catch (Exception e){
             TaskErrorUtils.updateStatusAndLog(e,this.getClass(),taskModel.getId(),dataEntity);
         }
 
-
-
         if(taskModel.isAutostart()){
-
-
-
+            //首次创建完成后自动启动
+            runSyncerTask(taskModel);
         }
 
-
-
-        if(dto.isAutostart()){
-            try{
-                redisBatchedSyncerService.batchedSync(dto,threadId,dto.isAfresh());
-                msgEntity.setStatus(ThreadStatusEnum.RUN);
-            }catch (Exception e){
-                msgEntity.setStatus(ThreadStatusEnum.BROKEN);
-                log.warn("任务Id【{}】任务启动失败 ，失败原因【{}】", threadId, e.getMessage());
-                e.printStackTrace();
-            }
-
-        }else {
-            msgEntity.getRedisClusterDto().setAfresh(true);
-        }
-
-        return threadId;
-        return null;
+        return taskModel.getId();
     }
 }

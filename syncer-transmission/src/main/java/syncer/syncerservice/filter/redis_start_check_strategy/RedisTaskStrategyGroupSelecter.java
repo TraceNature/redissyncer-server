@@ -1,7 +1,9 @@
 package syncer.syncerservice.filter.redis_start_check_strategy;
 
-import syncer.syncerservice.filter.strategy_factory.IRedisTaskStrategyGroupFactory;
+import syncer.syncerplusredis.entity.RedisPoolProps;
+import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerservice.filter.strategy_type.RedisTaskStrategyGroupType;
+import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 
 import java.util.List;
 import java.util.Map;
@@ -14,11 +16,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RedisTaskStrategyGroupSelecter {
 
-    private  static volatile Map<RedisTaskStrategyGroupType, IRedisTaskStrategyGroupFactory> strategyGroupMap=null;
+    private  static volatile Map<RedisTaskStrategyGroupType, IRedisStartCheckStrategyFactory> strategyGroupMap=null;
 
     public static final Object lock=new Object();
 
-    public List<IRedisStartCheckBaseStrategy> select(RedisTaskStrategyGroupType type){
+    public synchronized static IRedisStartCheckBaseStrategy select(RedisTaskStrategyGroupType type, JDRedisClient client, TaskModel taskModel, RedisPoolProps redisPoolProps){
         if(null==strategyGroupMap){
             initGroupMap();
         }
@@ -27,7 +29,23 @@ public class RedisTaskStrategyGroupSelecter {
             return null;
         }
 
-        return strategyGroupMap.get(type).getStrategyGroup();
+        /**
+         * 组装策略结构
+         */
+        List<IRedisStartCheckBaseStrategy>redisStartCheckBaseStrategyList=strategyGroupMap.get(type).getStrategyList(client, taskModel, redisPoolProps);
+        IRedisStartCheckBaseStrategy result=null;
+        //组装链式结构
+        if(redisStartCheckBaseStrategyList!=null&&redisStartCheckBaseStrategyList.size()>0){
+            for (int i = 0; i <redisStartCheckBaseStrategyList.size() ; i++) {
+                if(i<redisStartCheckBaseStrategyList.size()-1){
+                    IRedisStartCheckBaseStrategy filter=redisStartCheckBaseStrategyList.get(i);
+                    filter.setNext(redisStartCheckBaseStrategyList.get(i+1));
+                }
+            }
+            result=redisStartCheckBaseStrategyList.get(0);
+        }
+
+        return result;
     }
 
 
@@ -43,9 +61,13 @@ public class RedisTaskStrategyGroupSelecter {
                 //再次判断
                 if (null==strategyGroupMap){
                     strategyGroupMap=new ConcurrentHashMap<>();
-
                     //初始化策略工厂
-                    strategyGroupMap.put(RedisTaskStrategyGroupType.TEST,null);
+                    strategyGroupMap.put(RedisTaskStrategyGroupType.SYNCGROUP,SyncStartCheckStrategyFactory.builder().build());
+                    strategyGroupMap.put(RedisTaskStrategyGroupType.NODISTINCT,SyncStartCheckNoDistinctStrategyFactory.builder().build());
+                    strategyGroupMap.put(RedisTaskStrategyGroupType.FILEGROUP,SyncStartCheckFileStrategyFactory.builder().build());
+
+
+
                     //
                 }
             }

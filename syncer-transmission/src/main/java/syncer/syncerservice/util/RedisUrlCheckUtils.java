@@ -157,8 +157,8 @@ public class RedisUrlCheckUtils {
                 try {
                     String png = (String) target.send("PING".getBytes());
 
-                    if ("PONG".equals(png)) {
-
+                    if ("PONG".equalsIgnoreCase(png)) {
+                        break;
                     }
                     i--;
                 } catch (Exception e) {

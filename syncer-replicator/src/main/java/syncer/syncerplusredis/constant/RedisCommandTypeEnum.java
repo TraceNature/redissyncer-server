@@ -1,5 +1,8 @@
 package syncer.syncerplusredis.constant;
 
-public enum RedisCommandTypeEnum {
+
+import java.io.Serializable;
+
+public enum RedisCommandTypeEnum implements Serializable {
     STRING,LIST,SET,ZSET,HASH,MODULE,STREAM,DUMP,COMMAND
 }

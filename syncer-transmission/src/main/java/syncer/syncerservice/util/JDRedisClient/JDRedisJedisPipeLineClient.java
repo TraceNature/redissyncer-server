@@ -10,6 +10,7 @@ import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.constant.PipeLineCompensatorEnum;
 import syncer.syncerplusredis.entity.EventEntity;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerservice.constant.CmdEnum;
 import syncer.syncerservice.po.KVPersistenceDataEntity;
 import syncer.syncerservice.po.StringCompensatorEntity;
@@ -1141,7 +1142,8 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         public void run() {
             while (true){
                 submitCommandNum();
-                if (TaskMsgStatusUtils.doThreadisCloseCheckTask(taskId)&&taskId!=null) {
+                if (TaskDataManagerUtils.isTaskClose(taskId)&&taskId!=null) {
+                    log.info("task[{}]数据传输模块进入关闭保护状态,不再接收新数据",taskId);
                     Date time =new Date(date.getTime());
                     if (status) {
                         while (System.currentTimeMillis()-time.getTime()<1000*60*2){
@@ -1151,7 +1153,8 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                         Thread.currentThread().interrupt();
                         status = false;
                         addCommandNum();
-                        System.out.println("【" + taskId + "】 PipelinedSyncTask关闭...." + Thread.currentThread().getName());
+                        log.info("task[{}]数据传输模保护状态退出,任务停止,ThreadName[{}]",taskId,Thread.currentThread().getName());
+//                        System.out.println("【" + taskId + "】 PipelinedSyncTask关闭...." + Thread.currentThread().getName());
                         pipelined.close();
                         break;
                     }
