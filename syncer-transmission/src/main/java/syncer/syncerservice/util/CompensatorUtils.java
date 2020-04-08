@@ -25,6 +25,10 @@ public class CompensatorUtils {
         if("OK".equalsIgnoreCase(res)){
             return true;
         }
+
+        if(res.toUpperCase().indexOf("ERROR")>0){
+
+        }
         return false;
     }
 

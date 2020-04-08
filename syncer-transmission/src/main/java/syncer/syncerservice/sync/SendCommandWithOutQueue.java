@@ -50,23 +50,29 @@ public class SendCommandWithOutQueue {
             }catch (Exception e){
                 Event event=keyValueEventEntity.getEvent();
                 String keyName=null;
+                String keyValue=null;
                 if(event instanceof DefaultCommand){
                     DefaultCommand defaultCommand= (DefaultCommand) event;
                     if(defaultCommand.getArgs().length>0){
-                        keyName= Strings.byteToString(((DefaultCommand) event).getCommand())+Strings.byteToString(((DefaultCommand) event).getArgs()[0]);
+                        keyName= Strings.byteToString(((DefaultCommand) event).getCommand())+"  "+JSON.toJSONString(Strings.byteToString(((DefaultCommand) event).getArgs()));
                     }else{
                         keyName= Strings.byteToString(((DefaultCommand) event).getCommand());
                     }
                 }else if(event instanceof DumpKeyValuePair){
                     DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
                     keyName= Strings.byteToString(dumpKeyValuePair.getKey());
+
                 }else if(event instanceof BatchedKeyValuePair){
                     BatchedKeyValuePair batchedKeyValuePair= (BatchedKeyValuePair) event;
                     keyName=Strings.toString(batchedKeyValuePair.getKey());
                 }
 
-                e.printStackTrace();
                 log.warn("[{}]抛弃key:{} ,class:[{}]:原因[{}]",taskId, keyName,event.getClass().toString(),e.getMessage());
+                log.warn("[{}]抛弃的命令byte:[{}]",taskId,JSON.toJSONString(event));
+                log.warn("[{}]抛弃的命令格式:[{}]",taskId,keyName);
+                e.printStackTrace();
+
+
             }
 
 

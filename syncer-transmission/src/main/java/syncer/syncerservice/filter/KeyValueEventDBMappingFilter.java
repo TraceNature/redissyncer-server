@@ -29,11 +29,19 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
     private CommonFilter next;
     private JDRedisClient client;
     private String taskId;
+    private Integer dbNum=0;
 
     public KeyValueEventDBMappingFilter(CommonFilter next, JDRedisClient client, String taskId) {
         this.next = next;
         this.client = client;
         this.taskId = taskId;
+    }
+
+    public KeyValueEventDBMappingFilter(CommonFilter next, JDRedisClient client, String taskId, Integer dbNum) {
+        this.next = next;
+        this.client = client;
+        this.taskId = taskId;
+        this.dbNum = dbNum;
     }
 
     @Override
@@ -43,56 +51,70 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
 
         //DUMP格式数据
         Event event=eventEntity.getEvent();
-        if (event instanceof DumpKeyValuePair) {
-            DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
+            if (event instanceof DumpKeyValuePair) {
+                DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
 
-            if(null==dumpKeyValuePair.getValue()||null==dumpKeyValuePair.getKey()){
-                return;
-            }
-            DB db = dumpKeyValuePair.getDb();
-            try {
-                dbMapping(eventEntity,db);
-            } catch (KeyWeed0utException e) {
-                log.info("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
-                //抛弃此kv
-                return;
-            }
-        }
-
-        //分批格式数据
-        if (event instanceof BatchedKeyValuePair<?, ?>) {
-            BatchedKeyValuePair batchedKeyValuePair = (BatchedKeyValuePair) event;
-            if((batchedKeyValuePair.getBatch()==0&&null==batchedKeyValuePair.getValue())||null==batchedKeyValuePair.getValue()){
-                return;
-            }
-
-
-
-            DB db = batchedKeyValuePair.getDb();
-            try {
-                dbMapping(eventEntity,db);
-            } catch (KeyWeed0utException e) {
-                log.info("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
-                //抛弃此kv
-                return;
-            }
-        }
-
-        //增量数据
-        if (event instanceof DefaultCommand) {
-            DefaultCommand defaultCommand = (DefaultCommand) event;
-            if(Arrays.equals(defaultCommand.getCommand(),"SELECT".getBytes())) {
-                int commDbNum = Integer.parseInt(new String(defaultCommand.getArgs()[0]));
+                if(null==dumpKeyValuePair.getValue()||null==dumpKeyValuePair.getKey()){
+                    return;
+                }
+                DB db = dumpKeyValuePair.getDb();
                 try {
-                    commanddbMapping(eventEntity,commDbNum,defaultCommand);
+                    dbMapping(eventEntity,db);
                 } catch (KeyWeed0utException e) {
+                    log.info("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
                     //抛弃此kv
-                    log.info("增量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
                     return;
                 }
             }
 
-        }
+
+
+
+            //分批格式数据
+            if (event instanceof BatchedKeyValuePair<?, ?>) {
+                BatchedKeyValuePair batchedKeyValuePair = (BatchedKeyValuePair) event;
+                if((batchedKeyValuePair.getBatch()==0&&null==batchedKeyValuePair.getValue())||null==batchedKeyValuePair.getValue()){
+                    return;
+                }
+
+
+
+                DB db = batchedKeyValuePair.getDb();
+                try {
+                    dbMapping(eventEntity,db);
+                } catch (KeyWeed0utException e) {
+                    log.info("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                    //抛弃此kv
+                    return;
+                }
+            }
+
+
+
+            //增量数据
+            if (event instanceof DefaultCommand) {
+                DefaultCommand defaultCommand = (DefaultCommand) event;
+                if(Arrays.equals(defaultCommand.getCommand(),"SELECT".getBytes())) {
+                    int commDbNum = Integer.parseInt(new String(defaultCommand.getArgs()[0]));
+                    dbNum=commDbNum;
+                    try {
+                        commanddbMapping(eventEntity,commDbNum,defaultCommand);
+                    } catch (KeyWeed0utException e) {
+                        //抛弃此kv
+                        log.info("增量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                        return;
+                    }
+                }else{
+                    try {
+                        commanddbMapping(eventEntity,dbNum);
+                    } catch (KeyWeed0utException e) {
+                        //抛弃此kv
+                        log.info("增量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                        return;
+                    }
+                }
+
+            }
 
         //继续执行下一Filter节点
         toNext(replicator,eventEntity);
@@ -113,6 +135,8 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
         this.next=nextFilter;
     }
 
+
+
     /**
      * 全量KV DBNUM映射
      * @param eventEntity
@@ -120,7 +144,7 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
      * @throws KeyWeed0utException
      */
     void dbMapping(KeyValueEventEntity eventEntity,DB db) throws KeyWeed0utException {
-
+        Event event=eventEntity.getEvent();
         long dbbnum=db.getDbNumber();
         if (null != eventEntity.getDbMapper() && eventEntity.getDbMapper().size() > 0) {
             if (eventEntity.getDbMapper().containsKey((int) db.getDbNumber())) {
@@ -132,7 +156,20 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
 
             }
         }
+        if(event instanceof DumpKeyValuePair) {
+            DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
+            DB dbn=dumpKeyValuePair.getDb();
+            dbn.setDbNumber(dbbnum);
+            dumpKeyValuePair.setDb(dbn);
+            eventEntity.setEvent(dumpKeyValuePair);
+        }else if(event instanceof BatchedKeyValuePair<?, ?>){
+            BatchedKeyValuePair batchedKeyValuePair = (BatchedKeyValuePair) event;
+            DB dbn=batchedKeyValuePair.getDb();
+            dbn.setDbNumber(dbbnum);
+            eventEntity.setEvent(batchedKeyValuePair);
+        }
         eventEntity.setDbNum(dbbnum);
+
     }
 
     /**
@@ -142,12 +179,12 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
      * @throws KeyWeed0utException
      */
     void commanddbMapping(KeyValueEventEntity eventEntity,Integer correntDbNum,DefaultCommand command) throws KeyWeed0utException {
-        long dbbnum=correntDbNum;
+
         if (null != eventEntity.getDbMapper() && eventEntity.getDbMapper().size() > 0) {
-            if (eventEntity.getDbMapper().containsKey(dbbnum)) {
-                dbbnum = eventEntity.getDbMapper().get(dbbnum);
+            if (eventEntity.getDbMapper().containsKey(correntDbNum)) {
+                Integer  newNum = eventEntity.getDbMapper().get(correntDbNum);
                 byte[][]dbData=command.getArgs();
-                dbData[0]=String.valueOf(dbbnum).getBytes();
+                dbData[0]=String.valueOf(newNum).getBytes();
                 command.setArgs(dbData);
             } else {
                 //忽略本key
@@ -155,5 +192,14 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
             }
         }
         eventEntity.setEvent(command);
+    }
+
+    void commanddbMapping(KeyValueEventEntity eventEntity,Integer correntDbNum) throws KeyWeed0utException {
+        if (null != eventEntity.getDbMapper() && eventEntity.getDbMapper().size() > 0) {
+            if (!eventEntity.getDbMapper().containsKey(correntDbNum)) {
+                //忽略本key
+                throw new KeyWeed0utException("key抛弃");
+            }
+        }
     }
 }

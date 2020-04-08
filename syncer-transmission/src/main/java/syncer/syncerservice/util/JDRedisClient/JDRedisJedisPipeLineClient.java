@@ -1,6 +1,7 @@
 package syncer.syncerservice.util.JDRedisClient;
 
 
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import syncer.syncerjedis.*;
@@ -738,15 +739,14 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                 List<Object> resultList = pipelined.syncAndReturnAll();
 //                System.out.println(resultList.size()+":内存： "+kvPersistence.size());
 
-                Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
-                    Object data = resultList.get(index);
-                    if(!compensatorUtils.isObjectSuccess(data)){
-
-                        compensator(kvPersistence.getKey(index));
-
-
-                    }
-                });
+//                Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
+//                    Object data = resultList.get(index);
+//                    if(!compensatorUtils.isObjectSuccess(data)){
+//
+//                        compensator(kvPersistence.getKey(index));
+//
+//                    }
+//                });
 
                 resultList.clear();
                 kvPersistence.clear();
@@ -1019,17 +1019,17 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 //                 System.out.println(resultList.size()+":内存： "+kvPersistence.size());
 
 
-                 Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
-                     Object data = resultList.get(index);
-                     if(!compensatorUtils.isObjectSuccess(data)){
-
-                         compensator(kvPersistence.getKey(index));
-                         System.out.println("补偿机制："+data);
-
-
-
-                     }
-                 });
+//                 Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
+//                     Object data = resultList.get(index);
+//                     if(!compensatorUtils.isObjectSuccess(data)){
+//
+//                         compensator(kvPersistence.getKey(index));
+//                         System.out.println("补偿机制："+ JSON.toJSONString(data));
+//
+//
+//
+//                     }
+//                 });
 
 
                  resultList.clear();
@@ -1047,17 +1047,17 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 //                 pipelined.
                  List<Object> resultList = pipelined.syncAndReturnAll();
 
-                 Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
-                     Object data = resultList.get(index);
-                     if(!compensatorUtils.isObjectSuccess(data)){
-
-                         System.out.println("补偿机制："+data);
-                         compensator(kvPersistence.getKey(index));
-                         System.out.println(compensatorUtils.getRes(data));
-
-
-                     }
-                 });
+//                 Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
+//                     Object data = resultList.get(index);
+//                     if(!compensatorUtils.isObjectSuccess(data)){
+//
+//                         System.out.println("补偿机制："+ JSON.toJSONString(data));
+//                         compensator(kvPersistence.getKey(index));
+//                         System.out.println(compensatorUtils.getRes(data));
+//
+//
+//                     }
+//                 });
 
                  kvPersistence.clear();
 //                 log.info("[{}]PING->{}",taskId, r.get());
@@ -1069,17 +1069,19 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
                  List<Object> resultList = pipelined.syncAndReturnAll();
 
-
-                 Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
-                     Object data = resultList.get(index);
-                     if(!compensatorUtils.isObjectSuccess(data)){
-                         System.out.println("补偿机制："+data);
-                         compensator(kvPersistence.getKey(index));
-                         System.out.println(compensatorUtils.getRes(data));
-
-
-                     }
-                 });
+//
+//                 Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
+//                     Object data = resultList.get(index);
+//                     if(!compensatorUtils.isObjectSuccess(data)){
+//                         System.out.println("补偿机制："+data);
+//                         kvPersistence.getKey(index);
+//                         if(kvPersistence.getKey(index))
+//                         compensator(kvPersistence.getKey(index));
+//                         System.out.println(compensatorUtils.getRes(data));
+//
+//
+//                     }
+//                 });
 
                  kvPersistence.clear();
                  date = new Date();

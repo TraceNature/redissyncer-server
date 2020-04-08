@@ -16,6 +16,7 @@ import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.SyncTaskUtils;
+import syncer.syncerservice.util.common.Strings;
 
 /**
  * 增量数据同步节点
@@ -83,21 +84,51 @@ public class KeyValueCommandSyncEventFilter implements CommonFilter {
         //命令解析器
         if (event instanceof DefaultCommand) {
             DefaultCommand dc = (DefaultCommand) event;
-            Object result=client.send(dc.getCommand(),dc.getArgs());
+
+            if(dc!=null){
+
+                if(dc.getCommand()==null){
+                    log.info("[{}]命令null,赋值为空..command:[{}]",taskId,Strings.byteToString(dc.getCommand()));
+
+                }
+                if(dc.getArgs()==null){
+                    dc.setArgs(new byte[0][]);
+                    log.info("[{}]命令参数为null,赋值为空..command:[{}]",taskId,Strings.byteToString(dc.getCommand()));
+                }
+
+                Object result=client.send(dc.getCommand(),dc.getArgs());
+            }else {
+                log.info("[{}]DefaultCommand命令null",taskId);
+            }
+
+
 //            log.debug("增量命令 command:{} Args[0]:{}",dc.getCommand(),dc.getArgs());
 //            Configuration configuration=eventEntity.getConfiguration();
 //            eventEntity.getBaseOffSet().setReplId(configuration.getReplId());
 //            eventEntity.getBaseOffSet().getReplOffset().set(configuration.getReplOffset());
 
-            eventEntity.getBaseOffSet().setReplId(eventEntity.getReplId());
-            eventEntity.getBaseOffSet().getReplOffset().set(eventEntity.getReplOffset());
+            try {
+                eventEntity.getBaseOffSet().setReplId(eventEntity.getReplId());
+                eventEntity.getBaseOffSet().getReplOffset().set(eventEntity.getReplOffset());
+            }catch (Exception e){
+                log.info("task:[{}],command:{} 记录offset失败,无影响",taskId, Strings.byteToString(dc.getCommand()));
+            }
+
         }
 
         //继续执行下一Filter节点
         toNext(replicator,eventEntity);
 
         }catch (Exception e){
+            Event event=eventEntity.getEvent();
+            if (event instanceof DefaultCommand) {
+                DefaultCommand dc = (DefaultCommand) event;
+                log.info("[{}]抛弃key的命令[{}] ,参数为：[{}]",taskId,Strings.byteToString(dc.getCommand()),JSON.toJSONString(Strings.byteToString(dc.getArgs())));
+            }
+
+            e.printStackTrace();
             throw new FilterNodeException(e.getMessage()+"->KeyValueCommandSyncEventFilter",e.getCause());
+
         }
     }
 
