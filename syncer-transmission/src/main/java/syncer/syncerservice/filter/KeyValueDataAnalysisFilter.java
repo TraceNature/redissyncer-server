@@ -104,6 +104,7 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
                 addAnalysisMap(DataType.FRAGMENTATION);
                 addAnalysisMap(DataType.FRAGMENTATION_NUM);
             }else {
+
                 addAnalysisMap(DataType.FRAGMENTATION_NUM);
             }
 
@@ -156,11 +157,16 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
                 analysisMap.put(dataType.toString(),1L);
             }
 
-            if(analysisMap.containsKey(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM)){
-                analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM,analysisMap.get(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM)+1);
-            }else {
-                analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM,1L);
+
+            if(dataType!=null&&dataType.equals(DataType.FRAGMENTATION_NUM)){
+                if(analysisMap.containsKey(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM)){
+                    analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM,analysisMap.get(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM)+1);
+                }else {
+                    analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM,1L);
+                }
             }
+
+
 
 //            if(analysisMap.containsKey(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM)){
 //                analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM,analysisMap.get(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM)+1);
