@@ -2,6 +2,8 @@ package syncer.syncerservice.util.file;
 
 
 import org.springframework.web.multipart.MultipartFile;
+import syncer.syncerpluscommon.config.DbProperties;
+import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 
@@ -15,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 文件操作类
  */
 public class FileUtils {
-
+   static DbProperties dbProperties= SpringUtil.getBean(DbProperties.class);
     /**
      * 保存文件
      *
@@ -176,7 +178,8 @@ public class FileUtils {
      * 创建文件锁（判断是否首次启动）
      */
     public static void createSyncerLock() {
-        String path = System.getProperty("user.dir") + FileUtils.getLockFileName();
+//        String path = System.getProperty("user.dir") + FileUtils.getLockFileName();
+        String path = dbProperties.getDatafile() + FileUtils.getLockFileName();
         if (!existsFile(path)) {
             saveTextFile("syncer", path);
         }
@@ -188,7 +191,7 @@ public class FileUtils {
      * 删除文件锁
      */
     public static void delSyncerLock() {
-        String path = System.getProperty("user.dir") + FileUtils.getLockFileName();
+        String path =  dbProperties.getDatafile()  + FileUtils.getLockFileName();
         if (existsFile(path)) {
             deleteFile(path);
         }
@@ -200,8 +203,8 @@ public class FileUtils {
      * @param value
      */
     public static synchronized void createSyncerSetting(String value){
-        String lockPath = System.getProperty("user.dir") + FileUtils.getLockFileName();
-        String settingPath = System.getProperty("user.dir") + FileUtils.getSettingName();
+        String lockPath =  dbProperties.getDatafile() + FileUtils.getLockFileName();
+        String settingPath = dbProperties.getDatafile() + FileUtils.getSettingName();
         if(!existsFile(lockPath)){
             createSyncerLock();
         }
@@ -214,8 +217,11 @@ public class FileUtils {
      * 清理配置文件
      */
     public static void cleanSettings(){
-        String lockPath = System.getProperty("user.dir") + FileUtils.getLockFileName();
-        String settingPath = System.getProperty("user.dir") + FileUtils.getSettingName();
+        DbProperties dbProperties= SpringUtil.getBean(DbProperties.class);
+//        String lockPath = System.getProperty("user.dir") + FileUtils.getLockFileName();
+//        String settingPath = System.getProperty("user.dir") + FileUtils.getSettingName();
+        String lockPath = dbProperties.getDatafile() + FileUtils.getLockFileName();
+        String settingPath = dbProperties.getDatafile()+ FileUtils.getSettingName();
         if(existsFile(lockPath)){
             deleteFile(lockPath);
         }
@@ -226,9 +232,16 @@ public class FileUtils {
 
 
     public static void flushSettings(){
-        String settingPath = System.getProperty("user.dir") + FileUtils.getSettingName();
 
-        String lockPath = System.getProperty("user.dir") + FileUtils.getLockFileName();
+//        String settingPath = System.getProperty("user.dir") + FileUtils.getSettingName();
+//
+//        String lockPath =  + FileUtils.getLockFileName();
+
+        DbProperties dbProperties= SpringUtil.getBean(DbProperties.class);
+
+        String settingPath = dbProperties.getDatafile() + FileUtils.getSettingName();
+
+        String lockPath = dbProperties.getDatafile() + FileUtils.getLockFileName();
 
         if(!FileUtils.existsFile(lockPath)){
             FileUtils.createSyncerLock();

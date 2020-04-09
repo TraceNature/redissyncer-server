@@ -1,12 +1,9 @@
 package syncer;
 
-import redis.clients.jedis.JedisSentinelPool;
+import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
 import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
-
 import syncer.syncerplusredis.util.TaskMsgUtils;
-
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
@@ -14,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import syncer.syncerpluscommon.config.DbProperties;
 import syncer.syncerservice.persistence.SettingPersistenceTask;
 import syncer.syncerservice.util.file.FileUtils;
 
@@ -40,11 +38,12 @@ public class SyncerplusWebappApplication {
          */
         new Thread(new SettingPersistenceTask()).start();
 
+        DbProperties dbProperties= SpringUtil.getBean(DbProperties.class);
 
 
 
+        String settingPath = dbProperties.getDatafile() + FileUtils.getSettingName();
 
-        String settingPath = System.getProperty("user.dir") + FileUtils.getSettingName();
         if(FileUtils.existsFile(settingPath)){
 //            ConcurrentHashMap<String,ThreadMsgEntity> data=JSON.parseObject(FileUtils.getText(System.getProperty("user.dir")+ FileUtils.getSettingName()),new TypeReference<ConcurrentHashMap<String, ThreadMsgEntity>>() {});
             ConcurrentHashMap<String, ThreadMsgEntity> data= (ConcurrentHashMap<String, ThreadMsgEntity>) FileUtils.FileInputToObject(settingPath);

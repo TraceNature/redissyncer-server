@@ -25,6 +25,17 @@ syncerplus:
 #logging:
 server:
   port: 8080
-#  config: log/logback.xml
+#  config: log/logback-spring.xml
+#logging:
+#  config: logback-spring.xml
+
 logging:
-  config: logback.xml
+  level:
+    root: INFO
+#syncer配置以及数据文件存路径路径配置
+
+syncer:
+  config:
+    path:
+      logfile: ./log
+      datafile: ./

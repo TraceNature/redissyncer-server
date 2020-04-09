@@ -2,14 +2,17 @@
 
 <!--scan为true，党配置文件发生改变，将会重新加载-->
 <configuration scan="true" scanPeriod="60 seconds" debug="false">
-
+<!--        <property resource="application.properties"/>-->
         <!-- 路径名称 -->
         <property name="log.base" value="/data/logs" />
         <!-- 保存的文件名 -->
         <property name="log.fileName" value="log" />
 
         <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
-        <property name="LOG_HOME" value="D:/Log" />
+<!--        <property name="LOG_HOME" value="D:/Log" />-->
+        <springProperty scope="context" name="LOG_HOME" source="syncer.config.path.logfile"/>
+        <springProperty scope="context" name="LOG_LEVEL" source="logging.level.root"/>
+
         <!-- 控制台输出 -->
         <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
                 <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
@@ -42,11 +45,11 @@
                   class="ch.qos.logback.core.rolling.RollingFileAppender">
                 <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
                         <!--日志文件输出的文件名 -->
-                        <FileNamePattern>${log.fileName}/syncer.log.%d{yyyy-MM-dd}.%i.log
+                        <FileNamePattern>${LOG_HOME}/syncer.log.%d{yyyy-MM-dd}.%i.log
                         </FileNamePattern>
                         <!--日志文件保留天数 -->
-                        <MaxHistory>30</MaxHistory>
-                        <maxFileSize>200MB</maxFileSize>
+                        <MaxHistory>7</MaxHistory>
+                        <maxFileSize>512MB</maxFileSize>
                 </rollingPolicy>
                 <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
                         <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符 -->
@@ -55,11 +58,11 @@
 
         </appender>
 
-        <logger name="syncer" level="INFO"/>
+        <logger name="syncer" level="${LOG_LEVEL}"/>
 
 
         <!-- 日志输出级别 -->
-        <root level="INFO">
+        <root level="${LOG_LEVEL}">
                 <appender-ref ref="STDOUT"/>
                 <appender-ref ref="FILE" />
         </root>
