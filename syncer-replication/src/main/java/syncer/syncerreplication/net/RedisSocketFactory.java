@@ -17,11 +17,13 @@ import java.net.SocketException;
  */
 public class RedisSocketFactory extends SocketFactory {
 
-    protected final Configuration configuration;
+    final Configuration configuration;
 
     public RedisSocketFactory(Configuration configuration) {
         this.configuration = configuration;
     }
+
+
 
     @Override
     public Socket createSocket(String host, int port) throws IOException {
