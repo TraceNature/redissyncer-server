@@ -14,8 +14,8 @@ ENV SPRING_ENV="--server.port=80"
 ARG JAR_FILE
 # 复制打包完成后的jar文件到/opt目录下
 #COPY ${JAR_FILE}  /opt/app.jar
-RUN mkdir -p /opt/redissyncer
-COPY syncer-webapp/syncer-webapp-2.0.8.jar /opt/redissyncer/redissyncer.jar
+RUN mkdir -p /opt/redissyncer && mkdir -p /opt/redissyncer/log
+COPY syncer-webapp/${JAR_FILE} /opt/redissyncer/redissyncer.jar
 # 启动容器时执行
 #ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/opt/app.jar"]
 #CMD java -jar /opt/redissyncer/redissyncer.jar --server.port=80
