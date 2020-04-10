@@ -4,13 +4,15 @@ version: "2.4"
 
 services:
   redissyncer-server:
-      image: jiashiwen/redissyncer:v2.0.8
-      ports:
-      - "8000:80"
-      mem_limit: 3g 
+      image: jiashiwen/redissyncer:v2.0.9
+      #ports:
+      #- "8000:80"
+      network_mode: "host"
+      mem_limit: 2g 
       environment:
-        SPRING_ENV: "--server.port=80"
+        SPRING_ENV: "--server.port=8000 --syncer.config.path.logfile=/log --syncer.config.path.datafile=/data "
       volumes:
         - /etc/localtime:/etc/localtime:ro
-        - ./log:/opt/redissyncer/log
+        - ./log:/log
+        - ./data:/data
       container_name: redissyncer-server
