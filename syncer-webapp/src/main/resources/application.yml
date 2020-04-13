@@ -29,6 +29,17 @@ server:
 #logging:
 #  config: config/logback.xml
 
+logging:
+  level:
+    root: INFO
+#syncer配置以及数据文件存路径路径配置
+
+syncer:
+  config:
+    path:
+      logfile: ./log
+      datafile: ./
+
 
 spring:
   datasource:
