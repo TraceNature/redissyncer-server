@@ -79,6 +79,43 @@ public class ValueIterableDumpRdbValueVisitor extends DefaultRdbValueVisitor {
     }
 
 
+    /**
+     * 迭代
+     * @param in
+     * @param version
+     * @param <T>
+     * @return
+     * @throws IOException
+     */
+//    @Override
+//    public <T> T applyList1(RedisInputStream in, int version) throws IOException {
+//        /*
+//         * |    <len>     |       <content>       |
+//         * | 1 or 5 bytes |    string contents    |
+//         */
+//        BaseRdbParser parser = new BaseRdbParser(in);
+//
+//        long len = parser.rdbLoadLen().len;
+//        Iterator<byte[]> val = new Iter<byte[]>(len, parser) {
+//            @Override
+//            public boolean hasNext() {
+//                return condition > 0;
+//            }
+//
+//            @Override
+//            public byte[] next() {
+//                try {
+//                    byte[] element = parser.rdbLoadEncodedStringObject().first();
+//                    condition--;
+//                    return element;
+//                } catch (IOException e) {
+//                    throw new UncheckedIOException(e);
+//                }
+//            }
+//        };
+//        return (T) val;
+//    }
+
 
     @Override
     public <T> T applyList(RedisInputStream in, int version) throws IOException {
@@ -89,7 +126,10 @@ public class ValueIterableDumpRdbValueVisitor extends DefaultRdbValueVisitor {
         BaseRdbParser parser = new BaseRdbParser(in);
 
         long len = parser.rdbLoadLen().len;
+
+
         Iterator<byte[]> val = new Iter<byte[]>(len, parser) {
+
             @Override
             public boolean hasNext() {
                 return condition > 0;
@@ -108,6 +148,11 @@ public class ValueIterableDumpRdbValueVisitor extends DefaultRdbValueVisitor {
         };
         return (T) val;
     }
+
+
+
+
+
 
     @Override
     public <T> T applySet(RedisInputStream in, int version) throws IOException {
@@ -535,6 +580,13 @@ public class ValueIterableDumpRdbValueVisitor extends DefaultRdbValueVisitor {
             }
         }
     }
+
+
+
+
+
+
+
 
 
 

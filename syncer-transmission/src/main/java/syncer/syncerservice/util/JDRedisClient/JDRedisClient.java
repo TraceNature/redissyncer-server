@@ -32,6 +32,13 @@ public interface JDRedisClient {
     Long lpush(final Long dbNum,final  byte[]key,final List<byte[]> value);
     Long lpush(final Long dbNum,final byte[]key,long ms,final List<byte[]>value);
 
+
+    Long rpush(final Long dbNum,final  byte[]key,final byte[]...value);
+    Long rpush(final Long dbNum,final byte[]key,long ms,final byte[]...value);
+
+    Long rpush(final Long dbNum,final  byte[]key,final List<byte[]> value);
+    Long rpush(final Long dbNum,final byte[]key,long ms,final List<byte[]>value);
+
     //SET
 //    Long sadd(final byte[] key, final byte[]... members);
 //    Long sadd(final byte[] key,long ms, final byte[]... members);

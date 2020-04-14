@@ -87,9 +87,29 @@ public class JDRedisJedisClient implements JDRedisClient {
         return result;
     }
 
+    @Override
+    public Long rpush(Long dbNum, byte[] key, byte[]... value) {
+        return client.rpush(key,value);
+    }
 
+    @Override
+    public Long rpush(Long dbNum, byte[] key, long ms, byte[]... value) {
+        Long res=client.rpush(key, value);
+        client.pexpire(key,ms);
+        return res;
+    }
 
+    @Override
+    public Long rpush(Long dbNum, byte[] key, List<byte[]> value) {
+        return client.rpush(key, ObjectUtils.listBytes(value));
+    }
 
+    @Override
+    public Long rpush(Long dbNum, byte[] key, long ms, List<byte[]> value) {
+        Long result = client.rpush(key, ObjectUtils.listBytes(value));
+        client.pexpire(key,ms);
+        return result;
+    }
 
 
     @Override

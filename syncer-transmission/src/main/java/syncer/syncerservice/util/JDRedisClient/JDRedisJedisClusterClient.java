@@ -99,6 +99,30 @@ public class JDRedisJedisClusterClient implements JDRedisClient {
     }
 
     @Override
+    public Long rpush(Long dbNum, byte[] key, byte[]... value) {
+        return redisClient.rpush(key,value);
+    }
+
+    @Override
+    public Long rpush(Long dbNum, byte[] key, long ms, byte[]... value) {
+        Long res= redisClient.rpush(key,value);
+        redisClient.pexpire(key,ms);
+        return res;
+    }
+
+    @Override
+    public Long rpush(Long dbNum, byte[] key, List<byte[]> value) {
+        return  redisClient.rpush(key, ObjectUtils.listBytes(value));
+    }
+
+    @Override
+    public Long rpush(Long dbNum, byte[] key, long ms, List<byte[]> value) {
+        Long res= redisClient.rpush(key,ObjectUtils.listBytes(value));
+        redisClient.pexpire(key,ms);
+        return res;
+    }
+
+    @Override
     public Long sadd(Long dbNum, byte[] key, byte[]... members) {
         return redisClient.sadd(key,members);
     }

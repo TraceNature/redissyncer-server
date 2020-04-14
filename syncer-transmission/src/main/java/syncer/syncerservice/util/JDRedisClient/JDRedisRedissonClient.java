@@ -66,6 +66,26 @@ public class JDRedisRedissonClient implements JDRedisClient {
         return null;
     }
 
+    @Override
+    public Long rpush(Long dbNum, byte[] key, byte[]... value) {
+        return null;
+    }
+
+    @Override
+    public Long rpush(Long dbNum, byte[] key, long ms, byte[]... value) {
+        return null;
+    }
+
+    @Override
+    public Long rpush(Long dbNum, byte[] key, List<byte[]> value) {
+        return null;
+    }
+
+    @Override
+    public Long rpush(Long dbNum, byte[] key, long ms, List<byte[]> value) {
+        return null;
+    }
+
 
     @Override
     public Long sadd(Long dbNum, byte[] key, byte[]... members) {

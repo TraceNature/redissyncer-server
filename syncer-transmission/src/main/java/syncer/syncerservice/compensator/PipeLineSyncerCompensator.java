@@ -52,6 +52,26 @@ public class PipeLineSyncerCompensator implements ISyncerCompensator {
     }
 
     @Override
+    public void rpush(Long dbNum, byte[] key, byte[][] value, Long res) {
+
+    }
+
+    @Override
+    public void rpush(Long dbNum, byte[] key, long ms, byte[][] value, Long res) {
+
+    }
+
+    @Override
+    public void rpush(Long dbNum, byte[] key, List<byte[]> value, Long res) {
+
+    }
+
+    @Override
+    public void rpush(Long dbNum, byte[] key, long ms, List<byte[]> value, Long res) {
+
+    }
+
+    @Override
     public void sadd(Long dbNum, byte[] key, byte[][] members, Long res) {
 
     }
