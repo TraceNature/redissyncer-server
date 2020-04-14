@@ -8,7 +8,7 @@ import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
 import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
-import syncer.syncerservice.util.file.FileUtils;
+import syncer.syncerpluscommon.util.file.FileUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +22,8 @@ public class SqliteSettingPersistenceTask  implements Runnable{
 
     @Override
     public void run() {
+
+
         while (true){
             try {
                 Map<String, TaskDataEntity> aliveThreadHashMap =TaskDataManagerUtils.getAliveThreadHashMap();

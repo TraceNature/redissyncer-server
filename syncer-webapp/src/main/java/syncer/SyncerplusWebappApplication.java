@@ -10,14 +10,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import syncer.syncerpluscommon.service.SqlFileExecutor;
+import syncer.syncerpluscommon.util.db.SqliteUtil;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
-import syncer.syncerplusredis.constant.SyncType;
 import syncer.syncerplusredis.constant.TaskStatusType;
-import syncer.syncerplusredis.constant.TaskType;
 import syncer.syncerplusredis.dao.TaskMapper;
 import syncer.syncerplusredis.model.TaskModel;
-import syncer.syncerservice.persistence.SettingPersistenceTask;
 import syncer.syncerservice.persistence.SqliteSettingPersistenceTask;
+import syncer.syncerpluscommon.util.file.FileUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,7 +40,22 @@ public class SyncerplusWebappApplication {
 
 
         SpringApplication.run(SyncerplusWebappApplication.class, args);
+
+
+        if(!FileUtils.existsFile(SqliteUtil.getFilePath())){
+            FileUtils.mkdirs(SqliteUtil.getFilePath());
+        }
+        if(!FileUtils.existsFile(SqliteUtil.getPath())){
+            log.info("初始化持久化文件..");
+            SqlFileExecutor.execute();
+//            SqliteUtil.runSqlScript();
+        }else {
+            log.info("持久化文件存在,无需初始化持久化文件");
+        }
+
+
         loadingData();
+
         /**
          * 开启线程监控
          */
@@ -47,10 +63,16 @@ public class SyncerplusWebappApplication {
         /**
          * 持久化任务
          */
+
+
+
+
         new Thread(new SqliteSettingPersistenceTask()).start();
 
         String md5A="A239";
         String md5B="B240";
+
+
 
 //        Thread threadA=new Thread(new RedisDataMultiSyncTransmissionTask("redis://114.67.100.239:20001?authPassword=redistest0102", "114.67.100.240",20001,md5A,md5B,"A239"));
 //        Thread threadB=new Thread(new RedisDataMultiSyncTransmissionTask("redis://114.67.100.240:20001?authPassword=redistest0102","114.67.100.239",20001,md5A,md5B,"B240"));
@@ -77,6 +99,7 @@ public class SyncerplusWebappApplication {
 //            TaskMsgUtils.setAliveThreadHashMap(data);
 //
 //        }
+
 
 
     }

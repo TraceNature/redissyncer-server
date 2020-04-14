@@ -1,9 +1,8 @@
-package syncer.syncerservice.util.file;
+package syncer.syncerpluscommon.util.file;
 
 
 import org.springframework.web.multipart.MultipartFile;
-import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
-import syncer.syncerplusredis.util.TaskMsgUtils;
+
 
 import java.io.*;
 import java.util.ArrayList;
@@ -164,6 +163,14 @@ public class FileUtils {
         return null;
     }
 
+    public static boolean mkdirs(String path){
+        File f = new File(path);
+        if(!f.exists()){
+           return f.mkdirs(); //创建目录
+        }
+        return false;
+    }
+
     public static String getLockFileName() {
         return "/syncer.lock";
     }
@@ -225,45 +232,6 @@ public class FileUtils {
     }
 
 
-    public static void flushSettings(){
-        String settingPath = System.getProperty("user.dir") + FileUtils.getSettingName();
-
-        String lockPath = System.getProperty("user.dir") + FileUtils.getLockFileName();
-
-        if(!FileUtils.existsFile(lockPath)){
-            FileUtils.createSyncerLock();
-        }
-
-
-
-            if(TaskMsgUtils.getAliveThreadHashMap()!=null&& TaskMsgUtils.getAliveThreadHashMap().size()>0){
-                try {
-                    Map<String,ThreadMsgEntity>data=new ConcurrentHashMap<>();
-                    data.putAll(TaskMsgUtils.getAliveThreadHashMap());
-                    for (Map.Entry<String,ThreadMsgEntity> d:data.entrySet()) {
-                        ThreadMsgEntity msgEntity=d.getValue();
-                        ThreadMsgEntity newData=new ThreadMsgEntity();
-
-                        newData.setId(msgEntity.getId());
-                        newData.setTaskName(msgEntity.getTaskName());
-                        newData.setThread(msgEntity.getThread());
-                        newData.setRedisClusterDto(msgEntity.getRedisClusterDto());
-                        newData.setStatus(msgEntity.getStatus());
-                        newData.setOffsetMap(msgEntity.getOffsetMap());
-//                        BeanUtils.copyProperties(msgEntity,newData);
-//                        newData.setRList(new ArrayList<>());
-                        data.put(d.getKey(),newData);
-                    }
-                    ObjectOutToFile(settingPath,data);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-
-//                saveTextFile(JSON.toJSONString(TaskMsgUtils.getAliveThreadHashMap(), SerializerFeature.DisableCircularReferenceDetect),settingPath);
-            }
-
-    }
 
 
     public synchronized static void ObjectOutToFile(String path,Object object) throws IOException {

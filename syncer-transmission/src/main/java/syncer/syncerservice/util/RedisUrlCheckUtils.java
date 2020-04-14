@@ -15,7 +15,7 @@ import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.exception.TaskRestoreException;
 import syncer.syncerplusredis.util.code.CodeUtils;
 import syncer.syncerservice.pool.RedisClient;
-import syncer.syncerservice.util.file.FileUtils;
+import syncer.syncerpluscommon.util.file.FileUtils;
 import syncer.syncerservice.util.jedis.TestJedisClient;
 import syncer.syncerservice.util.regex.RegexUtil;
 

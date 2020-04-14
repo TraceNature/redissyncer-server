@@ -12,7 +12,7 @@ import syncer.syncerplusredis.entity.dto.RedisClusterDto;
 import syncer.syncerplusredis.entity.dto.RedisFileDataDto;
 import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.util.SyncTypeUtils;
-import syncer.syncerservice.util.file.FileUtils;
+import syncer.syncerpluscommon.util.file.FileUtils;
 
 import java.io.File;
 import java.util.ArrayList;

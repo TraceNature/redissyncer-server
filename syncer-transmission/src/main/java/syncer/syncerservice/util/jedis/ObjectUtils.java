@@ -3,7 +3,7 @@ package syncer.syncerservice.util.jedis;
 
 import syncer.syncerjedis.Jedis;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
-import syncer.syncerservice.util.file.SafeObjectInputStream;
+import syncer.syncerpluscommon.util.file.SafeObjectInputStream;
 
 import java.io.*;
 import java.util.HashMap;

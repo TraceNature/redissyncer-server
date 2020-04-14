@@ -1,6 +1,5 @@
 package syncer.syncerservice.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,7 @@ import syncer.syncerservice.service.ISyncerTaskService;
 import syncer.syncerservice.util.RedisUrlCheckUtils;
 import syncer.syncerservice.util.SyncTaskUtils;
 import syncer.syncerservice.util.TaskCheckUtils;
-import syncer.syncerservice.util.file.FileUtils;
+import syncer.syncerpluscommon.util.file.FileUtils;
 
 import java.io.File;
 import java.util.*;

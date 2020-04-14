@@ -3,7 +3,7 @@ package syncer.syncerservice.persistence;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
-import syncer.syncerservice.util.file.FileUtils;
+import syncer.syncerpluscommon.util.file.FileUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +14,7 @@ public class SettingPersistenceTask implements Runnable{
     public void run() {
         while (true){
             try {
-                FileUtils.flushSettings();
+//                FileUtils.flushSettings();
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();

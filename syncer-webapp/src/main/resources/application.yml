@@ -50,3 +50,5 @@ spring:
     url: jdbc:sqlite:data/syncer.db
     username:
     password:
+#    schema: classpath:init.sql
+#    initialization-mode: ALWAYS

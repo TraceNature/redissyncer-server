@@ -1,4 +1,4 @@
-package syncer.syncerservice.util.file;
+package syncer.syncerpluscommon.util.file;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
