@@ -301,6 +301,107 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         return null;
     }
 
+    @Override
+    public Long rpush(Long dbNum, byte[] key, byte[]... value) {
+        selectDb(dbNum);
+        commitLock.lock();
+
+        try{
+            pipelined.rpush(key, value);
+
+            kvPersistence.addKey(EventEntity
+                    .builder()
+                    .key(key)
+                    .valueList(value)
+                    .stringKey(Strings.byteToString(key))
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH)
+                    .dbNum(dbNum)
+                    .build());
+        }finally {
+            commitLock.unlock();
+        }
+
+        return null;
+    }
+
+    @Override
+    public Long rpush(Long dbNum, byte[] key, long ms, byte[]... value) {
+        selectDb(dbNum);
+        commitLock.lock();
+        try {
+            pipelined.rpush(key, value);
+            kvPersistence.addKey(EventEntity
+                    .builder()
+                    .key(key)
+                    .valueList(value)
+                    .stringKey(Strings.byteToString(key))
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH_WITH_TIME)
+                    .dbNum(dbNum)
+                    .ms(ms)
+                    .build());
+
+            pexpire(dbNum,key,ms);
+        }finally {
+            commitLock.unlock();
+        }
+
+
+        addCommandNum();
+        return null;
+    }
+
+    @Override
+    public Long rpush(Long dbNum, byte[] key, List<byte[]> value) {
+        selectDb(dbNum);
+        commitLock.lock();
+
+        try {
+            pipelined.rpush(key, ObjectUtils.listBytes(value));
+
+            kvPersistence.addKey(EventEntity
+                    .builder()
+                    .key(key)
+                    .lpush_value(value)
+                    .stringKey(Strings.byteToString(key))
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH_LIST)
+                    .dbNum(dbNum)
+                    .build());
+        }finally {
+            commitLock.unlock();
+        }
+
+
+
+        addCommandNum();
+        return null;
+    }
+
+    @Override
+    public Long rpush(Long dbNum, byte[] key, long ms, List<byte[]> value) {
+        selectDb(dbNum);
+
+        commitLock.lock();
+        try{
+            pipelined.rpush(key, ObjectUtils.listBytes(value));
+            kvPersistence.addKey(EventEntity
+                    .builder()
+                    .key(key)
+                    .lpush_value(value)
+                    .stringKey(Strings.byteToString(key))
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH_LIST)
+                    .dbNum(dbNum)
+                    .ms(ms)
+                    .build());
+
+            pexpire(dbNum,key,ms);
+        }finally {
+            commitLock.unlock();
+        }
+
+        addCommandNum();
+        return null;
+    }
+
 
     @Override
     public Long sadd(Long dbNum, byte[] key, byte[]... members) {

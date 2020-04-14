@@ -144,4 +144,62 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
 
         return taskModel.getId();
     }
+
+    @Override
+    public String createCommandSyncerTask(TaskModel taskModel) throws Exception {
+        if(StringUtils.isEmpty(taskModel.getTaskName())){
+            taskModel.setTaskName(taskModel.getId()+"【"+taskModel.getSourceRedisAddress()+"节点】");
+        }
+
+        TaskDataEntity dataEntity=null;
+        if(taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())){
+            String[] data = RedisUrlCheckUtils.selectSyncerBuffer(taskModel.getSourceUri(), SyncTypeUtils.getOffsetPlace(taskModel.getOffsetPlace()).getOffsetPlace());
+
+            dataEntity=TaskDataEntity.builder()
+                    .taskModel(taskModel)
+                    .offSetEntity(OffSetEntity.builder().replId(data[1]).build())
+                    .build();
+            dataEntity.getOffSetEntity().getReplOffset().set(taskModel.getOffset());
+        }else {
+            dataEntity=TaskDataEntity.builder()
+                    .taskModel(taskModel)
+                    .offSetEntity(OffSetEntity.builder().replId("").build())
+                    .build();
+        }
+
+
+
+
+        TaskDataManagerUtils.addMemThread(taskModel.getId(),dataEntity);
+
+
+        //创建中
+        TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.CREATING);
+
+        try {
+
+            //校验
+            RedisTaskStrategyGroupSelecter.select(RedisTaskStrategyGroupType.NODISTINCT,null,taskModel,redisPoolProps).run(null,taskModel,redisPoolProps);
+
+        }catch (Exception e){
+            TaskDataManagerUtils.removeThread(taskModel.getId());
+            throw e;
+        }
+
+
+        //创建完成
+        TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.CREATED);
+
+        try{
+            threadPoolTaskExecutor.execute(new RedisDataSyncTransmissionTask(taskModel, true));
+        }catch (Exception e){
+            TaskErrorUtils.brokenStatusAndLog(e,this.getClass(),taskModel.getId());
+        }
+
+
+        return taskModel.getId();
+
+    }
+
+
 }
