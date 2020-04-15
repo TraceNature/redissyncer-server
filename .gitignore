@@ -30,5 +30,5 @@
 **/.vscode
 # rust ignore
 Cargo.lock
-rscli/target
+**/target
 **/*.rs.bk
