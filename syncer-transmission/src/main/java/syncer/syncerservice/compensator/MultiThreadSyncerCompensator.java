@@ -162,6 +162,70 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
     }
 
     @Override
+    public void rpush(Long dbNum, byte[] key, byte[][] value, Long res) {
+        if(compensatorUtils.isLongSuccess(res)){
+            return;
+        }
+        int i=3;
+        while (i-->0){
+            if(compensatorUtils.isLongSuccess(client.rpush(dbNum,key,value))){
+                break;
+            }
+        }
+        if(i<=0){
+            log.warn("[{}]中key[{}]同步失败type[lpush]---->value{}",taskId, StringUtils.toString(key), JSON.toJSONString(value));
+        }
+    }
+
+    @Override
+    public void rpush(Long dbNum, byte[] key, long ms, byte[][] value, Long res) {
+        if(compensatorUtils.isLongSuccess(res)){
+            return;
+        }
+        int i=3;
+        while (i-->0){
+            if(compensatorUtils.isLongSuccess(client.rpush(dbNum,key,ms,value))){
+                break;
+            }
+        }
+        if(i<=0){
+            log.warn("[{}]中key[{}]同步失败type[lpush--time]---->value{}",taskId, StringUtils.toString(key), JSON.toJSONString(value));
+        }
+    }
+
+    @Override
+    public void rpush(Long dbNum, byte[] key, List<byte[]> value, Long res) {
+        if(compensatorUtils.isLongSuccess(res)){
+            return;
+        }
+        int i=3;
+        while (i-->0){
+            if(compensatorUtils.isLongSuccess(client.rpush(dbNum,key,value))){
+                break;
+            }
+        }
+        if(i<=0){
+            log.warn("[{}]中key[{}]同步失败type[lpush - time]---->value{}",taskId, StringUtils.toString(key), JSON.toJSONString(value));
+        }
+    }
+
+    @Override
+    public void rpush(Long dbNum, byte[] key, long ms, List<byte[]> value, Long res) {
+        if(compensatorUtils.isLongSuccess(res)){
+            return;
+        }
+        int i=3;
+        while (i-->0){
+            if(compensatorUtils.isLongSuccess(client.rpush(dbNum,key,ms,value))){
+                break;
+            }
+        }
+        if(i<=0){
+            log.warn("[{}]中key[{}]同步失败type[lpush - time]---->value{}",taskId, StringUtils.toString(key), JSON.toJSONString(value));
+        }
+    }
+
+    @Override
     public void sadd(Long dbNum, byte[] key, byte[][] members, Long res) {
         if(compensatorUtils.isLongSuccess(res)){
             return;

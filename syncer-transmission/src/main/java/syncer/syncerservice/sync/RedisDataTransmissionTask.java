@@ -2,13 +2,7 @@ package syncer.syncerservice.sync;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.StringUtils;
-import syncer.syncerjedis.exceptions.JedisConnectionException;
-import syncer.syncerpluscommon.config.ThreadPoolConfig;
-import syncer.syncerpluscommon.util.spring.SpringUtil;
-import syncer.syncerplusredis.cmd.impl.DefaultCommand;
 import syncer.syncerplusredis.constant.RedisBranchTypeEnum;
 import syncer.syncerplusredis.constant.TaskRunTypeEnum;
 import syncer.syncerplusredis.entity.Configuration;
@@ -35,6 +29,8 @@ import syncer.syncerservice.util.JDRedisClient.JDRedisClientFactory;
 import syncer.syncerservice.util.JDRedisClient.RedisMigrator;
 import syncer.syncerservice.util.RedisUrlCheckUtils;
 import syncer.syncerservice.util.SyncTaskUtils;
+import syncer.syncerservice.util.common.Strings;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -179,6 +175,7 @@ public class RedisDataTransmissionTask implements Runnable {
                         }
                         return;
                     }
+
 
                     KeyValueEventEntity node = KeyValueEventEntity.builder()
                             .event(event)

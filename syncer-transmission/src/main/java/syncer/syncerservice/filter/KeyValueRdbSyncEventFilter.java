@@ -144,12 +144,13 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
 
                 //list类型
                 BatchedKeyStringValueList valueList = (BatchedKeyStringValueList) event;
+
                 if (ms == null || ms <= 0L) {
-                    Long res=client.lpush(duNum,valueList.getKey(), valueList.getValue());
-                    iSyncerCompensator.lpush(duNum,valueList.getKey(), valueList.getValue(),res);
+                    Long res=client.rpush(duNum,valueList.getKey(), valueList.getValue());
+                    iSyncerCompensator.rpush(duNum,valueList.getKey(), valueList.getValue(),res);
                 }else {
-                    Long res= client.lpush(duNum,valueList.getKey(),ms, valueList.getValue());
-                    iSyncerCompensator.lpush(duNum,valueList.getKey(), ms,valueList.getValue(),res);
+                    Long res= client.rpush(duNum,valueList.getKey(),ms, valueList.getValue());
+                    iSyncerCompensator.rpush(duNum,valueList.getKey(), ms,valueList.getValue(),res);
                 }
 
 
