@@ -183,6 +183,9 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                 }
             }));
 
+
+
+
             replicationHandler.open(taskModel.getId());
 
             //任务运行

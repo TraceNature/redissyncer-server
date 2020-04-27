@@ -38,7 +38,6 @@ public class SyncerplusWebappApplication {
          *
          */
 
-
         SpringApplication.run(SyncerplusWebappApplication.class, args);
 
 
@@ -116,8 +115,8 @@ public class SyncerplusWebappApplication {
         TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
         List<TaskModel>taskModelList=taskMapper.selectAll();
         for (TaskModel taskModel:taskModelList){
-            if(!taskModel.getStatus().equals(TaskStatusType.BROKEN)||!taskModel.getStatus().equals(TaskStatusType.STOP)){
-                taskMapper.updateTaskStatusById(taskModel.getGroupId(),TaskStatusType.STOP.getCode());
+            if(!taskModel.getStatus().equals(TaskStatusType.BROKEN.getCode())&&!taskModel.getStatus().equals(TaskStatusType.STOP.getCode())){
+                taskMapper.updateTaskStatusById(taskModel.getGroupId(),TaskStatusType.BROKEN.getCode());
             }
         }
 

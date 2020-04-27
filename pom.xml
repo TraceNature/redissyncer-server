@@ -46,6 +46,11 @@
 <!--            </exclusions>-->
         </dependency>
 
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper-spring-boot-starter</artifactId>
+            <version>1.2.13</version>
+        </dependency>
         <!-- SQLite 驱动 -->
         <dependency>
             <groupId>org.xerial</groupId>
@@ -58,6 +63,12 @@
             <artifactId>mybatis-spring-boot-starter</artifactId>
             <version>2.0.1</version>
         </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>com.baomidou</groupId>-->
+<!--            <artifactId>mybatis-plus-boot-starter</artifactId>-->
+<!--            <version>3.3.1.tmp</version>-->
+<!--        </dependency>-->
 
         <!--springboot程序测试依赖，如果是自动创建项目默认添加-->
         <dependency>

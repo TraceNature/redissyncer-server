@@ -83,8 +83,8 @@ public class SqliteTaskManageServiceImpl implements ITaskManageService {
         //任务存在且未在运行中
         if(dataModel!=null){
             if(dataModel.getStatus().equals(TaskStatusType.RUN.getCode())
-                    &&dataModel.getStatus().equals(TaskStatusType.RDBRUNING.getCode())
-                    &&dataModel.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())){
+                    ||dataModel.getStatus().equals(TaskStatusType.RDBRUNING.getCode())
+                    ||dataModel.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())){
 
                 taskMapper.updateTaskStatusById(id,TaskStatusType.STOP.getCode());
                 //避免sqlite压力过大，同时更新内存状态
@@ -119,9 +119,9 @@ public class SqliteTaskManageServiceImpl implements ITaskManageService {
 
                 if(null!=task){
                     if(task.getStatus().equals(TaskStatusType.RUN.getCode())
-                            &&task.getStatus().equals(TaskStatusType.RDBRUNING.getCode())
-                            &&task.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())){
-                        taskMapper.updateTaskStatusById(task.getId(), TaskStatusType.RUN.getCode());
+                            ||task.getStatus().equals(TaskStatusType.RDBRUNING.getCode())
+                            ||task.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())){
+                        taskMapper.updateTaskStatusById(task.getId(), TaskStatusType.STOP.getCode());
                     }
                 }else{
                     continue;

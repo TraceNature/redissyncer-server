@@ -8,6 +8,7 @@ import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.dao.TaskMapper;
 import syncer.syncerplusredis.entity.RedisPoolProps;
+import syncer.syncerplusredis.entity.StartTaskEntity;
 import syncer.syncerplusredis.entity.dto.task.TaskStartMsgDto;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.model.TaskModel;
@@ -16,6 +17,7 @@ import syncer.syncerservice.service.IRedisSyncerService;
 import syncer.syncerservice.service.IRedisTaskService;
 import syncer.syncerservice.service.ISyncerService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +54,7 @@ public class TaskGroupServiceImpl implements ISyncerService {
 
     @Override
     public ResultMap createRedisToRedisTask(List<TaskModel> taskModelList) throws TaskMsgException {
-        Map<String,String> resultList=new HashMap<>();
+        List<StartTaskEntity>resultList=new ArrayList<>();
         String groupId=null;
         if(taskModelList.size()==1){
             groupId = taskModelList.get(0).getId();
@@ -67,31 +69,58 @@ public class TaskGroupServiceImpl implements ISyncerService {
                     TaskDataManagerUtils.addDbThread(taskModel.getId(),taskModel);
                     if(taskModel.isAutostart()){
                         String id=singleRedisService.runSyncerTask(taskModel);
-                        resultList.put(taskModel.getId(),"Task created successfully and entered running state");
+                        StartTaskEntity startTaskEntity=StartTaskEntity
+                                .builder()
+                                .code("2000")
+                                .taskId(taskModel.getId())
+                                .groupId(taskModel.getGroupId())
+                                .msg("Task created successfully and entered running state")
+                                .build();
+                        resultList.add(startTaskEntity);
+
                     }else {
-                        resultList.put(taskModel.getId(),"Task created successfully");
+                        StartTaskEntity startTaskEntity=StartTaskEntity
+                                .builder()
+                                .code("2000")
+                                .taskId(taskModel.getId())
+                                .groupId(taskModel.getGroupId())
+                                .msg("Task created successfully")
+                                .build();
+                        resultList.add(startTaskEntity);
                         TaskDataManagerUtils.updateThreadStatus(taskModel.getId(), TaskStatusType.STOP);
                     }
 
 
                 } catch (Exception e) {
-
-                    resultList.put(taskModel.getId(),"Error_"+e.getMessage());
+                    StartTaskEntity startTaskEntity=StartTaskEntity
+                            .builder()
+                            .code("1000")
+                            .taskId(taskModel.getId())
+                            .groupId(taskModel.getGroupId())
+                            .msg("Error_"+e.getMessage())
+                            .build();
+                    resultList.add(startTaskEntity);
                 }
             }
         }
-        return ResultMap.builder().data(resultList);
+        return ResultMap.builder().code("2000").data(resultList).msg("The request is successful");
     }
 
     @Override
     public ResultMap startSyncerTask(List<TaskStartMsgDto> taskStartMsgDtoList) throws Exception{
 
-        Map<String,String> resultList=new HashMap<>();
+        List<StartTaskEntity>resultList=new ArrayList<>();
         for (TaskStartMsgDto taskStartDto:
                 taskStartMsgDtoList) {
 
             if(!TaskDataManagerUtils.isTaskClose(taskStartDto.getTaskid())){
-                resultList.put(taskStartDto.getTaskid(),"The task is running");
+                StartTaskEntity startTaskEntity=StartTaskEntity
+                        .builder()
+                        .code("1000")
+                        .taskId(taskStartDto.getTaskid())
+                        .msg("The task is running")
+                        .build();
+                resultList.add(startTaskEntity);
                 continue;
             }
 
@@ -99,15 +128,33 @@ public class TaskGroupServiceImpl implements ISyncerService {
             taskModel.setAfresh(taskStartDto.isAfresh());
             taskMapper.updateAfreshsetById(taskStartDto.getTaskid(),taskStartDto.isAfresh());
             if(null==taskModel){
-                resultList.put(taskModel.getId(),"The task has not been created yet");
+                StartTaskEntity startTaskEntity=StartTaskEntity
+                        .builder()
+                        .code("1000")
+                        .taskId(taskStartDto.getTaskid())
+                        .msg("The task has not been created yet")
+                        .build();
+                resultList.add(startTaskEntity);
                 continue;
             }
 
             try {
                 String id=singleRedisService.runSyncerTask(taskModel);
-                resultList.put(id,"OK");
+                StartTaskEntity startTaskEntity=StartTaskEntity
+                        .builder()
+                        .code("2000")
+                        .taskId(id)
+                        .msg("OK")
+                        .build();
+                resultList.add(startTaskEntity);
             } catch (Exception e) {
-                resultList.put(taskModel.getId(),"Error_"+e.getMessage());
+                StartTaskEntity startTaskEntity=StartTaskEntity
+                        .builder()
+                        .code("1000")
+                        .taskId(taskModel.getId())
+                        .msg("Error_"+e.getMessage())
+                        .build();
+                resultList.add(startTaskEntity);
             }
 
         }

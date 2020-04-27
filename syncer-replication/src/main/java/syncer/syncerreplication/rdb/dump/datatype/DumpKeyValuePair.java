@@ -17,7 +17,7 @@
 package syncer.syncerreplication.rdb.dump.datatype;
 
 
-import syncer.syncerplusredis.rdb.datatype.KeyValuePair;
+import syncer.syncerreplication.rdb.datatype.KeyValuePair;
 
 import java.io.Serializable;
 

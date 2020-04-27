@@ -6,6 +6,9 @@ package syncer.syncerplusredis.rdb.datatype;
  * @Date 2020/1/7
  */
 public enum  DataType {
+    /**
+     * String类型
+     */
     STRING,
 
     LIST,
@@ -23,6 +26,20 @@ public enum  DataType {
     //分片
     FRAGMENTATION,
 
-    FRAGMENTATION_NUM
+    FRAGMENTATION_NUM,
+
+    /**
+     * 淘汰规则  Key_Discarded_By_Dbmapper_Rule, 因dbmapper被抛弃
+     */
+
+    KEY_DISCARDED_BY_DBMAPPER_RULE,
+
+
+    /**
+     * 被抛弃
+     */
+    ABANDONED
+
+
 
 }

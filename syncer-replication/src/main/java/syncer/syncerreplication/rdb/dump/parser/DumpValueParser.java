@@ -17,9 +17,9 @@
 package syncer.syncerreplication.rdb.dump.parser;
 
 
-import syncer.syncerplusredis.event.EventListener;
-import syncer.syncerplusredis.rdb.datatype.KeyValuePair;
-import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
+import syncer.syncerreplication.event.EventListener;
+import syncer.syncerreplication.rdb.datatype.KeyValuePair;
+import syncer.syncerreplication.rdb.dump.datatype.DumpKeyValuePair;
 
 /**
  * @author Leon Chen

@@ -170,4 +170,6 @@ public class TaskModelResult implements Serializable {
     private Long commandKeyCount=0L;
 
     private double rate;
+
+    private Integer rate2Int;
 }

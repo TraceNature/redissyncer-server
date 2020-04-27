@@ -1,35 +1,20 @@
-/*
- * Copyright 2016-2018 Leon Chen
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package syncer.syncerreplication.rdb.iterable;
-
-import syncer.syncerplusredis.event.Event;
-import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueByteArrayIterator;
-import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueMapEntryIterator;
-import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueZSetEntryIterator;
-import syncer.syncerplusredis.replicator.Replicator;
-import syncer.syncerplusredis.util.objectutil.ByteArrayList;
-import syncer.syncerplusredis.util.objectutil.ByteArrayMap;
-import syncer.syncerplusredis.util.objectutil.ByteArraySet;
+import syncer.syncerreplication.event.Event;
+import syncer.syncerreplication.event.EventListener;
+import syncer.syncerreplication.rdb.datatype.*;
+import syncer.syncerreplication.rdb.iterable.datatype.KeyStringValueByteArrayIterator;
+import syncer.syncerreplication.rdb.iterable.datatype.KeyStringValueMapEntryIterator;
+import syncer.syncerreplication.rdb.iterable.datatype.KeyStringValueZSetEntryIterator;
+import syncer.syncerreplication.replicator.Replicator;
+import syncer.syncerreplication.util.objectUtils.ByteArrayList;
+import syncer.syncerreplication.util.objectUtils.ByteArrayMap;
+import syncer.syncerreplication.util.objectUtils.ByteArraySet;
 
 import java.util.*;
 
-import static syncer.syncerplusredis.rdb.datatype.KeyValuePairs.*;
-import static syncer.syncerplusredis.replicator.Constants.RDB_TYPE_SET;
-import static syncer.syncerplusredis.replicator.Constants.RDB_TYPE_SET_INTSET;
+import static syncer.syncerreplication.constant.Constants.RDB_TYPE_SET;
+import static syncer.syncerreplication.constant.Constants.RDB_TYPE_SET_INTSET;
 
 /**
  * @author Leon Chen

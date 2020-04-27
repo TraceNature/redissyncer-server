@@ -44,6 +44,7 @@ syncer:
 
 
 
+
 spring:
   datasource:
     driver-class-name: org.sqlite.JDBC

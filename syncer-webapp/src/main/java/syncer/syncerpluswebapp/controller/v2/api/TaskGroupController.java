@@ -7,8 +7,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import syncer.syncerpluscommon.bean.PageBean;
 import syncer.syncerpluscommon.entity.ResultMap;
 import syncer.syncerplusredis.entity.RedisPoolProps;
+import syncer.syncerplusredis.entity.StartTaskEntity;
 import syncer.syncerplusredis.entity.dto.RedisClusterDto;
 import syncer.syncerplusredis.entity.dto.task.ListTaskMsgDto;
 import syncer.syncerplusredis.entity.dto.task.TaskMsgDto;
@@ -64,7 +66,7 @@ public class TaskGroupController {
      */
     @RequestMapping(value = "/stoptask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap stopTask(@RequestBody @Validated TaskMsgDto taskMsgDto) throws Exception {
-        Map<String,String> msg=null;
+        List<StartTaskEntity> msg=null;
         if(taskMsgDto.getTaskids()==null&&taskMsgDto.getGroupIds()==null){
             return  ResultMap.builder().code("4000").msg("taskids或GroupId不能为空");
         }
@@ -110,6 +112,20 @@ public class TaskGroupController {
         return  ResultMap.builder().code("2000").msg("The request is successful").data(listCreateThread);
     }
 
+
+
+    /**
+     * 根据taskId查询任务列表
+     * @param listTaskMsgDto
+     * @return
+     */
+    @RequestMapping(value = "/listtasksByPage",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    public ResultMap listTaskByPage(@RequestBody @Validated ListTaskMsgDto listTaskMsgDto) throws Exception {
+        PageBean<TaskModelResult> listCreateThread=TaskDataManagerUtils.listTaskListByPages(listTaskMsgDto);
+        return  ResultMap.builder().code("2000").msg("The request is successful").data(listCreateThread);
+    }
+
+
     /**
      * 删除任务
      * @param taskMsgDto
@@ -117,7 +133,7 @@ public class TaskGroupController {
      */
     @RequestMapping(value = "/removetask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap deleteTask(@RequestBody @Validated TaskMsgDto taskMsgDto) throws Exception {
-        Map<String,String> msg=null;
+        List<StartTaskEntity> msg=null;
         if(taskMsgDto.getTaskids()==null&&taskMsgDto.getGroupIds()==null){
             return  ResultMap.builder().code("4000").msg("taskids或GroupId不能为空");
         }

@@ -17,19 +17,20 @@
 package syncer.syncerreplication.rdb.dump;
 
 
-import syncer.syncerplusredis.event.Event;
-import syncer.syncerplusredis.io.RedisInputStream;
-import syncer.syncerplusredis.rdb.BaseRdbParser;
-import syncer.syncerplusredis.rdb.DefaultRdbVisitor;
-import syncer.syncerplusredis.rdb.datatype.ContextKeyValuePair;
-import syncer.syncerplusredis.rdb.datatype.DataType;
-import syncer.syncerplusredis.rdb.datatype.KeyValuePair;
-import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
-import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerreplication.event.Event;
+
+import syncer.syncerreplication.io.stream.RedisInputStream;
+import syncer.syncerreplication.rdb.BaseRdbParser;
+import syncer.syncerreplication.rdb.DefaultRdbVisitor;
+import syncer.syncerreplication.rdb.datatype.ContextKeyValuePair;
+import syncer.syncerreplication.rdb.datatype.DataType;
+import syncer.syncerreplication.rdb.datatype.KeyValuePair;
+import syncer.syncerreplication.rdb.dump.datatype.DumpKeyValuePair;
+import syncer.syncerreplication.replicator.Replicator;
 
 import java.io.IOException;
 
-import static syncer.syncerplusredis.replicator.Constants.*;
+import static syncer.syncerreplication.constant.Constants.*;
 
 /**
  * @author Leon Chen

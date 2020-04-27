@@ -1,11 +1,13 @@
 package syncer.syncerplusredis.util;
 
 import com.alibaba.fastjson.JSON;
+import com.github.pagehelper.PageHelper;
 import javafx.concurrent.Task;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
+import syncer.syncerpluscommon.bean.PageBean;
 import syncer.syncerpluscommon.constant.ResultCodeAndMessage;
 import syncer.syncerpluscommon.entity.ResultMap;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
@@ -15,10 +17,12 @@ import syncer.syncerplusredis.constant.TaskType;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
 import syncer.syncerplusredis.dao.TaskMapper;
 import syncer.syncerplusredis.entity.RedisURI;
+import syncer.syncerplusredis.entity.StartTaskEntity;
 import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.entity.dto.task.ListTaskMsgDto;
 import syncer.syncerplusredis.entity.dto.task.TaskMsgDto;
 import syncer.syncerplusredis.exception.TaskMsgException;
+import syncer.syncerplusredis.model.RdbVersionModel;
 import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.model.TaskModelResult;
 import syncer.syncerplusredis.replicator.Replicator;
@@ -207,8 +211,8 @@ public class TaskDataManagerUtils {
      * @return
      * @throws Exception
      */
-    public synchronized static Map<String,String> stopTaskList(List<String> taskids) throws Exception {
-        Map<String,String> result=new HashMap<>();
+    public synchronized static List<StartTaskEntity> stopTaskList(List<String> taskids) throws Exception {
+        List<StartTaskEntity>result=new ArrayList<>();
         for (String taskId:taskids
              ) {
             if(StringUtils.isEmpty(taskId)){
@@ -223,17 +227,41 @@ public class TaskDataManagerUtils {
                         e.printStackTrace();
                     }
                     changeThreadStatus(taskId,data.getOffSetEntity().getReplOffset().get(),TaskStatusType.STOP);
-                    result.put(taskId,"Task stopped successfully");
+                    StartTaskEntity startTaskEntity=StartTaskEntity
+                            .builder()
+                            .code("2000")
+                            .taskId(taskId)
+                            .msg("Task stopped successfully")
+                            .build();
+                    result.add(startTaskEntity);
                 }catch (Exception e){
-                    result.put(taskId,"Task stopped fail");
+                    StartTaskEntity startTaskEntity=StartTaskEntity
+                            .builder()
+                            .code("1000")
+                            .taskId(taskId)
+                            .msg("Task stopped fail")
+                            .build();
+                    result.add(startTaskEntity);
                 }
             }else{
                 TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
                 TaskModel taskModel=taskMapper.findTaskById(taskId);
                 if(taskModel!=null){
-                    result.put(taskId,"The current task is not running");
+                    StartTaskEntity startTaskEntity=StartTaskEntity
+                            .builder()
+                            .code("1000")
+                            .taskId(taskId)
+                            .msg("The current task is not running")
+                            .build();
+                    result.add(startTaskEntity);
                 }else {
-                    result.put(taskId,"The task does not exist. Please create the task first");
+                    StartTaskEntity startTaskEntity=StartTaskEntity
+                            .builder()
+                            .code("1000")
+                            .taskId(taskId)
+                            .msg("The task does not exist. Please create the task first")
+                            .build();
+                    result.add(startTaskEntity);
                 }
 
             }
@@ -248,8 +276,9 @@ public class TaskDataManagerUtils {
      * @return
      * @throws Exception
      */
-    public synchronized static Map<String,String> stopTaskListByGroupIds(List<String> groupIdList) throws Exception {
-        Map<String,String> result=new HashMap<>();
+    public synchronized static List<StartTaskEntity> stopTaskListByGroupIds(List<String> groupIdList) throws Exception {
+        List<StartTaskEntity>result=new ArrayList<>();
+
         List<String>groupIds=groupIdList.stream().filter(groupId->!StringUtils.isEmpty(groupId)).collect(Collectors.toList());
         TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
         groupIds.forEach(groupId-> {
@@ -265,16 +294,40 @@ public class TaskDataManagerUtils {
                                 e.printStackTrace();
                             }
                             changeThreadStatus(taskModel.getId(), data.getOffSetEntity().getReplOffset().get(), TaskStatusType.STOP);
-                            result.put(taskModel.getId(), "Task stopped successfully");
+                            StartTaskEntity startTaskEntity=StartTaskEntity
+                                    .builder()
+                                    .code("2000")
+                                    .taskId(taskModel.getId())
+                                    .msg("Task stopped successfully")
+                                    .build();
+                            result.add(startTaskEntity);
                         } catch (Exception e) {
-                            result.put(taskModel.getId(), "Task stopped fail");
+                            StartTaskEntity startTaskEntity=StartTaskEntity
+                                    .builder()
+                                    .code("1000")
+                                    .taskId(taskModel.getId())
+                                    .msg("Task stopped fail")
+                                    .build();
+                            result.add(startTaskEntity);
                         }
                     } else {
 
                         if (taskModel != null) {
-                            result.put(taskModel.getId(), "The current task is not running");
+                            StartTaskEntity startTaskEntity=StartTaskEntity
+                                    .builder()
+                                    .code("1000")
+                                    .taskId(taskModel.getId())
+                                    .msg("The current task is not running")
+                                    .build();
+                            result.add(startTaskEntity);
                         } else {
-                            result.put(taskModel.getId(), "The task does not exist. Please create the task first");
+                            StartTaskEntity startTaskEntity=StartTaskEntity
+                                    .builder()
+                                    .code("1000")
+                                    .taskId(taskModel.getId())
+                                    .msg("The task does not exist. Please create the task first")
+                                    .build();
+                            result.add(startTaskEntity);
                         }
                     }
                 });
@@ -392,10 +445,12 @@ public class TaskDataManagerUtils {
      * @return
      */
     public synchronized static TaskModelResult toTaskModelResult(TaskModel taskModel){
+
         Long allKeyCount=taskModel.getAllKeyCount();
         Long realKeyCount=taskModel.getAllKeyCount();
         Long commandKeyCount=0L;
         double rate=0.0;
+        Integer rate2Int=0;
         try{
             if(TaskDataManagerUtils.containsKey(taskModel.getId())){
                 TaskDataEntity taskDataEntity=TaskDataManagerUtils.get(taskModel.getId());
@@ -419,6 +474,11 @@ public class TaskDataManagerUtils {
             }else {
                 rate=0.0;
             }
+
+            if(allKeyCount>=taskModel.getRdbKeyCount()||taskModel.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())){
+                rate=1.0;
+            }
+            rate2Int=Integer.parseInt(new DecimalFormat("0").format(rate*100));
 
         }catch (Exception e){
             log.warn("[{}]进度计算失败",taskModel.getId());
@@ -455,9 +515,94 @@ public class TaskDataManagerUtils {
                 .realKeyCount(realKeyCount)
                 .commandKeyCount(commandKeyCount)
                 .rate(rate)
+                .rate2Int(rate2Int)
                 .build();
       return result;
     }
+
+    /**
+     * listtasks
+     * @param listTaskMsgDto
+     * @return
+     * @throws Exception
+     */
+    public synchronized static PageBean<TaskModelResult> listTaskListByPages(ListTaskMsgDto listTaskMsgDto) throws Exception {
+        checklistTaskMsgDto(listTaskMsgDto);
+        TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+        if("bynames".equals(listTaskMsgDto.getRegulation().trim())){
+            List<String>nameList=listTaskMsgDto.getTasknames().stream().filter(name->!name.isEmpty()).collect(Collectors.toList());
+            if(nameList.size()==0){
+                throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_NAMES_NOT_EMPTY.getCode(),ResultCodeAndMessage.TASK_NAMES_NOT_EMPTY.getMsg()));
+            }
+
+            List<TaskModelResult>listTaskList=new ArrayList<>();
+            nameList.forEach(name-> {
+                try {
+                    listTaskList.addAll(toTaskModelResult(taskMapper.findTaskBytaskName(name)));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            PageBean<TaskModelResult>pageBean=new PageBean<>(1,listTaskList.size(),listTaskList.size(),true);
+            pageBean.setItems(listTaskList);
+            return pageBean;
+        }else if("all".equalsIgnoreCase(listTaskMsgDto.getRegulation().trim())){
+            PageHelper.startPage(listTaskMsgDto.getCurrentPage(), listTaskMsgDto.getPageSize());
+            List<TaskModel> allItems = taskMapper.selectAll();        //全部商品
+            int countNums = taskMapper.countItem();            //总记录数
+            PageBean<TaskModelResult> pageData = new PageBean<>(listTaskMsgDto.getCurrentPage(), listTaskMsgDto.getPageSize(), countNums);
+            pageData.setItems(toTaskModelResult(allItems));
+            return pageData ;
+        }else if("byids".equalsIgnoreCase(listTaskMsgDto.getRegulation().trim())){
+
+            List<TaskModelResult> resultList=listTaskMsgDto.getTaskids().stream().filter(id->!StringUtils.isEmpty(id)).map(id->{
+                try {
+                    return toTaskModelResult(taskMapper.findTaskById(id));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }).collect(Collectors.toList());
+
+            PageBean<TaskModelResult>pageBean=new PageBean<>(1,resultList.size(),resultList.size(),true);
+            pageBean.setItems(resultList);
+            return pageBean;
+        }else if("bystatus".equalsIgnoreCase(listTaskMsgDto.getRegulation().trim())){
+            if(StringUtils.isEmpty(listTaskMsgDto.getTaskstatus())){
+                throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_STATUS_NOT_EMPTY.getCode(),ResultCodeAndMessage.TASK_STATUS_NOT_EMPTY.getMsg()));
+            }
+            //状态是否正确
+            TaskStatusType type=TaskStatusType.getTaskStatusTypeByName(listTaskMsgDto.getTaskstatus());
+            if(type==null){
+                throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_STATUS_NOT_FIND.getCode(),ResultCodeAndMessage.TASK_STATUS_NOT_FIND.getMsg()));
+            }
+            List<TaskModelResult>resultList=taskMapper.findTaskBytaskStatus(type.getCode()).stream().filter(taskModel -> taskMapper!=null).map(taskModel ->{
+                return toTaskModelResult(taskModel);
+            }).collect(Collectors.toList());
+            PageBean<TaskModelResult>pageBean=new PageBean<>(1,resultList.size(),resultList.size(),true);
+            pageBean.setItems(resultList);
+            return pageBean;
+        }else if("byGroupIds".equalsIgnoreCase(listTaskMsgDto.getRegulation().trim())){
+            List<String>groupIdList=listTaskMsgDto.getGroupIds().stream().filter(groupId->!StringUtils.isEmpty(groupId)).collect(Collectors.toList());
+            if(groupIdList.size()==0){
+                throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_GROUPID_NOT_EMPTY.getCode(),ResultCodeAndMessage.TASK_GROUPID_NOT_EMPTY.getMsg()));
+            }
+            List<TaskModelResult>listTaskList=new ArrayList<>();
+            groupIdList.forEach(groupId-> {
+                try {
+                    listTaskList.addAll(toTaskModelResult(taskMapper.findTaskByGroupId(groupId)));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            PageBean<TaskModelResult>pageBean=new PageBean<>(1,listTaskList.size(),listTaskList.size(),true);
+            pageBean.setItems(listTaskList);
+            return pageBean;
+        }
+
+        return null;
+    }
+
 
     /**
      * listtasks
@@ -536,23 +681,49 @@ public class TaskDataManagerUtils {
      * @param taskIdList
      * @return
      */
-    public synchronized static Map<String,String> removeTask(List<String>taskIdList)throws Exception{
-        Map<String,String> result=new HashMap<>();
+    public synchronized static List<StartTaskEntity> removeTask(List<String>taskIdList)throws Exception{
+        List<StartTaskEntity>result=new ArrayList<>();
         taskIdList.stream().filter(taskId->taskId!=null).forEach(taskId->{
             if(aliveThreadHashMap.containsKey(taskId)){
-                result.put(taskId,"task is running,please stop the task first");
+                StartTaskEntity startTaskEntity=StartTaskEntity
+                        .builder()
+                        .code("1000")
+                        .taskId(taskId)
+                        .msg("task is running,please stop the task first")
+                        .build();
+                result.add(startTaskEntity);
             }else {
                 TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
                 try {
                    if( taskMapper.findTaskById(taskId)!=null){
                        taskMapper.deleteTaskById(taskId);
-                       result.put(taskId,"Delete successful");
+                       StartTaskEntity startTaskEntity=StartTaskEntity
+                               .builder()
+                               .code("2000")
+                               .taskId(taskId)
+                               .msg("Delete successful")
+                               .build();
+                       result.add(startTaskEntity);
+
                    }else {
-                       result.put(taskId,"Task does not exist");
+                       StartTaskEntity startTaskEntity=StartTaskEntity
+                               .builder()
+                               .code("1000")
+                               .taskId(taskId)
+                               .msg("Task does not exist")
+                               .build();
+                       result.add(startTaskEntity);
+
                    }
 
                 } catch (Exception e) {
-                    result.put(taskId,"Delete failed");
+                    StartTaskEntity startTaskEntity=StartTaskEntity
+                            .builder()
+                            .code("1000")
+                            .taskId(taskId)
+                            .msg("Delete failed")
+                            .build();
+                    result.add(startTaskEntity);
                 }
 
             }
@@ -568,20 +739,43 @@ public class TaskDataManagerUtils {
      * @return
      * @throws Exception
      */
-    public static Map<String,String> removeTaskByGroupId(List<String> groupIdList) throws Exception {
-        Map<String,String> result=new HashMap<>();
+    public static List<StartTaskEntity>removeTaskByGroupId(List<String> groupIdList) throws Exception {
+        List<StartTaskEntity>result=new ArrayList<>();
         for (String groupId:groupIdList){
             TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
             List<TaskModel>taskModelList=taskMapper.findTaskByGroupId(groupId);
             for (TaskModel taskModel:taskModelList){
                 if(aliveThreadHashMap.containsKey(taskModel.getId())){
-                    result.put(taskModel.getId(),"["+groupId+"]task is running,please stop the task first");
+                    StartTaskEntity startTaskEntity=StartTaskEntity
+                            .builder()
+                            .code("1000")
+                            .taskId(taskModel.getId())
+                            .groupId(taskModel.getGroupId())
+                            .msg("["+groupId+"]task is running,please stop the task first")
+                            .build();
+                    result.add(startTaskEntity);
+
                 }else {
                     try {
                         taskMapper.deleteTaskById(taskModel.getId());
-                        result.put(taskModel.getId(),"["+groupId+"]Delete successful");
+                        StartTaskEntity startTaskEntity=StartTaskEntity
+                                .builder()
+                                .code("2000")
+                                .taskId(taskModel.getId())
+                                .groupId(taskModel.getGroupId())
+                                .msg("["+groupId+"]Delete successful")
+                                .build();
+                        result.add(startTaskEntity);
+
                     } catch (Exception e) {
-                        result.put(taskModel.getId(),"["+groupId+"]Delete failed");
+                        StartTaskEntity startTaskEntity=StartTaskEntity
+                                .builder()
+                                .code("1000")
+                                .taskId(taskModel.getId())
+                                .groupId(taskModel.getGroupId())
+                                .msg("["+groupId+"]Delete failed")
+                                .build();
+                        result.add(startTaskEntity);
                     }
                 }
             }
@@ -596,11 +790,19 @@ public class TaskDataManagerUtils {
      * @param listTaskMsgDto
      */
     public static void checklistTaskMsgDto(ListTaskMsgDto listTaskMsgDto) throws TaskMsgException {
+        if(listTaskMsgDto.getCurrentPage()==0){
+            listTaskMsgDto.setCurrentPage(1);
+        }
+        if(listTaskMsgDto.getPageSize()==0){
+            listTaskMsgDto.setPageSize(10);
+        }
         //all、bynames、byids、bystatus
         if(!"all".equals(listTaskMsgDto.getRegulation().trim())
                 &&!"bynames".equals(listTaskMsgDto.getRegulation().trim())
                 && !"byids".equals(listTaskMsgDto.getRegulation().trim())
-                && !"bystatus".equals(listTaskMsgDto.getRegulation().trim())){
+                && !"bystatus".equals(listTaskMsgDto.getRegulation().trim())
+                && !"byGroupIds".equals(listTaskMsgDto.getRegulation().trim())
+        ){
 //            throw new TaskMsgException("regulation 参数类型错误");
             throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKID_REGULATION_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKID_REGULATION_ERROR));
         }
@@ -635,11 +837,15 @@ public class TaskDataManagerUtils {
             taskMapper.updateTaskMsgAndStatusById( taskStatusType.getCode(),msg,taskId);
             data.getTaskModel().setStatus(taskStatusType.getCode());
             data.getTaskModel().setTaskMsg(msg);
-            if(taskStatusType.getStatus().equals(ThreadStatusEnum.BROKEN)
-                    ||taskStatusType.getStatus().equals(ThreadStatusEnum.STOP)){
+            if(taskStatusType.equals(TaskStatusType.BROKEN)||taskStatusType.equals(TaskStatusType.STOP)){
                 updateTaskOffset(taskId);
                 aliveThreadHashMap.remove(taskId);
             }
+//            if(taskStatusType.getStatus().equals(ThreadStatusEnum.BROKEN)
+//                    ||taskStatusType.getStatus().equals(ThreadStatusEnum.STOP)){
+//                updateTaskOffset(taskId);
+//                aliveThreadHashMap.remove(taskId);
+//            }
         }
     }
 

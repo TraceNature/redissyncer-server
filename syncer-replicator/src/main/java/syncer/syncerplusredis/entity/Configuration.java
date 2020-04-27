@@ -64,7 +64,7 @@ public class Configuration implements Serializable {
     /**
      * connection retry times. if retries <= 0 then always retry
      */
-    private volatile int retries = 3;
+    private volatile int retries = 5;
 
     /**
      * retry time interval

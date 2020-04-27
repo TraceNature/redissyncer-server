@@ -1,38 +1,25 @@
-/*
- * Copyright 2016-2017 Leon Chen
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package syncer.syncerreplication.rdb.dump.parser;
 
 
-import syncer.syncerplusredis.event.EventListener;
-import syncer.syncerplusredis.io.RedisInputStream;
-import syncer.syncerplusredis.rdb.RdbValueVisitor;
-import syncer.syncerplusredis.rdb.datatype.KeyValuePair;
-import syncer.syncerplusredis.rdb.datatype.KeyValuePairs;
-import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
-import syncer.syncerplusredis.rdb.iterable.ValueIterableEventListener;
-import syncer.syncerplusredis.rdb.iterable.ValueIterableRdbValueVisitor;
-import syncer.syncerplusredis.replicator.Replicator;
-import syncer.syncerplusredis.util.objectutil.ByteArray;
+import syncer.syncerreplication.event.EventListener;
+
+import syncer.syncerreplication.io.stream.RedisInputStream;
+import syncer.syncerreplication.rdb.AbstractRdbValueVisitor;
+import syncer.syncerreplication.rdb.RdbValueVisitor;
+import syncer.syncerreplication.rdb.datatype.KeyValuePair;
+import syncer.syncerreplication.rdb.datatype.KeyValuePairs;
+import syncer.syncerreplication.rdb.dump.datatype.DumpKeyValuePair;
+import syncer.syncerreplication.rdb.iterable.ValueIterableEventListener;
+import syncer.syncerreplication.rdb.iterable.ValueIterableRdbValueVisitor;
+import syncer.syncerreplication.replicator.Replicator;
+import syncer.syncerreplication.util.objectUtils.ByteArray;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Objects;
 
-import static syncer.syncerplusredis.replicator.Constants.*;
+import static syncer.syncerreplication.constant.Constants.*;
 
 /**
  * @author Leon Chen
@@ -43,7 +30,7 @@ public class IterableDumpValueParser implements DumpValueParser {
     protected final int batchSize;
     protected final boolean order;
     protected final Replicator replicator;
-    protected final RdbValueVisitor valueVisitor;
+    protected final AbstractRdbValueVisitor valueVisitor;
 
     public IterableDumpValueParser(Replicator replicator) {
         this(64, replicator);

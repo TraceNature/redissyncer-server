@@ -1,5 +1,6 @@
 package syncer.syncerplusredis.dao;
 
+
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Component;
 import syncer.syncerplusredis.model.TaskModel;
@@ -13,7 +14,7 @@ import java.util.List;
  */
 @Component
 @Mapper
-public interface TaskMapper {
+public interface TaskMapper  {
     // 根据 ID 查询
     @Select("SELECT * FROM t_task")
     List<TaskModel> selectAll()throws Exception;
@@ -21,7 +22,8 @@ public interface TaskMapper {
     @Select("SELECT * FROM t_task WHERE id =#{id}")
     TaskModel findTaskById(@Param("id") String id)throws Exception;
 
-
+    @Select("select count(*) from t_task")
+    int countItem()throws Exception;
 
     @Select("SELECT * FROM t_task WHERE taskName =#{taskName}")
     List<TaskModel> findTaskBytaskName(@Param("taskName") String taskName)throws Exception;

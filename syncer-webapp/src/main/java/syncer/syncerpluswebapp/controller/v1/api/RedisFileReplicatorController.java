@@ -17,8 +17,8 @@ import syncer.syncerservice.service.ISyncerTaskService;
 import syncer.syncerservice.util.SyncTaskUtils;
 
 
-@RestController
-@RequestMapping(value = "/api/v1/file")
+//@RestController
+//@RequestMapping(value = "/api/v1/file")
 @Validated
 public class RedisFileReplicatorController {
 

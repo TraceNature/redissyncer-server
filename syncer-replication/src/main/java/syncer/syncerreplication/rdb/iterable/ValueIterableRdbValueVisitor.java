@@ -1,27 +1,15 @@
-/*
- * Copyright 2016-2017 Leon Chen
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 
 package syncer.syncerreplication.rdb.iterable;
 
-import syncer.syncerplusredis.io.RedisInputStream;
-import syncer.syncerplusredis.rdb.BaseRdbParser;
-import syncer.syncerplusredis.rdb.DefaultRdbValueVisitor;
-import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
-import syncer.syncerplusredis.replicator.Replicator;
-import syncer.syncerplusredis.util.objectutil.Strings;
+
+import syncer.syncerreplication.io.stream.RedisInputStream;
+import syncer.syncerreplication.rdb.BaseRdbParser;
+import syncer.syncerreplication.rdb.DefaultRdbValueVisitor;
+import syncer.syncerreplication.rdb.datatype.ZSetEntry;
+import syncer.syncerreplication.replicator.Replicator;
+import syncer.syncerreplication.util.objectUtils.Strings;
+
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -29,13 +17,13 @@ import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import static syncer.syncerplusredis.replicator.Constants.RDB_LOAD_NONE;
+import static syncer.syncerreplication.constant.Constants.RDB_LOAD_NONE;
 
 /**
  * @author Leon Chen
  * @since 3.1.0
  */
-@SuppressWarnings("unchecked")
+
 public class ValueIterableRdbValueVisitor extends DefaultRdbValueVisitor {
 
     public ValueIterableRdbValueVisitor(Replicator replicator) {

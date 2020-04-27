@@ -17,21 +17,23 @@
 package syncer.syncerreplication.rdb.dump.parser;
 
 
-import syncer.syncerplusredis.event.EventListener;
-import syncer.syncerplusredis.io.RedisInputStream;
-import syncer.syncerplusredis.rdb.DefaultRdbValueVisitor;
-import syncer.syncerplusredis.rdb.RdbValueVisitor;
-import syncer.syncerplusredis.rdb.datatype.KeyValuePair;
-import syncer.syncerplusredis.rdb.datatype.KeyValuePairs;
-import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
-import syncer.syncerplusredis.replicator.Replicator;
-import syncer.syncerplusredis.util.objectutil.ByteArray;
+import syncer.syncerreplication.event.EventListener;
+
+import syncer.syncerreplication.io.stream.RedisInputStream;
+import syncer.syncerreplication.rdb.AbstractRdbValueVisitor;
+import syncer.syncerreplication.rdb.DefaultRdbValueVisitor;
+import syncer.syncerreplication.rdb.RdbValueVisitor;
+import syncer.syncerreplication.rdb.datatype.KeyValuePair;
+import syncer.syncerreplication.rdb.datatype.KeyValuePairs;
+import syncer.syncerreplication.rdb.dump.datatype.DumpKeyValuePair;
+import syncer.syncerreplication.replicator.Replicator;
+import syncer.syncerreplication.util.objectUtils.ByteArray;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Objects;
 
-import static syncer.syncerplusredis.replicator.Constants.*;
+import static syncer.syncerreplication.constant.Constants.*;
 
 /**
  * @author Leon Chen
@@ -40,7 +42,7 @@ import static syncer.syncerplusredis.replicator.Constants.*;
 public class DefaultDumpValueParser implements DumpValueParser {
 
     protected final Replicator replicator;
-    protected final RdbValueVisitor valueVisitor;
+    protected final AbstractRdbValueVisitor valueVisitor;
 
     public DefaultDumpValueParser(Replicator replicator) {
         Objects.requireNonNull(replicator);

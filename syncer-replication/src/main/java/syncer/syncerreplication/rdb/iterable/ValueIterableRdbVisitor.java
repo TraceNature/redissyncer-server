@@ -1,40 +1,26 @@
-/*
- * Copyright 2016-2018 Leon Chen
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package syncer.syncerreplication.rdb.iterable;
 
 
-import syncer.syncerplusredis.event.Event;
-import syncer.syncerplusredis.io.RedisInputStream;
-import syncer.syncerplusredis.rdb.BaseRdbParser;
-import syncer.syncerplusredis.rdb.DefaultRdbVisitor;
-import syncer.syncerplusredis.rdb.RdbValueVisitor;
-import syncer.syncerplusredis.rdb.datatype.ContextKeyValuePair;
-import syncer.syncerplusredis.rdb.datatype.KeyValuePair;
-import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
-import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueByteArrayIterator;
-import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueMapEntryIterator;
-import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueZSetEntryIterator;
-import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerreplication.event.Event;
+import syncer.syncerreplication.io.stream.RedisInputStream;
+import syncer.syncerreplication.rdb.AbstractRdbValueVisitor;
+import syncer.syncerreplication.rdb.BaseRdbParser;
+import syncer.syncerreplication.rdb.DefaultRdbVisitor;
+import syncer.syncerreplication.rdb.RdbValueVisitor;
+import syncer.syncerreplication.rdb.datatype.ContextKeyValuePair;
+import syncer.syncerreplication.rdb.datatype.KeyValuePair;
+import syncer.syncerreplication.rdb.datatype.ZSetEntry;
+import syncer.syncerreplication.rdb.iterable.datatype.KeyStringValueByteArrayIterator;
+import syncer.syncerreplication.rdb.iterable.datatype.KeyStringValueMapEntryIterator;
+import syncer.syncerreplication.rdb.iterable.datatype.KeyStringValueZSetEntryIterator;
+import syncer.syncerreplication.replicator.Replicator;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
-import static syncer.syncerplusredis.replicator.Constants.*;
+import static syncer.syncerreplication.constant.Constants.*;
 
 /**
  * @author Leon Chen
@@ -46,7 +32,7 @@ public class ValueIterableRdbVisitor extends DefaultRdbVisitor {
         this(replicator, new ValueIterableRdbValueVisitor(replicator));
     }
 
-    public ValueIterableRdbVisitor(Replicator replicator, RdbValueVisitor valueParser) {
+    public ValueIterableRdbVisitor(Replicator replicator, AbstractRdbValueVisitor valueParser) {
         super(replicator, valueParser);
     }
 

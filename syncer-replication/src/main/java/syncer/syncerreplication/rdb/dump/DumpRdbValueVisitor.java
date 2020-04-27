@@ -17,22 +17,22 @@
 package syncer.syncerreplication.rdb.dump;
 
 
-import syncer.syncerplusredis.io.RawByteListener;
-import syncer.syncerplusredis.io.RedisInputStream;
-import syncer.syncerplusredis.rdb.BaseRdbParser;
-import syncer.syncerplusredis.rdb.DefaultRdbValueVisitor;
-import syncer.syncerplusredis.rdb.datatype.Module;
-import syncer.syncerplusredis.rdb.module.ModuleParser;
-import syncer.syncerplusredis.rdb.skip.SkipRdbParser;
-import syncer.syncerplusredis.replicator.Replicator;
-import syncer.syncerplusredis.util.objectutil.ByteBuilder;
+import syncer.syncerreplication.io.RawByteListener;
+import syncer.syncerreplication.io.stream.RedisInputStream;
+import syncer.syncerreplication.rdb.BaseRdbParser;
+import syncer.syncerreplication.rdb.DefaultRdbValueVisitor;
+import syncer.syncerreplication.rdb.datatype.Module;
+import syncer.syncerreplication.rdb.module.ModuleParser;
+import syncer.syncerreplication.rdb.skip.SkipRdbParser;
+import syncer.syncerreplication.replicator.Replicator;
+import syncer.syncerreplication.util.objectUtils.ByteBuilder;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
 
-import static syncer.syncerplusredis.replicator.Constants.*;
-import static syncer.syncerplusredis.util.objectutil.CRC64.crc64;
-import static syncer.syncerplusredis.util.objectutil.CRC64.longToByteArray;
+import static syncer.syncerreplication.constant.Constants.*;
+import static syncer.syncerreplication.util.objectUtils.CRC64.crc64;
+import static syncer.syncerreplication.util.objectUtils.CRC64.longToByteArray;
 
 /**
  * @author Leon Chen

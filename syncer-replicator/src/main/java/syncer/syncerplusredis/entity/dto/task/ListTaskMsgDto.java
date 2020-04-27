@@ -20,4 +20,10 @@ public class ListTaskMsgDto {
     private List<String> taskids=new ArrayList<>();
     @Builder.Default
     private List<String> groupIds=new ArrayList<>();
+
+    @Builder.Default
+    int currentPage=1;
+    @Builder.Default
+    int pageSize=10;
+
 }

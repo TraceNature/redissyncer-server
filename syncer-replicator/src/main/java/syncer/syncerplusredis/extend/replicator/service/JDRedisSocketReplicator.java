@@ -186,7 +186,7 @@ public class JDRedisSocketReplicator extends AbstractReplicator implements Seria
 
     protected void auth(String password) throws IOException {
         if (password != null) {
-            logger.info("AUTH {}", password);
+//            logger.info("AUTH {}", password);
             send("AUTH".getBytes(), password.getBytes());
             final String reply = Strings.toString(reply());
             logger.info(reply);

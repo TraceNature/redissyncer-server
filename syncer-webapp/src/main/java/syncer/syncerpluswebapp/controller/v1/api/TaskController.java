@@ -43,8 +43,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@RestController
-@RequestMapping(value = "/api/v1")
+//@RestController
+//@RequestMapping(value = "/api/v1")
 @Validated
 public class TaskController {
 //    @Autowired

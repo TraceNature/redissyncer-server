@@ -16,19 +16,14 @@
 
 package syncer.syncerplusredis.replicator;
 
+import lombok.extern.slf4j.Slf4j;
 import syncer.syncerplusredis.constant.TaskStatusType;
-import syncer.syncerplusredis.constant.ThreadStatusEnum;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.exception.IncrementException;
-import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
-import syncer.syncerplusredis.util.TaskMsgUtils;
-import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Arrays;
-import java.util.Map;
 
 /**
  * @author Leon Chen
@@ -36,17 +31,16 @@ import java.util.Map;
  */
 
 @Slf4j
-public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
+public abstract class AbstractReplicatorRetrier1 implements ReplicatorRetrier {
     protected int retries = 0;
 
     protected abstract boolean isManualClosed();
 
     protected abstract boolean open() throws IOException, IncrementException;
-
+    
     protected abstract boolean connect() throws IOException;
 
     protected abstract boolean close(IOException reason) throws IOException;
-
 
     @Override
     public void retry(Replicator replicator) throws IOException, IncrementException {
@@ -87,20 +81,22 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
 
 
     @Override
-    public void retry(Replicator replicator,String taskId) throws IOException{
+    public void retry(Replicator replicator,String taskId) throws IOException {
+
         IOException exception = null;
         Configuration configuration = replicator.getConfiguration();
         for (; retries < configuration.getRetries() || configuration.getRetries() <= 0; retries++) {
             exception = null;
-            if (isManualClosed()){
+            if (isManualClosed()) {
                 break;
             }
             final long interval = configuration.getRetryTimeInterval();
             try {
                 if (connect()) {
-                    reset();
+//                    reset();
                 }
                 if (!open()) {
+
                     reset();
                     close(null);
                     sleep(interval);
@@ -112,6 +108,16 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
                 exception = translate(e);
                 close(exception);
                 sleep(interval);
+
+                //待验证
+                try {
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,e.getMessage());
+
             } catch (IncrementException e) {
                 try {
                     TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
@@ -121,10 +127,13 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
                 }
                 log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,e.getMessage());
             }
+
         }
 
-        if (exception != null){
 
+
+        if(!TaskDataManagerUtils.isTaskClose(taskId)){
+            System.out.println("-------------------------over");
             try {
                 TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,exception.getMessage(), TaskStatusType.BROKEN);
 
@@ -132,8 +141,20 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
                 e.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,exception);
+        }
+
+
+
+//        if (exception != null)
+//            throw exception;
+//
+        if (exception != null) {
             throw exception;
         }
+
+
+
+
     }
 
     protected void reset() {

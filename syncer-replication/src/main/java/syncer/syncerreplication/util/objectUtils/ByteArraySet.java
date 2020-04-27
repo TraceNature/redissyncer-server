@@ -19,7 +19,7 @@ package syncer.syncerreplication.util.objectUtils;
 import java.io.Serializable;
 import java.util.*;
 
-import static syncer.syncerplusredis.util.objectutil.ByteArrayMap.Element;
+import static syncer.syncerreplication.util.objectUtils.ByteArrayMap.Element;
 
 /**
  * @author Leon Chen

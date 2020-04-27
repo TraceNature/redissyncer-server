@@ -15,7 +15,7 @@ import java.util.List;
 
 @Component
 @Mapper
-public interface RdbVersionMapper {
+public interface RdbVersionMapper  {
     // 根据 ID 查询
     @Select("SELECT * FROM t_rdb_version")
     List<RdbVersionModel> selectAll()throws Exception;
@@ -26,12 +26,20 @@ public interface RdbVersionMapper {
     @Select("SELECT * FROM t_rdb_version WHERE redis_version =#{redisVersion}")
     RdbVersionModel findRdbVersionModelByRedisVersion(@Param("redisVersion") String redisVersion)throws Exception;
 
+    @Select("SELECT * FROM t_rdb_version WHERE redis_version =#{redisVersion} and rdb_version =#{rdbVersion}")
+    RdbVersionModel findRdbVersionModelByRedisVersionAndRdbVersion(@Param("redisVersion") String redisVersion,@Param("rdbVersion")Integer rdbVersion)throws Exception;
 
     @Select("SELECT * FROM t_rdb_version WHERE rdb_version =#{rdbVersion}")
     List<RdbVersionModel>findTaskByRdbVersion(@Param("rdbVersion")Integer rdbVersion)throws  Exception;
 
     @Insert("INSERT INTO t_rdb_version(redis_version,rdb_version) VALUES(#{redis_version},#{rdb_version})")
     boolean insertRdbVersionModel(RdbVersionModel rdbVersionModel)throws Exception;
+
+    @Select("select count(*) from t_rdb_version")
+    int countItem()throws Exception;
+
+    @Select("UPDATE  t_rdb_version  set redis_version=#{redisVersion}, rdb_version =#{rdbVersion} WHERE id =#{id}")
+    RdbVersionModel updateRdbVersionModelById(@Param("id")Integer id,@Param("redisVersion") String redisVersion,@Param("rdbVersion")Integer rdbVersion)throws Exception;
 
 
     @Insert({

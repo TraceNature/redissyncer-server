@@ -28,6 +28,7 @@
         <!--Logging-->
         <logback.version>1.2.3</logback.version>
         <slf4j.version>1.7.5</slf4j.version>
+        <shiro-spring.version>1.4.0</shiro-spring.version>
     </properties>
 
     <dependencies>
@@ -155,6 +156,18 @@
             <scope>compile</scope>
         </dependency>
 
+
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-spring</artifactId>
+            <version>${shiro-spring.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-ehcache</artifactId>
+            <version>${shiro-spring.version}</version>
+        </dependency>
 
     </dependencies>
 
