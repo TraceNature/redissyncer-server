@@ -119,7 +119,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
             }
 
             RedisBranchTypeEnum branchTypeEnum=SyncTypeUtils.getRedisBranchType(taskModel.getSourceRedisType()).getBranchTypeEnum();
-            JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, taskModel.getTargetHost(), taskModel.getTargetPort(), taskModel.getTargetPassword(), taskModel.getBatchSize(), taskModel.getId());
+            JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, taskModel.getTargetHost(), taskModel.getTargetPort(), taskModel.getTargetPassword(), taskModel.getBatchSize(), taskModel.getId(),null,null);
             //根据type生成相对节点List [List顺序即为filter节点执行顺序]
             List<CommonFilter> commonFilterList = KeyValueFilterListSelector.getStrategyList(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType(),taskModel,client);
             ISyncerCompensator syncerCompensator= ISyncerCompensatorFactory.createJDRedisClient(branchTypeEnum,taskModel.getId(),client);

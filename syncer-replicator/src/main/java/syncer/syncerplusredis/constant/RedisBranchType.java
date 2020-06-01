@@ -29,7 +29,9 @@ public enum RedisBranchType implements Serializable {
     /**
      * 哨兵
      */
-    SENTINEL(4,RedisBranchTypeEnum.SENTINEL,"哨兵");
+    SENTINEL(4,RedisBranchTypeEnum.SENTINEL,"哨兵"),
+
+    JIMDB(5,RedisBranchTypeEnum.JIMDB,"JIMDB");
     private int code;
     private RedisBranchTypeEnum branchTypeEnum;
     private String msg;

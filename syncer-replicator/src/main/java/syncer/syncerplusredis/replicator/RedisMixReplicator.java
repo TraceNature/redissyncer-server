@@ -16,6 +16,7 @@
 
 package syncer.syncerplusredis.replicator;
 
+import syncer.syncerplusredis.cmd.jimdb.JimDbFirstCommandParser;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.event.PostCommandSyncEvent;
@@ -161,6 +162,15 @@ public class RedisMixReplicator extends AbstractReplicator {
                     }
                     Object[] raw = (Object[]) obj;
                     CommandName name = CommandName.name(Strings.toString(raw[0]));
+
+                    //jimdb 首次解析
+//                    if(name.equals("TRANSMIT")){
+//                        CommandName first_parser_name = CommandName.name("TRANSMITFIRSTPARSER");
+//                        final JimDbFirstCommandParser firstparser= (JimDbFirstCommandParser) commands.get(first_parser_name);
+//                        if(firstparser!=null){
+//                            raw=firstparser.parse(raw).getCommand();
+//                        }
+//                    }
                     final CommandParser<? extends Command> parser;
                     if ((parser = commands.get(name)) == null) {
                         logger.warn("command [{}] not register. raw command:{}", name, Strings.format(raw));

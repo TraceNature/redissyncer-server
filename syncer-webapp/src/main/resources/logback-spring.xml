@@ -58,6 +58,15 @@
 
         </appender>
 
+
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                        <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+                        <charset>utf8</charset>
+                </encoder>
+                <filter class="syncer.syncerpluscommon.log.LogFilter"></filter>
+        </appender>
+
         <logger name="syncer" level="${LOG_LEVEL}"/>
 
 
@@ -65,5 +74,6 @@
         <root level="${LOG_LEVEL}">
                 <appender-ref ref="STDOUT"/>
                 <appender-ref ref="FILE" />
+                <appender-ref ref="CONSOLE" />
         </root>
 </configuration>

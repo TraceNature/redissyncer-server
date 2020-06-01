@@ -1,10 +1,9 @@
 package syncer.syncerplusredis.dao;
 
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Component;
 import syncer.syncerplusredis.model.AbandonCommandModel;
+import syncer.syncerplusredis.model.RdbVersionModel;
 
 import java.util.List;
 
@@ -26,5 +25,18 @@ public interface AbandonCommandMapper {
     @Select("SELECT * FROM t_abandon_command WHERE groupId =#{groupId}")
     List<AbandonCommandModel> findAbandonCommandListByGroupId(@Param("groupId") String groupId)throws Exception;
 
+    @Insert("INSERT INTO t_abandon_command(taskId,groupId,command,key,value,type,ttl,exception,result,desc) VALUES(#{taskId},#{groupId},#{command},#{key},#{value},#{type},#{ttl},#{exception},#{result},#{desc})")
+    boolean insertAbandonCommandModel(AbandonCommandModel abandonCommandModel)throws Exception;
+
+
+
+    @Delete("DELETE FROM t_abandon_command WHERE id=#{id}")
+    void deleteAbandonCommandModelById(@Param("id")String id)throws Exception;
+
+    @Delete("DELETE FROM t_abandon_command WHERE taskId=#{taskId}")
+    void deleteAbandonCommandModelByTaskId(@Param("taskId")String taskId)throws Exception;
+
+    @Delete("DELETE FROM t_abandon_command WHERE groupId=#{groupId}")
+    void deleteAbandonCommandModelByGroupId(@Param("groupId")String groupId)throws Exception;
 
 }

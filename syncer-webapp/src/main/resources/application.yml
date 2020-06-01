@@ -53,3 +53,16 @@ spring:
     password:
 #    schema: classpath:init.sql
 #    initialization-mode: ALWAYS
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+        exclude:
+    jmx:
+      exposure:
+        include:
+  endpoint:
+    health:
+      #显示详细信息
+      show-details: always

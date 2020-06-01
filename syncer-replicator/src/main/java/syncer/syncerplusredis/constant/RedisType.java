@@ -9,5 +9,5 @@ import java.io.Serializable;
  * @Date 2020/1/2
  */
 public enum RedisType implements Serializable {
-    SINGLE,CLUSTER,FILE
+    SINGLE,CLUSTER,FILE,JIMDB
 }

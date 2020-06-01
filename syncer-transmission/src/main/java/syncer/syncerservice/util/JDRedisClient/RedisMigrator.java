@@ -2,6 +2,7 @@ package syncer.syncerservice.util.JDRedisClient;
 
 
 import syncer.syncerplusredis.cmd.CommandName;
+import syncer.syncerplusredis.cmd.jimdb.JimDbFirstCommandParser;
 import syncer.syncerplusredis.cmd.parser.DefaultCommandParser;
 import syncer.syncerplusredis.cmd.parser.JimDbDefaultCommandParser;
 import syncer.syncerplusredis.cmd.parser.PingParser;
@@ -131,6 +132,7 @@ public class RedisMigrator {
 
         //jimdb解析
         r.addCommandParser(CommandName.name("TRANSMIT"),new JimDbDefaultCommandParser());
+        r.addCommandParser(CommandName.name("TRANSMITFIRSTPARSER"),new JimDbFirstCommandParser());
         return r;
     }
 }

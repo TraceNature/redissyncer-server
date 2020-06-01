@@ -1257,6 +1257,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                         log.info("task[{}]数据传输模保护状态退出,任务停止,ThreadName[{}]",taskId,Thread.currentThread().getName());
 //                        System.out.println("【" + taskId + "】 PipelinedSyncTask关闭...." + Thread.currentThread().getName());
                         pipelined.close();
+                        jedisPool.close();
                         break;
                     }
                 }

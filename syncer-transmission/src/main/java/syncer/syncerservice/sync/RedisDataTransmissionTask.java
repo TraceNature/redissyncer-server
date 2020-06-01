@@ -144,7 +144,7 @@ public class RedisDataTransmissionTask implements Runnable {
 
 
             List<CommonFilter> commonFilterList = new ArrayList<>();
-            JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, syncDataDto.getTargetHost(), syncDataDto.getTargetPort(), syncDataDto.getTargetPassword(), batchSize, taskId);
+            JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, syncDataDto.getTargetHost(), syncDataDto.getTargetPort(), syncDataDto.getTargetPassword(), batchSize, taskId,null,null);
 
 
             //根据type生成相对节点List [List顺序即为filter节点执行顺序]

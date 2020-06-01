@@ -3,14 +3,21 @@ package syncer;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import syncer.syncerpluscommon.log.LoggerMessage;
+import syncer.syncerpluscommon.log.LoggerQueue;
 import syncer.syncerpluscommon.service.SqlFileExecutor;
 import syncer.syncerpluscommon.util.db.SqliteUtil;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
@@ -20,6 +27,7 @@ import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerservice.persistence.SqliteSettingPersistenceTask;
 import syncer.syncerpluscommon.util.file.FileUtils;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.List;
 
@@ -29,7 +37,43 @@ import java.util.List;
 @EnableScheduling
 @EnableCaching  //开启缓存
 @Slf4j
+@EnableWebSocketMessageBroker
 public class SyncerplusWebappApplication {
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+    @Autowired
+    ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+//    int info=1;
+//    @Scheduled(fixedRate = 1000)
+//    public void outputLogger(){
+//        log.info("测试日志输出"+info++);
+//    }
+    /**
+     * 推送日志到/topic/pullLogger
+     */
+    @PostConstruct
+    public void pushLogger(){
+        Runnable runnable=new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        LoggerMessage log = LoggerQueue.getInstance().poll();
+                        if(log!=null){
+                            if(messagingTemplate!=null){
+                                messagingTemplate.convertAndSend("/topic/pullLogger",log);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        threadPoolTaskExecutor.submit(runnable);
+    }
 
     public static void main(String[] args) throws IOException, Exception {
 
