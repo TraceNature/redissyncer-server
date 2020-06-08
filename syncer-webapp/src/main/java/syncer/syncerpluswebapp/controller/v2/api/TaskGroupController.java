@@ -1,5 +1,6 @@
 package syncer.syncerpluswebapp.controller.v2.api;
 
+import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
@@ -34,6 +35,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping(value = "/api/v2")
+@Api( tags = "任务管理相关接口")
 @Validated
 public class TaskGroupController {
     @Autowired

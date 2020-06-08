@@ -168,6 +168,11 @@
             <artifactId>shiro-ehcache</artifactId>
             <version>${shiro-spring.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper</artifactId>
+            <version>5.1.11</version>
+        </dependency>
 
     </dependencies>
 
