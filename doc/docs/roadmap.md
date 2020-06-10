@@ -25,8 +25,7 @@
 - [x] 同步模式拆分：全量、增量和全量+增量，增量offset包括beginbuf、endbuf
 - [x]  断点续传：通过targetoffset续传，如果offset值已过期，该任务作废
 - [x] 离线rdb或aof文件加载
-- [ ] 数据校验
-- [ ] cli客户端程序(完成基本架构及部分功能)
+- [x] cli客户端程序(完成基本架构及部分功能)
 
 * 3.X
   
@@ -35,9 +34,11 @@
 - [ ] 限制任务数，提供任务最大数参数
 - [ ] 内存级别双向同步
 - [ ] 集成log4j2,日志可通过application.yml或启动参数配置，默认输出位置 ./log
+- [ ] 数据校验
 
 * 4.X
 - [ ] 兼容redis协议的其他kv产品例如Tides，TiKV
 - [ ] 理解Tikv机制
 - [ ] 实现Redis=>tikv全量+增量
-- [ ] 实现Tikv数据全量rollback to redis 
+- [ ] 实现Tikv数据全量rollback to redis
+- [ ] tikv 作为redis持久话的完整方案 
