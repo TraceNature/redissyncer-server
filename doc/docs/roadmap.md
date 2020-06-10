@@ -35,3 +35,9 @@
 - [ ] 限制任务数，提供任务最大数参数
 - [ ] 内存级别双向同步
 - [ ] 集成log4j2,日志可通过application.yml或启动参数配置，默认输出位置 ./log
+
+* 4.X
+- [ ] 兼容redis协议的其他kv产品例如Tides，TiKV
+- [ ] 理解Tikv机制
+- [ ] 实现Redis=>tikv全量+增量
+- [ ] 实现Tikv数据全量rollback to redis 
