@@ -1,8 +1,9 @@
-package common
+package commons
 
 import (
 	"math/rand"
 	"time"
+	"github.com/satori/go.uuid"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -25,4 +26,8 @@ func RandString(length int) string {
 		b[i] = charset[seededRand.Intn(len(charset))]
 	}
 	return string(b)
+}
+
+func GetUUID() string {
+	return uuid.NewV4().String()
 }

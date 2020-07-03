@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v7"
 	"os"
-	"testcase/common"
+	"testcase/commons"
 	"testcase/generatedata"
 )
 
@@ -48,7 +48,7 @@ to quickly create a Cobra application.`,
 			redisopt.Password = passwd
 		}
 
-		client := common.GetGoRedisClient(redisopt)
+		client := commons.GetGoRedisClient(redisopt)
 
 		_, err := client.Ping().Result()
 

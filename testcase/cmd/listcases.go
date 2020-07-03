@@ -17,13 +17,14 @@ package cmd
 
 import (
 	"fmt"
+	"testcase/cases"
 
 	"github.com/spf13/cobra"
 )
 
-// testremovetaskCmd represents the testremovetask command
-var testremovetaskCmd = &cobra.Command{
-	Use:   "testremovetask",
+// listcasesCmd represents the listcases command
+var listcasesCmd = &cobra.Command{
+	Use:   "listcases",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -32,20 +33,21 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("testremovetask called")
+		fmt.Println("listcases called")
+		cases.DisplayCasesList()
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(testremovetaskCmd)
+	rootCmd.AddCommand(listcasesCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// testremovetaskCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// listcasesCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// testremovetaskCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// listcasesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

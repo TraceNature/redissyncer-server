@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v7"
 	"os"
-	"testcase/check"
-	"testcase/common"
+	"testcase/compare"
+	"testcase/commons"
 
 	"github.com/spf13/cobra"
 )
@@ -62,8 +62,8 @@ to quickly create a Cobra application.`,
 		logger.Println(sopt)
 		logger.Println(topt)
 
-		sclient := common.GetGoRedisClient(sopt)
-		tclient := common.GetGoRedisClient(topt)
+		sclient := commons.GetGoRedisClient(sopt)
+		tclient := commons.GetGoRedisClient(topt)
 
 		_, serr := sclient.Ping().Result()
 		_, terr := tclient.Ping().Result()
@@ -78,7 +78,7 @@ to quickly create a Cobra application.`,
 			os.Exit(1)
 		}
 
-		check.Comparedata(sclient, tclient)
+		compare.Comparedata(sclient, tclient)
 	},
 }
 

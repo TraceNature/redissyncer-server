@@ -2,20 +2,22 @@ package synctaskhandle
 
 import (
 	"encoding/json"
+	"errors"
+	"github.com/tidwall/gjson"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
-	"testcase/global"
+	"testcase/globalzap"
 )
 
-var logger = global.GetInstance()
+var logger = globalzap.GetLogger()
 
-const CreateTaskPath = "/api/v1/createtask"
-const StartTaskPath = "/api/v1/starttask"
-const StopTaskPath = "/api/v1/stoptask"
-const RemoveTaskPath = "/api/v1/removetask"
-const ListTasksPath = "/api/v1/listtasks"
+const CreateTaskPath = "/api/v2/createtask"
+const StartTaskPath = "/api/v2/starttask"
+const StopTaskPath = "/api/v2/stoptask"
+const RemoveTaskPath = "/api/v2/removetask"
+const ListTasksPath = "/api/v2/listtasks"
 
 type Request struct {
 	Server string
@@ -24,13 +26,11 @@ type Request struct {
 }
 
 func (r Request) ExecRequest() (result string) {
-
 	client := &http.Client{}
-
 	req, err := http.NewRequest("POST", r.Server+r.Api, strings.NewReader(r.Body))
 
 	if err != nil {
-		logger.Println(err)
+		logger.Sugar().Error(err)
 		os.Exit(1)
 	}
 
@@ -38,40 +38,16 @@ func (r Request) ExecRequest() (result string) {
 
 	resp, err := client.Do(req)
 
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logger.Println(err)
-		os.Exit(1)
+		logger.Sugar().Error(err)
 	}
-	var dat map[string]interface{}
-	json.Unmarshal(body, &dat)
-	bodystr, _ := json.MarshalIndent(dat, "", " ")
-	return string(bodystr)
-
-}
-
-func CreateTask(server string, createjson string) (result string) {
-
-	url := server + "/api/v1/createtask"
-	client := &http.Client{}
-
-	req, err := http.NewRequest("POST", url, strings.NewReader(createjson))
-	if err != nil {
-		logger.Println(err)
-		os.Exit(1)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
 
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logger.Println(err)
+		//logger.Sugar().Error(err)
+		logger.Sugar().Error(err)
 		os.Exit(1)
 	}
 	var dat map[string]interface{}
@@ -80,116 +56,169 @@ func CreateTask(server string, createjson string) (result string) {
 	return string(bodystr)
 }
 
-func StopTask(server string, ids []string) (result string) {
+//创建同步任务
+func CreateTask(syncserver string, createjson string) []string {
+	createreq := &Request{
+		Server: syncserver,
+		Api:    CreateTaskPath,
+		Body:   createjson,
+	}
 
-	url := server + "/api/v1/stoptask"
-	logger.Println(ids)
+	resp := createreq.ExecRequest()
+	taskids := gjson.Get(resp, "data").Array()
+	if len(taskids) == 0 {
+		logger.Sugar().Error(errors.New("task create faile"))
+		logger.Sugar().Info(resp)
+		os.Exit(1)
+	}
+	taskidsstrarray := []string{}
+	for _, v := range taskids {
+		//fmt.Println(gjson.Get(v.String(), "taskId").String())
+		taskidsstrarray = append(taskidsstrarray, gjson.Get(v.String(), "taskId").String())
+	}
 
-	client := &http.Client{}
+	return taskidsstrarray
+
+}
+
+//Start task
+func StartTask(syncserver string, taskid string) {
 	jsonmap := make(map[string]interface{})
+	jsonmap["taskid"] = taskid
+	startjson, err := json.Marshal(jsonmap)
+	if err != nil {
+		logger.Sugar().Error(err)
+		os.Exit(1)
+	}
+	startreq := &Request{
+		Server: syncserver,
+		Api:    StartTaskPath,
+		Body:   string(startjson),
+	}
+	startreq.ExecRequest()
+
+}
+
+//Stop task by task ids
+func StopTaskByIds(syncserver string, ids []string) {
+	jsonmap := make(map[string]interface{})
+
 	jsonmap["taskids"] = ids
-	jsonStr, err := json.Marshal(jsonmap)
-
+	stopjsonStr, err := json.Marshal(jsonmap)
 	if err != nil {
-		logger.Println(err)
+		logger.Sugar().Error(err)
+		os.Exit(1)
+	}
+	stopreq := &Request{
+		Server: syncserver,
+		Api:    StopTaskPath,
+		Body:   string(stopjsonStr),
+	}
+	stopreq.ExecRequest()
+
+}
+
+//Remove task by name
+func RemoveTaskByName(syncserver string, taskname string) {
+	jsonmap := make(map[string]interface{})
+
+	taskids, err := GetSameTaskNameIds(syncserver, taskname)
+	if err != nil {
+		logger.Sugar().Error(err)
 		os.Exit(1)
 	}
 
-	logger.Println(string(jsonStr))
-
-	req, err := http.NewRequest("POST", url, strings.NewReader(string(jsonStr)))
-	if err != nil {
-		logger.Println(err)
+	if len(taskids) == 0 {
+		return
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
+	jsonmap["taskids"] = taskids
+	stopjsonStr, err := json.Marshal(jsonmap)
 	if err != nil {
-		logger.Println(err)
+		logger.Sugar().Error(err)
+		os.Exit(1)
 	}
-	var dat map[string]interface{}
-	json.Unmarshal(body, &dat)
-	bodystr, _ := json.MarshalIndent(dat, "", " ")
-	return string(bodystr)
+	stopreq := &Request{
+		Server: syncserver,
+		Api:    StopTaskPath,
+		Body:   string(stopjsonStr),
+	}
+	stopreq.ExecRequest()
+
+	removereq := &Request{
+		Server: syncserver,
+		Api:    RemoveTaskPath,
+		Body:   string(stopjsonStr),
+	}
+
+	removereq.ExecRequest()
+
 }
 
-func RemoveTask(server string, ids []string) (result string) {
-
-	url := server + "/api/v1/removetask"
-	logger.Println(ids)
-
-	client := &http.Client{}
+//获取同步任务状态
+func GetTaskStatus(syncserver string, ids []string) (map[string]string, error) {
 	jsonmap := make(map[string]interface{})
+
+	jsonmap["regulation"] = "byids"
 	jsonmap["taskids"] = ids
-	jsonStr, err := json.Marshal(jsonmap)
 
+	listtaskjsonStr, err := json.Marshal(jsonmap)
 	if err != nil {
-		logger.Println(err)
-		os.Exit(1)
+		return nil, err
+	}
+	listreq := &Request{
+		Server: syncserver,
+		Api:    ListTasksPath,
+		Body:   string(listtaskjsonStr),
+	}
+	listresp := listreq.ExecRequest()
+	taskarray := gjson.Get(listresp, "data").Array()
+
+	if len(taskarray) == 0 {
+		return nil, errors.New("No status return")
 	}
 
-	logger.Println(string(jsonStr))
+	statusmap := make(map[string]string)
 
-	req, err := http.NewRequest("POST", url, strings.NewReader(string(jsonStr)))
-	if err != nil {
-		logger.Println(err)
+	for _, v := range taskarray {
+		id := gjson.Get(v.String(), "taskId").String()
+		status := gjson.Get(v.String(), "status").String()
+		statusmap[id] = status
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		logger.Println(err)
-	}
-	var dat map[string]interface{}
-	json.Unmarshal(body, &dat)
-	bodystr, _ := json.MarshalIndent(dat, "", " ")
-	return string(bodystr)
+	return statusmap, nil
 }
 
-func StartTask(server string, id string, afresh bool) (result string) {
-	url := server + "/api/v1/starttask"
-	logger.Println(id)
+// @title    GetSameTaskNameIds
+// @description   获取同名任务列表
+// @auth      Jsw             时间（2020/7/1   10:57 ）
+// @param     syncserver        string         "redissyncer ip:port"
+// @param    taskname        string         "任务名称"
+// @return    taskids        []string         "任务id数组"
+func GetSameTaskNameIds(syncserver string, taskname string) ([]string, error) {
 
-	client := &http.Client{}
-	jsonmap := make(map[string]interface{})
-	jsonmap["taskid"] = id
-	jsonmap["afresh"] = afresh
-	jsonStr, err := json.Marshal(jsonmap)
-
+	existstaskids := []string{}
+	listjsonmap := make(map[string]interface{})
+	listjsonmap["regulation"] = "bynames"
+	listjsonmap["tasknames"] = strings.Split(taskname, ",")
+	listjsonStr, err := json.Marshal(listjsonmap)
 	if err != nil {
-		logger.Println(err)
-		os.Exit(1)
+		logger.Info(err.Error())
+		return nil, err
 	}
-
-	logger.Println(string(jsonStr))
-
-	req, err := http.NewRequest("POST", url, strings.NewReader(string(jsonStr)))
-	if err != nil {
-		logger.Println(err)
+	listtaskreq := &Request{
+		Server: syncserver,
+		Api:    ListTasksPath,
+		Body:   string(listjsonStr),
 	}
+	listresp := listtaskreq.ExecRequest()
 
-	req.Header.Set("Content-Type", "application/json")
+	tasklist := gjson.Get(listresp, "data").Array()
 
-	resp, err := client.Do(req)
-
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		logger.Println(err)
+	if len(tasklist) > 0 {
+		for _, v := range tasklist {
+			existstaskids = append(existstaskids, gjson.Get(v.String(), "taskId").String())
+		}
 	}
-	var dat map[string]interface{}
-	json.Unmarshal(body, &dat)
-	bodystr, _ := json.MarshalIndent(dat, "", " ")
-	return string(bodystr)
+	return existstaskids, nil
 }

@@ -24,8 +24,9 @@ import (
 	"github.com/tidwall/gjson"
 	"io/ioutil"
 	"os"
-	"testcase/check"
-	"testcase/common"
+	"strings"
+	"testcase/compare"
+	"testcase/commons"
 	"testcase/generatedata"
 	"testcase/synctaskhandle"
 	"time"
@@ -34,17 +35,12 @@ import (
 // testallCmd represents the testall command
 var testallCmd = &cobra.Command{
 	Use:   "testall",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "基础测试",
+	Long:  `用于测试任务从创建到销毁的全部流程，测试流程：环境预处理->生成全量数据->生成任务->启动任务->生成增量数据->停止任务->核对数据->删除任务`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("testall called")
 
-		report := &common.Report{ReportContent: make(map[string]interface{})}
+		report := &commons.Report{ReportContent: make(map[string]interface{})}
 		//解析创建任务文件
 		execfile, _ := cmd.Flags().GetString("createjson")
 		jsonFile, err := os.Open(execfile)
@@ -60,6 +56,7 @@ to quickly create a Cobra application.`,
 		taddr := gjson.Get(string(jsonbytes), "targetRedisAddress").String()
 		spasswd := gjson.Get(string(jsonbytes), "sourcePassword").String()
 		tpasswd := gjson.Get(string(jsonbytes), "targetPassword").String()
+		taskname := gjson.Get(string(jsonbytes), "taskName").String()
 		reportbool, _ := cmd.Flags().GetBool("report")
 
 		sopt := &redis.Options{
@@ -79,8 +76,8 @@ to quickly create a Cobra application.`,
 			topt.Password = tpasswd
 		}
 
-		sclient := common.GetGoRedisClient(sopt)
-		tclient := common.GetGoRedisClient(topt)
+		sclient := commons.GetGoRedisClient(sopt)
+		tclient := commons.GetGoRedisClient(topt)
 
 		//校验连通性
 		_, serr := sclient.Ping().Result()
@@ -113,6 +110,54 @@ to quickly create a Cobra application.`,
 		d, _ := cmd.Flags().GetInt64("basedatasize")
 		generatedata.GenerateBase(sclient, d)
 
+		//查看同名任务是否存在
+		listjsonmap := make(map[string]interface{})
+		listjsonmap["regulation"] = "bynames"
+		listjsonmap["tasknames"] = strings.Split(taskname, ",")
+		listjsonStr, err := json.Marshal(listjsonmap)
+		if err != nil {
+			logger.Info(err)
+			os.Exit(1)
+		}
+
+		listtaskreq := &synctaskhandle.Request{
+			Server: viper.GetViper().GetString("syncserver"),
+			Api:    synctaskhandle.ListTasksPath,
+			Body:   string(listjsonStr),
+		}
+		listresp := listtaskreq.ExecRequest()
+
+		tasklist := gjson.Get(listresp, "data").Array()
+		existstaskids := []string{}
+
+		if len(tasklist) > 0 {
+			for _, v := range tasklist {
+				existstaskids = append(existstaskids, gjson.Get(v.String(), "taskId").String())
+			}
+			//停止任务
+			stopexitsmap := make(map[string]interface{})
+			stopexitsmap["taskids"] = existstaskids
+			stopexistsjson, _ := json.MarshalIndent(stopexitsmap, "", " ")
+			stopexistsreq := &synctaskhandle.Request{
+				Server: viper.GetViper().GetString("syncserver"),
+				Api:    synctaskhandle.StopTaskPath,
+				Body:   string(stopexistsjson),
+			}
+			stopexistsreq.ExecRequest()
+
+			//删除任务
+			removeexistsreq := &synctaskhandle.Request{
+				Server: viper.GetViper().GetString("syncserver"),
+				Api:    synctaskhandle.RemoveTaskPath,
+				Body:   string(stopexistsjson),
+			}
+
+			stopresult := removeexistsreq.ExecRequest()
+
+			fmt.Println(stopresult)
+
+		}
+
 		//创建任务
 		createreq := &synctaskhandle.Request{
 			Server: viper.GetViper().GetString("syncserver"),
@@ -121,8 +166,8 @@ to quickly create a Cobra application.`,
 		}
 
 		resp := createreq.ExecRequest()
-
 		taskids := gjson.Get(resp, "data.taskids").Array()
+
 		taskidsstrarray := []string{}
 		for _, v := range taskids {
 			taskidsstrarray = append(taskidsstrarray, v.String())
@@ -142,6 +187,7 @@ to quickly create a Cobra application.`,
 		}
 
 		time.Sleep(5 * time.Second)
+
 		//停止任务
 		stopmap := make(map[string]interface{})
 		stopmap["taskids"] = taskidsstrarray
@@ -151,9 +197,11 @@ to quickly create a Cobra application.`,
 			Api:    synctaskhandle.StopTaskPath,
 			Body:   string(stopjson),
 		}
-		stopreq.ExecRequest()
+		stopresult := stopreq.ExecRequest()
+		fmt.Println(stopresult)
+		time.Sleep(5 * time.Second)
 
-		//删除惹我
+		//删除任务
 		removereq := &synctaskhandle.Request{
 			Server: viper.GetViper().GetString("syncserver"),
 			Api:    synctaskhandle.RemoveTaskPath,
@@ -163,7 +211,7 @@ to quickly create a Cobra application.`,
 		removereq.ExecRequest()
 
 		//比较数据
-		failkeys := check.Comparedata(sclient, tclient)
+		failkeys := compare.Comparedata(sclient, tclient)
 
 		if reportbool {
 			report.ReportContent["FailKeys"] = failkeys

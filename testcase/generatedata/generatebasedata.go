@@ -10,7 +10,7 @@ import (
 	"time"
 	"github.com/panjf2000/ants/v2"
 )
-import "testcase/common"
+import "testcase/commons"
 
 var logger = global.GetInstance()
 
@@ -20,11 +20,12 @@ func GenerateBase(client *redis.Client, loopstep int64) {
 	defer p.Release()
 
 	var wg sync.WaitGroup
-	basevalue := common.RandString(256 * 1024)
+	basevalue := commons.RandString(256 * 1024)
+	prefix := commons.GetUUID()
 
 	//生成biglist
 	logger.Info("start make big list")
-	listname := "list_" + common.RandString(8)
+	listname := prefix + "list_" + commons.RandString(8)
 	wg.Add(1)
 	biglistfunc := func() {
 		defer wg.Done()
@@ -39,13 +40,13 @@ func GenerateBase(client *redis.Client, loopstep int64) {
 
 	//生成string kv
 	logger.Info("make strings")
-	basestring := common.RandString(128)
+	//basestring := commons.RandString(128)
 	wg.Add(1)
 	makestringfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
 		for i := int64(0); i < loopstep; i++ {
-			client.Set(basestring+strconv.FormatInt(i, 10), basevalue, time.Duration(3600*time.Second))
+			client.Set(prefix+"str"+strconv.FormatInt(i, 10), basevalue, time.Duration(3600*time.Second))
 		}
 		t2 := time.Now()
 		logger.Info("Finish make strings   ", t2.Sub(t1))
@@ -54,7 +55,7 @@ func GenerateBase(client *redis.Client, loopstep int64) {
 
 	//生成set
 	logger.Info("start make big set")
-	setname := "set_" + common.RandString(10)
+	setname := prefix + "set_" + commons.RandString(10)
 	bigsetfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
@@ -69,7 +70,7 @@ func GenerateBase(client *redis.Client, loopstep int64) {
 
 	//生成hset
 	logger.Info("start make big hashset")
-	hsetname := "hset_" + common.RandString(10)
+	hsetname := prefix + "hset_" + commons.RandString(10)
 	makebighsetfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
@@ -85,7 +86,7 @@ func GenerateBase(client *redis.Client, loopstep int64) {
 
 	//生成sortedSet
 	logger.Info("start make big sorted set")
-	sortedsetname := "sortedset_" + common.RandString(8)
+	sortedsetname := prefix + "sortedset_" + commons.RandString(8)
 	makebigsortedsetfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
@@ -118,7 +119,7 @@ func GenerateIncrement(client *redis.Client) {
 	wg.Add(1)
 	appendfunc := func() {
 		t1 := time.Now()
-		appended := "append_" + common.RandString(16)
+		appended := "append_" + commons.RandString(16)
 		for i := 0; i < 10; i++ {
 			client.Append(appended, strconv.Itoa(i))
 		}
@@ -136,13 +137,13 @@ func GenerateIncrement(client *redis.Client) {
 	bitopfunc := func() {
 		t1 := time.Now()
 		strarry := []string{}
-		opandkey := "opand_" + common.RandString(8)
-		oporkey := "opor_" + common.RandString(8)
-		opxorkey := "opxor_" + common.RandString(8)
-		opnotkey := "opnot_" + common.RandString(8)
+		opandkey := "opand_" + commons.RandString(8)
+		oporkey := "opor_" + commons.RandString(8)
+		opxorkey := "opxor_" + commons.RandString(8)
+		opnotkey := "opnot_" + commons.RandString(8)
 		for i := 0; i < 20; i++ {
-			bitopkey := "bitop_" + common.RandString(16)
-			client.Do("set", bitopkey, common.RandString(16))
+			bitopkey := "bitop_" + commons.RandString(16)
+			client.Do("set", bitopkey, commons.RandString(16))
 			strarry = append(strarry, bitopkey)
 		}
 
@@ -164,7 +165,7 @@ func GenerateIncrement(client *redis.Client) {
 		t1 := time.Now()
 		strarry := []string{}
 		for i := 0; i < 100; i++ {
-			desckey := "desc_" + common.RandString(16)
+			desckey := "desc_" + commons.RandString(16)
 			client.Do("set", desckey, rand.Intn(200))
 			strarry = append(strarry, desckey)
 		}
@@ -187,7 +188,7 @@ func GenerateIncrement(client *redis.Client) {
 		t1 := time.Now()
 		strarry := []string{}
 		for i := 0; i < 100; i++ {
-			desckey := "incr_" + common.RandString(16)
+			desckey := "incr_" + commons.RandString(16)
 			client.Do("set", desckey, rand.Intn(200))
 			strarry = append(strarry, desckey)
 		}
@@ -212,12 +213,12 @@ func GenerateIncrement(client *redis.Client) {
 		msetnxarry := []string{}
 
 		for i := 0; i < 100; i++ {
-			msetkv := "mset_" + common.RandString(16)
+			msetkv := "mset_" + commons.RandString(16)
 			msetarry = append(msetarry, msetkv)
 		}
 
 		for i := 0; i < 100; i++ {
-			msetnxkv := "msetnx_" + common.RandString(16)
+			msetnxkv := "msetnx_" + commons.RandString(16)
 			msetnxarry = append(msetnxarry, msetnxkv)
 		}
 
@@ -236,9 +237,9 @@ func GenerateIncrement(client *redis.Client) {
 	wg.Add(1)
 	psetnexfuc := func() {
 		t1 := time.Now()
-		psetexbaseval := common.RandString(64)
+		psetexbaseval := commons.RandString(64)
 		for i := 0; i < 100; i++ {
-			psetexkey := "psetex_" + common.RandString(16)
+			psetexkey := "psetex_" + commons.RandString(16)
 			client.Do("psetex", psetexkey, 3600000, psetexbaseval+strconv.Itoa(i))
 		}
 		t2 := time.Now()
@@ -249,45 +250,12 @@ func GenerateIncrement(client *redis.Client) {
 	}
 	p.Submit(psetnexfuc)
 
-	//SET
-	wg.Add(1)
-	setfunc := func() {
-		t1 := time.Now()
-		setbaseval := common.RandString(64)
-		for i := 0; i < 1000; i++ {
-			setkey := "set_" + common.RandString(16)
-			client.Set(setkey, setbaseval+strconv.Itoa(i), time.Duration(3600*time.Second))
-		}
-		t2 := time.Now()
-		logger.WithFields(logrus.Fields{
-			"command": "set",
-		}).Info(t2.Sub(t1))
-		wg.Done()
-	}
-	p.Submit(setfunc)
-
-	//SETBIT
-	wg.Add(1)
-	setbitfunc := func() {
-		t1 := time.Now()
-		for i := 0; i < 100; i++ {
-			setbitkey := "setbit_" + common.RandString(16)
-			client.SetBit(setbitkey, rand.Int63n(100), rand.Intn(1))
-		}
-		t2 := time.Now()
-		logger.WithFields(logrus.Fields{
-			"command": "setbit",
-		}).Info(t2.Sub(t1))
-		wg.Done()
-	}
-	p.Submit(setbitfunc)
-
 	//SETEX
 	wg.Add(1)
 	setexfunc := func() {
 		t1 := time.Now()
 		for i := 0; i < 100; i++ {
-			setexkey := "setex_" + common.RandString(16)
+			setexkey := "setex_" + commons.RandString(16)
 			client.Do("setex", setexkey, 3600, setexkey)
 		}
 		t2 := time.Now()
@@ -299,12 +267,29 @@ func GenerateIncrement(client *redis.Client) {
 	}
 	p.Submit(setexfunc)
 
+	//SET
+	wg.Add(1)
+	setfunc := func() {
+		t1 := time.Now()
+		setbaseval := commons.RandString(64)
+		for i := 0; i < 1000; i++ {
+			setkey := "set_" + commons.RandString(16)
+			client.Set(setkey, setbaseval+strconv.Itoa(i), time.Duration(3600*time.Second))
+		}
+		t2 := time.Now()
+		logger.WithFields(logrus.Fields{
+			"command": "set",
+		}).Info(t2.Sub(t1))
+		wg.Done()
+	}
+	p.Submit(setfunc)
+
 	//SETNX
 	wg.Add(1)
 	setnxfunc := func() {
 		t1 := time.Now()
 		for i := 0; i < 100; i++ {
-			setnxkey := "setnx_" + common.RandString(16)
+			setnxkey := "setnx_" + commons.RandString(16)
 			client.SetNX(setnxkey, setnxkey, time.Duration(3600*time.Second))
 		}
 		t2 := time.Now()
@@ -315,14 +300,30 @@ func GenerateIncrement(client *redis.Client) {
 	}
 	p.Submit(setnxfunc)
 
+	//SETBIT
+	wg.Add(1)
+	setbitfunc := func() {
+		t1 := time.Now()
+		for i := 0; i < 100; i++ {
+			setbitkey := "setbit_" + commons.RandString(16)
+			client.SetBit(setbitkey, rand.Int63n(100), rand.Intn(1))
+		}
+		t2 := time.Now()
+		logger.WithFields(logrus.Fields{
+			"command": "setbit",
+		}).Info(t2.Sub(t1))
+		wg.Done()
+	}
+	p.Submit(setbitfunc)
+
 	//SETRANGE
 	wg.Add(1)
 	setrangefunc := func() {
 		t1 := time.Now()
 		strarry := []string{}
-		setrangebaseval := common.RandString(4)
+		setrangebaseval := commons.RandString(4)
 		for i := 0; i < 100; i++ {
-			setrangekey := "setrange_" + common.RandString(16)
+			setrangekey := "setrange_" + commons.RandString(16)
 			client.SetRange(setrangekey, rand.Int63n(16), setrangebaseval+strconv.Itoa(i))
 			strarry = append(strarry, setrangekey)
 		}
@@ -354,7 +355,7 @@ func GenerateIncrement(client *redis.Client) {
 	hincrbyfloatfunc := func() {
 		t1 := time.Now()
 		for i := 0; i < 100; i++ {
-			client.HIncrByFloat("HINCRBY_"+common.RandString(4), "page_view", rand.Float64())
+			client.HIncrByFloat("HINCRBY_"+commons.RandString(4), "page_view", rand.Float64())
 		}
 		t2 := time.Now()
 		logger.WithFields(logrus.Fields{
@@ -370,10 +371,10 @@ func GenerateIncrement(client *redis.Client) {
 		t1 := time.Now()
 		fieldmap := make(map[string]interface{})
 		for i := 0; i < 20; i++ {
-			key := common.RandString(8)
+			key := commons.RandString(8)
 			fieldmap[key] = "wwww." + key + ".com"
 		}
-		client.HMSet("hmset_"+common.RandString(4), fieldmap)
+		client.HMSet("hmset_"+commons.RandString(4), fieldmap)
 		t2 := time.Now()
 		logger.WithFields(logrus.Fields{
 			"command": "hmset",
@@ -387,8 +388,8 @@ func GenerateIncrement(client *redis.Client) {
 	hsetnxfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "hsetnx_" + common.RandString(8)
-		basefield := common.RandString(8)
+		basekey := "hsetnx_" + commons.RandString(8)
+		basefield := commons.RandString(8)
 		for i := 0; i < 20; i++ {
 			client.HSetNX(basekey, basefield+strconv.Itoa(i), basefield)
 		}
@@ -410,7 +411,7 @@ func GenerateIncrement(client *redis.Client) {
 			values[i] = i
 		}
 
-		client.LPush("lpush_"+common.RandString(4), values...)
+		client.LPush("lpush_"+commons.RandString(4), values...)
 		t2 := time.Now()
 		logger.WithFields(logrus.Fields{
 			"command": "lpush",
@@ -419,120 +420,12 @@ func GenerateIncrement(client *redis.Client) {
 	}
 	p.Submit(lpushfunc)
 
-	//BLPOP
-	wg.Add(1)
-	blpopfunc := func() {
-		defer wg.Done()
-		t1 := time.Now()
-		basekey := "blpop_" + common.RandString(8)
-		keys := []string{}
-		values := make([]interface{}, 40)
-		for i := 0; i < len(values); i++ {
-			values[i] = i
-		}
-		for i := 0; i < 50; i++ {
-			key := basekey + strconv.Itoa(i)
-			client.LPush(key, values...)
-			keys = append(keys, key)
-		}
-		client.BLPop(5*time.Second, keys...)
-
-		t2 := time.Now()
-		logger.WithFields(logrus.Fields{
-			"command": "blpop",
-		}).Info(t2.Sub(t1))
-	}
-	p.Submit(blpopfunc)
-
-	//BRPOP
-	wg.Add(1)
-	brpopfunc := func() {
-		defer wg.Done()
-		t1 := time.Now()
-		basekey := "brpop_" + common.RandString(8)
-		keys := []string{}
-		values := make([]interface{}, 40)
-		for i := 0; i < len(values); i++ {
-			values[i] = i
-		}
-		for i := 0; i < 50; i++ {
-			key := basekey + strconv.Itoa(i)
-			client.LPush(key, values...)
-			keys = append(keys, key)
-		}
-		client.BRPop(5*time.Second, keys...)
-
-		t2 := time.Now()
-		logger.WithFields(logrus.Fields{
-			"command": "brpop",
-		}).Info(t2.Sub(t1))
-	}
-	p.Submit(brpopfunc)
-
-	//BRPOPLPUSH
-	wg.Add(1)
-	brpoplpushfunc := func() {
-		defer wg.Done()
-		t1 := time.Now()
-		basekey := "brpoplpush_" + common.RandString(8)
-		keys := []string{}
-		values := make([]interface{}, 40)
-		for i := 0; i < len(values); i++ {
-			values[i] = i
-		}
-
-		for i := 0; i < 50; i++ {
-			key := basekey + strconv.Itoa(i)
-			client.LPush(key, values...)
-			keys = append(keys, key)
-		}
-
-		for k, v := range keys {
-			client.BRPopLPush(v, v+strconv.Itoa(k), 30*time.Second)
-		}
-
-		t2 := time.Now()
-		logger.WithFields(logrus.Fields{
-			"command": "brpoplpush",
-		}).Info(t2.Sub(t1))
-	}
-	p.Submit(brpoplpushfunc)
-
-	//LINSERT
-	wg.Add(1)
-	linsertfunc := func() {
-		defer wg.Done()
-		t1 := time.Now()
-		basekey := "linsert_" + common.RandString(8)
-		keys := []string{}
-		values := make([]interface{}, 40)
-		for i := 0; i < len(values); i++ {
-			values[i] = i
-		}
-
-		for i := 0; i < 50; i++ {
-			key := basekey + strconv.Itoa(i)
-			client.LPush(key, values...)
-			keys = append(keys, key)
-		}
-
-		for _, v := range keys {
-			client.LInsert(v, "AFTER", rand.Intn(40), v)
-		}
-
-		t2 := time.Now()
-		logger.WithFields(logrus.Fields{
-			"command": "linsert",
-		}).Info(t2.Sub(t1))
-	}
-	p.Submit(linsertfunc)
-
 	//LPOP
 	wg.Add(1)
 	lpopfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "lpop_" + common.RandString(8)
+		basekey := "lpop_" + commons.RandString(8)
 		keys := []string{}
 		values := make([]interface{}, 40)
 		for i := 0; i < len(values); i++ {
@@ -561,7 +454,7 @@ func GenerateIncrement(client *redis.Client) {
 	lpushxfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "lpushx_" + common.RandString(8)
+		basekey := "lpushx_" + commons.RandString(8)
 		values := make([]interface{}, 40)
 		for i := 0; i < len(values); i++ {
 			values[i] = i
@@ -580,7 +473,7 @@ func GenerateIncrement(client *redis.Client) {
 	lremfunc := func() {
 		t1 := time.Now()
 		defer wg.Done()
-		basekey := "lrem_" + common.RandString(4)
+		basekey := "lrem_" + commons.RandString(4)
 		for i := 0; i < 50; i++ {
 			client.LPush(basekey, i)
 		}
@@ -600,13 +493,13 @@ func GenerateIncrement(client *redis.Client) {
 	lsetfunc := func() {
 		t1 := time.Now()
 		defer wg.Done()
-		basekey := "lrem_" + common.RandString(4)
+		basekey := "lrem_" + commons.RandString(4)
 		for i := 0; i < 50; i++ {
 			client.LPush(basekey, i)
 		}
 
 		for i := 0; i < 10; i++ {
-			client.LSet(basekey, rand.Int63n(49), common.RandString(4))
+			client.LSet(basekey, rand.Int63n(49), commons.RandString(4))
 		}
 		t2 := time.Now()
 		logger.WithFields(logrus.Fields{
@@ -620,7 +513,7 @@ func GenerateIncrement(client *redis.Client) {
 	ltrimfunc := func() {
 		t1 := time.Now()
 		defer wg.Done()
-		basekey := "ltrim_" + common.RandString(4)
+		basekey := "ltrim_" + commons.RandString(4)
 		values := make([]interface{}, 50)
 		keys := []string{}
 		for i := 0; i < len(values); i++ {
@@ -642,12 +535,41 @@ func GenerateIncrement(client *redis.Client) {
 	}
 	p.Submit(ltrimfunc)
 
+	//LINSERT
+	wg.Add(1)
+	linsertfunc := func() {
+		defer wg.Done()
+		t1 := time.Now()
+		basekey := "linsert_" + commons.RandString(8)
+		keys := []string{}
+		values := make([]interface{}, 40)
+		for i := 0; i < len(values); i++ {
+			values[i] = i
+		}
+
+		for i := 0; i < 50; i++ {
+			key := basekey + strconv.Itoa(i)
+			client.LPush(key, values...)
+			keys = append(keys, key)
+		}
+
+		for _, v := range keys {
+			client.LInsert(v, "AFTER", rand.Intn(40), v)
+		}
+
+		t2 := time.Now()
+		logger.WithFields(logrus.Fields{
+			"command": "linsert",
+		}).Info(t2.Sub(t1))
+	}
+	p.Submit(linsertfunc)
+
 	//RPOP
 	wg.Add(1)
 	lrpopfunc := func() {
 		t1 := time.Now()
 		defer wg.Done()
-		basekey := "rpop_" + common.RandString(4)
+		basekey := "rpop_" + commons.RandString(4)
 		values := make([]interface{}, 50)
 		keys := []string{}
 		for i := 0; i < len(values); i++ {
@@ -674,7 +596,7 @@ func GenerateIncrement(client *redis.Client) {
 	rpoplpushfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "rpoplpush_" + common.RandString(8)
+		basekey := "rpoplpush_" + commons.RandString(8)
 		keys := []string{}
 		values := make([]interface{}, 40)
 		for i := 0; i < len(values); i++ {
@@ -703,7 +625,7 @@ func GenerateIncrement(client *redis.Client) {
 	rpushxfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "rpushx_" + common.RandString(8)
+		basekey := "rpushx_" + commons.RandString(8)
 		values := make([]interface{}, 40)
 		for i := 0; i < len(values); i++ {
 			values[i] = i
@@ -717,12 +639,91 @@ func GenerateIncrement(client *redis.Client) {
 	}
 	p.Submit(rpushxfunc)
 
+	//BLPOP
+	wg.Add(1)
+	blpopfunc := func() {
+		defer wg.Done()
+		t1 := time.Now()
+		basekey := "blpop_" + commons.RandString(8)
+		keys := []string{}
+		values := make([]interface{}, 40)
+		for i := 0; i < len(values); i++ {
+			values[i] = i
+		}
+		for i := 0; i < 50; i++ {
+			key := basekey + strconv.Itoa(i)
+			client.LPush(key, values...)
+			keys = append(keys, key)
+		}
+		client.BLPop(5*time.Second, keys...)
+
+		t2 := time.Now()
+		logger.WithFields(logrus.Fields{
+			"command": "blpop",
+		}).Info(t2.Sub(t1))
+	}
+	p.Submit(blpopfunc)
+
+	//BRPOP
+	wg.Add(1)
+	brpopfunc := func() {
+		defer wg.Done()
+		t1 := time.Now()
+		basekey := "brpop_" + commons.RandString(8)
+		keys := []string{}
+		values := make([]interface{}, 40)
+		for i := 0; i < len(values); i++ {
+			values[i] = i
+		}
+		for i := 0; i < 50; i++ {
+			key := basekey + strconv.Itoa(i)
+			client.LPush(key, values...)
+			keys = append(keys, key)
+		}
+		client.BRPop(5*time.Second, keys...)
+
+		t2 := time.Now()
+		logger.WithFields(logrus.Fields{
+			"command": "brpop",
+		}).Info(t2.Sub(t1))
+	}
+	p.Submit(brpopfunc)
+
+	//BRPOPLPUSH
+	wg.Add(1)
+	brpoplpushfunc := func() {
+		defer wg.Done()
+		t1 := time.Now()
+		basekey := "brpoplpush_" + commons.RandString(8)
+		keys := []string{}
+		values := make([]interface{}, 40)
+		for i := 0; i < len(values); i++ {
+			values[i] = i
+		}
+
+		for i := 0; i < 50; i++ {
+			key := basekey + strconv.Itoa(i)
+			client.LPush(key, values...)
+			keys = append(keys, key)
+		}
+
+		for k, v := range keys {
+			client.BRPopLPush(v, v+strconv.Itoa(k), 30*time.Second)
+		}
+
+		t2 := time.Now()
+		logger.WithFields(logrus.Fields{
+			"command": "brpoplpush",
+		}).Info(t2.Sub(t1))
+	}
+	p.Submit(brpoplpushfunc)
+
 	//SADD
 	wg.Add(1)
 	saddfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "sadd_" + common.RandString(4)
+		basekey := "sadd_" + commons.RandString(4)
 		for i := 0; i < 50; i++ {
 			client.SAdd(basekey, basekey+strconv.Itoa(i))
 		}
@@ -738,14 +739,14 @@ func GenerateIncrement(client *redis.Client) {
 	sdiffstorefunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "sdiffstore_" + common.RandString(4)
+		basekey := "sdiffstore_" + commons.RandString(4)
 		keys := []string{}
 		for i := 0; i < 50; i++ {
 			key := basekey + strconv.Itoa(i)
 			client.SAdd(key, strconv.Itoa(rand.Intn(10)))
 			keys = append(keys, key)
 		}
-		client.SDiffStore(basekey+common.RandString(2), keys...)
+		client.SDiffStore(basekey+commons.RandString(2), keys...)
 		t2 := time.Now()
 		logger.WithFields(logrus.Fields{
 			"command": "sdiffstore",
@@ -758,14 +759,14 @@ func GenerateIncrement(client *redis.Client) {
 	sinsertstorefunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "sinsertstore_" + common.RandString(4)
+		basekey := "sinsertstore_" + commons.RandString(4)
 		keys := []string{}
 		for i := 0; i < 50; i++ {
 			key := basekey + strconv.Itoa(i)
 			client.SAdd(key, strconv.Itoa(rand.Intn(10)))
 			keys = append(keys, key)
 		}
-		client.SDiffStore(basekey+common.RandString(2), keys...)
+		client.SDiffStore(basekey+commons.RandString(2), keys...)
 		t2 := time.Now()
 		logger.WithFields(logrus.Fields{
 			"command": "sinsertstore",
@@ -778,7 +779,7 @@ func GenerateIncrement(client *redis.Client) {
 	smovefunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "smove_" + common.RandString(4)
+		basekey := "smove_" + commons.RandString(4)
 		values := []string{}
 		for i := 0; i < 50; i++ {
 			value := basekey + strconv.Itoa(i)
@@ -801,7 +802,7 @@ func GenerateIncrement(client *redis.Client) {
 	spopfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "spop_" + common.RandString(4)
+		basekey := "spop_" + commons.RandString(4)
 
 		for i := 0; i < 50; i++ {
 			value := basekey + strconv.Itoa(i)
@@ -824,7 +825,7 @@ func GenerateIncrement(client *redis.Client) {
 	sremfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "srem_" + common.RandString(4)
+		basekey := "srem_" + commons.RandString(4)
 
 		for i := 0; i < 50; i++ {
 
@@ -847,7 +848,7 @@ func GenerateIncrement(client *redis.Client) {
 	sunionstorefunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "sunionstore_" + common.RandString(4)
+		basekey := "sunionstore_" + commons.RandString(4)
 		keys := []string{}
 		for i := 0; i < 50; i++ {
 			key := basekey + strconv.Itoa(i)
@@ -867,7 +868,7 @@ func GenerateIncrement(client *redis.Client) {
 	zaddfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "zadd_" + common.RandString(4)
+		basekey := "zadd_" + commons.RandString(4)
 
 		members := []*redis.Z{}
 		for i := 0; i < 50; i++ {
@@ -891,7 +892,7 @@ func GenerateIncrement(client *redis.Client) {
 	zincrbyfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "zincrby_" + common.RandString(4)
+		basekey := "zincrby_" + commons.RandString(4)
 		members := []*redis.Z{}
 		for i := 0; i < 50; i++ {
 			member := redis.Z{
@@ -918,7 +919,7 @@ func GenerateIncrement(client *redis.Client) {
 	zremfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "zrem_" + common.RandString(4)
+		basekey := "zrem_" + commons.RandString(4)
 		members := []*redis.Z{}
 		for i := 0; i < 50; i++ {
 			member := redis.Z{
@@ -945,7 +946,7 @@ func GenerateIncrement(client *redis.Client) {
 	zremrangebyrankfunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "zremrangebyrank_" + common.RandString(4)
+		basekey := "zremrangebyrank_" + commons.RandString(4)
 		members := []*redis.Z{}
 		for i := 0; i < 50; i++ {
 			member := redis.Z{
@@ -970,7 +971,7 @@ func GenerateIncrement(client *redis.Client) {
 	zremrangebyscorefunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "zremrangebyscore_" + common.RandString(4)
+		basekey := "zremrangebyscore_" + commons.RandString(4)
 		members := []*redis.Z{}
 		for i := 0; i < 50; i++ {
 			member := redis.Z{
@@ -995,7 +996,7 @@ func GenerateIncrement(client *redis.Client) {
 	zunionstorefunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "zunionstore_" + common.RandString(4)
+		basekey := "zunionstore_" + commons.RandString(4)
 		keys := []string{}
 		for i := 0; i < 50; i++ {
 			key := basekey + strconv.Itoa(i)
@@ -1014,7 +1015,7 @@ func GenerateIncrement(client *redis.Client) {
 			Weights:   []float64{1.0},
 		}
 
-		client.ZUnionStore(basekey+common.RandString(2), &zstore)
+		client.ZUnionStore(basekey+commons.RandString(2), &zstore)
 
 		t2 := time.Now()
 		logger.WithFields(logrus.Fields{
@@ -1028,7 +1029,7 @@ func GenerateIncrement(client *redis.Client) {
 	zinterstorefunc := func() {
 		defer wg.Done()
 		t1 := time.Now()
-		basekey := "zinterstore_" + common.RandString(4)
+		basekey := "zinterstore_" + commons.RandString(4)
 		keys := []string{}
 		for i := 0; i < 50; i++ {
 			key := basekey + strconv.Itoa(i)
@@ -1047,7 +1048,7 @@ func GenerateIncrement(client *redis.Client) {
 			Weights:   []float64{1.0},
 		}
 
-		client.ZInterStore(basekey+common.RandString(2), &zstore)
+		client.ZInterStore(basekey+commons.RandString(2), &zstore)
 
 		t2 := time.Now()
 		logger.WithFields(logrus.Fields{

@@ -1,4 +1,4 @@
-package common
+package commons
 
 import (
 	"fmt"
@@ -8,5 +8,8 @@ import (
 func TestStringWithCharset(t *testing.T) {
 	var randing = RandString(10)
 	fmt.Println(randing)
+}
 
+func TestGetUUID(t *testing.T) {
+	fmt.Println(GetUUID())
 }

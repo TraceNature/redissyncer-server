@@ -69,8 +69,8 @@ to quickly create a Cobra application.`,
 		//	}
 		//	sourceopt.Password = viper.GetViper().GetString("sourcePassword")
 		//	targetopt.Password = viper.GetViper().GetString("targetPassword")
-		//	sourceclient := common.GetGoRedisClient(sourceopt)
-		//	targetclient := common.GetGoRedisClient(targetopt)
+		//	sourceclient := commons.GetGoRedisClient(sourceopt)
+		//	targetclient := commons.GetGoRedisClient(targetopt)
 		//	defer sourceclient.Close()
 		//	defer targetclient.Close()
 		//
