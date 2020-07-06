@@ -291,7 +291,6 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                     .dbNum(dbNum)
                     .ms(ms)
                     .build());
-
             pexpire(dbNum,key,ms);
         }finally {
             commitLock.unlock();
@@ -1075,18 +1074,95 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
                 //非幂等性命令
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.APPEND)){
+                long pttl=eventEntity.getMs();
 
-                client.set(eventEntity.getStringKey(),appendMap.get(eventEntity.getStringKey()).getValue().toString());
+                if(pttl>0L){
+                    client.set(eventEntity.getStringKey(),appendMap.get(eventEntity.getStringKey()).getValue().toString(),SetParams.setParams().px(pttl));
+                }else {
+                    long targetPttl=client.pttl(eventEntity.getStringKey());
+                    if(targetPttl>0){
+                        client.set(eventEntity.getStringKey(),appendMap.get(eventEntity.getStringKey()).getValue().toString(),SetParams.setParams().px(targetPttl));
+                    }else{
+                        client.set(eventEntity.getStringKey(),appendMap.get(eventEntity.getStringKey()).getValue().toString());
+                    }
+                }
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.INCR)){
-                client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())));
+                long pttl=eventEntity.getMs();
+
+                if(pttl>0L){
+                    client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
+                }else {
+                    long targetPttl=client.pttl(eventEntity.getStringKey());
+                    if(targetPttl>0){
+                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
+
+                    }else{
+                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())));
+                    }
+
+                }
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.INCRBY)){
-                client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())));
-            }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.INCRBYFLOAT)){
-                client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrDoubleMap.get(eventEntity.getStringKey())));
+                long pttl=eventEntity.getMs();
+
+                if(pttl>0L){
+                    client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
+                }else {
+                    long targetPttl=client.pttl(eventEntity.getStringKey());
+                    if(targetPttl>0){
+                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
+                    }else {
+                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())));
+                    }
+                }
+
+
+                }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.INCRBYFLOAT)){
+                long pttl=eventEntity.getMs();
+                if(pttl>0L){
+                    client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrDoubleMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
+                }else {
+                    long targetPttl=client.pttl(eventEntity.getStringKey());
+                    if(targetPttl>0){
+                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrDoubleMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
+                    }else{
+                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrDoubleMap.get(eventEntity.getStringKey())));
+                    }
+                }
+
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.DECR)){
-                client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())));
+                long pttl=eventEntity.getMs();
+                if(pttl>0L){
+                    client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
+                }else {
+
+                    long targetPttl=client.pttl(eventEntity.getStringKey());
+                    if(targetPttl>0){
+                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
+
+                    }else {
+                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())));
+                    }
+
+
+                }
+
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.DECRBY)){
-                client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())));
+                long pttl=eventEntity.getMs();
+                if(pttl>0L){
+                    client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
+
+                }else {
+
+                    long targetPttl=client.pttl(eventEntity.getStringKey());
+
+                    if(targetPttl>0){
+                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
+
+                    }else {
+                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())));
+                    }
+
+                }
 
             }
 

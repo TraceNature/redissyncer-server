@@ -49,8 +49,19 @@ spring:
   datasource:
     driver-class-name: org.sqlite.JDBC
     url: jdbc:sqlite:data/syncer.db
+#    url: jdbc:sqlite:D:\github\redissyncer-service\data\syncer.db
     username:
     password:
+  application:
+    name: test-thymelead
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    servlet:
+      content-type: text/html
 #    schema: classpath:init.sql
 #    initialization-mode: ALWAYS
 management:
@@ -66,3 +77,10 @@ management:
     health:
       #显示详细信息
       show-details: always
+
+
+
+
+
+
+

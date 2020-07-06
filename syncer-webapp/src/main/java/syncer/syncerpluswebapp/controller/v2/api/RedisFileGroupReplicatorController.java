@@ -1,6 +1,5 @@
 package syncer.syncerpluswebapp.controller.v2.api;
 
-import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,7 +26,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v2/file")
-@Api( tags = "文件任务相关接口")
 @Validated
 public class RedisFileGroupReplicatorController {
 

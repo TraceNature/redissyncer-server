@@ -3,6 +3,7 @@ package syncer.syncerpluswebapp;
 import com.alibaba.fastjson.JSON;
 
 
+import org.apache.ibatis.annotations.Mapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +11,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import org.springframework.test.context.junit4.SpringRunner;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
+import syncer.syncerplusredis.dao.AbandonCommandMapper;
 import syncer.syncerplusredis.dao.RdbVersionMapper;
 import syncer.syncerplusredis.dao.TaskMapper;
+import syncer.syncerplusredis.model.AbandonCommandModel;
 import syncer.syncerplusredis.model.TaskModel;
 
 import java.util.ArrayList;
@@ -29,8 +32,25 @@ public class ITest {
     @Autowired
     TaskMapper testMaapper;
 
+    @Autowired
+    AbandonCommandMapper abandonCommandMapper;
+
 //    @Autowired
 //    RdbVersionMapper rdbVersionMapper;
+
+    @Test
+    public void abandonCommandMapperTest() throws Exception {
+        abandonCommandMapper.insertSimpleAbandonCommandModel(AbandonCommandModel
+                .builder()
+                .command("command")
+                .exception("null")
+                .key("command")
+                .taskId("command")
+                .desc("command")
+                .build());
+    }
+
+
     @Test
     public void testing() throws Exception {
         List<TaskModel>taskModelList=new ArrayList<>();

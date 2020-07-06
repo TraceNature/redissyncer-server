@@ -448,12 +448,16 @@ public class TaskDataManagerUtils {
 
         Long allKeyCount=taskModel.getAllKeyCount();
         Long realKeyCount=taskModel.getAllKeyCount();
-        Long commandKeyCount=0L;
+        Long lastTime=taskModel.getLastKeyUpdateTime();
+        Long commandKeyCount= 0L;
         double rate=0.0;
         Integer rate2Int=0;
         try{
             if(TaskDataManagerUtils.containsKey(taskModel.getId())){
                 TaskDataEntity taskDataEntity=TaskDataManagerUtils.get(taskModel.getId());
+
+                lastTime=taskDataEntity.getTaskModel().getLastKeyUpdateTime();
+
                 if(taskDataEntity.getAllKeyCount().get()!=0L){
                     allKeyCount=taskDataEntity.getAllKeyCount().get();
                 }
@@ -484,6 +488,18 @@ public class TaskDataManagerUtils {
             log.warn("[{}]进度计算失败",taskModel.getId());
         }
 
+        //最后一次数据间隔时间计算
+        long lastDataUpdateIntervalTime=0L;
+        try{
+//            if(lastTime==-1L){
+//                lastDataUpdateIntervalTime=-1L;
+//            }else {
+//
+//            }
+            lastDataUpdateIntervalTime=System.currentTimeMillis()-lastTime;
+        }catch (Exception e){
+            log.error("[{}]最后一次数据流入时间间隔计算失败",taskModel.getId());
+        }
       TaskModelResult result=  TaskModelResult
                 .builder()
                 .taskId(taskModel.getId())
@@ -515,6 +531,7 @@ public class TaskDataManagerUtils {
                 .realKeyCount(realKeyCount)
                 .commandKeyCount(commandKeyCount)
                 .rate(rate)
+                .lastDataUpdateIntervalTime(lastDataUpdateIntervalTime)
                 .rate2Int(rate2Int)
                 .build();
       return result;

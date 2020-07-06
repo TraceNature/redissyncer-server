@@ -33,7 +33,7 @@ import java.util.List;
 
 
 @SpringBootApplication
-@ComponentScan(basePackages="syncer")
+@ComponentScan(basePackages={"syncer"})
 @EnableScheduling
 @EnableCaching  //开启缓存
 @Slf4j

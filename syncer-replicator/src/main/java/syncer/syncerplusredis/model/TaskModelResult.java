@@ -172,4 +172,11 @@ public class TaskModelResult implements Serializable {
     private double rate;
 
     private Integer rate2Int;
+
+
+    /**
+     *上次数据更新间隔时间
+     */
+    private long lastDataUpdateIntervalTime;
+
 }

@@ -27,6 +27,8 @@
     <properties>
         <java.version>1.8</java.version>
         <fastjson.version>1.2.62</fastjson.version>
+
+        <jackson-version>2.9.9</jackson-version>
     </properties>
 
     <dependencies>
@@ -109,7 +111,22 @@
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>2.9.2</version>
+        </dependency>
 
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>28.0-jre</version>
+        </dependency>
 
         <!--        <dependency>-->
 <!--            <groupId>com.jd.jim.cli</groupId>-->
@@ -132,6 +149,25 @@
 <!--            <artifactId>jim-cli-api</artifactId>-->
 <!--            <version>2.1.4</version>-->
 <!--        </dependency>-->
+
+
+        <!--jackson-->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-core</artifactId>-->
+<!--            <version>${jackson-version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-databind</artifactId>-->
+<!--            <version>${jackson-version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-annotations</artifactId>-->
+<!--            <version>${jackson-version}</version>-->
+<!--        </dependency>-->
+
     </dependencies>
 
 <!--    <build>-->

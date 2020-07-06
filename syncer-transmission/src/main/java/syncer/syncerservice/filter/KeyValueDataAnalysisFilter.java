@@ -5,16 +5,12 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
-import syncer.syncerpluscommon.util.common.ConstUtils;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.cmd.impl.DefaultCommand;
-import syncer.syncerplusredis.constant.TaskRunTypeEnum;
 import syncer.syncerplusredis.dao.TaskMapper;
-import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.event.PostRdbSyncEvent;
-import syncer.syncerplusredis.rdb.datatype.DB;
 import syncer.syncerplusredis.rdb.datatype.DataType;
 import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
@@ -44,6 +40,7 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
     private String taskId;
     private Long size=0L;
 
+//    private
     public KeyValueDataAnalysisFilter(Map<String, Long> analysisMap, CommonFilter next, JDRedisClient client, String taskId) {
         this.analysisMap = new ConcurrentHashMap<>();
         this.next = next;
@@ -62,9 +59,24 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
     @Override
     public void run(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
 
+
+
+
+
+
+
+
         try {
         Event event=eventEntity.getEvent();
             TaskDataEntity dataEntity= TaskDataManagerUtils.get(taskId);
+
+
+            //记录任务最后一次update时间
+            try{
+                dataEntity.getTaskModel().setLastKeyUpdateTime(System.currentTimeMillis());
+            }catch (Exception e){
+                log.error("[{}] update last time error",taskId);
+            }
         //全量同步结束
         if (event instanceof PostRdbSyncEvent) {
             try {
@@ -98,6 +110,14 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
 
                 if(!StringUtils.isEmpty(batchedKeyValuePair.getKey())){
                     dataEntity.getAllKeyCount().incrementAndGet();
+
+                    try {
+
+
+                    }catch (Exception e){
+
+                    }
+
                     log.warn("大key统计：{}", Strings.toString(batchedKeyValuePair.getKey()));
                 }
 
