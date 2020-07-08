@@ -4,13 +4,16 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Mapper;
 import org.springframework.util.StringUtils;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.cmd.impl.DefaultCommand;
+import syncer.syncerplusredis.dao.BigKeyMapper;
 import syncer.syncerplusredis.dao.TaskMapper;
 import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.event.PostRdbSyncEvent;
+import syncer.syncerplusredis.model.BigKeyModel;
 import syncer.syncerplusredis.rdb.datatype.DataType;
 import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
@@ -39,7 +42,8 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
     private JDRedisClient client;
     private String taskId;
     private Long size=0L;
-
+    @Mapper
+    private BigKeyMapper bigKeyMapper;
 //    private
     public KeyValueDataAnalysisFilter(Map<String, Long> analysisMap, CommonFilter next, JDRedisClient client, String taskId) {
         this.analysisMap = new ConcurrentHashMap<>();
@@ -48,7 +52,7 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
         this.taskId = taskId;
     }
 
-    public KeyValueDataAnalysisFilter(Map<String, Long> analysisMap, CommonFilter next, JDRedisClient client, String taskId, Long size) {
+    public KeyValueDataAnalysisFilter(Map<String, Long> analysisMap, CommonFilter next, JDRedisClient client, String taskId, Long size,BigKeyMapper bigKeyMapper) {
         this.analysisMap = new ConcurrentHashMap<>();
         this.next = next;
         this.client = client;
@@ -58,13 +62,6 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
 
     @Override
     public void run(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
-
-
-
-
-
-
-
 
         try {
         Event event=eventEntity.getEvent();
@@ -112,10 +109,14 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
                     dataEntity.getAllKeyCount().incrementAndGet();
 
                     try {
-
-
+                        bigKeyMapper.insertBigKeyCommandModel(BigKeyModel
+                                .builder()
+                                .command(Strings.toString(batchedKeyValuePair.getKey()))
+                                .taskId(taskId)
+                                .command_type(String.valueOf(batchedKeyValuePair.getDataType()))
+                                .build());
                     }catch (Exception e){
-
+                        log.error("大key统计入库失败：[{}]", Strings.toString(batchedKeyValuePair.getKey()));
                     }
 
                     log.warn("大key统计：{}", Strings.toString(batchedKeyValuePair.getKey()));

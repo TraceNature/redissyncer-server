@@ -3,10 +3,7 @@ package syncer.syncerservice.util.JDRedisClient;
 
 import syncer.syncerplusredis.cmd.CommandName;
 import syncer.syncerplusredis.cmd.jimdb.JimDbFirstCommandParser;
-import syncer.syncerplusredis.cmd.parser.DefaultCommandParser;
-import syncer.syncerplusredis.cmd.parser.JimDbDefaultCommandParser;
-import syncer.syncerplusredis.cmd.parser.PingParser;
-import syncer.syncerplusredis.cmd.parser.ReplConfParser;
+import syncer.syncerplusredis.cmd.parser.*;
 import syncer.syncerplusredis.rdb.dump.DumpRdbVisitor;
 import syncer.syncerplusredis.rdb.iterable.ValueIterableRdbVisitor;
 import syncer.syncerplusredis.replicator.Replicator;
@@ -74,6 +71,9 @@ public class RedisMigrator {
         r.addCommandParser(CommandName.name("INCR"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("DECR"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("INCRBY"), new DefaultCommandParser());
+
+        r.addCommandParser(CommandName.name("INCRBYFLOAT"), new IncrByFloatParser());
+
         r.addCommandParser(CommandName.name("DECRBY"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("PERSIST"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("SELECT"), new DefaultCommandParser());
@@ -86,7 +86,7 @@ public class RedisMigrator {
         r.addCommandParser(CommandName.name("PFADD"), new DefaultCommandParser());
 
 
-//        r.addCommandParser(CommandName.name("PFADD"), new PFAddParser());
+        r.addCommandParser(CommandName.name("PFADD"), new PFAddParser());
         r.addCommandParser(CommandName.name("PFCOUNT"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("PFMERGE"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("SDIFFSTORE"), new DefaultCommandParser());

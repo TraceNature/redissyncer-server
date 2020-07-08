@@ -471,6 +471,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
                     }
                     Object[] raw = (Object[]) obj;
                     CommandName name = CommandName.name(Strings.toString(raw[0]));
+
                     final CommandParser<? extends Command> parser;
                     if ((parser = commands.get(name)) == null) {
                         logger.warn("command [{}] not register. raw command:{}", name, format(raw));

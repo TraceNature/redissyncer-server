@@ -17,5 +17,5 @@ public class BigKeyModel {
     private int id;
     private String taskId;
     private String command;
-    private int command_type;
+    private String command_type;
 }

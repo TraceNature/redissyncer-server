@@ -227,6 +227,8 @@ public class TaskModel {
      */
     @Builder.Default
     private Long realKeyCount=0L;
+
+
     /**
      * 是否是第一次创建
      */
@@ -234,9 +236,14 @@ public class TaskModel {
 //    private boolean first=true;
 
     /**
-     * 当前Key的最后一次更新时间
+     * 当前Key的最后一次更新时间（数据流入）
      */
     private long lastKeyUpdateTime=0L;
+
+    /**
+     * 当前Key的最后一次pipeline提交时间（数据流出）
+     */
+    private long lastKeyCommitTime=0L;
 
     public Map<String,Object>getDataAnalysis(){
         Map mapObj =null;
@@ -358,7 +365,7 @@ public class TaskModel {
 
     public TaskModel(String id, String groupId, String taskName, String sourceRedisAddress, String sourcePassword, String targetRedisAddress, String targetPassword, String fileAddress, boolean autostart, boolean afresh, Integer batchSize, Integer tasktype, Integer offsetPlace, String taskMsg, Long offset, Integer status, double redisVersion, Integer rdbVersion, Integer syncType, Integer sourceRedisType, Integer targetRedisType, String sourceHost, String targetHost, Integer sourcePort
             , Integer targetPort, String dbMapper,String md5,String createTime,String updateTime
-            ,String dataAnalysis,String replId,Long rdbKeyCount,Long allKeyCount,Long realKeyCount,Long lastKeyUpdateTime) {
+            ,String dataAnalysis,String replId,Long rdbKeyCount,Long allKeyCount,Long realKeyCount,Long lastKeyUpdateTime,Long lastKeyCommitTime) {
         this.id = id;
         this.groupId = groupId;
         this.taskName = taskName;
@@ -395,6 +402,7 @@ public class TaskModel {
         this.allKeyCount=allKeyCount;
         this.realKeyCount=realKeyCount;
         this.lastKeyUpdateTime=lastKeyUpdateTime;
+        this.lastKeyCommitTime=lastKeyCommitTime;
         setTargetRedisAddress(this.getTargetRedisAddress());
         setSourceRedisAddress(this.getSourceRedisAddress());
     }

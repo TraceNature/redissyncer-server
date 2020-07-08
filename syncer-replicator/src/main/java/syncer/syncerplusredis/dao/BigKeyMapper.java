@@ -20,7 +20,7 @@ public interface BigKeyMapper {
     List<BigKeyModel> findBigKeyCommandListByTaskId(@Param("taskId") String taskId)throws Exception;
 
     @Insert("INSERT INTO t_big_key(taskId,command,command_type) VALUES(#{taskId},#{command},#{command_type})")
-    boolean insertBigKeyCommandModel(AbandonCommandModel abandonCommandModel)throws Exception;
+    boolean insertBigKeyCommandModel(BigKeyModel bigKeyModel)throws Exception;
 
     @Delete("DELETE FROM t_big_key WHERE id=#{id}")
     void deleteBigKeyCommandModelById(@Param("id")String id)throws Exception;

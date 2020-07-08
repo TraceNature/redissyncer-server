@@ -16,7 +16,7 @@ public class KVPersistenceDataEntity {
 
     public synchronized void addKey(EventEntity key) {
 //        keys.add(key);
-        keys.add(key);
+//        keys.add(key);
     }
 
     public List<EventEntity> getKeys() {

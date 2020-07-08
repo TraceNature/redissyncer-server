@@ -119,9 +119,11 @@ public class CompensatorUtils {
 
     public  boolean isIdempotentCommand(byte[]cmd){
         String stringCmd= Strings.byteToString(cmd);
+
         PipeLineCompensatorEnum cmdEnum=null;
         try{
             cmdEnum= PipeLineCompensatorEnum.valueOf(stringCmd.toUpperCase());
+
             if(null==cmd){
                 cmdEnum=PipeLineCompensatorEnum.COMMAND;
             }

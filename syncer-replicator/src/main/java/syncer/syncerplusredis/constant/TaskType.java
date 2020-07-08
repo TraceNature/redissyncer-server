@@ -23,7 +23,7 @@ public enum TaskType implements Serializable {
      */
     TOTAL(1,TaskRunTypeEnum.TOTAL,"全量+增量"),
     STOCKONLY(2,TaskRunTypeEnum.STOCKONLY,"只全量"),
-    INCREMENTONLY(3,TaskRunTypeEnum.STOCKONLY,"只增量");
+    INCREMENTONLY(3,TaskRunTypeEnum.INCREMENTONLY,"只增量");
 
     @Getter
     private int code;

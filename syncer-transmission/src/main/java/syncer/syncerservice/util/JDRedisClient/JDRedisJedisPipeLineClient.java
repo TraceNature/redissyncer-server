@@ -9,6 +9,7 @@ import syncer.syncerpluscommon.config.ThreadPoolConfig;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.constant.PipeLineCompensatorEnum;
 import syncer.syncerplusredis.entity.EventEntity;
+import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerservice.constant.CmdEnum;
@@ -59,7 +60,8 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     private KVPersistenceDataEntity kvPersistence=new KVPersistenceDataEntity();
     private CompensatorUtils compensatorUtils=new CompensatorUtils();
     //内存非幂等命令转幂等命令
-    private Map<String,Integer>incrMap= new LruCache<>(1000);
+//    private  Map<String,Integer>incrMap= new LruCache<>(1000);
+    private  Map<String,Integer>incrMap= new LruCache<>(1000);
     private Map<String, StringCompensatorEntity>appendMap=new LruCache<>(1000);
     private Map<String,Float>incrDoubleMap= new LruCache<>(1000);
 
@@ -121,6 +123,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         return null;
     }
 
+
     @Override
     public String get(final Long dbNum,String key) {
         Jedis jdJedis=null;
@@ -149,16 +152,42 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                 .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SET)
                 .dbNum(dbNum)
                 .build());
+        cleanData(key);
         pipelined.set(key, value);
         addCommandNum();
 
         return null;
     }
 
+
+    /**
+     * 清理非幂等命令内存结构缓存
+     * @param keyName
+     */
+    void cleanData(byte[] keyName){
+        cleanData(Strings.byteToString(keyName));
+    }
+    void cleanData(String keyName){
+        try{
+            if(incrMap.containsKey(keyName)){
+                incrMap.remove(keyName);
+            }
+            if(incrDoubleMap.containsKey(keyName)){
+                incrDoubleMap.remove(keyName);
+            }
+
+            if(appendMap.containsKey(keyName)){
+                appendMap.remove(keyName);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public String set(Long dbNum, byte[] key, byte[] value, long ms) {
         selectDb(dbNum);
-
+        cleanData(key);
         pipelined.set(key, value, SetParams.setParams().px(ms));
         kvPersistence.addKey(EventEntity
                 .builder()
@@ -715,11 +744,19 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
     @Override
     public Object send(byte[] cmd, byte[]... args) {
 
-
         commitLock.lock();
-
         try {
             pipelined.sendCommand(JedisProtocolCommand.builder().raw(cmd).build(), args);
+
+//            if(!compensatorUtils.isIdempotentCommand(cmd)){
+//                pipelined.sendCommand(JedisProtocolCommand.builder().raw(cmd).build(), args);
+//                System.out.println("幂等"+Strings.byteToString(cmd));
+//            }
+
+            if(Strings.byteToString(cmd).toUpperCase().indexOf("SET")>=0||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("RESTORE")||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("RESTOREREPLACE")||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("DEL")){
+                cleanData(Strings.byteToString(args[0]));
+            }
+
             if(args==null||args.length==0){
                 kvPersistence.addKey(EventEntity
                         .builder()
@@ -731,6 +768,9 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
                 //判断幂等非幂等命令
                 if(compensatorUtils.isIdempotentCommand(cmd)){
+
+
+
                     EventEntity entity=EventEntity
                             .builder()
                             .key(args[0])
@@ -740,8 +780,11 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                             .pipeLineCompensatorEnum(compensatorUtils.getIdempotentCommand(cmd))
                             .build();
                     kvPersistence.addKey(entity);
-                    compensatorMap(entity);
 
+//                    compensatorMap(entity);
+
+
+//                    compensator(entity);
                 }else {
                     kvPersistence.addKey(EventEntity
                             .builder()
@@ -751,13 +794,8 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                             .stringKey(Strings.byteToString(args[0]))
                             .pipeLineCompensatorEnum(PipeLineCompensatorEnum.COMMAND)
                             .build());
-
-
-
                 }
-
             }
-
         }finally {
             commitLock.unlock();
         }
@@ -837,7 +875,9 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
             if (num>= count) {
 //                System.out.println("提交："+num);
                 List<Object> resultList = pipelined.syncAndReturnAll();
-//                System.out.println(resultList.size()+":内存： "+kvPersistence.size());
+
+                /**
+                System.out.println(resultList.size()+":内存： "+kvPersistence.size());
 
                 Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
                     Object data = resultList.get(index);
@@ -849,6 +889,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                     }
                 });
 
+                 **/
                 resultList.clear();
                 kvPersistence.clear();
                 date = new Date();
@@ -859,23 +900,6 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         }
 
 
-//        syncTaskEntity.add();
-//
-//        if (syncTaskEntity.syncNums >= count) {
-//            System.out.println("提交："+syncTaskEntity.syncNums);
-//                  List<Object> resultList = pipelined.syncAndReturnAll();
-//                  syncTaskEntity.clear();
-//                  date = new Date();
-//
-//            //补偿机制
-////            List<EventEntity>eventEntities=new ArrayList<>();
-////            eventEntities.clear();
-////            eventEntities.addAll(taskEntity.getKeys());
-////            taskEntity.getKeys().clear();
-////            threadPoolTaskExecutor.execute(new  PipelineCompensator(new ArrayList<>(resultList),eventEntities,suri,turi,pipelineLock.getTaskId()));
-////            PipelineCompensator.singleCompensator(resultList,eventEntities,suri,turi,pipelineLock.getTaskId());
-////            resultList.clear();
-//        }
 
 
     }
@@ -887,12 +911,15 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         try {
 
           if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.COMMAND)){
+
                 return;
                 //非幂等性命令
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.APPEND)){
+
               if(appendMap.containsKey(eventEntity.getStringKey())){
                   appendMap.get(eventEntity.getStringKey()).getValue().append(Strings.byteToString(eventEntity.getValue()));
               }else {
+                  submitCommandNumNow();
                   client=jedisPool.getResource();
 
                  String oldValue= client.get(eventEntity.getStringKey());
@@ -915,97 +942,164 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
               }
 
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.INCR)){
-
-
-
-
-              if(incrMap.containsKey(eventEntity.getStringKey())){
-                incrMap.put(eventEntity.getStringKey(),incrMap.get(eventEntity.getStringKey())+1);
-              }else{
-                  client=jedisPool.getResource();
-                  String oldValue= client.get(eventEntity.getStringKey());
-                  Integer newValue=0;
-                  if(org.springframework.util.StringUtils.isEmpty(oldValue)){
-                      newValue++;
-                  }else {
-                      newValue= Integer.valueOf(oldValue+1);
-                  }
-                  incrMap.put(eventEntity.getStringKey(),newValue);
+              submitCommandNumNow();
+              client=jedisPool.getResource();
+              String oldValue= client.get(eventEntity.getStringKey());
+              Integer newValue=0;
+              if(org.springframework.util.StringUtils.isEmpty(oldValue)||oldValue.equalsIgnoreCase("null")){
+                  newValue++;
+              }else {
+                  newValue= Integer.valueOf(oldValue)+1;
               }
+
+
+              incrMap.put(eventEntity.getStringKey(),newValue);
+              incrMap.get(eventEntity.getStringKey());
+//              if(incrMap.containsKey(eventEntity.getStringKey())){
+//                incrMap.put(eventEntity.getStringKey(),incrMap.get(eventEntity.getStringKey())+1);
+//              }else{
+//                  client=jedisPool.getResource();
+//                  String oldValue= client.get(eventEntity.getStringKey());
+//                  Integer newValue=0;
+//                  if(org.springframework.util.StringUtils.isEmpty(oldValue)){
+//                      newValue++;
+//                  }else {
+//                      newValue= Integer.valueOf(oldValue)+1;
+//                  }
+//                  incrMap.put(eventEntity.getStringKey(),newValue);
+//              }
 
 
 
 
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.INCRBY)){
+              submitCommandNumNow();
+              client=jedisPool.getResource();
+              String oldValue= client.get(eventEntity.getStringKey());
+              int newValue=0;
 
-              if(incrMap.containsKey(eventEntity.getStringKey())){
-                  incrMap.put(eventEntity.getStringKey(), incrMap.get(eventEntity.getStringKey())+ Integer.valueOf(Strings.byteToString(eventEntity.getValueList()[1])));
-              }else{
-                  client=jedisPool.getResource();
-                  String oldValue= client.get(eventEntity.getStringKey());
-                  Integer newValue=0;
-                  if(org.springframework.util.StringUtils.isEmpty(oldValue)){
-                      newValue++;
-                  }else {
-                      newValue= Integer.valueOf(oldValue+ Strings.byteToString(eventEntity.getValueList()[1]));
-                  }
-                  incrMap.put(eventEntity.getStringKey(),newValue);
+              String numData=Strings.byteToString(eventEntity.getValueList()[1]);
+              Integer numDataInt=Integer.valueOf(numData);
+              if(org.springframework.util.StringUtils.isEmpty(oldValue)||oldValue.equalsIgnoreCase("null")){
+                  newValue=numDataInt;
+              }else {
+                  Integer oldValueNum=Integer.valueOf(oldValue);
+                  newValue= oldValueNum+numDataInt;
               }
+//              if(org.springframework.util.StringUtils.isEmpty(oldValue)||oldValue.equalsIgnoreCase("null")){
+//                  newValue+=Integer.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
+//              }else {
+//                  newValue= Integer.valueOf(oldValue).intValue()+Integer.valueOf(Strings.byteToString(eventEntity.getValueList()[1])).intValue();
+//              }
+              incrMap.put(eventEntity.getStringKey(),newValue);
+
+
+
+//              if(incrMap.containsKey(eventEntity.getStringKey())){
+//                  incrMap.put(eventEntity.getStringKey(), incrMap.get(eventEntity.getStringKey())+ Integer.valueOf(Strings.byteToString(eventEntity.getValueList()[1])));
+//              }else{
+//                  client=jedisPool.getResource();
+//                  String oldValue= client.get(eventEntity.getStringKey());
+//                  Integer newValue=0;
+//                  if(org.springframework.util.StringUtils.isEmpty(oldValue)){
+//                      newValue++;
+//                  }else {
+//                      newValue= Integer.valueOf(oldValue)+Integer.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
+//                  }
+//                  incrMap.put(eventEntity.getStringKey(),newValue);
+//              }
 
 
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.INCRBYFLOAT)){
-
-              if(incrDoubleMap.containsKey(eventEntity.getStringKey())){
-                  incrDoubleMap.put(eventEntity.getStringKey(),incrDoubleMap.get(eventEntity.getStringKey())+Float.valueOf(Strings.byteToString(eventEntity.getValueList()[1])));
-              }else{
-                  client=jedisPool.getResource();
-                  String oldValue= client.get(eventEntity.getStringKey());
-                  float newValue=0;
-                  if(org.springframework.util.StringUtils.isEmpty(oldValue)){
-                      newValue-=newValue+Float.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
-                  }else {
-                      newValue= Float.valueOf(oldValue)+ Float.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
-                  }
-                  incrDoubleMap.put(eventEntity.getStringKey(),newValue);
+              submitCommandNumNow();
+              client=jedisPool.getResource();
+              String oldValue= client.get(eventEntity.getStringKey());
+              float newValue=0;
+              if(org.springframework.util.StringUtils.isEmpty(oldValue)||oldValue.equalsIgnoreCase("null")){
+                  newValue-=newValue+Float.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
+              }else {
+                  newValue= Float.valueOf(oldValue)+ Float.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
               }
+              incrDoubleMap.put(eventEntity.getStringKey(),newValue);
+//              if(incrDoubleMap.containsKey(eventEntity.getStringKey())){
+//                  incrDoubleMap.put(eventEntity.getStringKey(),incrDoubleMap.get(eventEntity.getStringKey())+Float.valueOf(Strings.byteToString(eventEntity.getValueList()[1])));
+//              }else{
+//                  client=jedisPool.getResource();
+//                  String oldValue= client.get(eventEntity.getStringKey());
+//                  float newValue=0;
+//                  if(org.springframework.util.StringUtils.isEmpty(oldValue)){
+//                      newValue-=newValue+Float.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
+//                  }else {
+//                      newValue= Float.valueOf(oldValue)+ Float.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
+//                  }
+//                  incrDoubleMap.put(eventEntity.getStringKey(),newValue);
+//              }
 
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.DECR)){
-
-              if(incrMap.containsKey(eventEntity.getStringKey())){
-                  incrMap.put(eventEntity.getStringKey(),incrMap.get(eventEntity.getStringKey())-1);
-              }else{
-                  client=jedisPool.getResource();
-                  String oldValue= client.get(eventEntity.getStringKey());
-                  Integer newValue=0;
-                  if(org.springframework.util.StringUtils.isEmpty(oldValue)){
-                      newValue--;
-                  }else {
-                      newValue= Integer.valueOf(oldValue)-1;
-                  }
-                  incrMap.put(eventEntity.getStringKey(),newValue);
+              submitCommandNumNow();
+              client=jedisPool.getResource();
+              String oldValue= client.get(eventEntity.getStringKey());
+              Integer newValue=0;
+              if(org.springframework.util.StringUtils.isEmpty(oldValue)){
+                  newValue--;
+              }else {
+                  newValue= Integer.valueOf(oldValue)-1;
               }
+
+              incrMap.put(eventEntity.getStringKey(),newValue);
+
+//              System.out.println("yyy:"+incrMap.get(eventEntity.getStringKey()));
+//              if(incrMap.containsKey(eventEntity.getStringKey())){
+//                  incrMap.put(eventEntity.getStringKey(),incrMap.get(eventEntity.getStringKey())-1);
+//              }else{
+//                  client=jedisPool.getResource();
+//                  String oldValue= client.get(eventEntity.getStringKey());
+//                  Integer newValue=0;
+//                  if(org.springframework.util.StringUtils.isEmpty(oldValue)){
+//                      newValue--;
+//                  }else {
+//                      newValue= Integer.valueOf(oldValue)-1;
+//                  }
+//                  incrMap.put(eventEntity.getStringKey(),newValue);
+//              }
 
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.DECRBY)){
-
-              if(incrMap.containsKey(eventEntity.getStringKey())){
-                  incrMap.put(eventEntity.getStringKey(),incrMap.get(eventEntity.getStringKey())-Integer.valueOf(Strings.byteToString(eventEntity.getValueList()[1])));
-              }else{
-                  client=jedisPool.getResource();
-                  String oldValue= client.get(eventEntity.getStringKey());
-                  Integer newValue=0;
-                  if(org.springframework.util.StringUtils.isEmpty(oldValue)){
-                      newValue-=newValue-Integer.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
-                  }else {
-                      newValue= Integer.valueOf(oldValue)- Integer.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
-                  }
-                  incrMap.put(eventEntity.getStringKey(),newValue);
+              submitCommandNumNow();
+              client=jedisPool.getResource();
+              String oldValue= client.get(eventEntity.getStringKey());
+              Integer newValue=0;
+              if(org.springframework.util.StringUtils.isEmpty(oldValue)){
+                  newValue-=newValue-Integer.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
+              }else {
+                  String num=Strings.byteToString(eventEntity.getValueList()[1]);
+                  newValue= Integer.valueOf(oldValue)- Integer.valueOf(num);
               }
+              incrMap.put(eventEntity.getStringKey(),newValue);
+//              if(incrMap.containsKey(eventEntity.getStringKey())){
+//                  incrMap.put(eventEntity.getStringKey(),incrMap.get(eventEntity.getStringKey())-Integer.valueOf(Strings.byteToString(eventEntity.getValueList()[1])));
+//              }else{
+//                  client=jedisPool.getResource();
+//                  String oldValue= client.get(eventEntity.getStringKey());
+//                  Integer newValue=0;
+//                  if(org.springframework.util.StringUtils.isEmpty(oldValue)){
+//                      newValue-=newValue-Integer.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
+//                  }else {
+//                      newValue= Integer.valueOf(oldValue)- Integer.valueOf(Strings.byteToString(eventEntity.getValueList()[1]));
+//                  }
+//                  incrMap.put(eventEntity.getStringKey(),newValue);
+//              }
             }
 
 
 
-        }catch (Exception e){
+        }catch (NumberFormatException ex){
+
+            log.warn("key[{}]非幂等转幂等单位计算错误,原因：[{}]",eventEntity.getStringKey(),ex.getMessage());
+            ex.printStackTrace();
+        } catch (Exception e){
+
             log.warn("key[{}]同步失败被抛弃,原因：[{}]",eventEntity.getStringKey(),e.getMessage());
+            e.printStackTrace();
 //            log.warn("key[{}]同步失败被抛弃",eventEntity.getStringKey());
 
         }finally {
@@ -1022,82 +1116,86 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
         try {
             client=jedisPool.getResource();
             if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SET)){
-                client.set(eventEntity.getKey(),eventEntity.getValue());
+                pipelined.set(eventEntity.getKey(),eventEntity.getValue());
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SET_WITH_TIME)){
-                client.set(eventEntity.getKey(),eventEntity.getValue(),SetParams.setParams().px(eventEntity.getMs()));
+                pipelined.set(eventEntity.getKey(),eventEntity.getValue(),SetParams.setParams().px(eventEntity.getMs()));
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.LPUSH)){
-                client.lpush(eventEntity.getKey(),eventEntity.getValue());
+                pipelined.lpush(eventEntity.getKey(),eventEntity.getValue());
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.LPUSH_LIST)){
-                client.lpush(eventEntity.getKey(),ObjectUtils.listBytes(eventEntity.getLpush_value()));
+                pipelined.lpush(eventEntity.getKey(),ObjectUtils.listBytes(eventEntity.getLpush_value()));
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.LPUSH_WITH_TIME)){
-                client.lpush(eventEntity.getKey(),eventEntity.getValue());
-                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+                pipelined.lpush(eventEntity.getKey(),eventEntity.getValue());
+                pipelined.pexpire(eventEntity.getKey(),eventEntity.getMs());
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.LPUSH_WITH_TIME_LIST)){
-                client.lpush(eventEntity.getKey(),ObjectUtils.listBytes(eventEntity.getLpush_value()));
-                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+                pipelined.lpush(eventEntity.getKey(),ObjectUtils.listBytes(eventEntity.getLpush_value()));
+                pipelined.pexpire(eventEntity.getKey(),eventEntity.getMs());
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.HMSET)){
-                client.hmset(eventEntity.getKey(),eventEntity.getHash_value());
+                pipelined.hmset(eventEntity.getKey(),eventEntity.getHash_value());
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.HMSET_WITH_TIME)){
-                client.hmset(eventEntity.getKey(),eventEntity.getHash_value());
-                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+                pipelined.hmset(eventEntity.getKey(),eventEntity.getHash_value());
+                pipelined.pexpire(eventEntity.getKey(),eventEntity.getMs());
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SADD)){
-                client.sadd(eventEntity.getKey(),eventEntity.getValue());
+                pipelined.sadd(eventEntity.getKey(),eventEntity.getValue());
 
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SADD_SET)){
-                client.sadd(eventEntity.getKey(),ObjectUtils.setBytes(eventEntity.getMembers()));
+                pipelined.sadd(eventEntity.getKey(),ObjectUtils.setBytes(eventEntity.getMembers()));
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SADD_WITH_TIME)){
-                client.sadd(eventEntity.getKey(),eventEntity.getValue());
-                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+                pipelined.sadd(eventEntity.getKey(),eventEntity.getValue());
+                pipelined.pexpire(eventEntity.getKey(),eventEntity.getMs());
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SADD_WITH_TIME_SET)){
-                client.sadd(eventEntity.getKey(),ObjectUtils.setBytes(eventEntity.getMembers()));
-                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+                pipelined.sadd(eventEntity.getKey(),ObjectUtils.setBytes(eventEntity.getMembers()));
+                pipelined.pexpire(eventEntity.getKey(),eventEntity.getMs());
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.ZADD)){
-                client.zadd(eventEntity.getKey(),ObjectUtils.zsetBytes(eventEntity.getZaddValue()));
+                pipelined.zadd(eventEntity.getKey(),ObjectUtils.zsetBytes(eventEntity.getZaddValue()));
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.ZADD_WITH_TIME)){
-                client.zadd(eventEntity.getKey(),ObjectUtils.zsetBytes(eventEntity.getZaddValue()));
-                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+                pipelined.zadd(eventEntity.getKey(),ObjectUtils.zsetBytes(eventEntity.getZaddValue()));
+                pipelined.pexpire(eventEntity.getKey(),eventEntity.getMs());
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.PEXPIRE)){
-                client.pexpire(eventEntity.getKey(),eventEntity.getMs());
+                pipelined.pexpire(eventEntity.getKey(),eventEntity.getMs());
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.RESTORE)){
-                client.restore(eventEntity.getKey(),eventEntity.getMs(),eventEntity.getValue());
+                pipelined.restore(eventEntity.getKey(),eventEntity.getMs(),eventEntity.getValue());
 
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.RESTORREPLCE)){
                 if(eventEntity.isHighVersion()){
-                    client.restoreReplace(eventEntity.getKey(),eventEntity.getMs(),eventEntity.getValue());
+                    pipelined.restoreReplace(eventEntity.getKey(),eventEntity.getMs(),eventEntity.getValue());
                 }else {
-                    client.del(eventEntity.getKey());
-                    client.restore(eventEntity.getKey(),eventEntity.getMs(),eventEntity.getValue());
+                    pipelined.del(eventEntity.getKey());
+                    pipelined.restore(eventEntity.getKey(),eventEntity.getMs(),eventEntity.getValue());
                 }
 
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.COMMAND)){
-                client.sendCommand(JedisProtocolCommand.builder().raw(eventEntity.getCmd()).build(), eventEntity.getValueList());
+                pipelined.sendCommand(JedisProtocolCommand.builder().raw(eventEntity.getCmd()).build(), eventEntity.getValueList());
 
                 //非幂等性命令
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.APPEND)){
                 long pttl=eventEntity.getMs();
 
                 if(pttl>0L){
-                    client.set(eventEntity.getStringKey(),appendMap.get(eventEntity.getStringKey()).getValue().toString(),SetParams.setParams().px(pttl));
+                    pipelined.set(eventEntity.getStringKey(),appendMap.get(eventEntity.getStringKey()).getValue().toString(),SetParams.setParams().px(pttl));
                 }else {
                     long targetPttl=client.pttl(eventEntity.getStringKey());
                     if(targetPttl>0){
-                        client.set(eventEntity.getStringKey(),appendMap.get(eventEntity.getStringKey()).getValue().toString(),SetParams.setParams().px(targetPttl));
+                        pipelined.set(eventEntity.getStringKey(),appendMap.get(eventEntity.getStringKey()).getValue().toString(),SetParams.setParams().px(targetPttl));
                     }else{
-                        client.set(eventEntity.getStringKey(),appendMap.get(eventEntity.getStringKey()).getValue().toString());
+                        pipelined.set(eventEntity.getStringKey(),appendMap.get(eventEntity.getStringKey()).getValue().toString());
                     }
                 }
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.INCR)){
+
                 long pttl=eventEntity.getMs();
 
                 if(pttl>0L){
-                    client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
+
+                    pipelined.set(eventEntity.getStringKey(), String.valueOf(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
                 }else {
+
                     long targetPttl=client.pttl(eventEntity.getStringKey());
                     if(targetPttl>0){
-                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
 
+                        pipelined.set(eventEntity.getStringKey(), String.valueOf(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
                     }else{
-                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())));
+
+                        pipelined.set(eventEntity.getStringKey(), String.valueOf(incrMap.get(eventEntity.getStringKey())));
                     }
 
                 }
@@ -1105,72 +1203,62 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                 long pttl=eventEntity.getMs();
 
                 if(pttl>0L){
-                    client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
+                    pipelined.set(eventEntity.getStringKey(), String.valueOf(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
                 }else {
                     long targetPttl=client.pttl(eventEntity.getStringKey());
                     if(targetPttl>0){
-                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
+                        pipelined.set(eventEntity.getStringKey(), String.valueOf(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
                     }else {
-                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())));
+                        pipelined.set(eventEntity.getStringKey(), String.valueOf(incrMap.get(eventEntity.getStringKey())));
                     }
                 }
 
 
                 }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.INCRBYFLOAT)){
-                long pttl=eventEntity.getMs();
-                if(pttl>0L){
-                    client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrDoubleMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
-                }else {
-                    long targetPttl=client.pttl(eventEntity.getStringKey());
-                    if(targetPttl>0){
-                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrDoubleMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
-                    }else{
-                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrDoubleMap.get(eventEntity.getStringKey())));
+                    long pttl=eventEntity.getMs();
+                    if(pttl>0L){
+                        pipelined.set(eventEntity.getStringKey(), String.valueOf(incrDoubleMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
+                    }else {
+                        long targetPttl=client.pttl(eventEntity.getStringKey());
+                        if(targetPttl>0){
+                            pipelined.set(eventEntity.getStringKey(), String.valueOf(incrDoubleMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
+                            pipelined.pexpire(eventEntity.getKey(),targetPttl);
+                        }else{
+                            pipelined.set(eventEntity.getStringKey(), String.valueOf(incrDoubleMap.get(eventEntity.getStringKey())));
+                        }
                     }
-                }
-
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.DECR)){
                 long pttl=eventEntity.getMs();
                 if(pttl>0L){
-                    client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
+                    pipelined.set(eventEntity.getStringKey(), String.valueOf(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
                 }else {
 
                     long targetPttl=client.pttl(eventEntity.getStringKey());
                     if(targetPttl>0){
-                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
-
+                        pipelined.set(eventEntity.getStringKey(), String.valueOf(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
                     }else {
-                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())));
+                        pipelined.set(eventEntity.getStringKey(), String.valueOf(incrMap.get(eventEntity.getStringKey())));
                     }
-
-
                 }
 
             }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.DECRBY)){
                 long pttl=eventEntity.getMs();
                 if(pttl>0L){
-                    client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
-
+                    pipelined.set(eventEntity.getStringKey(), String.valueOf(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(pttl));
                 }else {
-
                     long targetPttl=client.pttl(eventEntity.getStringKey());
 
                     if(targetPttl>0){
-                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
-
+                        pipelined.set(eventEntity.getStringKey(), String.valueOf(incrMap.get(eventEntity.getStringKey())),SetParams.setParams().px(targetPttl));
                     }else {
-                        client.set(eventEntity.getKey(),ObjectUtils.toBytes(incrMap.get(eventEntity.getStringKey())));
+                        pipelined.set(eventEntity.getStringKey(), String.valueOf(incrMap.get(eventEntity.getStringKey())));
                     }
-
                 }
-
             }
-
-
-
         }catch (Exception e){
-            log.warn("key[{}]同步失败被抛弃,原因：[{}]",eventEntity.getStringKey(),e.getMessage());
 
+            log.warn("key[{}]同步失败被抛弃,原因：[{}]",eventEntity.getStringKey(),e.getMessage());
+            e.printStackTrace();
         }finally {
             if(null!=client){
                 client.close();
@@ -1180,6 +1268,29 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
     }
 
+
+    void submitCommandNumNow() {
+        commitLock.lock();
+        try {
+            List<Object> resultList = pipelined.syncAndReturnAll();
+            System.out.println(resultList.size()+":内存： "+kvPersistence.size());
+
+            Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
+                Object data = resultList.get(index);
+                if(!compensatorUtils.isObjectSuccess(data)){
+                    compensator(kvPersistence.getKey(index));
+                    System.out.println(compensatorUtils.getRes(data));
+                }
+            });
+            kvPersistence.clear();
+            date = new Date();
+            commandNums.set(0);
+        }finally {
+            commitLock.unlock();
+        }
+
+
+    }
 
      void submitCommandNum() {
          commitLock.lock();
@@ -1194,7 +1305,8 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                  List<Object> resultList = pipelined.syncAndReturnAll();
 
 
-//                 System.out.println(resultList.size()+":内存： "+kvPersistence.size());
+                 /**
+                 System.out.println(resultList.size()+":内存： "+kvPersistence.size());
 
 
                  Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
@@ -1202,13 +1314,13 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                      if(!compensatorUtils.isObjectSuccess(data)){
 
                          compensator(kvPersistence.getKey(index));
-                         System.out.println("补偿机制："+data);
+                         System.out.println("补偿机制："+ JSON.toJSONString(data)+": "+Strings.byteToString((byte[]) data));
 
 
 
                      }
                  });
-
+            **/
 
                  resultList.clear();
                  kvPersistence.clear();
@@ -1225,17 +1337,22 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 //                 pipelined.
                  List<Object> resultList = pipelined.syncAndReturnAll();
 
+                 /**
+                 System.out.println(resultList.size()+":内存： "+kvPersistence.size());
+
                  Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
                      Object data = resultList.get(index);
                      if(!compensatorUtils.isObjectSuccess(data)){
 
-                         System.out.println("补偿机制："+data);
+                         System.out.println("补偿机制："+ JSON.toJSONString(data)+": "+Strings.byteToString((byte[]) data));
                          compensator(kvPersistence.getKey(index));
                          System.out.println(compensatorUtils.getRes(data));
 
 
                      }
                  });
+
+                  **/
 
                  kvPersistence.clear();
 //                 log.info("[{}]PING->{}",taskId, r.get());
@@ -1247,11 +1364,13 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
                  List<Object> resultList = pipelined.syncAndReturnAll();
 
+                 /**
+                 System.out.println(resultList.size()+":内存： "+kvPersistence.size());
 
                  Stream.iterate(0, i -> i + 1).limit(resultList.size()).forEach(index -> {
                      Object data = resultList.get(index);
                      if(!compensatorUtils.isObjectSuccess(data)){
-                         System.out.println("补偿机制："+data);
+                         System.out.println("补偿机制："+ JSON.toJSONString(data)+": "+Strings.byteToString((byte[]) data));
                          compensator(kvPersistence.getKey(index));
                          System.out.println(compensatorUtils.getRes(data));
 
@@ -1259,6 +1378,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                      }
                  });
 
+                  **/
                  kvPersistence.clear();
                  date = new Date();
                  time = System.currentTimeMillis() - date.getTime();
@@ -1270,38 +1390,25 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
 
 
-//            long time = System.currentTimeMillis() - date.getTime();
-//            if (syncTaskEntity.syncNums >= count && time > 5000) {
-//                //pipelined.sync();
-//
-//
-//                    List<Object> resultList = pipelined.syncAndReturnAll();
-//                    resultList.clear();
-//                    syncTaskEntity.clear();
-//                    // log.info("将管道中超过 {} 个值提交",taskEntity.getSyncNums());
-//
-//                date = new Date();
-//
-//
-//
-//
-//            } else if (syncTaskEntity.syncNums == 0 && time > 4000) {
-//                Response<String> r = pipelined.ping();
-//                pipelined.sync();
-//                syncTaskEntity.clear();
-//                log.info("[{}]PING->{}",taskId, r.get());
-//                date = new Date();
-//
-//
-//
-//            }else if(syncTaskEntity.syncNums>0 && time > 3000){
-//                System.out.println("提交："+syncTaskEntity.syncNums);
-//                List<Object> resultList = pipelined.syncAndReturnAll();
-//                syncTaskEntity.clear();
-//                date = new Date();
-//            }
-
     }
+
+
+    //更新最后pipeline提交时间
+
+    void updateTaskLastCommitTime(String taskId){
+        //记录任务最后一次update时间
+        try{
+            TaskDataEntity dataEntity= TaskDataManagerUtils.get(taskId);
+            dataEntity.getTaskModel().setLastKeyCommitTime(System.currentTimeMillis());
+        }catch (Exception e){
+            log.error("[{}] update last time error",taskId);
+        }
+    }
+
+
+
+
+
 
 
     /**
@@ -1320,7 +1427,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
             while (true){
                 submitCommandNum();
                 if (TaskDataManagerUtils.isTaskClose(taskId)&&taskId!=null) {
-                    log.info("task[{}]数据传输模块进入关闭保护状态,不再接收新数据",taskId);
+                    log.warn("task[{}]数据传输模块进入关闭保护状态,不再接收新数据",taskId);
                     Date time =new Date(date.getTime());
                     if (status) {
                         while (System.currentTimeMillis()-time.getTime()<1000*60*2){
@@ -1330,7 +1437,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
                         Thread.currentThread().interrupt();
                         status = false;
                         addCommandNum();
-                        log.info("task[{}]数据传输模保护状态退出,任务停止,ThreadName[{}]",taskId,Thread.currentThread().getName());
+                        log.warn("task[{}]数据传输模保护状态退出,任务停止,ThreadName[{}]",taskId,Thread.currentThread().getName());
 //                        System.out.println("【" + taskId + "】 PipelinedSyncTask关闭...." + Thread.currentThread().getName());
                         pipelined.close();
                         jedisPool.close();
@@ -1343,33 +1450,7 @@ public class JDRedisJedisPipeLineClient implements JDRedisClient {
 
                     }
             }
-//            try {
-//                if(startStatus){
-//                    startStatus=false;
-//                    Thread.sleep(3000);
-//                }
-//                while (true) {
-//                    addCommandNum();
-//                    if (TaskMsgStatusUtils.doThreadisCloseCheckTask(taskId)&&taskId!=null) {
-//                        if (status) {
-//                            Thread.currentThread().interrupt();
-//                            status = false;
-//                            addCommandNum();
-//                            System.out.println("【" + taskId + "】 PipelinedSyncTask关闭...." + Thread.currentThread().getName());
-//                            pipelined.close();
-//                            break;
-//                        }
-//                    }
-//                    try {
-//                        Thread.sleep(3000);
-//                    } catch (InterruptedException e) {
-//
-//                    }
-//
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
+
         }
     }
 
