@@ -22,21 +22,22 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"log"
+	"testcase/globalzap"
 	"testcase/synctaskhandle"
 
 	//"io/ioutil"
 	"os"
-	"testcase/global"
 	//"testcase/synctaskhandle"
 )
 
 var cfgFile string
-var logger *logrus.Logger
+var logger *zap.Logger
 
 func init() {
-	logger = global.GetInstance()
+	logger = globalzap.GetLogger()
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -152,12 +153,12 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		logger.Println("Using config file:", viper.ConfigFileUsed())
+		logger.Sugar().Info("Using config file:", viper.ConfigFileUsed())
 		if viper.GetViper().GetBool("logjsonformat") {
-			logger.SetFormatter(&logrus.JSONFormatter{})
+			logger.Sugar().Info(&logrus.JSONFormatter{})
 		}
 	} else {
-		logger.Println(err)
+		logger.Sugar().Error(err)
 		os.Exit(1)
 	}
 

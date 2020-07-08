@@ -4,8 +4,8 @@ import "fmt"
 
 func DisplayCasesList() {
 	fmt.Println("All Cases:")
-	for _, v := range CaseTypeArray {
-		fmt.Println("         " + v.String())
+	for k, v := range CaseTypeMap {
+		fmt.Println(k, v)
 	}
 
 }

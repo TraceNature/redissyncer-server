@@ -53,7 +53,7 @@ to quickly create a Cobra application.`,
 		_, err := client.Ping().Result()
 
 		if err != nil {
-			logger.Println(err)
+			logger.Sugar().Error(err)
 			os.Exit(1)
 		}
 

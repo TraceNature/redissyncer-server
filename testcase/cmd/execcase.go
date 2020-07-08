@@ -18,7 +18,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"testcase/cases"
 )
 
@@ -35,29 +34,46 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("execcase called")
 
-		execfile := "./tasks/createtask.json"
-
-		tc := &cases.TestCase{
-			SyncServer:      viper.GetViper().GetString("syncserver"),
-			CreateTaskFile:  execfile,
-			GenDataDuration: 60,
-			DataGenInterval: 10,
-			GenDataThreads:  2,
+		//execfile := "./tasks/createtask.json"
+		//
+		//tc := &cases.TestCase{
+		//	SyncServer:      viper.GetViper().GetString("syncserver"),
+		//	CreateTaskFile:  execfile,
+		//	GenDataDuration: 60,
+		//	DataGenInterval: 1000,
+		//	GenDataThreads:  2,
+		//}
+		//tc.Single2Single()
+		filepath, err := cmd.Flags().GetString("filepath")
+		if err != nil {
+			logger.Sugar().Error(err)
+			return
 		}
-		tc.Single2Single()
+		dir, err := cmd.Flags().GetString("yamldir")
+		if err != nil {
+			logger.Sugar().Error(err)
+			return
+		}
+		if filepath == "" && dir == "" {
+			logger.Sugar().Info("filepath or yamldir must be set")
+			return
+		}
+
+		if filepath != "" {
+			tc := cases.NewTestCase()
+			tc.ParseYamlFile(filepath)
+			fmt.Println(tc)
+			tc.Exec()
+			return
+		}
+
 	},
 }
 
 func init() {
+
+	execcaseCmd.Flags().StringP("filepath", "f", "", "Case yaml file to describe case config")
+	execcaseCmd.Flags().StringP("yamldir", "d", "", "Director fo case yaml file ,exec all yamlfile in the directory")
 	rootCmd.AddCommand(execcaseCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// execcaseCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// execcaseCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

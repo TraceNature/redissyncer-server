@@ -65,7 +65,7 @@ var defaultloggerdefine = &LoggerDefine{
 	},
 	Level:       zap.DebugLevel,
 	EncoderType: EcoderConsol,
-	Caller:      false,
+	Caller:      true,
 }
 
 func GetLogger() *zap.Logger {

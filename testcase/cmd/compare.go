@@ -16,12 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-	"github.com/go-redis/redis/v7"
-	"os"
-	"testcase/compare"
-	"testcase/commons"
-
 	"github.com/spf13/cobra"
 )
 
@@ -36,49 +30,49 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("compare called")
-		saddr, _ := cmd.Flags().GetString("saddr")
-		spasswd, _ := cmd.Flags().GetString("spassword")
-		taddr, _ := cmd.Flags().GetString("taddr")
-		tpasswd, _ := cmd.Flags().GetString("spassword")
-
-		sopt := &redis.Options{
-			Addr: saddr,
-			DB:   0, // use default DB
-		}
-
-		topt := &redis.Options{
-			Addr: taddr,
-			DB:   0, // use default DB
-		}
-		if spasswd != "" {
-			sopt.Password = spasswd
-		}
-
-		if tpasswd != "" {
-			topt.Password = tpasswd
-		}
-
-		logger.Println(sopt)
-		logger.Println(topt)
-
-		sclient := commons.GetGoRedisClient(sopt)
-		tclient := commons.GetGoRedisClient(topt)
-
-		_, serr := sclient.Ping().Result()
-		_, terr := tclient.Ping().Result()
-
-		if serr != nil {
-			logger.Println(serr)
-			os.Exit(1)
-		}
-
-		if terr != nil {
-			logger.Println(terr)
-			os.Exit(1)
-		}
-
-		compare.Comparedata(sclient, tclient)
+		//	fmt.Println("compare called")
+		//	saddr, _ := cmd.Flags().GetString("saddr")
+		//	spasswd, _ := cmd.Flags().GetString("spassword")
+		//	taddr, _ := cmd.Flags().GetString("taddr")
+		//	tpasswd, _ := cmd.Flags().GetString("spassword")
+		//
+		//	sopt := &redis.Options{
+		//		Addr: saddr,
+		//		DB:   0, // use default DB
+		//	}
+		//
+		//	topt := &redis.Options{
+		//		Addr: taddr,
+		//		DB:   0, // use default DB
+		//	}
+		//	if spasswd != "" {
+		//		sopt.Password = spasswd
+		//	}
+		//
+		//	if tpasswd != "" {
+		//		topt.Password = tpasswd
+		//	}
+		//
+		//	logger.Println(sopt)
+		//	logger.Println(topt)
+		//
+		//	sclient := commons.GetGoRedisClient(sopt)
+		//	tclient := commons.GetGoRedisClient(topt)
+		//
+		//	_, serr := sclient.Ping().Result()
+		//	_, terr := tclient.Ping().Result()
+		//
+		//	if serr != nil {
+		//		logger.Println(serr)
+		//		os.Exit(1)
+		//	}
+		//
+		//	if terr != nil {
+		//		logger.Println(terr)
+		//		os.Exit(1)
+		//	}
+		//
+		//	compare.Comparedata(sclient, tclient)
 	},
 }
 

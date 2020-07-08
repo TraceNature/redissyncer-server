@@ -14,6 +14,7 @@ type GenBigKV struct {
 	KeySuffix   string
 	Loopstep    int //生成数据的循环次数
 	EXPIRE      time.Duration
+	DB          int
 	ValuePrefix string
 }
 
@@ -26,7 +27,7 @@ func (gbkv *GenBigKV) GenBigHash() string {
 	gbkv.RedisConn.Expire(key, gbkv.EXPIRE)
 	t2 := time.Now()
 
-	zaplogger.Info("GenBigKV", zap.String("keytype", "hash"), zap.String("key", key), zap.String("duration", t2.Sub(t1).String()))
+	zaplogger.Info("GenBigKV", zap.Int("db", gbkv.DB), zap.String("keytype", "hash"), zap.String("key", key), zap.String("duration", t2.Sub(t1).String()))
 	return key
 }
 
@@ -38,7 +39,7 @@ func (gbkv *GenBigKV) GenBigList() string {
 	}
 	gbkv.RedisConn.Expire(key, gbkv.EXPIRE)
 	t2 := time.Now()
-	zaplogger.Info("GenBigKV", zap.String("keytype", "list"), zap.String("key", key), zap.String("duration", t2.Sub(t1).String()))
+	zaplogger.Info("GenBigKV", zap.Int("db", gbkv.DB), zap.String("keytype", "list"), zap.String("key", key), zap.String("duration", t2.Sub(t1).String()))
 
 	return key
 }
@@ -51,7 +52,7 @@ func (gbkv *GenBigKV) GenBigSet() string {
 	}
 	gbkv.RedisConn.Expire(key, gbkv.EXPIRE)
 	t2 := time.Now()
-	zaplogger.Info("GenBigKV", zap.String("keytype", "set"), zap.String("key", key), zap.String("duration", t2.Sub(t1).String()))
+	zaplogger.Info("GenBigKV", zap.Int("db", gbkv.DB), zap.String("keytype", "set"), zap.String("key", key), zap.String("duration", t2.Sub(t1).String()))
 	return key
 }
 
@@ -67,7 +68,7 @@ func (gbkv *GenBigKV) GenBigZset() string {
 	}
 	gbkv.RedisConn.Expire(key, gbkv.EXPIRE)
 	t2 := time.Now()
-	zaplogger.Info("GenBigKV", zap.String("keytype", "zset"), zap.String("key", key), zap.String("duration", t2.Sub(t1).String()))
+	zaplogger.Info("GenBigKV", zap.Int("db", gbkv.DB), zap.String("keytype", "zset"), zap.String("key", key), zap.String("duration", t2.Sub(t1).String()))
 	return key
 }
 
@@ -78,7 +79,7 @@ func (gbkv *GenBigKV) GenBigString() {
 		gbkv.RedisConn.Set(key+strconv.Itoa(i), gbkv.ValuePrefix+strconv.Itoa(i), gbkv.EXPIRE)
 	}
 	t2 := time.Now()
-	zaplogger.Info("GenBigKV", zap.String("keytype", "string"), zap.String("keyprefix", key), zap.String("duration", t2.Sub(t1).String()))
+	zaplogger.Info("GenBigKV", zap.Int("db", gbkv.DB), zap.String("keytype", "string"), zap.String("keyprefix", key), zap.String("duration", t2.Sub(t1).String()))
 }
 
 func (gbkv *GenBigKV) GenerateBaseDataParallel(client *redis.Client) map[string]string {
@@ -94,8 +95,8 @@ func (gbkv *GenBigKV) GenerateBaseDataParallel(client *redis.Client) map[string]
 		newgbkv.KeySuffix = gbkv.KeySuffix
 		newgbkv.Loopstep = gbkv.Loopstep
 		newgbkv.EXPIRE = gbkv.EXPIRE
+		newgbkv.DB = gbkv.DB
 		newgbkv.ValuePrefix = gbkv.ValuePrefix
-
 		bigkvmap[newgbkv.GenBigHash()] = "Hash"
 		wg.Done()
 	}()
@@ -108,6 +109,7 @@ func (gbkv *GenBigKV) GenerateBaseDataParallel(client *redis.Client) map[string]
 		newgbkv.Loopstep = gbkv.Loopstep
 		newgbkv.EXPIRE = gbkv.EXPIRE
 		newgbkv.ValuePrefix = gbkv.ValuePrefix
+		newgbkv.DB = gbkv.DB
 		bigkvmap[newgbkv.GenBigList()] = "List"
 		wg.Done()
 	}()
@@ -120,6 +122,7 @@ func (gbkv *GenBigKV) GenerateBaseDataParallel(client *redis.Client) map[string]
 		newgbkv.Loopstep = gbkv.Loopstep
 		newgbkv.EXPIRE = gbkv.EXPIRE
 		newgbkv.ValuePrefix = gbkv.ValuePrefix
+		newgbkv.DB = gbkv.DB
 		bigkvmap[newgbkv.GenBigSet()] = "Set"
 		wg.Done()
 	}()
@@ -132,6 +135,7 @@ func (gbkv *GenBigKV) GenerateBaseDataParallel(client *redis.Client) map[string]
 		newgbkv.Loopstep = gbkv.Loopstep
 		newgbkv.EXPIRE = gbkv.EXPIRE
 		newgbkv.ValuePrefix = gbkv.ValuePrefix
+		newgbkv.DB = gbkv.DB
 		bigkvmap[newgbkv.GenBigZset()] = "Zset"
 		wg.Done()
 	}()
@@ -144,6 +148,7 @@ func (gbkv *GenBigKV) GenerateBaseDataParallel(client *redis.Client) map[string]
 		newgbkv.Loopstep = gbkv.Loopstep
 		newgbkv.EXPIRE = gbkv.EXPIRE
 		newgbkv.ValuePrefix = gbkv.ValuePrefix
+		newgbkv.DB = gbkv.DB
 		newgbkv.GenBigString()
 		wg.Done()
 	}()
