@@ -19,7 +19,7 @@ func TestBasicOpt_ExecOpt(t *testing.T) {
 	opt.Password = "redistest0102"
 	client := commons.GetGoRedisClient(opt)
 
-	baseopt := BaseOpt{
+	baseopt := OptSingle{
 		RedisConn: client.Conn(),
 		//RedisClient:  client,
 		RedisVersion: "4.0",
@@ -52,7 +52,7 @@ func TestBasicOpt_KeepExecBasicOpt(t *testing.T) {
 	client := commons.GetGoRedisClient(opt)
 	defer client.Close()
 
-	baseopt := BaseOpt{
+	baseopt := OptSingle{
 		RedisConn:    client.Conn(),
 		RedisVersion: "4.0",
 		OptType:      BO_APPEND,

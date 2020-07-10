@@ -1,5 +1,5 @@
 syncserver:   "http://114.67.67.7:8080"
-createtaskfile: "./tasks/createtask.json"
+createtaskfile: "./tasks/single2cluster.json"
 gendataduration: 120
 datageninterval: 300
 gendatathreads: 4
@@ -13,4 +13,4 @@ incrementexpire: 1800
 comparebatchsize: 50
 comparethreads: 2
 comparettldiff: 100000
-casetype: 0
+casetype: 2
