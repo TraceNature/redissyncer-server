@@ -118,7 +118,11 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                 }
             }
 
-            RedisBranchTypeEnum branchTypeEnum=SyncTypeUtils.getRedisBranchType(taskModel.getSourceRedisType()).getBranchTypeEnum();
+            if(taskModel.getTargetUri().size()>1){
+                taskModel.setTargetRedisType(2);
+            }
+
+            RedisBranchTypeEnum branchTypeEnum=SyncTypeUtils.getRedisBranchType(taskModel.getTargetRedisType()).getBranchTypeEnum();
             JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, taskModel.getTargetHost(), taskModel.getTargetPort(), taskModel.getTargetPassword(), taskModel.getBatchSize(), taskModel.getId(),null,null);
             //根据type生成相对节点List [List顺序即为filter节点执行顺序]
             List<CommonFilter> commonFilterList = KeyValueFilterListSelector.getStrategyList(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType(),taskModel,client);

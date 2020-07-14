@@ -7,6 +7,7 @@ import javax.sql.DataSource;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp.BasicDataSource;
+
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.springframework.jdbc.datasource.DataSourceUtils;

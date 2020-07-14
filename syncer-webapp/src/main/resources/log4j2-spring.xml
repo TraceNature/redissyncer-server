@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="info" strict="true">
+	<properties>
+		<Property name="logPath" value="${sys:logPath}"/>
+		<Property name="LOG_PATTERN"
+				  value="%d{yyyy-MM-dd HH:mm:ss.SSS}|[%5p ]|[%t] -> %c{1}#%M:%L | %msg%n%xwEx" />
+		<property name="logFile">syncer-log</property>
+		<Property name="logLevel" value="${sys:logLevel}"/>
+	</properties>
+
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="${LOG_PATTERN}" />
+<!--			<Layout type="Log4j2Layout"/>-->
+		</Console>
+
+		<RollingRandomAccessFile
+				append="true"  immediateFlush="true" name="RollingRandomAccessFile" fileName="${logPath}/${logFile}.log"
+				filePattern="${logPath}/${logFile}-%d-%i.log" >
+			<PatternLayout pattern="${LOG_PATTERN}" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" />
+				<SizeBasedTriggeringPolicy size="50MB" />
+			</Policies>
+			<Filters>
+				<!--匹配INFO级别以及以上级别,不匹配INFO级别以下级别,即: 匹配 >= INFO的级别-->
+				<ThresholdFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
+			</Filters>
+			<DefaultRolloverStrategy max="20" />
+		</RollingRandomAccessFile>
+	</Appenders>
+	<Loggers>
+		<!--	某个类下的不打日志	<Logger name="log4j2.test" level="off"/>-->
+		<!--	某个类设置日志级别-->
+
+		<!-- Root Logger -->
+
+		<Root level="${logLevel}" >
+			<AppenderRef ref="Console" />
+			<AppenderRef ref="RollingRandomAccessFile" />
+		</Root>
+	</Loggers>
+</Configuration>

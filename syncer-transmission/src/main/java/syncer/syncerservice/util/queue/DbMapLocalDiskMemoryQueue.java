@@ -1,7 +1,7 @@
 package syncer.syncerservice.util.queue;
 
-import org.mapdb.DBMaker;
-import org.mapdb.Serializer;
+//import org.mapdb.DBMaker;
+//import org.mapdb.Serializer;
 
 import java.io.File;
 import java.util.Collection;
@@ -18,18 +18,18 @@ public class DbMapLocalDiskMemoryQueue <E>  implements SyncerQueue<E> {
     private String taskId;
     private BlockingQueue<Object> queue;
     private int size=1000;
-    public static void main(String[] args) {
-        DBMaker.newFileDB(new File("test.db")).make().createCircularQueue("queue", Serializer.JAVA,1000);
-
-    }
-
-    public DbMapLocalDiskMemoryQueue(String taskId, int size) {
-        this.taskId = taskId;
-        this.queue=DBMaker.newFileDB(new File("syncer_"+taskId+".db")).mmapFileEnableIfSupported().make().createCircularQueue(taskId, Serializer.JAVA,size);
-        if(size>0){
-            this.size = size;
-        }
-    }
+//    public static void main(String[] args) {
+//        DBMaker.newFileDB(new File("test.db")).make().createCircularQueue("queue", Serializer.JAVA,1000);
+//
+//    }
+//
+//    public DbMapLocalDiskMemoryQueue(String taskId, int size) {
+//        this.taskId = taskId;
+//        this.queue=DBMaker.newFileDB(new File("syncer_"+taskId+".db")).mmapFileEnableIfSupported().make().createCircularQueue(taskId, Serializer.JAVA,size);
+//        if(size>0){
+//            this.size = size;
+//        }
+//    }
 
     @Override
     public boolean add(E e) {

@@ -30,6 +30,10 @@ public class DtoToTaskModelUtils {
     public synchronized static List<TaskModel>getTaskModelList(RedisClusterDto redisClusterDto){
         List<TaskModel>taskModelList=new ArrayList<>();
         String[] addressList=redisClusterDto.getSourceRedisAddress().split(";");
+//        int targetRedisType=1;
+//        if(redisClusterDto.getTargetRedisAddress().split(";").length>1){
+//            targetRedisType=2;
+//        }
         for (String address:
                 addressList) {
             if(StringUtils.isEmpty(address)){
@@ -52,6 +56,7 @@ public class DtoToTaskModelUtils {
                     .sourceRedisAddress(address)
                     //源密码
                     .sourcePassword(redisClusterDto.getSourcePassword())
+
                     //目标地址
                     .targetRedisAddress(redisClusterDto.getTargetRedisAddress())
                     //目标密码

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Mapper;
+import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.cmd.impl.DefaultCommand;
 import syncer.syncerplusredis.constant.RedisCommandTypeEnum;
 import syncer.syncerplusredis.dao.AbandonCommandMapper;
@@ -34,10 +35,8 @@ public class SendCommandWithOutQueue {
     private boolean status = true;
     private ISyncerCompensator syncerCompensator;
 
-    @Mapper
-    private AbandonCommandMapper abandonCommandMapper;
 
-    public SendCommandWithOutQueue(Replicator r, KeyValueRunFilterChain filterChain, String taskId, boolean status, ISyncerCompensator syncerCompensator,AbandonCommandMapper abandonCommandMapper) {
+    public SendCommandWithOutQueue(Replicator r, KeyValueRunFilterChain filterChain, String taskId, boolean status, ISyncerCompensator syncerCompensator) {
         this.r = r;
         this.filterChain = filterChain;
         this.taskId = taskId;
@@ -85,16 +84,40 @@ public class SendCommandWithOutQueue {
 
                 //写入数据库抛弃key
                 try {
-                    abandonCommandMapper.insertAbandonCommandModel(AbandonCommandModel
+                    if(keyName==null){
+                        keyName="";
+                    }
+                    String message;
+                    if(e.getMessage()==null){
+                        message="";
+                    }else{
+                        message=e.getMessage();
+                    }
+                    String desc;
+                    if(event==null){
+                        desc="";
+
+                    }else {
+                        desc=event.getClass().toString();
+                    }
+
+
+                    AbandonCommandMapper abandonCommandMapper= SpringUtil.getBean(AbandonCommandMapper.class);
+                    if(abandonCommandMapper==null){
+
+                    }
+                    abandonCommandMapper.insertSimpleAbandonCommandModel(AbandonCommandModel
                             .builder()
                             .command(command)
-                            .exception(e.getMessage())
+                            .exception(message)
                             .key(keyName)
                             .taskId(taskId)
-                            .desc(event.getClass().toString())
+                            .desc(desc)
                             .build());
                 }catch (Exception ez){
+
                     log.error("[{}]抛弃key:{}信息写入数据库失败,原因[{}]",taskId, keyName,ez.getMessage());
+                    ez.printStackTrace();
                 }
 
                 log.error("[{}]抛弃key:{} ,class:[{}]:原因[{}]",taskId, keyName,event.getClass().toString(),e.getMessage());

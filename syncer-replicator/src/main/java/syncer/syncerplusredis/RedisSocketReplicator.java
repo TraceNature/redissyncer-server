@@ -47,6 +47,7 @@ import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static syncer.syncerplusredis.replicator.Constants.DOLLAR;
 import static syncer.syncerplusredis.replicator.Constants.STAR;
@@ -77,7 +78,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
     protected ScheduledExecutorService executor;
     protected final RedisSocketFactory socketFactory;
     protected  boolean status;
-    
+    AtomicInteger count = new AtomicInteger();
     public RedisSocketReplicator(String host, int port, Configuration configuration,boolean status) {
         Objects.requireNonNull(host);
         if (port <= 0 || port > 65535) {
@@ -144,6 +145,14 @@ public class RedisSocketReplicator extends AbstractReplicator {
 
     protected SyncMode trySync(final String reply) throws IOException, IncrementException {
         logger.info(reply);
+        if(reply.indexOf("Can't SYNC while not connected with my master")>=0){
+            if(count.get()>=3){
+                throw new IncrementException("NOMASTERLINK Can't SYNC while not connected with my master");
+
+            }
+            count.incrementAndGet();
+        }
+
         if (reply.startsWith("FULLRESYNC")) {
 
             if(!status){

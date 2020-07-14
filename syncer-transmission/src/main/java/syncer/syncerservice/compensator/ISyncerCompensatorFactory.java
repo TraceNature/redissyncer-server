@@ -27,6 +27,7 @@ public class ISyncerCompensatorFactory {
             iSyncerCompensator=new PipeLineSyncerCompensator();
             break;
         default:
+            break;
 
     }
         return iSyncerCompensator;
