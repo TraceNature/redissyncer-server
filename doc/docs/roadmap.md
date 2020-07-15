@@ -32,15 +32,28 @@
   
 - [ ] key过滤
 - [ ] 命令过滤
-- [ ] 限制任务数，提供任务最大数参数
+- [ ] 限制任务数，根据内存容量限制创建任务
 - [ ] 内存级别双向同步
 - [ ] 集成log4j2,日志可通过application.yml或启动参数配置，默认输出位置 ./log
 - [ ] 数据校验
 - [ ]  incr 、incrby等命令幂等操作
+- [ ]  swagger 补充api说明
+- [ ] goclient 适应v2 api
+- [ ] goclient 实现交互模式类似redis-cli
+* testcase完善，形成完整回归测试案例
+   - [x] single2single
+   - [ ] single2single with dbmap
+   - [x] single2single 断点续传
+   - [x] single2cluster
+   - [x] cluster2cluster
+   - [ ] cluster2cluster 断点续传
+   - [ ] rdb导入
+   - [ ] aof导入
+
 
 * 4.X
 - [ ] 兼容redis协议的其他kv产品例如Tides，TiKV
 - [ ] 理解Tikv机制
 - [ ] 实现Redis=>tikv全量+增量
 - [ ] 实现Tikv数据全量rollback to redis
-- [ ] tikv 作为redis持久话的完整方案 
+- [ ] tikv 作为redis持久化的完整方案 

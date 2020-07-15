@@ -4,7 +4,15 @@
 - [ ] readme增加如何生成swagger文档部分
 - [ ] goclient 适应v2 api
 - [ ] goclient 实现交互模式类似redis-cli
-- [ ] testcase完善，形成完整回归测试案例
+
+* testcase完善，形成完整回归测试案例
+   - [x] single2single
+   - [ ] single2single with dbmap
+   - [x] single2single 断点续传
+   - [x] single2cluster
+   - [x] cluster2cluster
+
+
 - [ ] 固化开发测试环境，形成列表
 - [ ] 做一个redis的docker-compose，配置环境
 - [ ] 两套集群4.0和5.0
@@ -14,6 +22,8 @@
 - [ ] 状态增加dataincomeinterval，最后数据流入时间，返回当前时间与最后流入数据时间的差值
 - [ ] 如何根据jvm已用内存和xmx差值限制任务
 - [ ] 服务端日志改用log4j2
+- [ ] 命令过滤
+- [ ] key过滤
   
 
 

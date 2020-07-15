@@ -1,0 +1,9 @@
+{
+  "fileAddress": "./data/dump.rdb",  
+  "targetRedisAddress": "114.67.100.240:20001",
+  "targetPassword": "redistest0102",
+  "taskName": "迁移任务1",
+  "autostart": true,
+  "afresh": true,
+  "batchSize": 1000
+}

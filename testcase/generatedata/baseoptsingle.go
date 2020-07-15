@@ -3,6 +3,7 @@
 package generatedata
 
 import (
+	"context"
 	"github.com/go-redis/redis/v7"
 	"go.uber.org/zap"
 	"math/rand"
@@ -10,7 +11,6 @@ import (
 	"strings"
 	"testcase/globalzap"
 	"time"
-	"context"
 )
 
 var zaplogger = globalzap.GetLogger()
@@ -36,10 +36,14 @@ func (optsingle *OptSingle) ExecOpt() {
 		optsingle.BO_DECR_DECRBY()
 	case "BO_INCR_INCRBY_INCRBYFLOAT":
 		optsingle.BO_INCR_INCRBY_INCRBYFLOAT()
-	case "BO_MGET_MSETNX":
-		optsingle.BO_MGET_MSETNX()
+	case "BO_MSET_MSETNX":
+		optsingle.BO_MSET_MSETNX()
 	//case "BO_PSETEX_SETEX":
 	//	optsingle.BO_PSETEX_SETEX()
+	case "BO_PFADD":
+		optsingle.BO_PFADD()
+	case "BO_PFMERGE":
+		optsingle.BO_PFMERGE()
 	case "BO_SET_SETNX":
 		optsingle.BO_SET_SETNX()
 	case "BO_SETBIT":
@@ -66,8 +70,10 @@ func (optsingle *OptSingle) ExecOpt() {
 		optsingle.BO_ZADD_ZINCRBY_ZPOPMAX_ZPOPMIN_ZREM()
 	case "BO_ZPOPMAX_ZPOPMIN":
 		optsingle.BO_ZPOPMAX_ZPOPMIN()
-	case "BO_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE_ZUNIONSTORE_ZINTERSTORE":
-		optsingle.BO_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE_ZUNIONSTORE_ZINTERSTORE()
+	case "BO_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE":
+		optsingle.BO_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE()
+	case "BO_UNIONSTORE_ZINTERSTORE":
+		optsingle.BO_ZUNIONSTORE_ZINTERSTORE()
 	default:
 		return
 	}
@@ -184,7 +190,7 @@ func (optsingle *OptSingle) BO_INCR_INCRBY_INCRBYFLOAT() {
 }
 
 //MSET and MSETNX
-func (optsingle *OptSingle) BO_MGET_MSETNX() {
+func (optsingle *OptSingle) BO_MSET_MSETNX() {
 	t1 := time.Now()
 	msetarry := []string{}
 	msetnxarry := []string{}
@@ -226,12 +232,46 @@ func (optsingle *OptSingle) BO_MGET_MSETNX() {
 //
 //}
 
+//PFADD
+func (optsingle *OptSingle) BO_PFADD() {
+	t1 := time.Now()
+	pfaddkey := "pfadd_" + optsingle.KeySuffix
+	rand.Seed(time.Now().Unix())
+	for i := 0; i < optsingle.Loopstep; i++ {
+		optsingle.RedisConn.PFAdd(pfaddkey, rand.Float64()*float64(rand.Int()))
+	}
+	t2 := time.Now()
+	zaplogger.Info("ExecCMD", zap.Int("db", optsingle.DB), zap.String("command", "BO_PFADD"), zap.String("KeySuffix", optsingle.KeySuffix), zap.Duration("time", t2.Sub(t1)))
+}
+
+//PFMERGE
+func (optsingle *OptSingle) BO_PFMERGE() {
+	t1 := time.Now()
+	pfaddkey := "pfadd_" + optsingle.KeySuffix
+	pfmergekey := "pfmerge_" + optsingle.KeySuffix
+	pfaddkeyarray := []string{}
+	rand.Seed(time.Now().Unix())
+	for i := 0; i < optsingle.Loopstep; i++ {
+		key := pfaddkey + strconv.Itoa(i)
+		optsingle.RedisConn.PFAdd(key, rand.Float64()*float64(rand.Int()))
+		pfaddkeyarray = append(pfaddkeyarray, key)
+	}
+	optsingle.RedisConn.PFMerge(pfmergekey, pfaddkeyarray...)
+
+	for _, v := range pfaddkeyarray {
+		optsingle.RedisConn.Del(v)
+	}
+	t2 := time.Now()
+	zaplogger.Info("ExecCMD", zap.Int("db", optsingle.DB), zap.String("command", "BO_PFMERGE"), zap.String("KeySuffix", optsingle.KeySuffix), zap.Duration("time", t2.Sub(t1)))
+}
+
 //SET and SETNX
 func (optsingle *OptSingle) BO_SET_SETNX() {
 	t1 := time.Now()
 	setkey := "set_" + optsingle.KeySuffix
 	setnxkey := "setnx_" + optsingle.KeySuffix
 	optsingle.RedisConn.Set(setkey, setkey, optsingle.EXPIRE)
+	optsingle.RedisConn.SetNX(setnxkey, setnxkey, optsingle.EXPIRE)
 	optsingle.RedisConn.SetNX(setnxkey, setkey, optsingle.EXPIRE)
 	t2 := time.Now()
 	zaplogger.Info("ExecCMD", zap.Int("db", optsingle.DB), zap.String("command", "SET_SETNX"), zap.String("KeySuffix", optsingle.KeySuffix), zap.Duration("time", t2.Sub(t1)))
@@ -381,12 +421,19 @@ func (optsingle *OptSingle) BO_RPUSH_RPUSHX_RPOP_RPOPLPUSH() {
 	optsingle.RedisConn.RPushX(rpushxkey, values...)
 	optsingle.RedisConn.RPushX(rpushkey, values...)
 
+	//rpoplpush 操作同一个key相当于将列表逆转
+	for i := 0; i < optsingle.Loopstep; i++ {
+		if rand.Intn(optsingle.Loopstep)%2 == 0 {
+			optsingle.RedisConn.RPopLPush(rpushkey, rpushkey)
+		}
+	}
+
 	for i := 0; i < optsingle.Loopstep; i++ {
 		if rand.Intn(optsingle.Loopstep)%2 == 0 {
 			optsingle.RedisConn.RPop(rpushkey)
 		}
 	}
-	optsingle.RedisConn.RPopLPush(rpushxkey, rpushkey)
+
 	optsingle.RedisConn.Expire(rpushkey, optsingle.EXPIRE)
 	optsingle.RedisConn.Expire(rpushxkey, optsingle.EXPIRE)
 
@@ -395,6 +442,7 @@ func (optsingle *OptSingle) BO_RPUSH_RPUSHX_RPOP_RPOPLPUSH() {
 }
 
 //BLPOP BRPOP BRPOPLPUSH
+//BRPOPLPUSH 集群模式下key分布在不同节点会报错(error) CROSSSLOT Keys in request don't hash to the same slot
 func (optsingle *OptSingle) BO_BLPOP_BRPOP_BRPOPLPUSH() {
 	t1 := time.Now()
 	blpopkey := "blpop_" + optsingle.KeySuffix
@@ -408,14 +456,23 @@ func (optsingle *OptSingle) BO_BLPOP_BRPOP_BRPOPLPUSH() {
 	optsingle.RedisConn.RPush(blpopkey, values...)
 	optsingle.RedisConn.RPush(brpopkey, values...)
 
-	optsingle.RedisConn.BLPop(optsingle.EXPIRE, blpopkey)
-	optsingle.RedisConn.BRPop(optsingle.EXPIRE, brpopkey)
+	for i := 0; i < optsingle.Loopstep; i++ {
+		if rand.Intn(optsingle.Loopstep)%2 == 0 {
+			optsingle.RedisConn.BRPopLPush(blpopkey, blpopkey, optsingle.EXPIRE)
+		}
+	}
 
-	optsingle.RedisConn.BRPopLPush(blpopkey, brpopkey, optsingle.EXPIRE)
+	for i := 0; i < optsingle.Loopstep; i++ {
+		if rand.Intn(optsingle.Loopstep)%2 == 0 {
+			optsingle.RedisConn.RPop(blpopkey)
+			optsingle.RedisConn.RPop(brpopkey)
+		}
+	}
+
 	optsingle.RedisConn.Expire(blpopkey, optsingle.EXPIRE)
 	optsingle.RedisConn.Expire(brpopkey, optsingle.EXPIRE)
 	t2 := time.Now()
-	zaplogger.Info("ExecCMD", zap.Int("db", optsingle.DB), zap.String("command", "BO_BLPOP_BRPOP_BRPOPLPUSH"), zap.String("KeySuffix", optsingle.KeySuffix), zap.Duration("time", t2.Sub(t1)))
+	zaplogger.Info("ExecCMD", zap.Int("db", optsingle.DB), zap.String("command", "BO_BLPOP_BRPOP"), zap.String("KeySuffix", optsingle.KeySuffix), zap.Duration("time", t2.Sub(t1)))
 }
 
 //SADD SMOVE SPOP SREM
@@ -447,7 +504,7 @@ func (optsingle *OptSingle) BO_SADD_SMOVE_SPOP_SREM() {
 
 	for i := 0; i < optsingle.Loopstep; i++ {
 		if rand.Intn(optsingle.Loopstep)%2 == 0 {
-			optsingle.RedisConn.SMove(saddkey, smovekey, saddkey+strconv.Itoa(i))
+			optsingle.RedisConn.SMove(smovekey, smovekey, saddkey+strconv.Itoa(i))
 		}
 	}
 
@@ -461,7 +518,7 @@ func (optsingle *OptSingle) BO_SADD_SMOVE_SPOP_SREM() {
 
 }
 
-//SDIFFSTORE SINTERSTORE SUNIONSTORE
+//SDIFFSTORE SINTERSTORE SUNIONSTORE 集群模式下key分布在不同节点会报错(error) CROSSSLOT Keys in request don't hash to the same slot
 func (optsingle *OptSingle) BO_SDIFFSTORE_SINTERSTORE_SUNIONSTORE() {
 	t1 := time.Now()
 	sdiff1 := "sdiff1_" + optsingle.KeySuffix
@@ -554,16 +611,14 @@ func (optsingle OptSingle) BO_ZPOPMAX_ZPOPMIN() {
 	zaplogger.Info("ExecCMD", zap.Int("db", optsingle.DB), zap.String("command", "BO_ZPOPMAX_ZPOPMIN"), zap.String("KeySuffix", optsingle.KeySuffix), zap.Duration("time", t2.Sub(t1)))
 }
 
-//ZREMRANGEBYLEX ZREMRANGEBYRANK ZREMRANGEBYSCORE  ZUNIONSTORE ZINTERSTORE
+//ZREMRANGEBYLEX ZREMRANGEBYRANK ZREMRANGEBYSCORE
 //start version:2.8.9
-func (optsingle *OptSingle) BO_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE_ZUNIONSTORE_ZINTERSTORE() {
+func (optsingle *OptSingle) BO_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE() {
 	t1 := time.Now()
 
 	zremrangebylex := "zremrangebylex_" + optsingle.KeySuffix
 	zremrangebyrank := "zremrangebyrank_" + optsingle.KeySuffix
 	zremrangebyscore := "zremrangebyscore_" + optsingle.KeySuffix
-	zinterstore := "zinterstore_" + optsingle.KeySuffix
-	zunionstore := "zunionstore_" + optsingle.KeySuffix
 
 	for i := 0; i < optsingle.Loopstep; i++ {
 		z := redis.Z{
@@ -572,28 +627,54 @@ func (optsingle *OptSingle) BO_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE_Z
 		}
 		optsingle.RedisConn.ZAdd(zremrangebylex, &z)
 		optsingle.RedisConn.ZAdd(zremrangebyrank, &z)
+		optsingle.RedisConn.ZAdd(zremrangebyscore, &z)
 	}
 
 	optsingle.RedisConn.ZRemRangeByLex(zremrangebylex, zremrangebylex+strconv.Itoa(0), zremrangebylex+strconv.Itoa(rand.Intn(optsingle.Loopstep-1)))
 	optsingle.RedisConn.ZRemRangeByRank(zremrangebyrank, int64(rand.Intn(2*optsingle.Loopstep)-optsingle.Loopstep), int64(rand.Intn(2*optsingle.Loopstep)-optsingle.Loopstep))
 	optsingle.RedisConn.ZRemRangeByScore(zremrangebyscore, strconv.Itoa(rand.Intn(optsingle.Loopstep)), strconv.Itoa(rand.Intn(optsingle.Loopstep)))
 
+	optsingle.RedisConn.Expire(zremrangebylex, optsingle.EXPIRE)
+	optsingle.RedisConn.Expire(zremrangebyrank, optsingle.EXPIRE)
+	optsingle.RedisConn.Expire(zremrangebyscore, optsingle.EXPIRE)
+
+	t2 := time.Now()
+	zaplogger.Info("ExecCMD", zap.Int("db", optsingle.DB), zap.String("command", "BO_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE"), zap.String("KeySuffix", optsingle.KeySuffix), zap.Duration("time", t2.Sub(t1)))
+
+}
+
+// BO_ZUNIONSTORE_ZINTERSTORE,集群模式下key分布在不同节点会报错(error) CROSSSLOT Keys in request don't hash to the same slot
+func (optsingle *OptSingle) BO_ZUNIONSTORE_ZINTERSTORE() {
+	t1 := time.Now()
+	zset1 := "zset1_" + optsingle.KeySuffix
+	zset2 := "zset2_" + optsingle.KeySuffix
+	zset3 := "zset3_" + optsingle.KeySuffix
+	zinterstore := "zinterstore_" + optsingle.KeySuffix
+	zunionstore := "zunionstore_" + optsingle.KeySuffix
+
+	for i := 0; i < optsingle.Loopstep; i++ {
+		z := redis.Z{
+			Score:  float64(i),
+			Member: zset1 + strconv.Itoa(i),
+		}
+		optsingle.RedisConn.ZAdd(zset1, &z)
+		optsingle.RedisConn.ZAdd(zset2, &z)
+		optsingle.RedisConn.ZAdd(zset3, &z)
+	}
+
 	zstore := redis.ZStore{
-		Keys:    []string{zremrangebylex, zremrangebyrank, zremrangebyscore},
+		Keys:    []string{zset1, zset2, zset3},
 		Weights: []float64{float64(rand.Intn(optsingle.Loopstep))},
 	}
 
 	optsingle.RedisConn.ZInterStore(zinterstore, &zstore)
 	optsingle.RedisConn.ZUnionStore(zunionstore, &zstore)
 
-	optsingle.RedisConn.Expire(zremrangebylex, optsingle.EXPIRE)
-	optsingle.RedisConn.Expire(zremrangebyrank, optsingle.EXPIRE)
-	optsingle.RedisConn.Expire(zremrangebyscore, optsingle.EXPIRE)
+	optsingle.RedisConn.Del(zset1, zset2, zset3)
 	optsingle.RedisConn.Expire(zinterstore, optsingle.EXPIRE)
 	optsingle.RedisConn.Expire(zunionstore, optsingle.EXPIRE)
-
 	t2 := time.Now()
-	zaplogger.Info("ExecCMD", zap.Int("db", optsingle.DB), zap.String("command", "BO_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE_ZUNIONSTORE_ZINTERSTORE"), zap.String("KeySuffix", optsingle.KeySuffix), zap.Duration("time", t2.Sub(t1)))
+	zaplogger.Info("ExecCMD", zap.Int("db", optsingle.DB), zap.String("command", "BO_ZUNIONSTORE_ZINTERSTORE"), zap.String("KeySuffix", optsingle.KeySuffix), zap.Duration("time", t2.Sub(t1)))
 
 }
 
@@ -622,19 +703,35 @@ func (optsingle *OptSingle) ExecAllBasicOpt() {
 }
 
 //持续随机执行基础操作
-func (optsingle *OptSingle) KeepExecBasicOpt(ctx context.Context, sleeptime time.Duration) {
+func (optsingle *OptSingle) KeepExecBasicOpt(ctx context.Context, sleeptime time.Duration, tocluster bool) {
 	i := int64(0)
 	keysuffix := optsingle.KeySuffix
+	//会引起CROSSSLOT Keys in request don't hash to the same slot错误的命令列表
+	tocluster_skip_array := map[OptType]string{
+		BO_MSET_MSETNX:                        "BO_MSET_MSETNX",
+		BO_PFMERGE:                            "BO_PFMERGE",
+		BO_SDIFFSTORE_SINTERSTORE_SUNIONSTORE: "BO_SDIFFSTORE_SINTERSTORE_SUNIONSTORE",
+		BO_ZUNIONSTORE_ZINTERSTORE:            "BO_ZUNIONSTORE_ZINTERSTORE",
+	}
+
 	for {
+		rand.Seed(time.Now().Unix())
 		randi := rand.Intn(2 * len(BaseOptArray))
 		optsingle.KeySuffix = keysuffix + strconv.FormatInt(i, 10)
 		if randi < len(BaseOptArray) {
 			optsingle.OptType = BaseOptArray[randi]
-			optsingle.ExecRandOpt()
 		} else {
 			optsingle.OptType = BO_SET_SETNX
-			optsingle.ExecRandOpt()
 		}
+
+		if tocluster {
+			if _, ok := tocluster_skip_array[optsingle.OptType]; ok {
+				continue
+			}
+		}
+
+		optsingle.ExecOpt()
+
 		i++
 		time.Sleep(sleeptime)
 		select {

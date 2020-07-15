@@ -1,10 +1,10 @@
 syncserver:   "http://114.67.67.7:8080"
-createtaskfile: "./tasks/single2cluster.json"
-gendataduration: 300
+createtaskfile: "./tasks/cluster2cluster.json"
+gendataduration: 10
 datageninterval: 300
 gendatathreads: 4
 bigkvkeysuffixlen: 4
-bigkvloopstep: 100
+bigkvloopstep: 20
 bigkvexpire: 3600
 bigkvvalueprefixlen: 512
 incrementkeysuffixlen: 4
@@ -13,4 +13,4 @@ incrementexpire: 1800
 comparebatchsize: 50
 comparethreads: 2
 comparettldiff: 100000
-casetype: 2
+casetype: 3

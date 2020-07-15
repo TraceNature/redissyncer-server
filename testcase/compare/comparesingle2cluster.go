@@ -1,7 +1,6 @@
 package compare
 
 import (
-	"fmt"
 	"github.com/go-redis/redis/v7"
 	"github.com/panjf2000/ants/v2"
 	"go.uber.org/zap"
@@ -118,40 +117,22 @@ func (compare *CompareSingle2Cluster) CompareString(key string) *CompareResult {
 	compareresult.SourceDB = compare.SourceDB
 	compareresult.TargetDB = compare.TargetDB
 
-	sourceexists := KeyExists(compare.Source, key)
-	targetexists := KeyExistsInCluster(compare.Target, key)
-
-	if !sourceexists && !targetexists {
-		return &compareresult
+	//比较key的存在状态是否一致
+	result := compare.KeyExistsStatusEqual(key)
+	if !result.IsEqual {
+		return result
 	}
 
-	sourceval := compare.Source.Get(key).Val()
-	targetval := compare.Target.Get(key).Val()
-
-	if sourceval != targetval {
-		//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "string"), zap.String("Not_Equal_Reason", "Value not equal"))
-		//return errors.Errorf("Not_Equal_Reason: %s,sval: %s,tval: %s", "String value not equal", sourceval, targetval)
-		compareresult.IsEqual = false
-		compareresult.NotEqualReason["description"] = "String value not equal"
-		compareresult.NotEqualReason["sval"] = sourceval
-		compareresult.NotEqualReason["tval"] = targetval
-		return &compareresult
-
+	//比较string value是否一致
+	result = compare.CompareStringVal(key)
+	if !result.IsEqual {
+		return result
 	}
 
-	sourcettl := compare.Source.PTTL(key).Val().Milliseconds()
-	targetttl := compare.Target.PTTL(key).Val().Milliseconds()
-
-	sub := targetttl - sourcettl
-	if math.Abs(float64(sub)) > compare.TTLDiff {
-		//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "string"), zap.String("Not_Equal_Reason", "Key ttl difference is too large"), zap.Float64("TTLDiff", math.Abs(float64(sub))))
-		//return errors.Errorf("Not_Equal_Reason: %s, TTLDiff:%f", "Key ttl difference is too large", math.Abs(float64(sub)))
-		compareresult.IsEqual = false
-		compareresult.NotEqualReason["description"] = "Key ttl difference is too large"
-		compareresult.NotEqualReason["TTLDiff"] = int64(math.Abs(float64(sub)))
-		compareresult.NotEqualReason["sourcettl"] = sourcettl
-		compareresult.NotEqualReason["targetttl"] = targetttl
-		return &compareresult
+	//比较ttl差值是否在允许范围内
+	result = compare.DiffTTLOver(key)
+	if !result.IsEqual {
+		return result
 	}
 	return &compareresult
 }
@@ -165,41 +146,365 @@ func (compare *CompareSingle2Cluster) CompareList(key string) *CompareResult {
 	compareresult.SourceDB = compare.SourceDB
 	compareresult.TargetDB = compare.TargetDB
 
+	result := compare.KeyExistsStatusEqual(key)
+	if !result.IsEqual {
+		return result
+	}
+
+	result = compare.CompareListLen(key)
+	if !result.IsEqual {
+		return result
+	}
+
+	result = compare.DiffTTLOver(key)
+	if !result.IsEqual {
+		return result
+	}
+
+	result = compare.CompareListIndexVal(key)
+	if !result.IsEqual {
+		return result
+	}
+	return &compareresult
+
+}
+
+func (compare *CompareSingle2Cluster) CompareHash(key string) *CompareResult {
+	notequalreason := make(map[string]interface{})
+	compareresult := NewCompareResult()
+	compareresult.NotEqualReason = notequalreason
+	compareresult.Key = key
+	compareresult.KeyType = "hash"
+	compareresult.SourceDB = compare.SourceDB
+	compareresult.TargetDB = compare.TargetDB
+
+	result := compare.KeyExistsStatusEqual(key)
+	if !result.IsEqual {
+		return result
+	}
+
+	result = compare.CompareHashLen(key)
+	if !result.IsEqual {
+		return result
+	}
+
+	result = compare.CompareHashFieldVal(key)
+	if !result.IsEqual {
+		return result
+	}
+
+	return &compareresult
+}
+
+func (compare *CompareSingle2Cluster) CompareSet(key string) *CompareResult {
+	notequalreason := make(map[string]interface{})
+	compareresult := NewCompareResult()
+	compareresult.NotEqualReason = notequalreason
+	compareresult.Key = key
+	compareresult.KeyType = "set"
+	compareresult.SourceDB = compare.SourceDB
+	compareresult.TargetDB = compare.TargetDB
+
+	result := compare.KeyExistsStatusEqual(key)
+	if !result.IsEqual {
+		return result
+	}
+
+	result = compare.CompareSetLen(key)
+	if !result.IsEqual {
+		return result
+	}
+
+	result = compare.DiffTTLOver(key)
+	if !result.IsEqual {
+		return result
+	}
+
+	result = compare.CompareSetMember(key)
+	if !result.IsEqual {
+		return result
+	}
+	return &compareresult
+}
+
+func (compare *CompareSingle2Cluster) CompareZset(key string) *CompareResult {
+	notequalreason := make(map[string]interface{})
+	compareresult := NewCompareResult()
+	compareresult.NotEqualReason = notequalreason
+	compareresult.Key = key
+	compareresult.KeyType = "zset"
+	compareresult.SourceDB = compare.SourceDB
+	compareresult.TargetDB = compare.TargetDB
+
+	result := compare.KeyExistsStatusEqual(key)
+	if !result.IsEqual {
+		return result
+	}
+
+	result = compare.CompareZsetLen(key)
+	if !result.IsEqual {
+		return result
+	}
+
+	result = compare.DiffTTLOver(key)
+	if !result.IsEqual {
+		return result
+	}
+
+	result = compare.CompareZsetMemberScore(key)
+	if !result.IsEqual {
+		return result
+	}
+	return &compareresult
+}
+
+//判断key在source和target同时不存在
+func (compare *CompareSingle2Cluster) KeyExistsStatusEqual(key string) *CompareResult {
+
+	compareresult := NewCompareResult()
+	reason := make(map[string]interface{})
+	compareresult.Key = key
+	//compareresult.KeyType = "Zset"
+	compareresult.SourceDB = compare.SourceDB
+	compareresult.TargetDB = compare.TargetDB
+
 	sourceexists := KeyExists(compare.Source, key)
 	targetexists := KeyExistsInCluster(compare.Target, key)
 
-	if !sourceexists && !targetexists {
+	if sourceexists == targetexists {
 		return &compareresult
 	}
 
-	sourcelen := compare.Source.LLen(key).Val()
-	targetlen := compare.Target.LLen(key).Val()
+	compareresult.IsEqual = false
+	reason["description"] = "Source or Target key not exists"
+	reason["source"] = sourceexists
+	reason["target"] = targetexists
+	compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
+	return &compareresult
+}
+
+//比较Zset member以及sore值是否一致
+func (compare *CompareSingle2Cluster) CompareZsetMemberScore(key string) *CompareResult {
+	compareresult := NewCompareResult()
+	reason := make(map[string]interface{})
+	compareresult.Key = key
+	compareresult.KeyType = "Zset"
+	compareresult.SourceDB = compare.SourceDB
+	compareresult.TargetDB = compare.TargetDB
+
+	cursor := uint64(0)
+	for {
+		sourceresult, c, err := compare.Source.ZScan(key, cursor, "*", compare.BatchSize).Result()
+		if err != nil {
+			compareresult.IsEqual = false
+			reason["description"] = "Source zscan error"
+			reason["zscanerror"] = err.Error()
+			compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
+			return &compareresult
+		}
+
+		for i := 0; i < len(sourceresult); i = i + 2 {
+			sourecemember := sourceresult[i]
+			sourcescore, err := strconv.ParseFloat(sourceresult[i+1], 64)
+			if err != nil {
+				compareresult.IsEqual = false
+				reason["description"] = "Convert sourcescore to float64 error"
+				reason["floattostringerror"] = err.Error()
+				compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
+				return &compareresult
+			}
+
+			intcmd := compare.Target.ZRank(key, sourecemember)
+			targetscore := compare.Target.ZScore(key, sourecemember).Val()
+
+			if intcmd == nil {
+				compareresult.IsEqual = false
+				reason["description"] = "Source zset member not exists in Target"
+				reason["member"] = sourecemember
+				compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
+				return &compareresult
+			}
+
+			if targetscore != sourcescore {
+				compareresult.IsEqual = false
+				reason["description"] = "zset member score not equal"
+				reason["member"] = sourecemember
+				reason["sourcescore"] = sourcescore
+				reason["targetscore"] = targetscore
+				compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
+				return &compareresult
+			}
+
+		}
+
+		cursor = c
+		if c == 0 {
+			break
+		}
+	}
+	return &compareresult
+}
+
+//比较zset 长度是否一致
+func (compare *CompareSingle2Cluster) CompareZsetLen(key string) *CompareResult {
+	compareresult := NewCompareResult()
+	reason := make(map[string]interface{})
+	compareresult.Key = key
+	compareresult.KeyType = "Zset"
+	compareresult.SourceDB = compare.SourceDB
+	compareresult.TargetDB = compare.TargetDB
+
+	sourcelen := compare.Source.ZCard(key).Val()
+	targetlen := compare.Target.ZCard(key).Val()
+	if sourcelen != targetlen {
+		compareresult.IsEqual = false
+		reason["description"] = "Zset length not equal"
+		reason["sourcelen"] = sourcelen
+		reason["targetlen"] = targetlen
+		compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
+		return &compareresult
+	}
+	return &compareresult
+}
+
+//比较set member 是否一致
+func (compare *CompareSingle2Cluster) CompareSetMember(key string) *CompareResult {
+	compareresult := NewCompareResult()
+	reason := make(map[string]interface{})
+	compareresult.Key = key
+	compareresult.KeyType = "set"
+	compareresult.SourceDB = compare.SourceDB
+	compareresult.TargetDB = compare.TargetDB
+
+	cursor := uint64(0)
+	for {
+		sourceresult, c, err := compare.Source.SScan(key, cursor, "*", compare.BatchSize).Result()
+		if err != nil {
+			compareresult.IsEqual = false
+			reason["description"] = "Source sscan error"
+			reason["sscanerror"] = err.Error()
+			compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
+			return &compareresult
+		}
+
+		for _, v := range sourceresult {
+			if !compare.Target.SIsMember(key, v).Val() {
+				compareresult.IsEqual = false
+				reason["description"] = "Source set member not exists in Target"
+				reason["member"] = v
+				compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
+				return &compareresult
+			}
+		}
+
+		cursor = c
+		if c == 0 {
+			break
+		}
+	}
+	return &compareresult
+}
+
+//比较set长度
+func (compare *CompareSingle2Cluster) CompareSetLen(key string) *CompareResult {
+	compareresult := NewCompareResult()
+	reason := make(map[string]interface{})
+	compareresult.Key = key
+	compareresult.KeyType = "set"
+	compareresult.SourceDB = compare.SourceDB
+	compareresult.TargetDB = compare.TargetDB
+
+	sourcelen := compare.Source.SCard(key).Val()
+	targetlen := compare.Target.SCard(key).Val()
+	if sourcelen != targetlen {
+		compareresult.IsEqual = false
+		reason["description"] = "Set length not equal"
+		reason["sourcelen"] = sourcelen
+		reason["targetlen"] = targetlen
+		compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
+		return &compareresult
+	}
+	return &compareresult
+}
+
+//比较hash field value 返回首个不相等的field
+func (compare *CompareSingle2Cluster) CompareHashFieldVal(key string) *CompareResult {
+	compareresult := NewCompareResult()
+	reason := make(map[string]interface{})
+	compareresult.Key = key
+	compareresult.KeyType = "hash"
+	compareresult.SourceDB = compare.SourceDB
+	compareresult.TargetDB = compare.TargetDB
+
+	cursor := uint64(0)
+	for {
+		sourceresult, c, err := compare.Source.HScan(key, cursor, "*", compare.BatchSize).Result()
+
+		if err != nil {
+			compareresult.IsEqual = false
+			reason["description"] = "Source hscan error"
+			reason["hscanerror"] = err.Error()
+			compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
+			return &compareresult
+		}
+
+		for i := 0; i < len(sourceresult); i = i + 2 {
+			targetfieldval := compare.Target.HGet(key, sourceresult[i]).Val()
+			if targetfieldval != sourceresult[i+1] {
+				compareresult.IsEqual = false
+				reason["description"] = "Field value not equal"
+				reason["field"] = sourceresult[i]
+				reason["sourceval"] = sourceresult[i+1]
+				reason["targetval"] = targetfieldval
+				compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
+				return &compareresult
+			}
+		}
+		cursor = c
+		if c == uint64(0) {
+			break
+		}
+	}
+	return &compareresult
+}
+
+//比较hash长度
+func (compare *CompareSingle2Cluster) CompareHashLen(key string) *CompareResult {
+	compareresult := NewCompareResult()
+	reason := make(map[string]interface{})
+	compareresult.Key = key
+	compareresult.KeyType = "hash"
+	compareresult.SourceDB = compare.SourceDB
+	compareresult.TargetDB = compare.TargetDB
+
+	sourcelen := compare.Source.HLen(key).Val()
+	targetlen := compare.Target.HLen(key).Val()
 
 	if sourcelen != targetlen {
-		//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "list"), zap.String("Not_Equal_Reason", "Key length not equal"))
-		//return errors.Errorf("Not_Equal_Reason: %s", "Key length not equal")
+
 		compareresult.IsEqual = false
-		compareresult.NotEqualReason["description"] = "Key length not equal"
-		compareresult.NotEqualReason["sourcelen"] = sourcelen
-		compareresult.NotEqualReason["targetlen"] = targetlen
+		reason["description"] = "Hash length not equal"
+		reason["sourcelen"] = sourcelen
+		reason["targetlen"] = targetlen
+		compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
 		return &compareresult
 	}
+	return &compareresult
+}
 
-	sourcettl := compare.Source.PTTL(key).Val().Milliseconds()
-	targetttl := compare.Target.PTTL(key).Val().Milliseconds()
+//比较list index对应值是否一致，返回第一条错误的index以及源和目标对应的值
+func (compare *CompareSingle2Cluster) CompareListIndexVal(key string) *CompareResult {
+	compareresult := NewCompareResult()
+	reason := make(map[string]interface{})
+	compareresult.Key = key
+	compareresult.KeyType = "list"
+	compareresult.SourceDB = compare.SourceDB
+	compareresult.TargetDB = compare.TargetDB
 
-	sub := targetttl - sourcettl
-	if math.Abs(float64(sub)) > compare.TTLDiff {
-		//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "string"), zap.String("Not_Equal_Reason", "Key ttl difference is too large"), zap.Float64("TTLDiff", math.Abs(float64(sub))))
-		//return errors.Errorf("Not_Equal_Reason: %s, TTLDiff:%f", "Key ttl difference is too large", math.Abs(float64(sub)))
-		compareresult.IsEqual = false
-		compareresult.NotEqualReason["description"] = "Key ttl difference is too large"
-		compareresult.NotEqualReason["TTLDiff"] = int64(math.Abs(float64(sub)))
-		compareresult.NotEqualReason["sourcettl"] = sourcettl
-		compareresult.NotEqualReason["targetttl"] = targetttl
-		return &compareresult
-	}
+	sourcelen := compare.Source.LLen(key).Val()
+	//targetlen := compare.Target.LLen(key).Val()
 
+	compareresult.Key = key
 	quotient := sourcelen / compare.BatchSize // integer division, decimals are truncated
 	remainder := sourcelen % compare.BatchSize
 
@@ -215,13 +520,12 @@ func (compare *CompareSingle2Cluster) CompareList(key string) *CompareResult {
 			targetvalues := compare.Target.LRange(key, int64(0)+i*compare.BatchSize, lrangeend).Val()
 			for k, v := range sourcevalues {
 				if targetvalues[k] != v {
-					//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "list"), zap.String("index", strconv.Itoa(k)), zap.String("Not_Equal_Reason", "value not equal"))
-					//return errors.Errorf("Not_Equal_Reason: %s,Index:%d, sourceval:%s, targetval:%s", "index value not equal", int64(k)+i*compare.BatchSize, v, targetvalues[k])
 					compareresult.IsEqual = false
-					compareresult.NotEqualReason["description"] = "index value not equal"
-					compareresult.NotEqualReason["Index"] = int64(k) + i*compare.BatchSize
-					compareresult.NotEqualReason["sourceval"] = v
-					compareresult.NotEqualReason["targetval"] = targetvalues[k]
+					reason["description"] = "List index value not equal"
+					reason["Index"] = int64(k) + i*compare.BatchSize
+					reason["sourceval"] = v
+					reason["targetval"] = targetvalues[k]
+					compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
 					return &compareresult
 				}
 			}
@@ -232,7 +536,7 @@ func (compare *CompareSingle2Cluster) CompareList(key string) *CompareResult {
 		var rangstart int64
 
 		if quotient == int64(0) {
-			rangstart = 0
+			rangstart = int64(0)
 		} else {
 			rangstart = quotient*compare.BatchSize + 1
 		}
@@ -241,14 +545,12 @@ func (compare *CompareSingle2Cluster) CompareList(key string) *CompareResult {
 		targetvalues := compare.Target.LRange(key, rangstart, remainder+quotient*compare.BatchSize).Val()
 		for k, v := range sourcevalues {
 			if targetvalues[k] != v {
-				//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "list"), zap.String("index", strconv.Itoa(k)), zap.String("Not_Equal_Reason", "value not equal"))
-				//return errors.Errorf("Not_Equal_Reason: %s,Index:%d, sourceval:%s, targetval:%s", "index value not equal", int64(k)+rangstart, v, targetvalues[k])
-
 				compareresult.IsEqual = false
-				compareresult.NotEqualReason["description"] = "index value not equal"
-				compareresult.NotEqualReason["Index"] = int64(k) + rangstart
-				compareresult.NotEqualReason["sourceval"] = v
-				compareresult.NotEqualReason["targetval"] = targetvalues[k]
+				reason["description"] = "List index value not equal"
+				reason["Index"] = int64(k) + rangstart
+				reason["sourceval"] = v
+				reason["targetval"] = targetvalues[k]
+				compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
 				return &compareresult
 			}
 		}
@@ -258,246 +560,75 @@ func (compare *CompareSingle2Cluster) CompareList(key string) *CompareResult {
 
 }
 
-func (compare *CompareSingle2Cluster) CompareHash(key string) *CompareResult {
-	notequalreason := make(map[string]interface{})
+//比较list长度是否一致
+func (compare *CompareSingle2Cluster) CompareListLen(key string) *CompareResult {
 	compareresult := NewCompareResult()
-	compareresult.NotEqualReason = notequalreason
+	reason := make(map[string]interface{})
 	compareresult.Key = key
-	compareresult.KeyType = "hash"
+	compareresult.KeyType = "list"
 	compareresult.SourceDB = compare.SourceDB
 	compareresult.TargetDB = compare.TargetDB
 
-	sourceexists := KeyExists(compare.Source, key)
-	targetexists := KeyExistsInCluster(compare.Target, key)
+	sourcelen := compare.Source.LLen(key).Val()
+	targetlen := compare.Target.LLen(key).Val()
 
-	if !sourceexists && !targetexists {
-		return &compareresult
-	}
-	sourcelen := compare.Source.HLen(key).Val()
-	targetlen := compare.Target.HLen(key).Val()
-
+	compareresult.Key = key
 	if sourcelen != targetlen {
-		//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "hash"), zap.String("Not_Equal_Reason", "Key length not equal"))
-		//return errors.Errorf("Not_Equal_Reason:%s, sourcelen:%d, targetlen:%d", "Key length not equal", sourcelen, targetlen)
 		compareresult.IsEqual = false
-		compareresult.NotEqualReason["description"] = "Key length not equal"
-		compareresult.NotEqualReason["sourcelen"] = sourcelen
-		compareresult.NotEqualReason["targetlen"] = targetlen
+		reason["description"] = "List length not equal"
+		reason["sourcelen"] = sourcelen
+		reason["targetlen"] = targetlen
+		compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
 		return &compareresult
-	}
-
-	sourcettl := compare.Source.PTTL(key).Val().Milliseconds()
-	targetttl := compare.Target.PTTL(key).Val().Milliseconds()
-
-	sub := targetttl - sourcettl
-	if math.Abs(float64(sub)) > compare.TTLDiff {
-		//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "hash"), zap.String("Not_Equal_Reason", "Key ttl difference is too large"), zap.Float64("TTLDiff", math.Abs(float64(sub))))
-		//return errors.Errorf("Not_Equal_Reason: %s, TTLDiff:%f", "Key ttl difference is too large", math.Abs(float64(sub)))
-		compareresult.IsEqual = false
-		compareresult.NotEqualReason["description"] = "Key ttl difference is too large"
-		compareresult.NotEqualReason["TTLDiff"] = int64(math.Abs(float64(sub)))
-		compareresult.NotEqualReason["sourcettl"] = sourcettl
-		compareresult.NotEqualReason["targetttl"] = targetttl
-		return &compareresult
-	}
-
-	cursor := uint64(0)
-	for {
-		sourceresult, c, err := compare.Source.HScan(key, cursor, "*", compare.BatchSize).Result()
-
-		if err != nil {
-			//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "hash"), zap.String("Not_Equal_Reason", "Source hscan error:"+err.Error()))
-			//return errors.Errorf("Not_Equal_Reason:%s", "Source hscan error:"+err.Error())
-			compareresult.IsEqual = false
-			compareresult.NotEqualReason["description"] = "Source hscan error"
-			compareresult.NotEqualReason["hscanerror"] = err.Error()
-			return &compareresult
-		}
-
-		for i := 0; i < len(sourceresult); i = i + 2 {
-			targetfieldval := compare.Target.HGet(key, sourceresult[i]).Val()
-			if targetfieldval != sourceresult[i+1] {
-				//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "hash"), zap.String("field", sourceresult[i]), zap.String("Not_Equal_Reason", "Field value not equal"))
-				//return errors.Errorf("Not_Equal_Reason:%s, field:%s, sourceval:%s, targetval:%s", "Field value not equal", sourceresult[i], sourceresult[i+1], targetfieldval)
-				compareresult.IsEqual = false
-				compareresult.NotEqualReason["description"] = "Field value not equal"
-				compareresult.NotEqualReason["field"] = sourceresult[i]
-				compareresult.NotEqualReason["sourceval"] = sourceresult[i+1]
-				compareresult.NotEqualReason["targetval"] = targetfieldval
-				return &compareresult
-			}
-		}
-		cursor = c
-		if c == uint64(0) {
-			break
-		}
 	}
 	return &compareresult
 }
 
-func (compare *CompareSingle2Cluster) CompareSet(key string) *CompareResult {
-	notequalreason := make(map[string]interface{})
+//对比string类型value是否一致
+func (compare *CompareSingle2Cluster) CompareStringVal(key string) *CompareResult {
 	compareresult := NewCompareResult()
-	compareresult.NotEqualReason = notequalreason
+	reason := make(map[string]interface{})
 	compareresult.Key = key
-	compareresult.KeyType = "set"
+	compareresult.KeyType = "string"
 	compareresult.SourceDB = compare.SourceDB
 	compareresult.TargetDB = compare.TargetDB
 
-	sourceexists := KeyExists(compare.Source, key)
-	targetexists := KeyExistsInCluster(compare.Target, key)
-
-	if !sourceexists && !targetexists {
-		return &compareresult
-	}
-	sourcelen := compare.Source.SCard(key).Val()
-	targetlen := compare.Target.SCard(key).Val()
-	if sourcelen != targetlen {
-		//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "set"), zap.String("Not_Equal_Reason", "Key length not equal"))
-		//return errors.Errorf("Not_Equal_Reason:%s, sourcelen:", "Key length not equal")
+	sourceval := compare.Source.Get(key).Val()
+	targetval := compare.Target.Get(key).Val()
+	compareresult.Key = key
+	if sourceval != targetval {
 		compareresult.IsEqual = false
-		compareresult.NotEqualReason["description"] = "Key length not equal"
-		compareresult.NotEqualReason["sourcelen"] = sourcelen
-		compareresult.NotEqualReason["targetlen"] = targetlen
+		reason["description"] = "String value not equal"
+		reason["sval"] = sourceval
+		reason["tval"] = targetval
+		compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
 		return &compareresult
-	}
-
-	sourcettl := compare.Source.PTTL(key).Val().Milliseconds()
-	targetttl := compare.Target.PTTL(key).Val().Milliseconds()
-
-	sub := targetttl - sourcettl
-	if math.Abs(float64(sub)) > compare.TTLDiff {
-		//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "set"), zap.String("Not_Equal_Reason", "Key ttl difference is too large"), zap.Float64("TTLDiff", math.Abs(float64(sub))))
-		compareresult.IsEqual = false
-		compareresult.NotEqualReason["description"] = "Key ttl difference is too large"
-		compareresult.NotEqualReason["TTLDiff"] = int64(math.Abs(float64(sub)))
-		compareresult.NotEqualReason["sourcettl"] = sourcettl
-		compareresult.NotEqualReason["targetttl"] = targetttl
-		return &compareresult
-	}
-
-	cursor := uint64(0)
-	for {
-		sourceresult, c, err := compare.Source.SScan(key, cursor, "*", compare.BatchSize).Result()
-		if err != nil {
-			//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "set"), zap.String("Not_Equal_Reason", "Source sscan error:"+err.Error()))
-			compareresult.IsEqual = false
-			compareresult.NotEqualReason["description"] = "Source sscan error"
-			compareresult.NotEqualReason["sscanerror"] = err.Error()
-			return &compareresult
-		}
-
-		for _, v := range sourceresult {
-			if !compare.Target.SIsMember(key, v).Val() {
-				zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "set"), zap.String("member", v), zap.String("Not_Equal_Reason", "Source member not exists in Target "))
-				compareresult.IsEqual = false
-				compareresult.NotEqualReason["description"] = "Source member not exists in Target"
-				compareresult.NotEqualReason["member"] = v
-				return &compareresult
-			}
-		}
-
-		cursor = c
-		if c == 0 {
-			break
-		}
 	}
 	return &compareresult
 }
 
-func (compare *CompareSingle2Cluster) CompareZset(key string) *CompareResult {
-	notequalreason := make(map[string]interface{})
+//对比key TTl差值
+func (compare *CompareSingle2Cluster) DiffTTLOver(key string) *CompareResult {
 	compareresult := NewCompareResult()
-	compareresult.NotEqualReason = notequalreason
+	reason := make(map[string]interface{})
 	compareresult.Key = key
-	compareresult.KeyType = "zset"
+	compareresult.KeyType = "string"
 	compareresult.SourceDB = compare.SourceDB
 	compareresult.TargetDB = compare.TargetDB
-
-	sourceexists := KeyExists(compare.Source, key)
-	targetexists := KeyExistsInCluster(compare.Target, key)
-
-	if !sourceexists && !targetexists {
-		return &compareresult
-	}
-
-	sourcelen := compare.Source.ZCard(key).Val()
-	targetlen := compare.Target.ZCard(key).Val()
-	if sourcelen != targetlen {
-		//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "zset"), zap.String("Not_Equal_Reason", "Key length not equal"))
-
-		compareresult.IsEqual = false
-		compareresult.NotEqualReason["description"] = "Key length not equal"
-		compareresult.NotEqualReason["sourcelen"] = sourcelen
-		compareresult.NotEqualReason["targetlen"] = targetlen
-		return &compareresult
-	}
 
 	sourcettl := compare.Source.PTTL(key).Val().Milliseconds()
 	targetttl := compare.Target.PTTL(key).Val().Milliseconds()
 
 	sub := targetttl - sourcettl
 	if math.Abs(float64(sub)) > compare.TTLDiff {
-		//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "zset"), zap.String("Not_Equal_Reason", "Key ttl difference is too large"), zap.Float64("TTLDiff", math.Abs(float64(sub))))
 		compareresult.IsEqual = false
-		compareresult.NotEqualReason["description"] = "Key ttl difference is too large"
-		compareresult.NotEqualReason["TTLDiff"] = int64(math.Abs(float64(sub)))
-		compareresult.NotEqualReason["sourcettl"] = sourcettl
-		compareresult.NotEqualReason["targetttl"] = targetttl
+		reason["description"] = "Key ttl difference is too large"
+		reason["TTLDiff"] = int64(math.Abs(float64(sub)))
+		reason["sourcettl"] = sourcettl
+		reason["targetttl"] = targetttl
 
+		compareresult.KeyDiffReason = append(compareresult.KeyDiffReason, reason)
 		return &compareresult
-	}
-
-	cursor := uint64(0)
-	for {
-		sourceresult, c, err := compare.Source.ZScan(key, cursor, "*", compare.BatchSize).Result()
-		if err != nil {
-			//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "zset"), zap.String("Not_Equal_Reason", "Source zscan error:"+err.Error()))
-			compareresult.IsEqual = false
-			compareresult.NotEqualReason["description"] = "Source zscan error"
-			compareresult.NotEqualReason["zscanerror"] = err.Error()
-			return &compareresult
-		}
-
-		for i := 0; i < len(sourceresult); i = i + 2 {
-			sourecemember := sourceresult[i]
-			sourcescore, err := strconv.ParseFloat(sourceresult[i+1], 64)
-			if err != nil {
-				//zaplogger.Sugar().Error(err)
-				compareresult.IsEqual = false
-				compareresult.NotEqualReason["description"] = "Convert sourcescore to float64 error"
-				compareresult.NotEqualReason["error"] = err.Error()
-				return &compareresult
-			}
-
-			intcmd := compare.Target.ZRank(key, sourecemember)
-			targetscore := compare.Target.ZScore(key, sourecemember).Val()
-
-			if intcmd == nil {
-				//zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "zset"), zap.String("member", sourecemember), zap.String("Not_Equal_Reason", "Source member not exists in Target"))
-				compareresult.IsEqual = false
-				compareresult.NotEqualReason["description"] = "Source member not exists in Target"
-				compareresult.NotEqualReason["member"] = sourecemember
-				return &compareresult
-			}
-
-			if targetscore != sourcescore {
-				zaplogger.Info("Compare_Result", zap.Int("SourceDB", compare.SourceDB), zap.Int("TargetDB", compare.TargetDB), zap.String("key", key), zap.String("keytype", "zset"), zap.String("member", sourecemember), zap.String("Not_Equal_Reason", "member score not equal"))
-				fmt.Println(targetscore, sourcescore)
-				compareresult.IsEqual = false
-				compareresult.NotEqualReason["description"] = "member score not equal"
-				compareresult.NotEqualReason["member"] = sourecemember
-				compareresult.NotEqualReason["sourcescore"] = sourcescore
-				compareresult.NotEqualReason["targetscore"] = targetscore
-				return &compareresult
-			}
-
-		}
-
-		cursor = c
-		if c == 0 {
-			break
-		}
 	}
 	return &compareresult
 }

@@ -7,6 +7,7 @@ var zaplogger = globalzap.GetLogger()
 type CompareResult struct {
 	IsEqual        bool
 	NotEqualReason map[string]interface{}
+	KeyDiffReason  []interface{}
 	KeyType        string
 	Key            string
 	SourceDB       int //源redis DB number
