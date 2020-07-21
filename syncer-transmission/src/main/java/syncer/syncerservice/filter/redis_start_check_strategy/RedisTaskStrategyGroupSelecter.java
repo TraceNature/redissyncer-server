@@ -65,6 +65,7 @@ public class RedisTaskStrategyGroupSelecter {
                     strategyGroupMap.put(RedisTaskStrategyGroupType.SYNCGROUP,SyncStartCheckStrategyFactory.builder().build());
                     strategyGroupMap.put(RedisTaskStrategyGroupType.NODISTINCT,SyncStartCheckNoDistinctStrategyFactory.builder().build());
                     strategyGroupMap.put(RedisTaskStrategyGroupType.FILEGROUP,SyncStartCheckFileStrategyFactory.builder().build());
+                    strategyGroupMap.put(RedisTaskStrategyGroupType.COMMANDUPGROUP,SyncCommnadUpStrategyFactory.builder().build());
 
 
 

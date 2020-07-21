@@ -29,6 +29,12 @@ public class TaskModel {
      * 任务Id
      */
     private String id;
+
+    /**
+     * 任务Id
+     */
+    private String taskId;
+
     /**
      * 任务组Id
      */
@@ -245,6 +251,20 @@ public class TaskModel {
      */
     private long lastKeyCommitTime=0L;
 
+    @Builder.Default
+    private boolean sourceAcl=false;
+
+    @Builder.Default
+    private boolean targetAcl=false;
+
+    //源用户名
+    @Builder.Default
+    private String sourceUserName="";
+    //目标用户名
+    @Builder.Default
+    private String targetUserName="";
+
+
     public Map<String,Object>getDataAnalysis(){
         Map mapObj =null;
         try {
@@ -349,12 +369,18 @@ public class TaskModel {
         }
         String[] address=targetRedisAddress.split(";");
         if(targetRedisAddress.split(";").length==1){
-            String[]data=address[0].split(":");
-            if(data.length==2){
-                this.targetHost=data[0];
+            if(address[0].indexOf(":")>0){
+                String[]data=address[0].split(":");
+                if(data.length==2){
+                    this.targetHost=data[0];
 
-                this.targetPort= Integer.valueOf(data[1]);
+                    this.targetPort= Integer.valueOf(data[1]);
+                }
+            }else {
+                this.targetHost=address[0];
+                this.targetPort=6379;
             }
+
         }else{
             this.targetHost=targetRedisAddress;
         }
@@ -363,10 +389,18 @@ public class TaskModel {
     }
 
 
-    public TaskModel(String id, String groupId, String taskName, String sourceRedisAddress, String sourcePassword, String targetRedisAddress, String targetPassword, String fileAddress, boolean autostart, boolean afresh, Integer batchSize, Integer tasktype, Integer offsetPlace, String taskMsg, Long offset, Integer status, double redisVersion, Integer rdbVersion, Integer syncType, Integer sourceRedisType, Integer targetRedisType, String sourceHost, String targetHost, Integer sourcePort
-            , Integer targetPort, String dbMapper,String md5,String createTime,String updateTime
-            ,String dataAnalysis,String replId,Long rdbKeyCount,Long allKeyCount,Long realKeyCount,Long lastKeyUpdateTime,Long lastKeyCommitTime) {
+    public Integer getSourceRedisType() {
+
+        return sourceRedisType;
+    }
+
+    public TaskModel(String id,String taskId, String groupId, String taskName, String sourceRedisAddress, String sourcePassword, String targetRedisAddress, String targetPassword, String fileAddress, boolean autostart, boolean afresh, Integer batchSize, Integer tasktype, Integer offsetPlace, String taskMsg, Long offset, Integer status, double redisVersion, Integer rdbVersion, Integer syncType, Integer sourceRedisType, Integer targetRedisType, String sourceHost, String targetHost, Integer sourcePort
+            , Integer targetPort, String dbMapper, String md5, String createTime, String updateTime
+            , String dataAnalysis, String replId, Long rdbKeyCount, Long allKeyCount,
+                     Long realKeyCount, Long lastKeyUpdateTime, Long lastKeyCommitTime,
+    boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName) {
         this.id = id;
+        this.taskId=taskId;
         this.groupId = groupId;
         this.taskName = taskName;
         this.sourceRedisAddress = sourceRedisAddress;
@@ -403,8 +437,26 @@ public class TaskModel {
         this.realKeyCount=realKeyCount;
         this.lastKeyUpdateTime=lastKeyUpdateTime;
         this.lastKeyCommitTime=lastKeyCommitTime;
+        this.sourceAcl=sourceAcl;
+        this.targetAcl=targetAcl;
+        this.sourceUserName=sourceUserName;
+        this.targetUserName=targetUserName;
         setTargetRedisAddress(this.getTargetRedisAddress());
         setSourceRedisAddress(this.getSourceRedisAddress());
+    }
+
+    public String getId() {
+        if(StringUtils.isEmpty(id)&&!StringUtils.isEmpty(taskId)){
+            id=taskId;
+        }
+        return id;
+    }
+
+    public String getTaskId() {
+        if(StringUtils.isEmpty(taskId)&&!StringUtils.isEmpty(id)){
+            taskId=id;
+        }
+        return taskId;
     }
 
     public static void main(String[] args) {

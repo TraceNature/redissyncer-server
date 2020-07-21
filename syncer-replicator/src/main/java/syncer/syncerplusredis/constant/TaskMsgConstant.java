@@ -82,6 +82,11 @@ public class TaskMsgConstant {
     public static final String TASK_MSG_INCREMENT_ERROR_CODE="4027";
 
 
+
+    public static final String TASK_MSG_SYNCTYPE_ERROR="SyncType参数错误";
+    public static final String TASK_MSG_SYNCTYPE_ERROR_CODE="4028";
+
+
     ///dbMaping中库号超出Redis库的最大大小
 
     //targetRedisVersion can not be empty /targetRedisVersion error

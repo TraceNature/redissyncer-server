@@ -136,6 +136,9 @@ public class CompensatorUtils {
 
 
     public String getRes(Object res){
+        if(res==null){
+            return "返回值结果为NULL";
+        }
         if(res instanceof String){
             return String.valueOf(res);
         }else if(res instanceof Long){
@@ -144,7 +147,6 @@ public class CompensatorUtils {
         }else if(res instanceof Integer){
             return String.valueOf(res);
         }else if(res instanceof  byte[]){
-
             return Strings.byteToString((byte[]) res);
         }
         return "";

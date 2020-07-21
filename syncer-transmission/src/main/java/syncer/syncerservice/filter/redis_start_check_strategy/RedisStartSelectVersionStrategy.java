@@ -43,6 +43,8 @@ public class RedisStartSelectVersionStrategy implements IRedisStartCheckBaseStra
                 ||taskModel.getSyncType().equals(SyncType.ONLINERDB.getCode())
                 ||taskModel.getSyncType().equals(SyncType.ONLINEAOF.getCode())
                 ||taskModel.getSyncType().equals(SyncType.ONLINEMIXED.getCode())){
+
+
             String version=selectSyncerVersion(String.valueOf(taskModel.getTargetUri().toArray()[0]));
 
             log.warn("自动获取redis版本号：{},手动输入版本号：{}",version,taskModel.getRedisVersion());

@@ -30,7 +30,7 @@ public class RedisFileDataDto extends SyncDataDto {
 
     //迁移类型：psync/文件
     @Builder.Default
-    private FileType fileType=FileType.ONLINERDB;
+    private FileType fileType=FileType.RDB;
 
 
     public RedisFileDataDto(int minPoolSize, int maxPoolSize, long maxWaitTime, long timeBetweenEvictionRunsMillis, long idleTimeRunsMillis, int diffVersion, String pipeline, Map<Integer, Integer> dbNum) {

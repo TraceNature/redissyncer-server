@@ -44,10 +44,15 @@ public class FileUtils {
 
     public static synchronized boolean existsFile(String path) {
         File targetFile = new File(path);
-
         return targetFile.exists();
     }
 
+
+
+    public static synchronized boolean isDirectory(String path){
+        File targetFile = new File(path);
+        return targetFile.isDirectory();
+    }
 
     /**
      * 删除文件

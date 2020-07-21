@@ -20,5 +20,10 @@ public enum  RedisTaskStrategyGroupType {
     /**
      * 文件组
      */
-    FILEGROUP
+    FILEGROUP,
+
+    /**
+     * 实时备份AOF任务组
+     */
+    COMMANDUPGROUP
 }

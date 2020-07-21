@@ -226,7 +226,10 @@ public class TaskDataManagerUtils {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+
+
                     changeThreadStatus(taskId,data.getOffSetEntity().getReplOffset().get(),TaskStatusType.STOP);
+
                     StartTaskEntity startTaskEntity=StartTaskEntity
                             .builder()
                             .code("2000")
@@ -234,6 +237,7 @@ public class TaskDataManagerUtils {
                             .msg("Task stopped successfully")
                             .build();
                     result.add(startTaskEntity);
+
                 }catch (Exception e){
                     StartTaskEntity startTaskEntity=StartTaskEntity
                             .builder()
@@ -293,6 +297,7 @@ public class TaskDataManagerUtils {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
+
                             changeThreadStatus(taskModel.getId(), data.getOffSetEntity().getReplOffset().get(), TaskStatusType.STOP);
                             StartTaskEntity startTaskEntity=StartTaskEntity
                                     .builder()
@@ -449,6 +454,8 @@ public class TaskDataManagerUtils {
         Long allKeyCount=taskModel.getAllKeyCount();
         Long realKeyCount=taskModel.getAllKeyCount();
         Long lastTime=taskModel.getLastKeyUpdateTime();
+        Long lastCommitTime=taskModel.getLastKeyCommitTime();
+
         Long commandKeyCount= 0L;
         double rate=0.0;
         Integer rate2Int=0;
@@ -457,7 +464,7 @@ public class TaskDataManagerUtils {
                 TaskDataEntity taskDataEntity=TaskDataManagerUtils.get(taskModel.getId());
 
                 lastTime=taskDataEntity.getTaskModel().getLastKeyUpdateTime();
-
+                lastCommitTime=taskDataEntity.getTaskModel().getLastKeyCommitTime();
                 if(taskDataEntity.getAllKeyCount().get()!=0L){
                     allKeyCount=taskDataEntity.getAllKeyCount().get();
                 }
@@ -490,15 +497,17 @@ public class TaskDataManagerUtils {
 
         //最后一次数据间隔时间计算
         long lastDataUpdateIntervalTime=0L;
+        long lastDataCommitIntervalTime=0L;
         try{
-//            if(lastTime==-1L){
-//                lastDataUpdateIntervalTime=-1L;
-//            }else {
-//
-//            }
             lastDataUpdateIntervalTime=System.currentTimeMillis()-lastTime;
         }catch (Exception e){
             log.error("[{}]最后一次数据流入时间间隔计算失败",taskModel.getId());
+        }
+
+        try{
+            lastDataCommitIntervalTime=System.currentTimeMillis()-lastCommitTime;
+        }catch (Exception e){
+            log.error("[{}]最后一次数据流出时间间隔计算失败",taskModel.getId());
         }
       TaskModelResult result=  TaskModelResult
                 .builder()
@@ -532,6 +541,7 @@ public class TaskDataManagerUtils {
                 .commandKeyCount(commandKeyCount)
                 .rate(rate)
                 .lastDataUpdateIntervalTime(lastDataUpdateIntervalTime)
+                .lastDataCommitIntervalTime(lastDataCommitIntervalTime)
                 .rate2Int(rate2Int)
                 .build();
       return result;

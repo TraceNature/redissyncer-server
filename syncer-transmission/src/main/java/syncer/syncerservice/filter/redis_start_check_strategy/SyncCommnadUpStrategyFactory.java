@@ -10,20 +10,18 @@ import java.util.List;
 
 /**
  * @author zhanenqiang
- * @Description 文件统一策略
- * @Date 2020/3/19
+ * @Description 命令实时备份AOF策略
+ * @Date 2020/7/20
  */
 @Builder
-public class SyncStartCheckFileStrategyFactory implements IRedisStartCheckStrategyFactory{
+public class SyncCommnadUpStrategyFactory implements IRedisStartCheckStrategyFactory{
+
     @Override
     public List<IRedisStartCheckBaseStrategy> getStrategyList(JDRedisClient client, TaskModel taskModel, RedisPoolProps redisPoolProps) {
         List<IRedisStartCheckBaseStrategy>startCheckBaseStrategyList=new ArrayList<>();
         //判断是否重复
         startCheckBaseStrategyList.add(RedisStartDistinctStrategy.builder().client(client).redisPoolProps(redisPoolProps).taskModel(taskModel).build());
-
-        startCheckBaseStrategyList.add(SyncerOnlineAddressCheckStrategy.builder().client(client).redisPoolProps(redisPoolProps).taskModel(taskModel).build());
         startCheckBaseStrategyList.add(RedisStartCheckRedisUrlStrategy.builder().client(client).redisPoolProps(redisPoolProps).taskModel(taskModel).build());
-        startCheckBaseStrategyList.add(RedisStartSelectVersionStrategy.builder().client(client).redisPoolProps(redisPoolProps).taskModel(taskModel).build());
         return startCheckBaseStrategyList;
     }
 }

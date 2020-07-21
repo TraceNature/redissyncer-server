@@ -3,7 +3,6 @@ package syncer.syncerservice.util.JDRedisClient;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import syncer.syncerjedis.*;
 import syncer.syncerjedis.params.SetParams;
@@ -28,11 +27,11 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Stream;
+
 
 
 /**
- * 单机redis pipeleine版本
+ * 单机redis pipeleine版本  已修复补偿机制问题
  */
 @Slf4j
 public class JDJedisPipeLineClient implements JDRedisClient {
@@ -788,8 +787,16 @@ public class JDJedisPipeLineClient implements JDRedisClient {
 
         commitLock.lock();
         try {
-            pipelined.sendCommand(JedisProtocolCommand.builder().raw(cmd).build(), args);
+           String  command=Strings.byteToString(cmd).toUpperCase();
+            if(isSetNxWithTime(cmd,args)){
+                SetParams setParams=getSetParams(args);
+                pipelined.set(args[0],args[1],setParams);
 
+            }else{
+                pipelined.sendCommand(JedisProtocolCommand.builder().raw(cmd).build(), args);
+            }
+
+//            System.out.println("[sendCommand]"+Strings.byteToString(cmd)+": "+JSON.toJSONString(Strings.byteToString(args)));
 //            if(!compensatorUtils.isIdempotentCommand(cmd)){
 //                pipelined.sendCommand(JedisProtocolCommand.builder().raw(cmd).build(), args);
 //                System.out.println("幂等"+Strings.byteToString(cmd));
@@ -799,54 +806,78 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                 cleanData(Strings.byteToString(args[0]));
             }
 
-            if(args==null||args.length==0){
+            if(isSetNxWithTime(cmd,args)){
+                String byte3=Strings.byteToString(args[3]);
+
                 kvPersistence.addKey(EventEntity
                         .builder()
-                        .cmd(cmd)
-                        .valueList(args)
+                        .key(args[0])
+                        .value(args[1])
+                        .stringKey(Strings.byteToString(args[0]))
+                        .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SET_WITH_TIME)
                         .dbNum(Long.valueOf(currentDbNum))
-                        .pipeLineCompensatorEnum(PipeLineCompensatorEnum.COMMAND)
+                        .cmd("SET".getBytes())
+                        .ms(Long.parseLong(byte3))
                         .build());
-            }else {
-
-                //判断幂等非幂等命令
-                if(compensatorUtils.isIdempotentCommand(cmd)){
-
-
-
-                    EventEntity entity=EventEntity
+                addCommandNum();
+            }else{
+                if(args==null||args.length<=0){
+                    kvPersistence.addKey(EventEntity
                             .builder()
-                            .key(args[0])
+                            .key("no key".getBytes())
                             .cmd(cmd)
                             .valueList(args)
-                            .stringKey(Strings.byteToString(args[0]))
                             .dbNum(Long.valueOf(currentDbNum))
-                            .pipeLineCompensatorEnum(compensatorUtils.getIdempotentCommand(cmd))
-                            .build();
-                    kvPersistence.addKey(entity);
+                            .pipeLineCompensatorEnum(PipeLineCompensatorEnum.COMMAND)
+                            .build());
+                }else {
+
+                    //判断幂等非幂等命令
+                    if(compensatorUtils.isIdempotentCommand(cmd)){
+
+
+
+                        EventEntity entity=EventEntity
+                                .builder()
+                                .key(args[0])
+                                .cmd(cmd)
+                                .valueList(args)
+                                .stringKey(Strings.byteToString(args[0]))
+                                .dbNum(Long.valueOf(currentDbNum))
+                                .pipeLineCompensatorEnum(compensatorUtils.getIdempotentCommand(cmd))
+                                .build();
+                        kvPersistence.addKey(entity);
 
 //                    compensatorMap(entity);
 
 
 //                    compensator(entity);
-                }else {
-                    kvPersistence.addKey(EventEntity
-                            .builder()
-                            .key(args[0])
-                            .cmd(cmd)
-                            .valueList(args)
-                            .stringKey(Strings.byteToString(args[0]))
-                            .dbNum(Long.valueOf(currentDbNum))
-                            .pipeLineCompensatorEnum(PipeLineCompensatorEnum.COMMAND)
-                            .build());
+                    }else {
+
+                        kvPersistence.addKey(EventEntity
+                                .builder()
+                                .key(args[0])
+                                .cmd(cmd)
+                                .valueList(args)
+                                .stringKey(Strings.byteToString(args[0]))
+                                .dbNum(Long.valueOf(currentDbNum))
+                                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.COMMAND)
+                                .build());
+                    }
                 }
             }
+
+
+
+
+
+            addCommandNum();
         }finally {
             commitLock.unlock();
         }
 
 
-        addCommandNum();
+
         return null;
     }
 
@@ -864,11 +895,14 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                     .cmd("SELECT".getBytes())
                     .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SELECT)
                     .build());
+            addCommandNum();
         }finally {
+
+
             commitLock.unlock();
         }
 
-        addCommandNum();
+
     }
 
     @Override
@@ -887,9 +921,10 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                     .build());
         }finally {
             commitLock.unlock();
+            addCommandNum();
         }
 
-        addCommandNum();
+
         return null;
     }
 
@@ -1130,6 +1165,7 @@ public class JDJedisPipeLineClient implements JDRedisClient {
     }
 
     void compensator(EventEntity eventEntity){
+
         commitLock.lock();
         try {
             Jedis client=null;
@@ -1147,6 +1183,7 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                     command="SET";
                 }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SET_WITH_TIME)){
                     result=client.set(eventEntity.getKey(),eventEntity.getValue(), SetParams.setParams().px(eventEntity.getMs()));
+
                     command="SET";
                 }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.LPUSH)){
                     result=client.lpush(eventEntity.getKey(),eventEntity.getValue());
@@ -1207,10 +1244,19 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                     }
 
                 }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.COMMAND)){
-
+                    command=Strings.byteToString(eventEntity.getCmd()).toUpperCase();
+                    /** setnx命令处理相关
+                    if(isSetNxWithTime(eventEntity.getCmd(),eventEntity.getValueList())){
+                        byte[][]data=eventEntity.getValueList();
+                        SetParams setParams=getSetParams(data);
+                        result=client.set(data[0],data[1],setParams);
+                    }else{
+                        result=client.sendCommand(JedisProtocolCommand.builder().raw(eventEntity.getCmd()).build(), eventEntity.getValueList());
+                    }
+                     **/
                     result=client.sendCommand(JedisProtocolCommand.builder().raw(eventEntity.getCmd()).build(), eventEntity.getValueList());
+
                     //非幂等性命令
-                    command="[sendCommand]"+Strings.byteToString(eventEntity.getCmd());
                 }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.APPEND)){
                     result=sendMI(appendMap.get(eventEntity.getStringKey()),eventEntity,client);
                     command="APPEND";
@@ -1315,15 +1361,31 @@ public class JDJedisPipeLineClient implements JDRedisClient {
 
     //更新最后pipeline提交时间
 
-    void updateTaskLastCommitTime(String taskId){
+    void updateTaskLastCommitTime(String taskIds,List<Object> resultList){
         //记录任务最后一次update时间
         try{
-            TaskDataEntity dataEntity= TaskDataManagerUtils.get(taskId);
-            dataEntity.getTaskModel().setLastKeyUpdateTime(System.currentTimeMillis());
+            if(TaskDataManagerUtils.containsKey(taskIds)&&getCommandNums(resultList)>0){
+                TaskDataEntity dataEntity= TaskDataManagerUtils.get(taskIds);
+                dataEntity.getTaskModel().setLastKeyCommitTime(System.currentTimeMillis());
+            }
+
         }catch (Exception e){
-            log.error("[{}] update last time error",taskId);
+            log.error("[{}] update last commit time error",taskIds);
         }
     }
+
+
+    int getCommandNums(List<Object> resultList){
+        int num=0;
+        for (Object result: resultList){
+
+            if(null!=result&&!"PONG".equalsIgnoreCase(compensatorUtils.getRes(result))){
+                num++;
+            }
+        }
+        return num;
+    }
+
 
 
     /**
@@ -1331,9 +1393,18 @@ public class JDJedisPipeLineClient implements JDRedisClient {
      * @param resultList
      */
     void commitCompensator(List<Object> resultList){
+        //更新时间
+        updateTaskLastCommitTime(taskId,resultList);
+
         try {
             if(resultList.size()!=kvPersistence.size()){
-                log.warn("pipeline返回[{}]:内存[{}] ",resultList.size(),kvPersistence.size());
+                log.error("pipeline返回size[{}]:内存[{}] ",resultList.size(),kvPersistence.size());
+                kvPersistence.clear();
+                resultList.clear();
+                date = new Date();
+
+                commandNums.set(0);
+                return;
             }
             KVPersistenceDataEntity newKvPersistence=new KVPersistenceDataEntity();
 
@@ -1342,8 +1413,14 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                 byte[]cmd=kvPersistence.getKey(i).getCmd();
                 String key=kvPersistence.getKey(i).getStringKey();
 //                System.out.println(Strings.byteToString(kvPersistence.getKey(i).getCmd())+":"+data+ ": "+data.getClass());
+//                if(data==null||cmd==null){
+////                    System.out.println(JSON.toJSONString(resultList));
+//                    log.error("数据为空【{}】【{}】+i[{}],data[{}]",Strings.byteToString(cmd),data,i,JSON.toJSONString(kvPersistence.getKey(i)));
+////                    continue;
+//                }
                 if(!commandCompensatorUtils.isCommandSuccess(data,cmd,taskId,key)){
-                    log.error("Command[{}],Key[{}]进入补偿机制：[{}] : String[{}]",Strings.byteToString(kvPersistence.getKey(i).getCmd()), kvPersistence.getKey(i).getStringKey(),JSON.toJSONString(data),compensatorUtils.getRes(data));
+                    log.error("pipeline返回[{}]:内存[{}] ",data,JSON.toJSONString(kvPersistence.getKey(i)));
+                    log.error("Command[{}],KEY[{}]进入补偿机制：[{}] : RESPONSE[{}]->String[{}]",Strings.byteToString(kvPersistence.getKey(i).getCmd()), kvPersistence.getKey(i).getStringKey(),JSON.toJSONString(data),data,compensatorUtils.getRes(data));
                     newKvPersistence.addKey(kvPersistence.getKey(i));
                 }
             }
@@ -1368,7 +1445,40 @@ public class JDJedisPipeLineClient implements JDRedisClient {
     }
 
 
+    /**
+     * 判断是否是setnx带时间(SET)的命令
+     * @param cmd
+     * @param args
+     * @return
+     */
+    boolean isSetNxWithTime(byte[]cmd,byte[]...args){
+        String  command=Strings.byteToString(cmd).trim().toUpperCase();
+        if("SET".equalsIgnoreCase(command)&&args.length==5){
+            return true;
+        }
+        return false;
+    }
 
+
+    SetParams getSetParams(byte[]... args){
+        byte[][]data=args;
+        SetParams setParams=SetParams.setParams();
+        String byte2=Strings.byteToString(data[2]).toLowerCase();
+        String byte4=Strings.byteToString(data[4]).toLowerCase();
+        String byte3=Strings.byteToString(data[3]);
+        if(byte2.equalsIgnoreCase("ex")){
+            setParams.ex(Integer.parseInt(byte3));
+        }else if(byte2.equalsIgnoreCase("px")){
+            setParams.px(Long.parseLong(byte3));
+        }
+
+        if(byte4.equalsIgnoreCase("nx")){
+            setParams.nx();
+        }else if(byte4.equalsIgnoreCase("xx")){
+            setParams.xx();
+        }
+        return setParams;
+    }
 
     /**
      * 超时自动提交线程
@@ -1384,6 +1494,7 @@ public class JDJedisPipeLineClient implements JDRedisClient {
 
         @Override
         public void run() {
+            Thread.currentThread().setName(taskId+": "+Thread.currentThread().getName());
             while (true){
                 compensatorLock.lock();
                 try {

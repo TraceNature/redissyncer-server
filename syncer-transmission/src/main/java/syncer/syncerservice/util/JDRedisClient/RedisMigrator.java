@@ -62,6 +62,7 @@ public class RedisMigrator {
         r.addCommandParser(CommandName.name("LPOP"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("LPUSH"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("LPUSHX"), new DefaultCommandParser());
+        r.addCommandParser(CommandName.name("LREM"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("LRem"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("RPOP"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("RPUSH"), new DefaultCommandParser());
@@ -86,7 +87,7 @@ public class RedisMigrator {
         r.addCommandParser(CommandName.name("PFADD"), new DefaultCommandParser());
 
 
-        r.addCommandParser(CommandName.name("PFADD"), new PFAddParser());
+//        r.addCommandParser(CommandName.name("PFADD"), new PFAddParser());
         r.addCommandParser(CommandName.name("PFCOUNT"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("PFMERGE"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("SDIFFSTORE"), new DefaultCommandParser());

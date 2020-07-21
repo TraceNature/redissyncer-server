@@ -3,44 +3,27 @@ package syncer;
 
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.ThreadContext;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import org.yaml.snakeyaml.Yaml;
-import syncer.syncerpluscommon.log.LoggerMessage;
-import syncer.syncerpluscommon.log.LoggerQueue;
 import syncer.syncerpluscommon.service.SqlFileExecutor;
 import syncer.syncerpluscommon.util.db.SqliteUtil;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.dao.TaskMapper;
 import syncer.syncerplusredis.model.TaskModel;
-import syncer.syncerpluswebapp.util.EnvironmentUtils;
-import syncer.syncerpluswebapp.util.YmlUtils;
 import syncer.syncerservice.persistence.SqliteSettingPersistenceTask;
 import syncer.syncerpluscommon.util.file.FileUtils;
 
-import javax.annotation.PostConstruct;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 
 @SpringBootApplication
@@ -200,7 +183,7 @@ public class SyncerplusWebappApplication {
         List<TaskModel>taskModelList=taskMapper.selectAll();
         for (TaskModel taskModel:taskModelList){
             if(!taskModel.getStatus().equals(TaskStatusType.BROKEN.getCode())&&!taskModel.getStatus().equals(TaskStatusType.STOP.getCode())){
-                taskMapper.updateTaskStatusById(taskModel.getGroupId(),TaskStatusType.BROKEN.getCode());
+                taskMapper.updateTaskStatusById(taskModel.getTaskId(),TaskStatusType.BROKEN.getCode());
             }
         }
 

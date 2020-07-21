@@ -213,7 +213,11 @@ public class CommandCompensatorUtils {
 
     }
 
-    public  boolean isObjectSuccess(Object res, String stringCmd){
+    public  boolean isObjectSuccess(Object res, String cmd){
+         if(cmd.indexOf("[sendCommand]")>=0){
+             cmd=cmd.split("[sendCommand]")[0];
+         }
+        String stringCmd=cmd.trim().toUpperCase();
 
         if(comanndResponseTypeMap.containsKey(stringCmd)){
             ComanndResponseType responseType=comanndResponseTypeMap.get(stringCmd);
@@ -239,7 +243,7 @@ public class CommandCompensatorUtils {
 
 
         }else{
-            log.warn("[{}]key未被定义",stringCmd);
+            log.warn("[{}]command->type[{}]未被定义",stringCmd,cmd);
             return true;
         }
 
@@ -248,7 +252,13 @@ public class CommandCompensatorUtils {
 
 
      public  boolean isCommandSuccess(Object res, byte[]cmd,String taskId,String key){
+
         String stringCmd= Strings.byteToString(cmd).toUpperCase();
+         if(res==null){
+             if("SET".equalsIgnoreCase(stringCmd)){
+                 return true;
+             }
+         }
         if(res instanceof byte[]){
             try {
                 res=toObject((byte[]) res);

@@ -19,6 +19,7 @@ import java.util.*;
 @EqualsAndHashCode
 public class SyncDataDto implements Serializable {
     private static final long serialVersionUID = -5809782578272943997L;
+    private String taskId;
     private int minPoolSize;
     private int maxPoolSize;
     private long maxWaitTime;
@@ -41,6 +42,18 @@ public class SyncDataDto implements Serializable {
     @Builder.Default
     private FileType fileType=FileType.SYNC;
 
+    @Builder.Default
+    private boolean sourceAcl=false;
+
+    @Builder.Default
+    private boolean targetAcl=false;
+
+    //源用户名
+    @Builder.Default
+    private String sourceUserName="";
+    //目标用户名
+    @Builder.Default
+    private String targetUserName="";
     public SyncDataDto() {
     }
 

@@ -39,6 +39,12 @@ public class ResultMap extends HashMap<String, Object>implements Serializable {
         return this;
     }
 
+
+    public ResultMap add(String key,Object value) {
+        this.put(key, value);
+        return this;
+    }
+
     public  ResultMap start() {
         return new ResultMap();
     }

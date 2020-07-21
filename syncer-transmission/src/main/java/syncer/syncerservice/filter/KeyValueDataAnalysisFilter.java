@@ -64,7 +64,7 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
     public void run(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
 
         try {
-        Event event=eventEntity.getEvent();
+            Event event=eventEntity.getEvent();
             TaskDataEntity dataEntity= TaskDataManagerUtils.get(taskId);
 
 
@@ -72,7 +72,7 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
             try{
                 dataEntity.getTaskModel().setLastKeyUpdateTime(System.currentTimeMillis());
             }catch (Exception e){
-                log.error("[{}] update last time error",taskId);
+                log.error("[{}] update last key update time error",taskId);
             }
         //全量同步结束
         if (event instanceof PostRdbSyncEvent) {

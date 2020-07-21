@@ -15,8 +15,6 @@ import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
-import syncer.syncerservice.util.SyncTaskUtils;
-import syncer.syncerservice.util.common.Strings;
 
 /**
  * 增量数据同步节点
@@ -93,9 +91,12 @@ public class KeyValueCommandSyncEventFilter implements CommonFilter {
 //            String stringCmd= Strings.byteToString(dc.getCommand());
 //            System.out.println(stringCmd);
 
-            client.send(dc.getCommand(),dc.getArgs());
-
-
+              client.send(dc.getCommand(),dc.getArgs());
+//              if(dc.getArgs()!=null&&dc.getArgs().length>0){
+//                  if(Strings.byteToString(dc.getArgs()[0]).toLowerCase().indexOf("pfadd")>=0){
+//                      log.warn(Strings.byteToString(dc.getCommand())+ JSON.toJSONString(Strings.byteToString(dc.getArgs())));
+//                  }
+//              }
 
 //            Configuration configuration=eventEntity.getConfiguration();
 //            eventEntity.getBaseOffSet().setReplId(configuration.getReplId());

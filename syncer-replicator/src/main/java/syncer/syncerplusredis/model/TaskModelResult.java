@@ -175,8 +175,15 @@ public class TaskModelResult implements Serializable {
 
 
     /**
-     *上次数据更新间隔时间
+     *上次数据流入间隔时间
      */
     private long lastDataUpdateIntervalTime;
+
+
+    /**
+     *上次数据流出间隔时间
+     */
+    private long lastDataCommitIntervalTime;
+
 
 }

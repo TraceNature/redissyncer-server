@@ -37,15 +37,15 @@ public interface TaskMapper  {
     @Select("SELECT * FROM t_task WHERE groupId =#{groupId}")
     List<TaskModel>findTaskByGroupId(@Param("groupId")String groupId)throws  Exception;
 
-    @Insert("INSERT INTO t_task(id, groupId,taskName,sourceRedisAddress,sourcePassword,targetRedisAddress,targetPassword,autostart,afresh,batchSize,tasktype,offsetPlace,taskMsg,offset,status,redisVersion,rdbVersion,sourceRedisType,targetRedisType,syncType,dbMapper,md5,replId,fileAddress) VALUES(#{id}, #{groupId},#{taskName},#{sourceRedisAddress},#{sourcePassword},#{targetRedisAddress},#{targetPassword},#{autostart},#{afresh},#{batchSize},#{tasktype},#{offsetPlace},#{taskMsg},#{offset},#{status},#{redisVersion},#{rdbVersion},#{sourceRedisType},#{targetRedisType},#{syncType},#{dbMapper},#{md5},#{replId},#{fileAddress})")
+    @Insert("INSERT INTO t_task(id, groupId,taskName,sourceRedisAddress,sourcePassword,targetRedisAddress,targetPassword,autostart,afresh,batchSize,tasktype,offsetPlace,taskMsg,offset,status,redisVersion,rdbVersion,sourceRedisType,targetRedisType,syncType,dbMapper,md5,replId,fileAddress,sourceAcl,targetAcl,sourceUserName,targetUserName) VALUES(#{id}, #{groupId},#{taskName},#{sourceRedisAddress},#{sourcePassword},#{targetRedisAddress},#{targetPassword},#{autostart},#{afresh},#{batchSize},#{tasktype},#{offsetPlace},#{taskMsg},#{offset},#{status},#{redisVersion},#{rdbVersion},#{sourceRedisType},#{targetRedisType},#{syncType},#{dbMapper},#{md5},#{replId},#{fileAddress},#{sourceAcl},#{targetAcl},#{sourceUserName},#{targetUserName})")
     boolean insertTask(TaskModel taskModel)throws Exception;
 
 
     @Insert({
             "<script>",
-            "insert into t_task(id, groupId,taskName,sourceRedisAddress,sourcePassword,targetRedisAddress,targetPassword,autostart,afresh,batchSize,tasktype,offsetPlace,taskMsg,offset,status,redisVersion,rdbVersion,sourceRedisType,targetRedisType,syncType,dbMapper,md5,replId,fileAddress) values ",
+            "insert into t_task(id, groupId,taskName,sourceRedisAddress,sourcePassword,targetRedisAddress,targetPassword,autostart,afresh,batchSize,tasktype,offsetPlace,taskMsg,offset,status,redisVersion,rdbVersion,sourceRedisType,targetRedisType,syncType,dbMapper,md5,replId,fileAddress,sourceAcl,targetAcl,sourceUserName,targetUserName) values ",
             "<foreach collection='taskModelList' item='item' index='index' separator=','>",
-            "(#{item.id}, #{item.groupId}, #{item.taskName}, #{item.sourceRedisAddress}, #{item.sourcePassword}, #{item.targetRedisAddress}, #{item.targetPassword}, #{item.autostart}, #{item.afresh}, #{item.batchSize}, #{item.tasktype}, #{item.offsetPlace}, #{item.taskMsg}, #{item.offset}, #{item.status},#{item.redisVersion},#{item.rdbVersion},#{item.sourceRedisType},#{item.targetRedisType},#{item.syncType},#{item.dbMapper},#{item.md5},#{item.replId},#{item.fileAddress})",
+            "(#{item.id}, #{item.groupId}, #{item.taskName}, #{item.sourceRedisAddress}, #{item.sourcePassword}, #{item.targetRedisAddress}, #{item.targetPassword}, #{item.autostart}, #{item.afresh}, #{item.batchSize}, #{item.tasktype}, #{item.offsetPlace}, #{item.taskMsg}, #{item.offset}, #{item.status},#{item.redisVersion},#{item.rdbVersion},#{item.sourceRedisType},#{item.targetRedisType},#{item.syncType},#{item.dbMapper},#{item.md5},#{item.replId},#{item.fileAddress},,#{item.sourceAcl},#{item.targetAcl},#{item.sourceUserName},#{item.targetUserName})",
             "</foreach>",
             "</script>"
     })
@@ -62,7 +62,7 @@ public interface TaskMapper  {
     @Delete("DELETE FROM t_task")
     int deleteAllTask();
 
-    @Update("UPDATE t_task SET groupId=#{groupId} ,taskName=#{taskName},sourceRedisAddress=#{sourceRedisAddress},sourcePassword=#{sourcePassword},targetRedisAddress=#{targetRedisAddress},targetPassword=#{targetPassword},autostart=#{autostart},afresh=#{afresh},batchSize=#{batchSize},tasktype=#{tasktype},offsetPlace=#{offsetPlace},taskMsg=#{taskMsg},offset=#{offset},status=#{status},redisVersion=#{redisVersion},rdbVersion=#{rdbVersion} ,targetRedisType=#{targetRedisType},sourceRedisType=#{sourceRedisType},syncType=#{syncType},dbMapper=#{dbMapper},updateTime=(datetime('now', 'localtime'),md5=#{md5}) WHERE id=#{id}")
+    @Update("UPDATE t_task SET groupId=#{groupId} ,taskName=#{taskName},sourceRedisAddress=#{sourceRedisAddress},sourcePassword=#{sourcePassword},targetRedisAddress=#{targetRedisAddress},targetPassword=#{targetPassword},autostart=#{autostart},afresh=#{afresh},batchSize=#{batchSize},tasktype=#{tasktype},offsetPlace=#{offsetPlace},taskMsg=#{taskMsg},offset=#{offset},status=#{status},redisVersion=#{redisVersion},rdbVersion=#{rdbVersion} ,targetRedisType=#{targetRedisType},sourceRedisType=#{sourceRedisType},syncType=#{syncType},dbMapper=#{dbMapper},updateTime=(datetime('now', 'localtime')) ,md5=#{md5},sourceAcl=#{sourceAcl},targetAcl=#{targetAcl},sourceUserName=#{sourceUserName},targetUserName=#{targetUserName} WHERE id=#{id}")
     boolean updateTask(TaskModel taskModel)throws Exception;
 
     @Update("UPDATE t_task SET status=#{status},updateTime=(datetime('now', 'localtime')) WHERE id=#{id}")
