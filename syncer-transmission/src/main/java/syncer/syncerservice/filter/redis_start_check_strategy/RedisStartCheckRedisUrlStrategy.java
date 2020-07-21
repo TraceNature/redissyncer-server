@@ -1,12 +1,16 @@
 package syncer.syncerservice.filter.redis_start_check_strategy;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import org.springframework.util.StringUtils;
 import syncer.syncerjedis.exceptions.JedisDataException;
 import syncer.syncerplusredis.constant.RedisStartCheckTypeEnum;
+import syncer.syncerplusredis.constant.SyncType;
 import syncer.syncerplusredis.constant.TaskMsgConstant;
 import syncer.syncerplusredis.entity.*;
 import syncer.syncerplusredis.entity.dto.RedisClusterDto;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.exception.TaskRestoreException;
+import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.util.code.CodeUtils;
 import syncer.syncerservice.pool.RedisClient;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
@@ -20,44 +24,40 @@ import static syncer.syncerjedis.Protocol.Command.AUTH;
 
 /**
  * @author zhanenqiang
- * @Description 描述
+ * @Description url心跳检查策略
  * @Date 2020/3/3
  */
+@AllArgsConstructor
+@Builder
 public class RedisStartCheckRedisUrlStrategy implements IRedisStartCheckBaseStrategy {
     private IRedisStartCheckBaseStrategy next;
     private JDRedisClient client;
-    private RedisStartCheckEntity eventEntity;
+    private TaskModel taskModel;
     private RedisPoolProps redisPoolProps;
 
+
     @Override
-    public void run(JDRedisClient client, RedisStartCheckEntity eventEntity, RedisPoolProps redisPoolProps) throws Exception {
+    public void run(JDRedisClient client, TaskModel taskModel, RedisPoolProps redisPoolProps) throws Exception {
 
-        //初始化数据
-        RedisStartCheckTypeEnum type=eventEntity.getStartCheckType();
-
-        RedisClusterDto clusterDto=eventEntity.getClusterDto();
-
-        if(type.equals(RedisStartCheckTypeEnum.SINGLE_REDIS_TO_SINGLE_REDIS)
-                ||type.equals(RedisStartCheckTypeEnum.SINGLE_REDIS_TO_CLUSTER)
-                ||type.equals(RedisStartCheckTypeEnum.SINGLE_REDIS_TO_FILE)){
-
-            Set<String> sourceRedisUris = clusterDto.getSourceUris();
-
-            for (String sourceUri : sourceRedisUris) {
-                checkRedisUrl(sourceUri, "sourceUri:" + sourceUri);
+        //两边都需要进行检测
+        if(taskModel.getSyncType().equals(SyncType.SYNC.getCode())){
+            checkRedisUrl(taskModel.getSourceUri(), "sourceUri:" + taskModel.getSourceHost());
+            for (String targetUri : taskModel.getTargetUri()) {
+                checkRedisUrl(targetUri, "targetUri:" + taskModel.getTargetHost());
             }
-
-        }else if(type.equals(RedisStartCheckTypeEnum.FILE_TO_CLUSTER)
-                ||type.equals(RedisStartCheckTypeEnum.FILE_TO_SINGLE_REDIS)){
-            clusterDto.setSourceUris(clusterDto.getFileUris());
-        }
-
-
-        if(!type.equals(RedisStartCheckTypeEnum.SINGLE_REDIS_TO_FILE)){
-            Set<String> targetRedisUris = clusterDto.getTargetUris();
-            for (String targetUri : targetRedisUris) {
-                checkRedisUrl(targetUri, "targetUri : " + targetUri);
+            //只校验目标
+        }else if(taskModel.getSyncType().equals(SyncType.RDB.getCode())
+                ||taskModel.getSyncType().equals(SyncType.AOF.getCode())
+                ||taskModel.getSyncType().equals(SyncType.MIXED.getCode())
+                ||taskModel.getSyncType().equals(SyncType.ONLINERDB.getCode())
+                ||taskModel.getSyncType().equals(SyncType.ONLINEAOF.getCode())
+                ||taskModel.getSyncType().equals(SyncType.ONLINEMIXED.getCode())){
+            for (String targetUri : taskModel.getTargetUri()) {
+                checkRedisUrl(targetUri, "sourcehost"+taskModel.getSourceHost()+"targetUri:" + taskModel.getTargetHost());
             }
+        }else if(taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())){
+            //只校验源
+            checkRedisUrl(taskModel.getSourceUri(), "sourceUri:" + taskModel.getSourceHost());
         }
 
 
@@ -72,15 +72,15 @@ public class RedisStartCheckRedisUrlStrategy implements IRedisStartCheckBaseStra
 
 
         //下一节点
-        toNext(client,eventEntity,redisPoolProps);
+        toNext(client,taskModel,redisPoolProps);
 
 
     }
 
     @Override
-    public void toNext(JDRedisClient client, RedisStartCheckEntity eventEntity, RedisPoolProps redisPoolProps) throws Exception {
+    public void toNext(JDRedisClient client, TaskModel taskModel, RedisPoolProps redisPoolProps) throws Exception {
         if(null!=next) {
-            next.run(client,eventEntity,redisPoolProps);
+            next.run(client,taskModel,redisPoolProps);
         }
     }
 

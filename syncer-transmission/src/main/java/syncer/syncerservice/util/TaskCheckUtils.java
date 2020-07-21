@@ -1,6 +1,5 @@
 package syncer.syncerservice.util;
 
-import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.StringUtils;
@@ -21,7 +20,6 @@ import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.util.code.CodeUtils;
 import syncer.syncerservice.util.regex.RegexUtil;
 
-import java.net.URISyntaxException;
 import java.util.*;
 
 /**

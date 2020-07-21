@@ -4,6 +4,7 @@ import syncer.syncerpluscommon.entity.ResultMap;
 import syncer.syncerplusredis.constant.RedisStartCheckTypeEnum;
 import syncer.syncerplusredis.entity.RedisStartCheckEntity;
 import syncer.syncerplusredis.exception.TaskMsgException;
+import syncer.syncerplusredis.model.TaskModel;
 
 /**
  * @author zhanenqiang
@@ -18,9 +19,22 @@ public interface IRedisTaskService {
      * @return
      * @throws TaskMsgException
      */
-    ResultMap runSyncerTask(RedisStartCheckEntity redisStartCheckEntity, RedisStartCheckTypeEnum redisStartCheckType) throws TaskMsgException;
+    String runSyncerTask(RedisStartCheckEntity redisStartCheckEntity, RedisStartCheckTypeEnum redisStartCheckType) throws Exception;
 
 
+    String runSyncerTask(TaskModel taskModel) throws Exception;
+
+
+
+    String createSyncerTask(TaskModel taskModel) throws Exception;
+
+    /**
+     * 编辑处于STOP 或 Broken状态的同步任务
+     * @param taskModel
+     * @return
+     * @throws Exception
+     */
+    String createCommandSyncerTask(TaskModel taskModel) throws Exception;
 
 
 }

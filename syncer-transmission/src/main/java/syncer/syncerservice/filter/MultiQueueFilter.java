@@ -61,7 +61,7 @@ public class MultiQueueFilter implements CommonFilter {
         this.batchSize=batchSize;
         for (int i = 0; i < QUEUE_SIZE; i++) {
             //Configuration sourceCon = Configuration.valueOf(turi);
-            JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, syncDataDto.getTargetHost(), syncDataDto.getTargetPort(), syncDataDto.getTargetPassword(), batchSize, taskId);
+            JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, syncDataDto.getTargetHost(), syncDataDto.getTargetPort(), syncDataDto.getTargetPassword(), batchSize, taskId,null,null);
             //JDRedisClient client=new JDRedisJedisPipeLineClient(turi.getHost(),turi.getPort(),sourceCon.getAuthPassword(),batchSize,taskId);
 
             List<CommonFilter> commonFilterList = new ArrayList<>();

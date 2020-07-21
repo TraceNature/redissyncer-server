@@ -9,10 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -22,6 +19,7 @@ import java.util.Set;
 @EqualsAndHashCode
 public class SyncDataDto implements Serializable {
     private static final long serialVersionUID = -5809782578272943997L;
+    private String taskId;
     private int minPoolSize;
     private int maxPoolSize;
     private long maxWaitTime;
@@ -38,12 +36,24 @@ public class SyncDataDto implements Serializable {
     @Builder.Default
     private  int bigKeySize=8192;
     @Builder.Default
-    private String redistype=RedisType.SINGLE.toString();
+    private String redistype= RedisType.SINGLE.toString();
 
     //迁移类型：psync/文件
     @Builder.Default
     private FileType fileType=FileType.SYNC;
 
+    @Builder.Default
+    private boolean sourceAcl=false;
+
+    @Builder.Default
+    private boolean targetAcl=false;
+
+    //源用户名
+    @Builder.Default
+    private String sourceUserName="";
+    //目标用户名
+    @Builder.Default
+    private String targetUserName="";
     public SyncDataDto() {
     }
 
@@ -125,7 +135,10 @@ public class SyncDataDto implements Serializable {
     }
 
     public Map<Integer, Integer> getDbMapper() {
-        return dbMapper;
+        if(dbMapper!=null){
+            return dbMapper;
+        }
+        return new HashMap<Integer,Integer>();
     }
 
     public void setDbMapper(Map<Integer, Integer> dbMapper) {

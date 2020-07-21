@@ -10,8 +10,8 @@
 
     <groupId>syncer</groupId>
     <artifactId>syncer-webapp</artifactId>
-    <version>2.1.0</version>
-    <name>redissyncer-server</name>
+    <version>3.0.0</version>
+    <name>syncer-webapp</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
@@ -23,6 +23,16 @@
             <groupId>syncer</groupId>
             <artifactId>syncer-common</artifactId>
             <version>2.0.8</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+<!--                <exclusion>-->
+<!--                    <groupId>org.jboss.logging</groupId>-->
+<!--                    <artifactId>jboss-logging</artifactId>-->
+<!--                </exclusion>-->
+            </exclusions>
 <!--            <scope>compile</scope>-->
         </dependency>
 <!--        <dependency>-->
@@ -33,24 +43,63 @@
 <!--         <exclusions>-->
 <!--               <exclusion>-->
 <!--                  <groupId>redis.clients</groupId>-->
-<!--                  <artifactId>jedis</artifactId>-->
 <!--              </exclusion>-->
 <!--           </exclusions>-->
 <!--        </dependency>-->
 
+        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-log4j2 -->
 
 
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>3.1.0-m4</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>syncer</groupId>
             <artifactId>syncer-transmission</artifactId>
             <version>2.0.8.2</version>
             <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jboss.logging</groupId>
+                    <artifactId>jboss-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-actuator</artifactId>-->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>cn.pomit</groupId>
+            <artifactId>spring-boot-monitor</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework</groupId>-->
+<!--            <artifactId>spring-jdbc</artifactId>-->
+<!--            <version>5.2.7.RELEASE</version>-->
+<!--        </dependency>-->
+
 
     </dependencies>
 
@@ -111,7 +160,6 @@
                 </executions>
                 <configuration>
                     <artifactItems>
-
                         <artifactItem>
                             <groupId>${project.groupId}</groupId>
                             <artifactId>${project.artifactId}</artifactId>
@@ -126,30 +174,19 @@
             </plugin>
 
             <!--Docker maven plugin-->
-<!--            <plugin>-->
-<!--                <groupId>com.spotify</groupId>-->
-<!--                <artifactId>dockerfile-maven-plugin</artifactId>-->
-<!--                <version>1.4.13</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>default</id>-->
-<!--                        <goals>-->
-<!--                            <goal>build</goal>-->
-<!--                            <goal>push</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--                <configuration>-->
-<!--                    &lt;!&ndash; <repository>${project.artifactId}</repository> &ndash;&gt;-->
-<!--                    <repository>redissyncer</repository>-->
-<!--                    <contextDirectory>../</contextDirectory>-->
-<!--&lt;!&ndash;                <dockerDirectory>../</dockerDirectory>&ndash;&gt;-->
-<!--                    <tag>v${project.version}</tag>-->
-<!--                    <buildArgs>-->
-<!--                        <JAR_FILE>${project.artifactId}-${project.version}.jar</JAR_FILE>-->
-<!--                    </buildArgs>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <version>1.4.10</version>
+                <configuration>
+                    <repository>${project.artifactId}</repository>
+                    <contextDirectory>./</contextDirectory>
+                    <tag>${project.version}</tag>
+                    <buildArgs>
+                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+                    </buildArgs>
+                </configuration>
+            </plugin>
         </plugins>
 
 

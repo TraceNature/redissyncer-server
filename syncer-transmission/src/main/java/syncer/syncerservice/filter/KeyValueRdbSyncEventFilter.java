@@ -6,27 +6,24 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import syncer.syncerplusredis.constant.RedisCommandTypeEnum;
 import syncer.syncerplusredis.constant.TaskRunTypeEnum;
+import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.event.PostRdbSyncEvent;
 import syncer.syncerplusredis.event.PreRdbSyncEvent;
-import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.rdb.datatype.DB;
 import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.*;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
+import syncer.syncerplusredis.util.TimeUtils;
 import syncer.syncerservice.compensator.ISyncerCompensator;
-import syncer.syncerservice.compensator.MultiThreadSyncerCompensator;
 import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.RedisCommandTypeUtils;
-import syncer.syncerservice.util.SyncTaskUtils;
 
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.Map;
 
 
 /**
@@ -65,10 +62,8 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
         ISyncerCompensator iSyncerCompensator=eventEntity.getISyncerCompensator();
 
         if (event instanceof PreRdbSyncEvent) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-
-            log.warn("taskId为[{}]的全量数据到达同步程序同步开始..，当前时间：{}",taskId,sdf.format(new Date()));
+            log.warn("taskId为[{}]的全量数据到达同步程序同步开始..，当前时间：{}",taskId, TimeUtils.getNowTimeString());
             if(eventEntity.getFileType().equals(FileType.ONLINERDB)
                     ||eventEntity.getFileType().equals(FileType.RDB)
                     ||eventEntity.getFileType().equals(FileType.ONLINEAOF)
@@ -77,11 +72,15 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
                     ||eventEntity.getFileType().equals(FileType.MIXED)){
 
                 log.warn("taskId为[{}]的文件任务全量同步开始..",taskId);
-                SyncTaskUtils.editTaskMsg(taskId,"文件全量同步开始[同步任务启动]");
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "文件全量同步开始[同步任务启动]",TaskStatusType.RDBRUNING);
+
             }else{
                 log.warn("taskId为[{}]的任务全量同步开始..",taskId);
-                SyncTaskUtils.editTaskMsg(taskId,"全量同步开始[同步任务启动]");
+
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "全量同步开始[同步任务启动]",TaskStatusType.RDBRUNING);
             }
+
+
         }
 
         //全量同步结束
@@ -95,20 +94,23 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
                     ||eventEntity.getFileType().equals(FileType.MIXED)){
                 log.warn("taskId为[{}]的文件任务全量同步结束[任务完成]..时间为:"+time,taskId);
 
-                SyncTaskUtils.editTaskMsg(taskId,"文件同步结束[任务完成] 时间(ms)："+time);
-                SyncTaskUtils.stopCreateThread(taskId);
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "文件同步结束[任务完成] 时间(ms)："+time,TaskStatusType.STOP);
+
             }else {
 
                 if(eventEntity.getTaskRunTypeEnum().equals(TaskRunTypeEnum.TOTAL)){
 
                     log.warn("taskId为[{}]的任务全量同步结束..进入增量同步模式 time:[{}] ",taskId,time);
-                    SyncTaskUtils.editTaskMsg(taskId,"全量同步结束进入增量同步 时间(ms)："+time+" 进入增量状态");
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "全量同步结束进入增量同步 时间(ms)："+time+" 进入增量状态",TaskStatusType.COMMANDRUNING);
+
+
                 }else if(eventEntity.getTaskRunTypeEnum().equals(TaskRunTypeEnum.STOCKONLY)){
                     log.warn("taskId为[{}]的任务全量同步结束[任务完成]..",taskId);
-                    SyncTaskUtils.editTaskMsg(taskId,"全量同步结束[任务完成] 时间(ms)："+time);
-                    SyncTaskUtils.stopCreateThread(taskId);
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "全量同步结束[任务完成] 时间(ms)："+time,TaskStatusType.STOP);
                 }
             }
+
+
 
                    return;
         }

@@ -9,6 +9,8 @@
         <module>syncer-replicator</module>
         <module>syncer-transmission</module>
         <module>syncer-jedis</module>
+        <module>syncer-replication</module>
+
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -25,9 +27,25 @@
     <properties>
         <java.version>1.8</java.version>
         <fastjson.version>1.2.62</fastjson.version>
+
+        <jackson-version>2.9.9</jackson-version>
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -43,21 +61,88 @@
 <!--                    <artifactId>spring-boot-starter-logging</artifactId>-->
 <!--                </exclusion>-->
 <!--            </exclusions>-->
+            <exclusions>
+
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper-spring-boot-starter</artifactId>
+            <version>1.2.13</version>
         </dependency>
 
 
 
+
+        <!-- SQLite 驱动 -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.21.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>com.baomidou</groupId>-->
+<!--            <artifactId>mybatis-plus-boot-starter</artifactId>-->
+<!--            <version>3.3.1.tmp</version>-->
+<!--        </dependency>-->
+
+        <!--springboot程序测试依赖，如果是自动创建项目默认添加-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.lmax/disruptor -->
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+            <version>3.4.2</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
+
 
         <!--json相关-->
         <dependency>
@@ -66,11 +151,72 @@
             <version>${fastjson.version}</version>
         </dependency>
 
+                <dependency>
+                    <groupId>com.jd.jim.cli</groupId>
+                    <artifactId>jim-cli-api</artifactId>
+                    <version>syncer-2.1.4</version>
+                </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>28.0-jre</version>
+        </dependency>
+
+        <!--        <dependency>-->
+<!--            <groupId>com.jd.jim.cli</groupId>-->
+<!--            <artifactId>jim-cli-jedis</artifactId>-->
+<!--            <version>1.4.9-SNAPSHOT</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.jd.jim.cli</groupId>-->
+<!--            <artifactId>jim-cli-api</artifactId>-->
+<!--            <version>1.4.9-SNAPSHOT</version>-->
+<!--        </dependency>-->
 <!--        <dependency>-->
 <!--            <groupId>com.jd.security.codesec</groupId>-->
 <!--            <artifactId>ajdv</artifactId>-->
 <!--            <version>0.1</version>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>com.jd.jim.cli</groupId>-->
+<!--            <artifactId>jim-cli-api</artifactId>-->
+<!--            <version>2.1.4</version>-->
+<!--        </dependency>-->
+
+
+        <!--jackson-->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-core</artifactId>-->
+<!--            <version>${jackson-version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-databind</artifactId>-->
+<!--            <version>${jackson-version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-annotations</artifactId>-->
+<!--            <version>${jackson-version}</version>-->
 <!--        </dependency>-->
 
     </dependencies>
@@ -120,5 +266,12 @@
 <!--            </plugins>-->
 <!--        </pluginManagement>-->
 <!--    </build>-->
+<repositories>
 
+    <repository>
+        <id>snapshots</id>
+        <name>JD maven2 repository-snapshots</name>
+        <url>http://artifactory.jd.com/libs-snapshots-local</url>
+    </repository>
+</repositories>
 </project>

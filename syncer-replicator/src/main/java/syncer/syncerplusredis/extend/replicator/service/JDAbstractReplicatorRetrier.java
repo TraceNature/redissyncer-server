@@ -2,10 +2,12 @@ package syncer.syncerplusredis.extend.replicator.service;
 
 
 
+import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.exception.IncrementException;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -71,8 +73,9 @@ public abstract class JDAbstractReplicatorRetrier implements JDReplicatorRetrier
 
 
         try {
-            Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),"重试多次后失败");
-        } catch (TaskMsgException e) {
+            TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"重试多次后失败", TaskStatusType.BROKEN);
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
         log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId);

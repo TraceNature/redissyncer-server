@@ -16,11 +16,13 @@
 
 package syncer.syncerplusredis.replicator;
 
+import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.event.PostCommandSyncEvent;
 import syncer.syncerplusredis.event.PreCommandSyncEvent;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.io.RedisInputStream;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 import syncer.syncerplusredis.util.objectutil.Strings;
 import syncer.syncerplusredis.util.type.Tuples;
@@ -85,8 +87,8 @@ public class RedisOnlineAofReplicator extends AbstractReplicator {
 
         }catch (IOException e){
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),"文件在线读取异常");
-            } catch (TaskMsgException ex) {
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"文件在线读取异常", TaskStatusType.BROKEN);
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,"文件下载异常");
@@ -131,8 +133,9 @@ public class RedisOnlineAofReplicator extends AbstractReplicator {
             doOpen();
         } catch (UncheckedIOException e) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),e.getMessage());
-            } catch (TaskMsgException ex) {
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
+
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,e.getMessage());

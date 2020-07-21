@@ -1,22 +1,20 @@
 package syncer.syncerservice.filter;
 
-import com.alibaba.fastjson.JSON;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import syncer.syncerplusredis.cmd.impl.DefaultCommand;
-import syncer.syncerplusredis.entity.Configuration;
+import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.event.PostCommandSyncEvent;
 import syncer.syncerplusredis.event.PreCommandSyncEvent;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
-import syncer.syncerservice.util.SyncTaskUtils;
-import syncer.syncerservice.util.common.Strings;
 
 /**
  * 增量数据同步节点
@@ -53,10 +51,14 @@ public class KeyValueCommandSyncEventFilter implements CommonFilter {
                     ||eventEntity.getFileType().equals(FileType.ONLINEMIXED)
                     ||eventEntity.getFileType().equals(FileType.MIXED)){
                 log.warn("taskId为[{}]的任务AOF文件同步开始..",taskId);
-                SyncTaskUtils.editTaskMsg(taskId,"AOF文件同步开始");
+
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "AOF文件同步开始", TaskStatusType.COMMANDRUNING);
+
             }else {
                 log.warn("taskId为[{}]的任务增量同步开始..",taskId);
-                SyncTaskUtils.editTaskMsg(taskId,"增量同步开始");
+
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "增量同步开始", TaskStatusType.COMMANDRUNING);
+
             }
 
         }
@@ -71,11 +73,13 @@ public class KeyValueCommandSyncEventFilter implements CommonFilter {
                     ||eventEntity.getFileType().equals(FileType.ONLINEMIXED)
                     ||eventEntity.getFileType().equals(FileType.MIXED)){
                 log.warn("taskId为[{}]AOF文件同步结束..",taskId);
-                SyncTaskUtils.editTaskMsg(taskId,"AOF文件同步结束");
-                SyncTaskUtils.stopCreateThread(taskId);
+
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "AOF文件同步结束", TaskStatusType.STOP);
+
             }else {
                 log.warn("taskId为[{}]的任务增量同步结束..",taskId);
-                SyncTaskUtils.editTaskMsg(taskId,"增量/同步结束");
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "增量/同步结束", TaskStatusType.STOP);
+
             }
 
             return;
@@ -84,51 +88,29 @@ public class KeyValueCommandSyncEventFilter implements CommonFilter {
         //命令解析器
         if (event instanceof DefaultCommand) {
             DefaultCommand dc = (DefaultCommand) event;
+//            String stringCmd= Strings.byteToString(dc.getCommand());
+//            System.out.println(stringCmd);
 
-            if(dc!=null){
+              client.send(dc.getCommand(),dc.getArgs());
+//              if(dc.getArgs()!=null&&dc.getArgs().length>0){
+//                  if(Strings.byteToString(dc.getArgs()[0]).toLowerCase().indexOf("pfadd")>=0){
+//                      log.warn(Strings.byteToString(dc.getCommand())+ JSON.toJSONString(Strings.byteToString(dc.getArgs())));
+//                  }
+//              }
 
-                if(dc.getCommand()==null){
-                    log.info("[{}]命令null,赋值为空..command:[{}]",taskId,Strings.byteToString(dc.getCommand()));
-
-                }
-                if(dc.getArgs()==null){
-                    dc.setArgs(new byte[0][]);
-                    log.info("[{}]命令参数为null,赋值为空..command:[{}]",taskId,Strings.byteToString(dc.getCommand()));
-                }
-
-                Object result=client.send(dc.getCommand(),dc.getArgs());
-            }else {
-                log.info("[{}]DefaultCommand命令null",taskId);
-            }
-
-
-//            log.debug("增量命令 command:{} Args[0]:{}",dc.getCommand(),dc.getArgs());
 //            Configuration configuration=eventEntity.getConfiguration();
 //            eventEntity.getBaseOffSet().setReplId(configuration.getReplId());
 //            eventEntity.getBaseOffSet().getReplOffset().set(configuration.getReplOffset());
 
-            try {
-                eventEntity.getBaseOffSet().setReplId(eventEntity.getReplId());
-                eventEntity.getBaseOffSet().getReplOffset().set(eventEntity.getReplOffset());
-            }catch (Exception e){
-                log.info("task:[{}],command:{} 记录offset失败,无影响",taskId, Strings.byteToString(dc.getCommand()));
-            }
-
+            eventEntity.getBaseOffSet().setReplId(eventEntity.getReplId());
+            eventEntity.getBaseOffSet().getReplOffset().set(eventEntity.getReplOffset());
         }
 
         //继续执行下一Filter节点
         toNext(replicator,eventEntity);
 
         }catch (Exception e){
-            Event event=eventEntity.getEvent();
-            if (event instanceof DefaultCommand) {
-                DefaultCommand dc = (DefaultCommand) event;
-                log.info("[{}]抛弃key的命令[{}] ,参数为：[{}]",taskId,Strings.byteToString(dc.getCommand()),JSON.toJSONString(Strings.byteToString(dc.getArgs())));
-            }
-
-            e.printStackTrace();
             throw new FilterNodeException(e.getMessage()+"->KeyValueCommandSyncEventFilter",e.getCause());
-
         }
     }
 

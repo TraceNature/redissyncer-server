@@ -32,6 +32,7 @@ import syncer.syncerplusredis.rdb.RdbParser;
 import syncer.syncerplusredis.replicator.AbstractReplicator;
 import syncer.syncerplusredis.replicator.AbstractReplicatorRetrier;
 import syncer.syncerplusredis.replicator.DefaultExceptionListener;
+import syncer.syncerplusredis.util.TimeUtils;
 import syncer.syncerplusredis.util.objectutil.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,7 @@ import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static syncer.syncerplusredis.replicator.Constants.DOLLAR;
 import static syncer.syncerplusredis.replicator.Constants.STAR;
@@ -76,7 +78,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
     protected ScheduledExecutorService executor;
     protected final RedisSocketFactory socketFactory;
     protected  boolean status;
-    
+    AtomicInteger count = new AtomicInteger();
     public RedisSocketReplicator(String host, int port, Configuration configuration,boolean status) {
         Objects.requireNonNull(host);
         if (port <= 0 || port > 65535) {
@@ -116,7 +118,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
         try {
             new RedisSocketReplicatorRetrier().retry(this);
         }catch (EOFException e){
-            System.out.println(e.getMessage());
+            System.out.println("[EOFException]:"+e.getMessage());
         } finally {
             doClose();
             doCloseListener(this);
@@ -132,7 +134,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
         try {
             new RedisSocketReplicatorRetrier().retry(this,taskId);
         }catch (EOFException e){
-            System.out.println(e.getMessage());
+            System.out.println("[EOFException]:"+e.getMessage());
 
         } finally {
             doClose();
@@ -143,10 +145,18 @@ public class RedisSocketReplicator extends AbstractReplicator {
 
     protected SyncMode trySync(final String reply) throws IOException, IncrementException {
         logger.info(reply);
+        if(reply.indexOf("Can't SYNC while not connected with my master")>=0){
+            if(count.get()>=3){
+                throw new IncrementException("NOMASTERLINK Can't SYNC while not connected with my master");
+
+            }
+            count.incrementAndGet();
+        }
+
         if (reply.startsWith("FULLRESYNC")) {
 
             if(!status){
-                throw new IncrementException("增量同步runId不存在..结束");
+                throw new IncrementException("增量同步runId不存在..结束,[请检查offset是否刷过/或者当前任务之前未进行过数据同步但afresh设置为false]");
             }else {
                 // reset db
                 this.db = -1;
@@ -221,7 +231,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
 
     protected void auth(String password) throws IOException {
         if (password != null) {
-            logger.info("AUTH {}", password);
+//            logger.info("AUTH {}", password);
             send("AUTH".getBytes(), password.getBytes());
             final String reply = Strings.toString(reply());
             logger.info(reply);
@@ -438,9 +448,13 @@ public class RedisSocketReplicator extends AbstractReplicator {
             long replOffset = configuration.getReplOffset();
             logger.info("PSYNC {} {}", replId, String.valueOf(replOffset >= 0 ? replOffset + 1 : replOffset));
             send("PSYNC".getBytes(), replId.getBytes(), String.valueOf(replOffset >= 0 ? replOffset + 1 : replOffset).getBytes());
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-            logger.warn("同步命令发送..源redis全量数据开始打包，时间：{}",sdf.format(new Date()));
+            if(replOffset >= 0){
+                logger.warn("增量同步命令发送..增量数据同步初始化，时间：{}", TimeUtils.getNowTimeString());
+            }else{
+                logger.warn("同步命令发送..源redis全量数据开始打包，时间：{}",TimeUtils.getNowTimeString());
+            }
+
             final String reply = Strings.toString(reply());
 
             SyncMode mode = trySync(reply);
@@ -466,6 +480,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
                     }
                     Object[] raw = (Object[]) obj;
                     CommandName name = CommandName.name(Strings.toString(raw[0]));
+
                     final CommandParser<? extends Command> parser;
                     if ((parser = commands.get(name)) == null) {
                         logger.warn("command [{}] not register. raw command:{}", name, format(raw));

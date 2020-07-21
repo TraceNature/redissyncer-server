@@ -10,9 +10,9 @@ import java.util.List;
 
 public class TaskMsgDto {
 
-    @NotEmpty(message = "taskids不能为空")
+//    @NotEmpty(message = "taskids不能为空")
     private List<String> taskids;
-
+    private List<String> groupIds;
 //    @NotEmpty(message = "taskid不能为空")
 //    private String taskid;
 

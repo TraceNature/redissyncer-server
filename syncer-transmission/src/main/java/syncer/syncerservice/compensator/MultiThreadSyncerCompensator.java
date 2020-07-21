@@ -173,7 +173,7 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
             }
         }
         if(i<=0){
-            log.warn("[{}]中key[{}]同步失败type[lpush]---->value{}",taskId, StringUtils.toString(key), JSON.toJSONString(value));
+            log.warn("[{}]中key[{}]同步失败type[rpush]---->value{}",taskId, StringUtils.toString(key), JSON.toJSONString(value));
         }
     }
 
@@ -189,7 +189,7 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
             }
         }
         if(i<=0){
-            log.warn("[{}]中key[{}]同步失败type[lpush--time]---->value{}",taskId, StringUtils.toString(key), JSON.toJSONString(value));
+            log.warn("[{}]中key[{}]同步失败type[rpush--time]---->value{}",taskId, StringUtils.toString(key), JSON.toJSONString(value));
         }
     }
 
@@ -205,7 +205,7 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
             }
         }
         if(i<=0){
-            log.warn("[{}]中key[{}]同步失败type[lpush - time]---->value{}",taskId, StringUtils.toString(key), JSON.toJSONString(value));
+            log.warn("[{}]中key[{}]同步失败type[rpush - time]---->value{}",taskId, StringUtils.toString(key), JSON.toJSONString(value));
         }
     }
 
@@ -221,7 +221,7 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
             }
         }
         if(i<=0){
-            log.warn("[{}]中key[{}]同步失败type[lpush - time]---->value{}",taskId, StringUtils.toString(key), JSON.toJSONString(value));
+            log.warn("[{}]中key[{}]同步失败type[rpush - time]---->value{}",taskId, StringUtils.toString(key), JSON.toJSONString(value));
         }
     }
 
@@ -492,6 +492,7 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
         }else if(cmdEnum.equals(CmdEnum.DECRBY)){
             incrMap.put(key,incrMap.get(key)+Integer.valueOf(String.valueOf(args[1])));
         }else if(cmdEnum.equals(CmdEnum.APPEND)){
+
             appendMap.get(key).getValue().append(Strings.byteToString(args[1]));
 
         }

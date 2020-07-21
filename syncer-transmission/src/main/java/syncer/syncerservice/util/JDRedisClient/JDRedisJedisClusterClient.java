@@ -8,6 +8,7 @@ import syncer.syncerpluscommon.config.ThreadPoolConfig;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerservice.cmd.ClusterProtocolCommand;
+import syncer.syncerservice.util.common.Strings;
 import syncer.syncerservice.util.jedis.ObjectUtils;
 import syncer.syncerservice.util.jedis.StringUtils;
 import syncer.syncerservice.util.jedis.cluster.SyncJedisClusterClient;
@@ -188,6 +189,9 @@ public class JDRedisJedisClusterClient implements JDRedisClient {
 
     @Override
     public Object send(byte[] cmd, byte[]... args) {
+        if(Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("FLUSHALL")){
+            return "OK";
+        }
         return redisClient.sendCommand(args[0], ClusterProtocolCommand.builder().raw(cmd).build(),args);
     }
 

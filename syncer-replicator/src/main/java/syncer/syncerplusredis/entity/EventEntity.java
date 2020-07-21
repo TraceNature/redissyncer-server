@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
+import syncer.syncerplusredis.util.objectutil.Strings;
 
 import java.io.Serializable;
 import java.util.List;
@@ -29,4 +30,11 @@ public class EventEntity implements Serializable {
     private Long dbNum;
     private PipeLineCompensatorEnum pipeLineCompensatorEnum;
     private boolean highVersion;
+
+    public String getStringKey() {
+
+        return stringKey;
+    }
+
+
 }

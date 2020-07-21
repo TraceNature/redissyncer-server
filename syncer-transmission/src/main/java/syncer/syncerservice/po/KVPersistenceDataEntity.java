@@ -15,7 +15,7 @@ public class KVPersistenceDataEntity {
     private volatile List<EventEntity> keys = new ArrayList<>();
 
     public synchronized void addKey(EventEntity key) {
-//        keys.add(key);
+        keys.add(key);
 //        keys.add(key);
     }
 

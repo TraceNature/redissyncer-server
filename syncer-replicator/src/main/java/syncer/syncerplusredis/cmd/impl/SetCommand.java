@@ -33,12 +33,15 @@ public class SetCommand extends GenericKeyValueCommand {
     public SetCommand() {
     }
 
+
     public SetCommand(byte[] key, byte[] value, ExpiredType expiredType, Long expiredValue, ExistType existType) {
         super(key, value);
         this.expiredType = expiredType;
         this.expiredValue = expiredValue;
         this.existType = existType;
     }
+
+
 
     public ExpiredType getExpiredType() {
         return expiredType;

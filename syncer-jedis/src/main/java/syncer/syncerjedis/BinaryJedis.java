@@ -4072,7 +4072,7 @@ public class BinaryJedis implements BasicCommands, BinaryJedisCommands, MultiKey
 
   public Object sendCommand(ProtocolCommand cmd, byte[]... args) {
     checkIsInMultiOrPipeline();
-    client.sendCommand(cmd, args);
+      client.sendCommand(cmd, args);
     return client.getOne();
   }
 

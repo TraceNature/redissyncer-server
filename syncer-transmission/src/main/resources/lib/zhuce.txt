@@ -1,0 +1,1 @@
+mvn install:install-file -DgroupId=com.jd.jim.cli -DartifactId=jim-cli-api -Dversion=syncer-2.1.4 -Dpackaging=jar -Dfile=D:\github\redissyncer-service\syncer-transmission\src\main\resources\lib\jim-cli-api-2.1.4.jar

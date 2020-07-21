@@ -1,5 +1,12 @@
 package syncer.syncerplusredis.constant;
 
-public enum RedisBranchTypeEnum {
-    SENTINEL,CLUSTER,FILE,SINGLE
+
+import java.io.Serializable;
+
+public enum RedisBranchTypeEnum implements Serializable {
+    SENTINEL,CLUSTER,FILE,SINGLE,
+    /**
+     * jimdb
+     */
+    JIMDB
 }

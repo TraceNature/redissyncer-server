@@ -1,15 +1,13 @@
 package syncer.syncerservice.util.jedis;
 
 
+import com.jd.jim.cli.protocol.ZSetTuple;
 import syncer.syncerjedis.Jedis;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
-import syncer.syncerservice.util.file.SafeObjectInputStream;
+import syncer.syncerpluscommon.util.file.SafeObjectInputStream;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author 平行时空
@@ -150,6 +148,19 @@ public class ObjectUtils {
         Map<byte[], Double> map = new HashMap<>();
         datas.forEach(zset -> {
             map.put(zset.getElement(), zset.getScore());
+        });
+        return map;
+    }
+
+    /**
+     * JimDb
+     * @param datas
+     * @return
+     */
+    public synchronized static Set<ZSetTuple<byte[]>> jimDbZsetBytes(Set<ZSetEntry> datas){
+        Set<ZSetTuple<byte[]>> map = new HashSet<>();
+        datas.forEach(zset -> {
+            map.add(new ZSetTuple<byte[]>(zset.getElement(), zset.getScore()));
         });
         return map;
     }

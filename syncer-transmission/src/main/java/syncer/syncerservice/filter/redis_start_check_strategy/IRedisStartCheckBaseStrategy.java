@@ -3,6 +3,7 @@ package syncer.syncerservice.filter.redis_start_check_strategy;
 import syncer.syncerplusredis.entity.RedisPoolProps;
 import syncer.syncerplusredis.entity.RedisStartCheckEntity;
 import syncer.syncerplusredis.exception.TaskMsgException;
+import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
@@ -14,9 +15,9 @@ import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
  */
 public interface IRedisStartCheckBaseStrategy {
 
-    void run(JDRedisClient client, RedisStartCheckEntity eventEntity, RedisPoolProps redisPoolProps) throws Exception;
+    void run(JDRedisClient client, TaskModel taskModel, RedisPoolProps redisPoolProps) throws Exception;
 
-    void toNext(JDRedisClient client, RedisStartCheckEntity eventEntity,RedisPoolProps redisPoolProps) throws Exception;
+    void toNext(JDRedisClient client, TaskModel taskModel,RedisPoolProps redisPoolProps) throws Exception;
 
     void setNext(IRedisStartCheckBaseStrategy nextStrategy);
 

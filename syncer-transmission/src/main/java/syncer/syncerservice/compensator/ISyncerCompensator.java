@@ -22,6 +22,7 @@ public interface ISyncerCompensator {
     void lpush(final Long dbNum,final  byte[]key,final List<byte[]> value,Long res);
     void lpush(final Long dbNum,final byte[]key,long ms,final List<byte[]>value,Long res);
 
+
     void rpush(final Long dbNum,final  byte[]key,final byte[][]value,Long res);
     void rpush(final Long dbNum,final byte[]key,long ms,final byte[][]value,Long res);
 

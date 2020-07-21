@@ -2,10 +2,8 @@ package syncer.syncerservice.util.JDRedisClient;
 
 
 import syncer.syncerplusredis.cmd.CommandName;
-import syncer.syncerplusredis.cmd.parser.DefaultCommandParser;
-import syncer.syncerplusredis.cmd.parser.JimDbDefaultCommandParser;
-import syncer.syncerplusredis.cmd.parser.PingParser;
-import syncer.syncerplusredis.cmd.parser.ReplConfParser;
+import syncer.syncerplusredis.cmd.jimdb.JimDbFirstCommandParser;
+import syncer.syncerplusredis.cmd.parser.*;
 import syncer.syncerplusredis.rdb.dump.DumpRdbVisitor;
 import syncer.syncerplusredis.rdb.iterable.ValueIterableRdbVisitor;
 import syncer.syncerplusredis.replicator.Replicator;
@@ -64,6 +62,7 @@ public class RedisMigrator {
         r.addCommandParser(CommandName.name("LPOP"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("LPUSH"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("LPUSHX"), new DefaultCommandParser());
+        r.addCommandParser(CommandName.name("LREM"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("LRem"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("RPOP"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("RPUSH"), new DefaultCommandParser());
@@ -73,6 +72,9 @@ public class RedisMigrator {
         r.addCommandParser(CommandName.name("INCR"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("DECR"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("INCRBY"), new DefaultCommandParser());
+
+        r.addCommandParser(CommandName.name("INCRBYFLOAT"), new IncrByFloatParser());
+
         r.addCommandParser(CommandName.name("DECRBY"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("PERSIST"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("SELECT"), new DefaultCommandParser());
@@ -131,6 +133,7 @@ public class RedisMigrator {
 
         //jimdb解析
         r.addCommandParser(CommandName.name("TRANSMIT"),new JimDbDefaultCommandParser());
+        r.addCommandParser(CommandName.name("TRANSMITFIRSTPARSER"),new JimDbFirstCommandParser());
         return r;
     }
 }

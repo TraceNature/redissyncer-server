@@ -1,5 +1,8 @@
 package syncer.syncerplusredis.constant;
 
-public enum RedisVersion {
+
+import java.io.Serializable;
+
+public enum RedisVersion implements Serializable {
     SAME,LOWER,UPPER,OTHER
 }

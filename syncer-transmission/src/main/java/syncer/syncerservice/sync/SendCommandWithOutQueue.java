@@ -3,14 +3,21 @@ package syncer.syncerservice.sync;
 import com.alibaba.fastjson.JSON;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Mapper;
+import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.cmd.impl.DefaultCommand;
+import syncer.syncerplusredis.constant.RedisCommandTypeEnum;
+import syncer.syncerplusredis.dao.AbandonCommandMapper;
 import syncer.syncerplusredis.event.Event;
+import syncer.syncerplusredis.model.AbandonCommandModel;
 import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
 import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerservice.compensator.ISyncerCompensator;
 import syncer.syncerservice.filter.KeyValueRunFilterChain;
 import syncer.syncerservice.po.KeyValueEventEntity;
+import syncer.syncerservice.util.DataCleanUtils;
+import syncer.syncerservice.util.RedisCommandTypeUtils;
 import syncer.syncerservice.util.common.Strings;
 
 /**
@@ -47,14 +54,18 @@ public class SendCommandWithOutQueue {
                     filterChain.run(r,keyValueEventEntity);
                 }
 
+                DataCleanUtils.cleanData(keyValueEventEntity);
+
             }catch (Exception e){
                 Event event=keyValueEventEntity.getEvent();
                 String keyName=null;
-                String keyValue=null;
+                String command=null;
+                String value=null;
                 if(event instanceof DefaultCommand){
                     DefaultCommand defaultCommand= (DefaultCommand) event;
+                    command=Strings.byteToString(defaultCommand.getCommand());
                     if(defaultCommand.getArgs().length>0){
-                        keyName= Strings.byteToString(((DefaultCommand) event).getCommand())+"  "+JSON.toJSONString(Strings.byteToString(((DefaultCommand) event).getArgs()));
+                        keyName= Strings.byteToString(((DefaultCommand) event).getCommand())+Strings.byteToString(((DefaultCommand) event).getArgs()[0]);
                     }else{
                         keyName= Strings.byteToString(((DefaultCommand) event).getCommand());
                     }
@@ -62,16 +73,56 @@ public class SendCommandWithOutQueue {
                     DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
                     keyName= Strings.byteToString(dumpKeyValuePair.getKey());
 
+                    command="RestoreReplace";
                 }else if(event instanceof BatchedKeyValuePair){
                     BatchedKeyValuePair batchedKeyValuePair= (BatchedKeyValuePair) event;
                     keyName=Strings.toString(batchedKeyValuePair.getKey());
+
+                    RedisCommandTypeEnum typeEnum= RedisCommandTypeUtils.getRedisCommandTypeEnum(batchedKeyValuePair.getValueRdbType());
+                    command=typeEnum.name();
                 }
 
-                log.warn("[{}]抛弃key:{} ,class:[{}]:原因[{}]",taskId, keyName,event.getClass().toString(),e.getMessage());
-                log.warn("[{}]抛弃的命令byte:[{}]",taskId,JSON.toJSONString(event));
-                log.warn("[{}]抛弃的命令格式:[{}]",taskId,keyName);
-                e.printStackTrace();
+                //写入数据库抛弃key
+                try {
+                    if(keyName==null){
+                        keyName="";
+                    }
+                    String message;
+                    if(e.getMessage()==null){
+                        message="";
+                    }else{
+                        message=e.getMessage();
+                    }
+                    String desc;
+                    if(event==null){
+                        desc="";
 
+                    }else {
+                        desc=event.getClass().toString();
+                    }
+
+
+                    AbandonCommandMapper abandonCommandMapper= SpringUtil.getBean(AbandonCommandMapper.class);
+                    if(abandonCommandMapper==null){
+
+                    }
+                    abandonCommandMapper.insertSimpleAbandonCommandModel(AbandonCommandModel
+                            .builder()
+                            .command(command)
+                            .exception(message)
+                            .key(keyName)
+                            .taskId(taskId)
+                            .desc(desc)
+                            .build());
+                }catch (Exception ez){
+
+                    log.error("[{}]抛弃key:{}信息写入数据库失败,原因[{}]",taskId, keyName,ez.getMessage());
+                    ez.printStackTrace();
+                }
+
+                log.error("[{}]抛弃key:{} ,class:[{}]:原因[{}]",taskId, keyName,event.getClass().toString(),e.getMessage());
+                DataCleanUtils.cleanData(keyValueEventEntity,event);
+                e.printStackTrace();
 
             }
 

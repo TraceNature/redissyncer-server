@@ -1,25 +1,25 @@
 package syncer.syncerservice.filter.redis_start_check_strategy;
+import com.alibaba.fastjson.JSON;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.syncerjedis.Jedis;
-import syncer.syncerplusredis.constant.RedisStartCheckTypeEnum;
+import syncer.syncerpluscommon.constant.ResultCodeAndMessage;
+import syncer.syncerpluscommon.util.spring.SpringUtil;
+import syncer.syncerplusredis.constant.SyncType;
 import syncer.syncerplusredis.constant.TaskMsgConstant;
+import syncer.syncerplusredis.dao.RdbVersionMapper;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.entity.RedisPoolProps;
-import syncer.syncerplusredis.entity.RedisStartCheckEntity;
 import syncer.syncerplusredis.entity.RedisURI;
-import syncer.syncerplusredis.entity.dto.RedisClusterDto;
 import syncer.syncerplusredis.exception.TaskMsgException;
+import syncer.syncerplusredis.model.RdbVersionModel;
+import syncer.syncerplusredis.model.TaskModel;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.code.CodeUtils;
-import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
-import syncer.syncerservice.util.RedisUrlCheckUtils;
-import syncer.syncerservice.util.TaskCheckUtils;
 import syncer.syncerservice.util.jedis.TestJedisClient;
-
 import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author zhanenqiang
@@ -27,55 +27,63 @@ import java.util.Set;
  * @Date 2020/2/27
  */
 @Builder
+@Slf4j
 public class RedisStartSelectVersionStrategy implements IRedisStartCheckBaseStrategy{
     private IRedisStartCheckBaseStrategy next;
     private JDRedisClient client;
-    private RedisStartCheckEntity eventEntity;
     private RedisPoolProps redisPoolProps;
+    private TaskModel taskModel;
 
-    public RedisStartSelectVersionStrategy(IRedisStartCheckBaseStrategy next, JDRedisClient client, RedisStartCheckEntity eventEntity, RedisPoolProps redisPoolProps) {
-        this.next = next;
-        this.client = client;
-        this.eventEntity = eventEntity;
-        this.redisPoolProps = redisPoolProps;
+    @Override
+    public void run(JDRedisClient client, TaskModel taskModel, RedisPoolProps redisPoolProps) throws Exception {
+        if(taskModel.getSyncType().equals(SyncType.SYNC.getCode())
+                ||taskModel.getSyncType().equals(SyncType.RDB.getCode())
+                ||taskModel.getSyncType().equals(SyncType.AOF.getCode())
+                ||taskModel.getSyncType().equals(SyncType.MIXED.getCode())
+                ||taskModel.getSyncType().equals(SyncType.ONLINERDB.getCode())
+                ||taskModel.getSyncType().equals(SyncType.ONLINEAOF.getCode())
+                ||taskModel.getSyncType().equals(SyncType.ONLINEMIXED.getCode())){
+
+
+            String version=selectSyncerVersion(String.valueOf(taskModel.getTargetUri().toArray()[0]));
+
+            log.warn("自动获取redis版本号：{},手动输入版本号：{}",version,taskModel.getRedisVersion());
+
+            if(version.equalsIgnoreCase("0.0")){
+                if(taskModel.getRedisVersion()==0){
+                    // throw new TaskMsgException("targetRedisVersion can not be empty /targetRedisVersion error");
+                    throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_MSG_REDIS_MSG_ERROR.getCode(),ResultCodeAndMessage.TASK_MSG_REDIS_MSG_ERROR.getMsg()));
+                }else {
+                    version= String.valueOf(taskModel.getRedisVersion());
+                }
+            }
+
+            if(version.indexOf("jimdb")>=0){
+                taskModel.setRedisVersion(2.8);
+            }else {
+                taskModel.setRedisVersion(Double.valueOf(version));
+            }
+
+            RdbVersionMapper rdbVersionMapper= SpringUtil.getBean(RdbVersionMapper.class);
+            RdbVersionModel rdbVersion=rdbVersionMapper.findRdbVersionModelByRedisVersion(version);
+            if(rdbVersion==null){
+                rdbVersion=RdbVersionModel.builder()
+                        .rdb_version(TaskDataManagerUtils.getRdbVersionMap().get(version))
+                        .redis_version(version)
+                         .build();
+            }
+
+            taskModel.setRdbVersion(rdbVersion.getRdb_version());
+
+        }
+
+        toNext(client,taskModel,redisPoolProps);
     }
 
     @Override
-    public void run(JDRedisClient client, RedisStartCheckEntity eventEntity, RedisPoolProps redisPoolProps) throws Exception {
-        RedisStartCheckTypeEnum type=eventEntity.getStartCheckType();
-
-//        if(type.equals(RedisStartCheckTypeEnum.SINGLE_TO_SINGLE)
-//                ||type.equals(RedisStartCheckTypeEnum.SINGLE_TO_CLUSTER)
-//                ||type.equals(RedisStartCheckTypeEnum.FILE_TO_CLUSTER)
-//                ||type.equals(RedisStartCheckTypeEnum.FILE_TO_SINGLE)){
-//            RedisClusterDto redisClusterDto= eventEntity.getClusterDto();
-//            Set<String> targetUris= redisClusterDto.getTargetUris();
-//            if(null==targetUris||targetUris.size()==0){
-//                throw new FilterNodeException("目标路径不存在或targetUri解析错误");
-//            }
-//
-//            String targetUri= (String) targetUris.toArray()[0];
-//
-//            try {
-//                String version=selectSyncerVersion(targetUri);
-//                redisClusterDto.setTargetRedisVersion(version);
-//            } catch (URISyntaxException e) {
-//                e.printStackTrace();
-//            } catch (TaskMsgException e) {
-//                e.printStackTrace();
-//            }
-//
-//        }
-
-
-
-        toNext(client,eventEntity,redisPoolProps);
-    }
-
-    @Override
-    public void toNext(JDRedisClient client, RedisStartCheckEntity eventEntity, RedisPoolProps redisPoolProps) throws Exception {
+    public void toNext(JDRedisClient client, TaskModel taskModel, RedisPoolProps redisPoolProps) throws Exception {
         if(null!=next) {
-            next.run(client,eventEntity,redisPoolProps);
+            next.run(client,taskModel,redisPoolProps);
         }
     }
 

@@ -1,5 +1,7 @@
 package syncer.syncerplusredis.replicator;
 
+import syncer.syncerplusredis.cmd.jimdb.JimDbFirstCommandParser;
+import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.event.PostCommandSyncEvent;
 import syncer.syncerplusredis.event.PreCommandSyncEvent;
@@ -7,6 +9,7 @@ import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.io.PeekableInputStream;
 import syncer.syncerplusredis.io.RedisInputStream;
 import syncer.syncerplusredis.rdb.RdbParser;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 import syncer.syncerplusredis.util.objectutil.Strings;
 import syncer.syncerplusredis.util.type.Tuples;
@@ -102,8 +105,8 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
 
         } catch (Exception e) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),"文件在线读取异常");
-            } catch (TaskMsgException ex) {
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"文件在线读取异常", TaskStatusType.BROKEN);
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, "文件下载异常");
@@ -151,6 +154,16 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
                     }
                     Object[] raw = (Object[]) obj;
                     CommandName name = CommandName.name(Strings.toString(raw[0]));
+
+//                    //jimdb 首次解析
+//                    if(name.equals("TRANSMIT")){
+//                        CommandName first_parser_name = CommandName.name("TRANSMITFIRSTPARSER");
+//                        final JimDbFirstCommandParser firstparser= (JimDbFirstCommandParser) commands.get(first_parser_name);
+//                        if(firstparser!=null){
+//                            raw=firstparser.parse(raw).getCommand();
+//                        }
+//                    }
+
                     final CommandParser<? extends Command> parser;
                     if ((parser = commands.get(name)) == null) {
                         log.warn("command [{}] not register. raw command:{}", name, Strings.format(raw));
@@ -194,6 +207,16 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
                         }
                         Object[] raw = (Object[]) obj;
                         CommandName name = CommandName.name(Strings.toString(raw[0]));
+
+                        //jimdb 首次解析
+//                        if(name.equals("TRANSMIT")){
+//                            CommandName first_parser_name = CommandName.name("TRANSMITFIRSTPARSER");
+//                            final JimDbFirstCommandParser firstparser= (JimDbFirstCommandParser) commands.get(first_parser_name);
+//                            if(firstparser!=null){
+//                                raw=firstparser.parse(raw).getCommand();
+//                            }
+//                        }
+
                         final CommandParser<? extends Command> parser;
                         if ((parser = commands.get(name)) == null) {
                             log.warn("command [{}] not register. raw command:{}", name, Strings.format(raw));
@@ -216,8 +239,9 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
 
         } catch (Exception ignore) {
             try {
-                Map<String, String> msg = TaskMsgUtils.brokenCreateThread(Arrays.asList(taskId),ignore.getMessage());
-            } catch (TaskMsgException ex) {
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,ignore.getMessage(), TaskStatusType.BROKEN);
+
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
             log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId, ignore.getMessage());

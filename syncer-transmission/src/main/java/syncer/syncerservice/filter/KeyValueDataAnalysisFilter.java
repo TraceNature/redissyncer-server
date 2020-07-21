@@ -4,16 +4,22 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Mapper;
 import org.springframework.util.StringUtils;
-import syncer.syncerplusredis.constant.TaskRunTypeEnum;
-import syncer.syncerplusredis.entity.FileType;
+import syncer.syncerpluscommon.util.spring.SpringUtil;
+import syncer.syncerplusredis.cmd.impl.DefaultCommand;
+import syncer.syncerplusredis.dao.BigKeyMapper;
+import syncer.syncerplusredis.dao.TaskMapper;
+import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.event.PostRdbSyncEvent;
-import syncer.syncerplusredis.rdb.datatype.DB;
+import syncer.syncerplusredis.model.BigKeyModel;
 import syncer.syncerplusredis.rdb.datatype.DataType;
 import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
+import syncer.syncerplusredis.util.TimeUtils;
 import syncer.syncerservice.constant.RedisDataTypeAnalysisConstant;
 import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.po.KeyValueEventEntity;
@@ -36,7 +42,9 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
     private JDRedisClient client;
     private String taskId;
     private Long size=0L;
-
+    @Mapper
+    private BigKeyMapper bigKeyMapper;
+//    private
     public KeyValueDataAnalysisFilter(Map<String, Long> analysisMap, CommonFilter next, JDRedisClient client, String taskId) {
         this.analysisMap = new ConcurrentHashMap<>();
         this.next = next;
@@ -44,7 +52,7 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
         this.taskId = taskId;
     }
 
-    public KeyValueDataAnalysisFilter(Map<String, Long> analysisMap, CommonFilter next, JDRedisClient client, String taskId, Long size) {
+    public KeyValueDataAnalysisFilter(Map<String, Long> analysisMap, CommonFilter next, JDRedisClient client, String taskId, Long size,BigKeyMapper bigKeyMapper) {
         this.analysisMap = new ConcurrentHashMap<>();
         this.next = next;
         this.client = client;
@@ -56,15 +64,33 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
     public void run(Replicator replicator, KeyValueEventEntity eventEntity) throws FilterNodeException {
 
         try {
-        Event event=eventEntity.getEvent();
+            Event event=eventEntity.getEvent();
+            TaskDataEntity dataEntity= TaskDataManagerUtils.get(taskId);
 
+
+            //记录任务最后一次update时间
+            try{
+                dataEntity.getTaskModel().setLastKeyUpdateTime(System.currentTimeMillis());
+            }catch (Exception e){
+                log.error("[{}] update last key update time error",taskId);
+            }
         //全量同步结束
         if (event instanceof PostRdbSyncEvent) {
+            try {
+                TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+                analysisMap.put("time", TimeUtils.getNowTimeMills());
+                taskMapper.updateDataAnalysis(taskId,JSON.toJSONString(analysisMap));
+            }catch (Exception e){
+                log.info("全量数据分析报告入库失败");
+            }
+
+
             log.warn("[{}]全量数据结构分析报告：\r\n{}",taskId, JSON.toJSONString(analysisMap, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue,
                     SerializerFeature.WriteDateUseDateFormat));
         }
 
         if (event instanceof DumpKeyValuePair) {
+            dataEntity.getAllKeyCount().incrementAndGet();
             DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
             addAnalysisMap(dumpKeyValuePair.getDataType());
         }
@@ -80,6 +106,18 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
             if(batchedKeyValuePair.getBatch()==0){
 
                 if(!StringUtils.isEmpty(batchedKeyValuePair.getKey())){
+                    dataEntity.getAllKeyCount().incrementAndGet();
+
+                    try {
+                        bigKeyMapper.insertBigKeyCommandModel(BigKeyModel
+                                .builder()
+                                .command(Strings.toString(batchedKeyValuePair.getKey()))
+                                .taskId(taskId)
+                                .command_type(String.valueOf(batchedKeyValuePair.getDataType()))
+                                .build());
+                    }catch (Exception e){
+                        log.error("大key统计入库失败：[{}]", Strings.toString(batchedKeyValuePair.getKey()));
+                    }
 
                     log.warn("大key统计：{}", Strings.toString(batchedKeyValuePair.getKey()));
                 }
@@ -87,11 +125,19 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
                 addAnalysisMap(DataType.FRAGMENTATION);
                 addAnalysisMap(DataType.FRAGMENTATION_NUM);
             }else {
+
                 addAnalysisMap(DataType.FRAGMENTATION_NUM);
             }
 
 
         }
+
+
+            //增量数据
+            if (event instanceof DefaultCommand) {
+                dataEntity.getAllKeyCount().incrementAndGet();
+            }
+
         //继续执行下一Filter节点
         toNext(replicator,eventEntity);
 
@@ -131,6 +177,7 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
             }else {
                 analysisMap.put(dataType.toString(),1L);
             }
+
 
             if(dataType!=null&&dataType.equals(DataType.FRAGMENTATION_NUM)){
                 if(analysisMap.containsKey(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM)){
