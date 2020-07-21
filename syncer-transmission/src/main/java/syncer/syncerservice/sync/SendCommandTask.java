@@ -9,7 +9,6 @@ import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerservice.compensator.ISyncerCompensator;
 import syncer.syncerservice.filter.KeyValueRunFilterChain;
 import syncer.syncerservice.po.KeyValueEventEntity;
-import syncer.syncerservice.util.SyncTaskUtils;
 import syncer.syncerservice.util.queue.SyncerQueue;
 
 import java.io.IOException;

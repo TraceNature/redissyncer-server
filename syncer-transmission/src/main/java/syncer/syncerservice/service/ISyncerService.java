@@ -46,4 +46,6 @@ public interface ISyncerService {
     ResultMap startSyncerTask(List<TaskStartMsgDto> taskStartMsgDtoList) throws Exception;
 
     ResultMap startSyncerTaskByGroupId(String groupId,boolean afresh) throws Exception;
+
+    ResultMap editSyncerTaskByTaskId(TaskModel taskModel)throws Exception;
 }

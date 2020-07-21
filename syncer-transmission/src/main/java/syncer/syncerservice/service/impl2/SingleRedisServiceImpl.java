@@ -5,16 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import syncer.syncerpluscommon.entity.ResultMap;
-import syncer.syncerpluscommon.util.common.TemplateUtils;
 import syncer.syncerplusredis.constant.*;
-import syncer.syncerplusredis.entity.RedisInfo;
 import syncer.syncerplusredis.entity.RedisPoolProps;
 import syncer.syncerplusredis.entity.RedisStartCheckEntity;
 import syncer.syncerplusredis.entity.TaskDataEntity;
-import syncer.syncerplusredis.entity.dto.RedisClusterDto;
 import syncer.syncerplusredis.entity.thread.OffSetEntity;
-import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.util.SyncTypeUtils;
@@ -23,6 +18,7 @@ import syncer.syncerplusredis.util.TaskErrorUtils;
 import syncer.syncerservice.filter.redis_start_check_strategy.RedisTaskStrategyGroupSelecter;
 import syncer.syncerservice.filter.strategy_type.RedisTaskStrategyGroupType;
 import syncer.syncerservice.service.IRedisTaskService;
+import syncer.syncerservice.sync.RedisDataCommandUpTransmissionTask;
 import syncer.syncerservice.sync.RedisDataSyncTransmissionTask;
 import syncer.syncerservice.util.RedisUrlCheckUtils;
 
@@ -55,14 +51,19 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
      * @throws TaskMsgException
      */
     @Override
-        public String runSyncerTask(TaskModel taskModel) throws Exception {
+    public String runSyncerTask(TaskModel taskModel) throws Exception {
 
         if(StringUtils.isEmpty(taskModel.getTaskName())){
-            taskModel.setTaskName(taskModel.getId()+"【"+taskModel.getSourceRedisAddress()+"节点】");
+            if(taskModel.getSourceRedisType()==3){
+                taskModel.setTaskName(taskModel.getId()+"【"+taskModel.getFileAddress()+"数据文件】");
+            }else{
+                taskModel.setTaskName(taskModel.getId()+"【"+taskModel.getSourceRedisAddress()+"节点】");
+            }
         }
 
         TaskDataEntity dataEntity=null;
         if(taskModel.getSyncType().equals(SyncType.SYNC.getCode())||taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())){
+           //获取offset和服务id
             String[] data = RedisUrlCheckUtils.selectSyncerBuffer(taskModel.getSourceUri(), SyncTypeUtils.getOffsetPlace(taskModel.getOffsetPlace()).getOffsetPlace());
 
             dataEntity=TaskDataEntity.builder()
@@ -76,18 +77,10 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
                     .offSetEntity(OffSetEntity.builder().replId("").build())
                     .build();
         }
-
-
-
-
         TaskDataManagerUtils.addMemThread(taskModel.getId(),dataEntity);
-
-
         //创建中
         TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.CREATING);
-
         try {
-
             //校验
             RedisTaskStrategyGroupSelecter.select(RedisTaskStrategyGroupType.NODISTINCT,null,taskModel,redisPoolProps).run(null,taskModel,redisPoolProps);
 
@@ -96,17 +89,13 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
             throw e;
         }
 
-
         //创建完成
         TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.CREATED);
-
         try{
             threadPoolTaskExecutor.execute(new RedisDataSyncTransmissionTask(taskModel, true));
         }catch (Exception e){
             TaskErrorUtils.brokenStatusAndLog(e,this.getClass(),taskModel.getId());
         }
-
-
         return taskModel.getId();
     }
 
@@ -168,10 +157,7 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
         }
 
 
-
-
         TaskDataManagerUtils.addMemThread(taskModel.getId(),dataEntity);
-
 
         //创建中
         TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.CREATING);
@@ -191,7 +177,7 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
         TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.CREATED);
 
         try{
-            threadPoolTaskExecutor.execute(new RedisDataSyncTransmissionTask(taskModel, true));
+            threadPoolTaskExecutor.execute(new RedisDataCommandUpTransmissionTask(taskModel));
         }catch (Exception e){
             TaskErrorUtils.brokenStatusAndLog(e,this.getClass(),taskModel.getId());
         }
@@ -200,6 +186,8 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
         return taskModel.getId();
 
     }
+
+
 
 
 }

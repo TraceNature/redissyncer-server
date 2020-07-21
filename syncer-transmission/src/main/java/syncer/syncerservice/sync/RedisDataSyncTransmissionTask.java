@@ -37,7 +37,6 @@ import syncer.syncerservice.util.JDRedisClient.JDRedisClientFactory;
 import syncer.syncerservice.util.JDRedisClient.RedisMigrator;
 import syncer.syncerservice.util.KeyCountUtils;
 import syncer.syncerservice.util.RedisUrlCheckUtils;
-import syncer.syncerservice.util.SyncTaskUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -58,10 +57,10 @@ public class RedisDataSyncTransmissionTask implements Runnable{
     private boolean status = true;
     @Override
     public void run() {
-
+        Thread.currentThread().setName(taskModel.getId()+": "+Thread.currentThread().getName());
         //这一步应交给上层去做
         if(null==taskModel.getBatchSize()||taskModel.getBatchSize()==0){
-            taskModel.setBatchSize(1500);
+            taskModel.setBatchSize(500);
         }
 
         try {
@@ -102,7 +101,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
 
 
 
-            //只增量相关代码
+            //只增量相关代码  增量命令实时备份
             if (SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType().equals(TaskRunTypeEnum.INCREMENTONLY)) {
                 String[] data = RedisUrlCheckUtils.selectSyncerBuffer(taskModel.getSourceUri(), SyncTypeUtils.getOffsetPlace(taskModel.getOffsetPlace()).getOffsetPlace());
                 long offsetNum = 0L;

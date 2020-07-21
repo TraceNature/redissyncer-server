@@ -28,6 +28,13 @@ public interface IRedisTaskService {
 
     String createSyncerTask(TaskModel taskModel) throws Exception;
 
+    /**
+     * 编辑处于STOP 或 Broken状态的同步任务
+     * @param taskModel
+     * @return
+     * @throws Exception
+     */
     String createCommandSyncerTask(TaskModel taskModel) throws Exception;
+
 
 }
