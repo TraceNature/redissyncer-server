@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import syncer.syncerplusredis.cmd.impl.DefaultCommand;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.rdb.datatype.DB;
@@ -50,8 +49,8 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
         try {
 
 
-        //DUMP格式数据
-        Event event=eventEntity.getEvent();
+            //DUMP格式数据
+            Event event=eventEntity.getEvent();
             if (event instanceof DumpKeyValuePair) {
                 DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
 
@@ -59,10 +58,8 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
                     return;
                 }
                 DB db = dumpKeyValuePair.getDb();
-                DB newDb=new DB();
-                BeanUtils.copyProperties(db,newDb);
                 try {
-                    dbMapping(eventEntity,newDb);
+                    dbMapping(eventEntity,db);
                 } catch (KeyWeed0utException e) {
                     log.info("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
                     //抛弃此kv
@@ -83,10 +80,8 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
 
 
                 DB db = batchedKeyValuePair.getDb();
-                DB newDb=new DB();
-                BeanUtils.copyProperties(db,newDb);
                 try {
-                    dbMapping(eventEntity,newDb);
+                    dbMapping(eventEntity,db);
                 } catch (KeyWeed0utException e) {
                     log.info("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
                     //抛弃此kv
@@ -121,8 +116,8 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
 
             }
 
-        //继续执行下一Filter节点
-        toNext(replicator,eventEntity);
+            //继续执行下一Filter节点
+            toNext(replicator,eventEntity);
         }catch (Exception e){
             throw new FilterNodeException(e.getMessage()+"->KeyValueEventDBMappingFilter",e.getCause());
         }
@@ -151,35 +146,26 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
     void dbMapping(KeyValueEventEntity eventEntity,DB db) throws KeyWeed0utException {
         Event event=eventEntity.getEvent();
         long dbbnum=db.getDbNumber();
-        int dbNumInt= Math.toIntExact(db.getDbNumber());
-
         if (null != eventEntity.getDbMapper() && eventEntity.getDbMapper().size() > 0) {
-            if (eventEntity.getDbMapper().containsKey(dbNumInt)) {
-                dbbnum = eventEntity.getDbMapper().get(dbNumInt);
+            if (eventEntity.getDbMapper().containsKey((int) db.getDbNumber())) {
+                dbbnum = eventEntity.getDbMapper().get((int) db.getDbNumber());
             } else {
                 //忽略本key
+
                 throw new KeyWeed0utException("key抛弃");
+
             }
         }
-
         if(event instanceof DumpKeyValuePair) {
             DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
-
-//            DB dbn=dumpKeyValuePair.getDb();
-//            dbn.setDbNumber(dbbnum);
-//            dumpKeyValuePair.setDb(dbn);
-
-            db.setDbNumber(dbbnum);
-            dumpKeyValuePair.setDb(db);
-
+            DB dbn=dumpKeyValuePair.getDb();
+            dbn.setDbNumber(dbbnum);
+            dumpKeyValuePair.setDb(dbn);
             eventEntity.setEvent(dumpKeyValuePair);
         }else if(event instanceof BatchedKeyValuePair<?, ?>){
             BatchedKeyValuePair batchedKeyValuePair = (BatchedKeyValuePair) event;
-//            DB dbn=batchedKeyValuePair.getDb();
-//            dbn.setDbNumber(dbbnum);
-
-            db.setDbNumber(dbbnum);
-            batchedKeyValuePair.setDb(db);
+            DB dbn=batchedKeyValuePair.getDb();
+            dbn.setDbNumber(dbbnum);
             eventEntity.setEvent(batchedKeyValuePair);
         }
         eventEntity.setDbNum(dbbnum);
