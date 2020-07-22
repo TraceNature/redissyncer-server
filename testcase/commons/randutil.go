@@ -20,10 +20,15 @@ func StringWithCharset(length int, charset string) string {
 }
 
 func RandString(length int) string {
-	rand.Seed(time.Now().Unix())
+	//var seededRand *rand.Rand = rand.New(
+	//	rand.NewSource(time.Now().UnixNano()))
+	rand.Seed(time.Now().UnixNano())
+
 	b := make([]byte, length)
 	for i := range b {
+		//b[i] = charset[seededRand.Intn(len(charset))]
 		b[i] = charset[rand.Intn(len(charset))]
+
 	}
 	return string(b)
 }

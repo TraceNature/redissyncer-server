@@ -236,7 +236,7 @@ func (optsingle *OptSingle) BO_MSET_MSETNX() {
 func (optsingle *OptSingle) BO_PFADD() {
 	t1 := time.Now()
 	pfaddkey := "pfadd_" + optsingle.KeySuffix
-	rand.Seed(time.Now().Unix())
+	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < optsingle.Loopstep; i++ {
 		optsingle.RedisConn.PFAdd(pfaddkey, rand.Float64()*float64(rand.Int()))
 	}
@@ -250,7 +250,7 @@ func (optsingle *OptSingle) BO_PFMERGE() {
 	pfaddkey := "pfadd_" + optsingle.KeySuffix
 	pfmergekey := "pfmerge_" + optsingle.KeySuffix
 	pfaddkeyarray := []string{}
-	rand.Seed(time.Now().Unix())
+	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < optsingle.Loopstep; i++ {
 		key := pfaddkey + strconv.Itoa(i)
 		optsingle.RedisConn.PFAdd(key, rand.Float64()*float64(rand.Int()))
@@ -715,7 +715,7 @@ func (optsingle *OptSingle) KeepExecBasicOpt(ctx context.Context, sleeptime time
 	}
 
 	for {
-		rand.Seed(time.Now().Unix())
+		rand.Seed(time.Now().UnixNano())
 		randi := rand.Intn(2 * len(BaseOptArray))
 		optsingle.KeySuffix = keysuffix + strconv.FormatInt(i, 10)
 		if randi < len(BaseOptArray) {

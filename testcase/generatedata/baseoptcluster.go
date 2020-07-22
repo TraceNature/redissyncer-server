@@ -231,7 +231,7 @@ func (optcluster *OptCluster) BO_MSET_MSETNX() {
 func (optcluster *OptCluster) BO_PFADD() {
 	t1 := time.Now()
 	pfaddkey := "pfadd_" + optcluster.KeySuffix
-	rand.Seed(time.Now().Unix())
+	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < optcluster.Loopstep; i++ {
 		optcluster.ClusterClient.PFAdd(pfaddkey, rand.Float64()*float64(rand.Int()))
 	}
