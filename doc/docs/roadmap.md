@@ -30,12 +30,12 @@
 
 * 3.X
   
-- [ ] key过滤
+- [ ] key过滤    
 - [ ] 命令过滤
 - [ ] 限制任务数，根据内存容量限制创建任务
 - [ ] 内存级别双向同步
 - [ ] 集成log4j2,日志可通过application.yml或启动参数配置，默认输出位置 ./log
-- [ ] 数据校验
+- [ ] 数据校验，由goclient集成
 - [ ]  incr 、incrby等命令幂等操作
 - [ ]  swagger 补充api说明
 - [ ] goclient 适应v2 api
@@ -45,8 +45,8 @@
    - [ ] single2single with dbmap
    - [x] single2single 断点续传
    - [x] single2cluster
-   - [x] cluster2cluster
-   - [ ] cluster2cluster 断点续传
+   - [x]  group2cluster
+   - [ ]  group2cluster 断点续传
    - [ ] rdb导入
    - [ ] aof导入
 

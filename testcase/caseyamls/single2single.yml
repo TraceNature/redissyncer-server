@@ -1,6 +1,6 @@
 syncserver:   "http://114.67.67.7:8080"
 createtaskfile: "./tasks/createtask.json"
-gendataduration: 36000
+gendataduration: 300
 datageninterval: 200
 gendatathreads: 8
 bigkvkeysuffixlen: 4
@@ -9,7 +9,7 @@ bigkvexpire: 3600
 bigkvvalueprefixlen: 512
 incrementkeysuffixlen: 4
 incrementloopstep: 20
-incrementexpire: 30
+incrementexpire: 18000
 comparebatchsize: 50
 comparethreads: 2
 comparettldiff: 100000

@@ -273,6 +273,7 @@ func (tc *TestCase) Single2Single() {
 			Loopstep:  tc.Increment_Loopstep,
 			EXPIRE:    time.Duration(tc.Increment_EXPIRE) * time.Second,
 		}
+
 		wg.Add(1)
 		increment_pool.Submit(func() {
 			bo.KeepExecBasicOpt(ctx, time.Duration(tc.DataGenInterval)*time.Millisecond, false)
@@ -420,6 +421,7 @@ func (tc TestCase) Single2SingleWithDBMap() {
 			EXPIRE:    time.Duration(tc.Increment_EXPIRE) * time.Second,
 			DB:        db,
 		}
+
 		wg.Add(1)
 		increment_pool.Submit(func() {
 			bo.KeepExecBasicOpt(ctx, time.Duration(tc.DataGenInterval)*time.Millisecond, false)
