@@ -12,14 +12,14 @@ import java.util.List;
  * @Description 描述
  * @Date 2020/3/10
  */
-@Component
+//@Component
 @Mapper
 public interface TaskMapper  {
     // 根据 ID 查询
     @Select("SELECT * FROM t_task")
     List<TaskModel> selectAll()throws Exception;
 
-    @Select("SELECT * FROM t_task WHERE id =#{id}")
+    @Select("SELECT * FROM t_task WHERE id =#{id} limit 1")
     TaskModel findTaskById(@Param("id") String id)throws Exception;
 
     @Select("select count(*) from t_task")
@@ -37,15 +37,15 @@ public interface TaskMapper  {
     @Select("SELECT * FROM t_task WHERE groupId =#{groupId}")
     List<TaskModel>findTaskByGroupId(@Param("groupId")String groupId)throws  Exception;
 
-    @Insert("INSERT INTO t_task(id, groupId,taskName,sourceRedisAddress,sourcePassword,targetRedisAddress,targetPassword,autostart,afresh,batchSize,tasktype,offsetPlace,taskMsg,offset,status,redisVersion,rdbVersion,sourceRedisType,targetRedisType,syncType,dbMapper,md5,replId,fileAddress,sourceAcl,targetAcl,sourceUserName,targetUserName) VALUES(#{id}, #{groupId},#{taskName},#{sourceRedisAddress},#{sourcePassword},#{targetRedisAddress},#{targetPassword},#{autostart},#{afresh},#{batchSize},#{tasktype},#{offsetPlace},#{taskMsg},#{offset},#{status},#{redisVersion},#{rdbVersion},#{sourceRedisType},#{targetRedisType},#{syncType},#{dbMapper},#{md5},#{replId},#{fileAddress},#{sourceAcl},#{targetAcl},#{sourceUserName},#{targetUserName})")
+    @Insert("INSERT INTO t_task(id, groupId,taskName,sourceRedisAddress,sourcePassword,targetRedisAddress,targetPassword,autostart,afresh,batchSize,tasktype,offsetPlace,taskMsg,offset,status,redisVersion,rdbVersion,sourceRedisType,targetRedisType,syncType,dbMapper,md5,replId,fileAddress,sourceAcl,targetAcl,sourceUserName,targetUserName,errorCount) VALUES(#{id}, #{groupId},#{taskName},#{sourceRedisAddress},#{sourcePassword},#{targetRedisAddress},#{targetPassword},#{autostart},#{afresh},#{batchSize},#{tasktype},#{offsetPlace},#{taskMsg},#{offset},#{status},#{redisVersion},#{rdbVersion},#{sourceRedisType},#{targetRedisType},#{syncType},#{dbMapper},#{md5},#{replId},#{fileAddress},#{sourceAcl},#{targetAcl},#{sourceUserName},#{targetUserName},#{errorCount})")
     boolean insertTask(TaskModel taskModel)throws Exception;
 
 
     @Insert({
             "<script>",
-            "insert into t_task(id, groupId,taskName,sourceRedisAddress,sourcePassword,targetRedisAddress,targetPassword,autostart,afresh,batchSize,tasktype,offsetPlace,taskMsg,offset,status,redisVersion,rdbVersion,sourceRedisType,targetRedisType,syncType,dbMapper,md5,replId,fileAddress,sourceAcl,targetAcl,sourceUserName,targetUserName) values ",
+            "insert into t_task(id, groupId,taskName,sourceRedisAddress,sourcePassword,targetRedisAddress,targetPassword,autostart,afresh,batchSize,tasktype,offsetPlace,taskMsg,offset,status,redisVersion,rdbVersion,sourceRedisType,targetRedisType,syncType,dbMapper,md5,replId,fileAddress,sourceAcl,targetAcl,sourceUserName,targetUserName,errorCount) values ",
             "<foreach collection='taskModelList' item='item' index='index' separator=','>",
-            "(#{item.id}, #{item.groupId}, #{item.taskName}, #{item.sourceRedisAddress}, #{item.sourcePassword}, #{item.targetRedisAddress}, #{item.targetPassword}, #{item.autostart}, #{item.afresh}, #{item.batchSize}, #{item.tasktype}, #{item.offsetPlace}, #{item.taskMsg}, #{item.offset}, #{item.status},#{item.redisVersion},#{item.rdbVersion},#{item.sourceRedisType},#{item.targetRedisType},#{item.syncType},#{item.dbMapper},#{item.md5},#{item.replId},#{item.fileAddress},,#{item.sourceAcl},#{item.targetAcl},#{item.sourceUserName},#{item.targetUserName})",
+            "(#{item.id}, #{item.groupId}, #{item.taskName}, #{item.sourceRedisAddress}, #{item.sourcePassword}, #{item.targetRedisAddress}, #{item.targetPassword}, #{item.autostart}, #{item.afresh}, #{item.batchSize}, #{item.tasktype}, #{item.offsetPlace}, #{item.taskMsg}, #{item.offset}, #{item.status},#{item.redisVersion},#{item.rdbVersion},#{item.sourceRedisType},#{item.targetRedisType},#{item.syncType},#{item.dbMapper},#{item.md5},#{item.replId},#{item.fileAddress},,#{item.sourceAcl},#{item.targetAcl},#{item.sourceUserName},#{item.targetUserName},#{item.errorCount})",
             "</foreach>",
             "</script>"
     })
@@ -62,7 +62,7 @@ public interface TaskMapper  {
     @Delete("DELETE FROM t_task")
     int deleteAllTask();
 
-    @Update("UPDATE t_task SET groupId=#{groupId} ,taskName=#{taskName},sourceRedisAddress=#{sourceRedisAddress},sourcePassword=#{sourcePassword},targetRedisAddress=#{targetRedisAddress},targetPassword=#{targetPassword},autostart=#{autostart},afresh=#{afresh},batchSize=#{batchSize},tasktype=#{tasktype},offsetPlace=#{offsetPlace},taskMsg=#{taskMsg},offset=#{offset},status=#{status},redisVersion=#{redisVersion},rdbVersion=#{rdbVersion} ,targetRedisType=#{targetRedisType},sourceRedisType=#{sourceRedisType},syncType=#{syncType},dbMapper=#{dbMapper},updateTime=(datetime('now', 'localtime')) ,md5=#{md5},sourceAcl=#{sourceAcl},targetAcl=#{targetAcl},sourceUserName=#{sourceUserName},targetUserName=#{targetUserName} WHERE id=#{id}")
+    @Update("UPDATE t_task SET groupId=#{groupId} ,taskName=#{taskName},sourceRedisAddress=#{sourceRedisAddress},sourcePassword=#{sourcePassword},targetRedisAddress=#{targetRedisAddress},targetPassword=#{targetPassword},autostart=#{autostart},afresh=#{afresh},batchSize=#{batchSize},tasktype=#{tasktype},offsetPlace=#{offsetPlace},taskMsg=#{taskMsg},offset=#{offset},status=#{status},redisVersion=#{redisVersion},rdbVersion=#{rdbVersion} ,targetRedisType=#{targetRedisType},sourceRedisType=#{sourceRedisType},syncType=#{syncType},dbMapper=#{dbMapper},updateTime=(datetime('now', 'localtime')) ,md5=#{md5},sourceAcl=#{sourceAcl},targetAcl=#{targetAcl},sourceUserName=#{sourceUserName},targetUserName=#{targetUserName},errorCount=#{errorCount} WHERE id=#{id}")
     boolean updateTask(TaskModel taskModel)throws Exception;
 
     @Update("UPDATE t_task SET status=#{status},updateTime=(datetime('now', 'localtime')) WHERE id=#{id}")
@@ -96,7 +96,7 @@ public interface TaskMapper  {
     @Update("UPDATE t_task set offset=#{offset},replId=#{replId} where id=#{id}")
     boolean updateOffsetAndReplId(@Param("id")String id,@Param("offset")Long offset,@Param("replId") String replId)throws Exception;
 
-    @Update("UPDATE t_task set offset=#{offset},replId=#{replId} where id=#{id}")
+    @Update("UPDATE t_task set offset=#{offset},replId=#{replId},allKeyCount=#{allKeyCount},realKeyCount=#{realKeyCount} where id=#{id}")
     boolean updateOffsetAndReplIdAndAllKey(@Param("id")String id,@Param("offset")Long offset,@Param("replId") String replId,String allKeyCount,String realKeyCount)throws Exception;
 
 

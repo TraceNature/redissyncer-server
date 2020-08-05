@@ -8,17 +8,24 @@ import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.cmd.impl.DefaultCommand;
 import syncer.syncerplusredis.constant.RedisCommandTypeEnum;
 import syncer.syncerplusredis.dao.AbandonCommandMapper;
+import syncer.syncerplusredis.entity.TaskOffsetEntity;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.model.AbandonCommandModel;
 import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerplusredis.util.DataTypeUtils;
+import syncer.syncerplusredis.util.SqliteOPUtils;
 import syncer.syncerservice.compensator.ISyncerCompensator;
+import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.filter.KeyValueRunFilterChain;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.DataCleanUtils;
 import syncer.syncerservice.util.RedisCommandTypeUtils;
 import syncer.syncerservice.util.common.Strings;
+import syncer.syncerservice.util.jedis.StringUtils;
+import syncer.syncerservice.util.taskutil.TaskGetUtils;
+import syncer.syncerservice.util.taskutil.taskServiceQueue.DbDataCommitQueue;
 
 /**
  * @author zhanenqiang
@@ -48,19 +55,19 @@ public class SendCommandWithOutQueue {
 
 
             try {
-
                 keyValueEventEntity.setISyncerCompensator(syncerCompensator);
                 if(null!=keyValueEventEntity){
                     filterChain.run(r,keyValueEventEntity);
                 }
-
                 DataCleanUtils.cleanData(keyValueEventEntity);
-
+//                throw new FilterNodeException("测试异常");
             }catch (Exception e){
                 Event event=keyValueEventEntity.getEvent();
                 String keyName=null;
                 String command=null;
                 String value=null;
+                int dataType=12;
+                long ttl=-1L;
                 if(event instanceof DefaultCommand){
                     DefaultCommand defaultCommand= (DefaultCommand) event;
                     command=Strings.byteToString(defaultCommand.getCommand());
@@ -69,17 +76,28 @@ public class SendCommandWithOutQueue {
                     }else{
                         keyName= Strings.byteToString(((DefaultCommand) event).getCommand());
                     }
+
                 }else if(event instanceof DumpKeyValuePair){
                     DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
                     keyName= Strings.byteToString(dumpKeyValuePair.getKey());
-
                     command="RestoreReplace";
+                    if(dumpKeyValuePair.getExpiredMs()!=null){
+                        ttl=dumpKeyValuePair.getExpiredMs();
+                    }
+                    dataType= DataTypeUtils.getType(dumpKeyValuePair.getDataType());
                 }else if(event instanceof BatchedKeyValuePair){
                     BatchedKeyValuePair batchedKeyValuePair= (BatchedKeyValuePair) event;
                     keyName=Strings.toString(batchedKeyValuePair.getKey());
-
                     RedisCommandTypeEnum typeEnum= RedisCommandTypeUtils.getRedisCommandTypeEnum(batchedKeyValuePair.getValueRdbType());
                     command=typeEnum.name();
+                    if(batchedKeyValuePair.getExpiredMs()!=null){
+                        ttl=batchedKeyValuePair.getExpiredMs();
+                    }
+                    dataType= DataTypeUtils.getType(batchedKeyValuePair.getDataType());
+                }
+
+                if(StringUtils.isEmpty(command)){
+                    return;
                 }
 
                 //写入数据库抛弃key
@@ -102,17 +120,17 @@ public class SendCommandWithOutQueue {
                     }
 
 
-                    AbandonCommandMapper abandonCommandMapper= SpringUtil.getBean(AbandonCommandMapper.class);
-                    if(abandonCommandMapper==null){
 
-                    }
-                    abandonCommandMapper.insertSimpleAbandonCommandModel(AbandonCommandModel
+                    SqliteOPUtils.insertSimpleAbandonCommandModel(AbandonCommandModel
                             .builder()
                             .command(command)
                             .exception(message)
                             .key(keyName)
                             .taskId(taskId)
+                            .type(dataType)
                             .desc(desc)
+                            .ttl(ttl)
+                            .groupId(TaskGetUtils.getRunningTaskGroupId(taskId))
                             .build());
                 }catch (Exception ez){
 
@@ -123,9 +141,6 @@ public class SendCommandWithOutQueue {
                 log.error("[{}]抛弃key:{} ,class:[{}]:原因[{}]",taskId, keyName,event.getClass().toString(),e.getMessage());
                 DataCleanUtils.cleanData(keyValueEventEntity,event);
                 e.printStackTrace();
-
             }
-
-
     }
 }

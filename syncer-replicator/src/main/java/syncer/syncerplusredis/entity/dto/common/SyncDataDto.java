@@ -38,6 +38,12 @@ public class SyncDataDto implements Serializable {
     @Builder.Default
     private String redistype= RedisType.SINGLE.toString();
 
+    /**
+     * 抛弃Key阈值
+     */
+    @Builder.Default
+    private long errorCount=1;
+
     //迁移类型：psync/文件
     @Builder.Default
     private FileType fileType=FileType.SYNC;

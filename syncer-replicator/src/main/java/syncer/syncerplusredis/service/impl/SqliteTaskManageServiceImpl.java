@@ -7,6 +7,7 @@ import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.dao.TaskMapper;
 import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.service.ITaskManageService;
+import syncer.syncerplusredis.util.SqliteOPUtils;
 
 import java.util.List;
 
@@ -20,17 +21,15 @@ import java.util.List;
 @Service("sqliteTaskManageService")
 public class SqliteTaskManageServiceImpl implements ITaskManageService {
 
-    @Autowired
-    TaskMapper taskMapper;
 
 
     @Override
     public boolean createTaskService(TaskModel model) throws Exception {
 
         try {
-            TaskModel dataModel=taskMapper.findTaskById(model.getId());
+            TaskModel dataModel= SqliteOPUtils.findTaskById(model.getId());
             if(dataModel==null){
-                if(taskMapper.insertTask(model)){
+                if(SqliteOPUtils.insertTask(model)){
                     return true;
                 }
             }
@@ -45,13 +44,13 @@ public class SqliteTaskManageServiceImpl implements ITaskManageService {
 
     @Override
     public boolean startTaskServiceById(String id, TaskStatusType statusType)throws Exception {
-        TaskModel dataModel=taskMapper.findTaskById(id);
+        TaskModel dataModel=SqliteOPUtils.findTaskById(id);
         //任务存在且未在运行中
         if(dataModel!=null
                 && !dataModel.getStatus().equals(TaskStatusType.RUN.getCode())
         &&!dataModel.getStatus().equals(TaskStatusType.RDBRUNING.getCode())
         &&!dataModel.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())){
-            taskMapper.updateTaskStatusById(id,TaskStatusType.RUN.getCode());
+            SqliteOPUtils.updateTaskStatusById(id,TaskStatusType.RUN.getCode());
 
         }else {
 //            throw new  Exception()
@@ -61,14 +60,14 @@ public class SqliteTaskManageServiceImpl implements ITaskManageService {
 
     @Override
     public boolean startTaskServiceByGroupId(String groupId, TaskStatusType statusType)throws Exception {
-        List<TaskModel> taskModelList = taskMapper.findTaskByGroupId(groupId);
+        List<TaskModel> taskModelList = SqliteOPUtils.findTaskByGroupId(groupId);
         if (null != taskModelList) {
             for (TaskModel task : taskModelList) {
                 if (null != task
                         && !task.getStatus().equals(TaskStatusType.RUN.getCode())
                         && !task.getStatus().equals(TaskStatusType.RDBRUNING.getCode())
                         && !task.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())) {
-                    taskMapper.updateTaskStatusById(task.getId(), TaskStatusType.RUN.getCode());
+                    SqliteOPUtils.updateTaskStatusById(task.getId(), TaskStatusType.RUN.getCode());
                 }
             }
             return true;
@@ -79,17 +78,17 @@ public class SqliteTaskManageServiceImpl implements ITaskManageService {
     @Override
     public boolean stopTaskServiceById(String id, TaskStatusType statusType) throws Exception {
 
-        TaskModel dataModel=taskMapper.findTaskById(id);
+        TaskModel dataModel=SqliteOPUtils.findTaskById(id);
         //任务存在且未在运行中
         if(dataModel!=null){
             if(dataModel.getStatus().equals(TaskStatusType.RUN.getCode())
                     ||dataModel.getStatus().equals(TaskStatusType.RDBRUNING.getCode())
                     ||dataModel.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())){
 
-                taskMapper.updateTaskStatusById(id,TaskStatusType.STOP.getCode());
+                SqliteOPUtils.updateTaskStatusById(id,TaskStatusType.STOP.getCode());
                 //避免sqlite压力过大，同时更新内存状态
             }else {
-                taskMapper.updateTaskStatusById(id,TaskStatusType.STOP.getCode());
+                SqliteOPUtils.updateTaskStatusById(id,TaskStatusType.STOP.getCode());
 
 
             }
@@ -113,7 +112,7 @@ public class SqliteTaskManageServiceImpl implements ITaskManageService {
     @Override
     public boolean stopTaskServiceByGroupId(String groupId, TaskStatusType statusType) throws Exception {
 
-        List<TaskModel> taskModelList = taskMapper.findTaskByGroupId(groupId);
+        List<TaskModel> taskModelList = SqliteOPUtils.findTaskByGroupId(groupId);
         if (null != taskModelList) {
             for (TaskModel task : taskModelList) {
 
@@ -121,7 +120,7 @@ public class SqliteTaskManageServiceImpl implements ITaskManageService {
                     if(task.getStatus().equals(TaskStatusType.RUN.getCode())
                             ||task.getStatus().equals(TaskStatusType.RDBRUNING.getCode())
                             ||task.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())){
-                        taskMapper.updateTaskStatusById(task.getId(), TaskStatusType.STOP.getCode());
+                        SqliteOPUtils.updateTaskStatusById(task.getId(), TaskStatusType.STOP.getCode());
                     }
                 }else{
                     continue;
@@ -144,11 +143,11 @@ public class SqliteTaskManageServiceImpl implements ITaskManageService {
      */
     @Override
     public boolean brokenTaskServiceById(String id, TaskStatusType statusType) throws Exception {
-        TaskModel dataModel=taskMapper.findTaskById(id);
+        TaskModel dataModel=SqliteOPUtils.findTaskById(id);
         //任务存在且未在运行中
 
         if(null!=dataModel){
-            return taskMapper.updateTaskStatusById(id,TaskStatusType.BROKEN.getCode());
+            return SqliteOPUtils.updateTaskStatusById(id,TaskStatusType.BROKEN.getCode());
         }
 
 
@@ -166,11 +165,11 @@ public class SqliteTaskManageServiceImpl implements ITaskManageService {
      */
     @Override
     public boolean brokenTaskServiceByGroupId(String groupId, TaskStatusType statusType) throws Exception {
-        List<TaskModel> taskModelList = taskMapper.findTaskByGroupId(groupId);
+        List<TaskModel> taskModelList = SqliteOPUtils.findTaskByGroupId(groupId);
         if (null != taskModelList) {
             for (TaskModel task : taskModelList) {
                 if(null!=task){
-                     taskMapper.updateTaskStatusById(task.getId(),TaskStatusType.BROKEN.getCode());
+                     SqliteOPUtils.updateTaskStatusById(task.getId(),TaskStatusType.BROKEN.getCode());
                 }
             }
             return true;

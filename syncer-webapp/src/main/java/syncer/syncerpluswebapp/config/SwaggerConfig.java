@@ -12,6 +12,9 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 import springfox.documentation.service.Parameter;
+import syncer.syncerpluswebapp.config.swagger.ModelCache;
+import syncer.syncerpluswebapp.config.swagger.model.GlobalString;
+
 import java.util.List;
 
 /**
@@ -31,10 +34,10 @@ public class SwaggerConfig {
 
         List<Parameter> aParameters = Lists.newArrayList();
         aParameters.add(aParameterBuilder.build());
-
+        ModelCache.getInstance().setParamClass(GlobalString.class);
         return new Docket(DocumentationType.SWAGGER_2)
                 .pathMapping("/")
-                .globalOperationParameters(aParameters)
+//                .globalOperationParameters(aParameters)
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("syncer.syncerpluswebapp.controller.v2"))
                 .paths(PathSelectors.any())

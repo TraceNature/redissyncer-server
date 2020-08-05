@@ -8,6 +8,7 @@ import org.springframework.util.StringUtils;
 import syncer.syncerplusredis.constant.*;
 import syncer.syncerplusredis.entity.RedisPoolProps;
 import syncer.syncerplusredis.entity.RedisStartCheckEntity;
+import syncer.syncerplusredis.entity.StartTaskEntity;
 import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.entity.thread.OffSetEntity;
 import syncer.syncerplusredis.exception.TaskMsgException;
@@ -77,7 +78,10 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
                     .offSetEntity(OffSetEntity.builder().replId("").build())
                     .build();
         }
-        TaskDataManagerUtils.addMemThread(taskModel.getId(),dataEntity);
+
+
+
+        TaskDataManagerUtils.addMemThread(taskModel.getId(),dataEntity,true);
         //创建中
         TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.CREATING);
         try {
@@ -156,11 +160,12 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
                     .build();
         }
 
+        dataEntity.getTaskModel().setStatus(TaskStatusType.CREATING.getCode());
 
-        TaskDataManagerUtils.addMemThread(taskModel.getId(),dataEntity);
+        TaskDataManagerUtils.addMemThread(taskModel.getId(),dataEntity,true);
 
         //创建中
-        TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.CREATING);
+        TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),-1L, TaskStatusType.CREATING);
 
         try {
 
@@ -174,7 +179,7 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
 
 
         //创建完成
-        TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.CREATED);
+        TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),-1L, TaskStatusType.CREATED);
 
         try{
             threadPoolTaskExecutor.execute(new RedisDataCommandUpTransmissionTask(taskModel));

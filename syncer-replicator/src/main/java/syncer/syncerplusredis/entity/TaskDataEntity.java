@@ -10,6 +10,7 @@ import syncer.syncerplusredis.replicator.Replicator;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -25,11 +26,16 @@ public class TaskDataEntity {
     private  TaskModel taskModel;
     private OffSetEntity offSetEntity;
     private Replicator replicator;
+
     @Builder.Default
     private AtomicLong rdbKeyCount=new AtomicLong(0);
+
     @Builder.Default
     private AtomicLong allKeyCount=new AtomicLong(0);
 
     @Builder.Default
     private AtomicLong realKeyCount=new AtomicLong(0);
+
+    @Builder.Default
+    private AtomicInteger abandonKeyCount=new AtomicInteger(0);
 }

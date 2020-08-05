@@ -6,10 +6,8 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.util.StringUtils;
-import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.cmd.impl.DefaultCommand;
-import syncer.syncerplusredis.dao.BigKeyMapper;
-import syncer.syncerplusredis.dao.TaskMapper;
+import syncer.syncerplusredis.entity.SqliteCommitEntity;
 import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.event.Event;
 import syncer.syncerplusredis.event.PostRdbSyncEvent;
@@ -18,6 +16,7 @@ import syncer.syncerplusredis.rdb.datatype.DataType;
 import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerplusredis.util.SqliteOPUtils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TimeUtils;
 import syncer.syncerservice.constant.RedisDataTypeAnalysisConstant;
@@ -25,6 +24,7 @@ import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.po.KeyValueEventEntity;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.common.Strings;
+import syncer.syncerservice.util.taskutil.taskServiceQueue.DbDataCommitQueue;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,8 +42,7 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
     private JDRedisClient client;
     private String taskId;
     private Long size=0L;
-    @Mapper
-    private BigKeyMapper bigKeyMapper;
+
 //    private
     public KeyValueDataAnalysisFilter(Map<String, Long> analysisMap, CommonFilter next, JDRedisClient client, String taskId) {
         this.analysisMap = new ConcurrentHashMap<>();
@@ -52,7 +51,7 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
         this.taskId = taskId;
     }
 
-    public KeyValueDataAnalysisFilter(Map<String, Long> analysisMap, CommonFilter next, JDRedisClient client, String taskId, Long size,BigKeyMapper bigKeyMapper) {
+    public KeyValueDataAnalysisFilter(Map<String, Long> analysisMap, CommonFilter next, JDRedisClient client, String taskId, Long size) {
         this.analysisMap = new ConcurrentHashMap<>();
         this.next = next;
         this.client = client;
@@ -67,7 +66,6 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
             Event event=eventEntity.getEvent();
             TaskDataEntity dataEntity= TaskDataManagerUtils.get(taskId);
 
-
             //记录任务最后一次update时间
             try{
                 dataEntity.getTaskModel().setLastKeyUpdateTime(System.currentTimeMillis());
@@ -77,9 +75,9 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
         //全量同步结束
         if (event instanceof PostRdbSyncEvent) {
             try {
-                TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+
                 analysisMap.put("time", TimeUtils.getNowTimeMills());
-                taskMapper.updateDataAnalysis(taskId,JSON.toJSONString(analysisMap));
+                SqliteOPUtils.updateDataAnalysis(taskId,JSON.toJSONString(analysisMap));
             }catch (Exception e){
                 log.info("全量数据分析报告入库失败");
             }
@@ -109,12 +107,21 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
                     dataEntity.getAllKeyCount().incrementAndGet();
 
                     try {
-                        bigKeyMapper.insertBigKeyCommandModel(BigKeyModel
+
+                        BigKeyModel bigKeyModel=BigKeyModel
                                 .builder()
                                 .command(Strings.toString(batchedKeyValuePair.getKey()))
                                 .taskId(taskId)
                                 .command_type(String.valueOf(batchedKeyValuePair.getDataType()))
-                                .build());
+                                .build();
+                        DbDataCommitQueue.put(SqliteCommitEntity.builder().type(10).object(bigKeyModel).msg("bigKeyInsert").build());
+//                        BigKeyMapper bigKeyMapper=SpringUtil.getBean(BigKeyMapper.class);
+//                        bigKeyMapper.insertBigKeyCommandModel(BigKeyModel
+//                                .builder()
+//                                .command(Strings.toString(batchedKeyValuePair.getKey()))
+//                                .taskId(taskId)
+//                                .command_type(String.valueOf(batchedKeyValuePair.getDataType()))
+//                                .build());
                     }catch (Exception e){
                         log.error("大key统计入库失败：[{}]", Strings.toString(batchedKeyValuePair.getKey()));
                     }

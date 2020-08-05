@@ -16,6 +16,7 @@ import syncer.syncerplusredis.entity.RedisURI;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.exception.TaskRestoreException;
 import syncer.syncerplusredis.model.TaskModel;
+import syncer.syncerplusredis.util.SqliteOPUtils;
 import syncer.syncerplusredis.util.code.CodeUtils;
 import syncer.syncerservice.pool.RedisClient;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
@@ -44,8 +45,8 @@ public class RedisStartDistinctStrategy implements IRedisStartCheckBaseStrategy 
     public void run(JDRedisClient client, TaskModel taskModel, RedisPoolProps redisPoolProps) throws Exception {
 
 
-        TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-        List<TaskModel> taskModelList=taskMapper.findTaskBytaskMd5(taskModel.getMd5());
+
+        List<TaskModel> taskModelList= SqliteOPUtils.findTaskBytaskMd5(taskModel.getMd5());
         if(taskModelList!=null&&taskModelList.size()>0){
             throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_MSG_TASKSETTING_ERROR.getCode(),ResultCodeAndMessage.TASK_MSG_TASKSETTING_ERROR.getMsg()));
         }

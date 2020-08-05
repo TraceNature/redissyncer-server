@@ -9,7 +9,7 @@ import syncer.syncerplusredis.constant.RedisBranchTypeEnum;
 import syncer.syncerplusredis.constant.SyncType;
 import syncer.syncerplusredis.constant.TaskRunTypeEnum;
 import syncer.syncerplusredis.constant.TaskStatusType;
-import syncer.syncerplusredis.dao.TaskMapper;
+
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.entity.RedisURI;
 import syncer.syncerplusredis.entity.TaskDataEntity;
@@ -23,6 +23,7 @@ import syncer.syncerplusredis.extend.replicator.service.JDRedisReplicator;
 import syncer.syncerplusredis.extend.replicator.visitor.ValueDumpIterableRdbVisitor;
 import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerplusredis.util.SqliteOPUtils;
 import syncer.syncerplusredis.util.SyncTypeUtils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TaskErrorUtils;
@@ -122,7 +123,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
             }
 
             RedisBranchTypeEnum branchTypeEnum=SyncTypeUtils.getRedisBranchType(taskModel.getTargetRedisType()).getBranchTypeEnum();
-            JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, taskModel.getTargetHost(), taskModel.getTargetPort(), taskModel.getTargetPassword(), taskModel.getBatchSize(), taskModel.getId(),null,null);
+            JDRedisClient client = JDRedisClientFactory.createJDRedisClient(branchTypeEnum, taskModel.getTargetHost(), taskModel.getTargetPort(), taskModel.getTargetPassword(), taskModel.getBatchSize(),taskModel.getErrorCount(), taskModel.getId(),null,null);
             //根据type生成相对节点List [List顺序即为filter节点执行顺序]
             List<CommonFilter> commonFilterList = KeyValueFilterListSelector.getStrategyList(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType(),taskModel,client);
             ISyncerCompensator syncerCompensator= ISyncerCompensatorFactory.createJDRedisClient(branchTypeEnum,taskModel.getId(),client);
@@ -225,8 +226,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                 data.getOffSetEntity().getReplOffset().set(replicationHandler.getConfiguration().getReplOffset());
 
               if(node.getTaskRunTypeEnum().equals(TaskRunTypeEnum.STOCKONLY)||event instanceof PreCommandSyncEvent){
-                  TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-                  taskMapper.updateOffsetAndReplId(taskId,replicationHandler.getConfiguration().getReplOffset(),replicationHandler.getConfiguration().getReplId());
+                  SqliteOPUtils.updateOffsetAndReplId(taskId,replicationHandler.getConfiguration().getReplOffset(),replicationHandler.getConfiguration().getReplId());
               }
             }
         }catch (Exception e){

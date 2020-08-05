@@ -53,6 +53,12 @@ spring:
 #    url: jdbc:sqlite:D:\github\redissyncer-service\data\syncer.db
     username:
     password:
+
+    hikari:
+      maximum-pool-size: 1
+      connection-timeout: 300000
+      minimum-idle: 1
+
   application:
     name: test-thymelead
   thymeleaf:

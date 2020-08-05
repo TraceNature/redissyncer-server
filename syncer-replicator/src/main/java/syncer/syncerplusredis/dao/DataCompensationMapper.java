@@ -11,7 +11,7 @@ import java.util.List;
  * @Description 描述
  * @Date 2020/4/27
  */
-@Component
+//@Component
 @Mapper
 public interface DataCompensationMapper {
     // 根据 ID 查询
@@ -24,7 +24,7 @@ public interface DataCompensationMapper {
     @Select("SELECT * FROM t_data_compensation WHERE groupId =#{groupId}")
     List<DataCompensationModel> findDataCompensationModelListByGroupId(@Param("groupId") String groupId)throws Exception;
 
-    @Insert("INSERT INTO t_data_compensation(taskId,groupId,key,value,times,command ) VALUES(#{taskId},#{groupId},#{key},#{key},#{value},#{times},#{command} )")
+    @Insert("INSERT INTO t_data_compensation(taskId,groupId,key,value,times,command) VALUES( #{taskId},#{groupId},#{key},#{value},#{times},#{command})")
     boolean insertDataCompensationModel(DataCompensationModel abandonCommandModel)throws Exception;
 
 

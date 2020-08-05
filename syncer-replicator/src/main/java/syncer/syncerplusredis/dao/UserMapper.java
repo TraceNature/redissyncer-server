@@ -4,7 +4,6 @@ package syncer.syncerplusredis.dao;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-import org.springframework.stereotype.Component;
 import syncer.syncerplusredis.model.UserModel;
 
 import java.util.List;
@@ -14,7 +13,7 @@ import java.util.List;
  * @Description 描述
  * @Date 2020/4/24
  */
-@Component
+//@Component
 @Mapper
 public interface UserMapper {
     // 根据 ID 查询

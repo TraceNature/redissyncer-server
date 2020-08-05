@@ -11,7 +11,7 @@ import java.util.List;
  * @Description 描述
  * @Date 2020/4/27
  */
-@Component
+//@Component
 @Mapper
 public interface DataMonitorMapper {
     // 根据 ID 查询

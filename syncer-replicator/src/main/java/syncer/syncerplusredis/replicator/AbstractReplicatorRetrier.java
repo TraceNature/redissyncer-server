@@ -98,7 +98,7 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
             final long interval = configuration.getRetryTimeInterval();
             try {
                 if (connect()) {
-                    reset();
+//                    reset();
                 }
                 if (!open()) {
                     reset();

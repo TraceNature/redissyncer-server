@@ -1,4 +1,7 @@
 package syncer.syncerpluswebapp.controller.v2.api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -6,16 +9,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import syncer.syncerpluscommon.entity.ResultMap;
+import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.entity.RedisPoolProps;
 import syncer.syncerplusredis.entity.dto.FileCommandBackupDataDto;
 import syncer.syncerplusredis.entity.dto.RedisFileDataDto;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.model.TaskModel;
+import syncer.syncerpluswebapp.config.swagger.model.ApiJsonObject;
+import syncer.syncerpluswebapp.config.swagger.model.ApiJsonProperty;
+import syncer.syncerpluswebapp.config.swagger.model.ApiJsonResult;
 import syncer.syncerservice.filter.redis_start_check_strategy.RedisTaskStrategyGroupSelecter;
 import syncer.syncerservice.filter.strategy_type.RedisTaskStrategyGroupType;
 import syncer.syncerservice.service.ISyncerService;
 import syncer.syncerservice.util.DtoToTaskModelUtils;
 import java.util.List;
+
+import static syncer.syncerpluswebapp.config.swagger.model.GlobalString.*;
 
 /**
  * @author zhanenqiang
@@ -33,6 +42,26 @@ public class TaskGroupFileController {
     ISyncerService taskGroupService;
 
 
+    @ApiJsonObject(name = "manager-createtask", value = {
+            @ApiJsonProperty(name = JSON_FILE_ADDRESS,required = false),
+            @ApiJsonProperty(name = JSON_TARGET_REDIS_ADDRESS,required = true),
+            @ApiJsonProperty(name = JSON_TARGET_REDIS_PASSWORD),
+            @ApiJsonProperty(name = JSON_TARGET_REDIS_VERION,required = true),
+            @ApiJsonProperty(name = JSON_TASKNAME,required = true),
+            @ApiJsonProperty(name = JSON_AUTO_START),
+            @ApiJsonProperty(name = JSON_BATCHSIZE),
+            @ApiJsonProperty(name = JSON_DBMAPPER),
+            @ApiJsonProperty(name = JSON_FILE_TYPE)
+
+    }, result = @ApiJsonResult(value = {
+            JSON_RESULT_CODE,
+            JSON_RESULT_MSG,
+            JSON_RESULT_DATA
+    }))
+    @ApiImplicitParam(name = "redisFileDataDto", required = true, dataType = "manager-stopTask")
+    @ApiResponses({@ApiResponse(response=String.class,code = 200, message = "OK", reference = "manager-stopTask")})
+
+
     @RequestMapping(value = "/createtask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap createtask(@RequestBody @Validated RedisFileDataDto redisFileDataDto) throws Exception {
         List<TaskModel> taskModelList= DtoToTaskModelUtils.getTaskModelList(redisFileDataDto,false);
@@ -40,6 +69,8 @@ public class TaskGroupFileController {
         /**
          * 检查策略
          */
+
+
         for (TaskModel taskModel : taskModelList) {
             RedisTaskStrategyGroupSelecter.select(RedisTaskStrategyGroupType.FILEGROUP,null,taskModel,redisPoolProps).run(null,taskModel,redisPoolProps);
         }
@@ -73,6 +104,7 @@ public class TaskGroupFileController {
      */
     @RequestMapping(value = "/createCommandDumpUpTask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap creatCommandDumpUptask(@RequestBody @Validated FileCommandBackupDataDto redisFileDataDto) throws Exception {
+        redisFileDataDto.setFileType(FileType.COMMANDDUMPUP);
         List<TaskModel> taskModelList= DtoToTaskModelUtils.getTaskModelList(redisFileDataDto,false);
 
         /**

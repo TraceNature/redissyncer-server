@@ -10,20 +10,37 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import syncer.syncerpluscommon.log.LoggerMessage;
+import syncer.syncerpluscommon.log.LoggerQueue;
 import syncer.syncerpluscommon.service.SqlFileExecutor;
+import syncer.syncerpluscommon.util.ThreadPoolUtils;
 import syncer.syncerpluscommon.util.db.SqliteUtil;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
+import syncer.syncerplusredis.constant.SyncType;
 import syncer.syncerplusredis.constant.TaskStatusType;
+import syncer.syncerplusredis.dao.RubbishDataMapper;
 import syncer.syncerplusredis.dao.TaskMapper;
+import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.model.TaskModel;
+import syncer.syncerplusredis.util.SqliteOPUtils;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerservice.persistence.SqliteSettingPersistenceTask;
 import syncer.syncerpluscommon.util.file.FileUtils;
+import syncer.syncerservice.task.OffSetCommitEntity;
+import syncer.syncerservice.task.OffsetCommitTask;
+import syncer.syncerservice.util.jedis.StringUtils;
+import syncer.syncerservice.util.taskutil.taskServiceQueue.DbDataCommitQueue;
+import syncer.syncerservice.util.taskutil.taskServiceQueue.DbDataCommitTask;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.Map;
 
 
 @SpringBootApplication
@@ -34,8 +51,8 @@ import java.util.List;
 @EnableWebSocketMessageBroker
 public class SyncerplusWebappApplication {
 
-//    @Autowired
-//    private SimpMessagingTemplate messagingTemplate;
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
     @Autowired
     ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
@@ -48,7 +65,7 @@ public class SyncerplusWebappApplication {
      * 推送日志到/topic/pullLogger
      */
 
-    /**
+/**
     @PostConstruct
     public void pushLogger(){
         Runnable runnable=new Runnable() {
@@ -70,8 +87,8 @@ public class SyncerplusWebappApplication {
         };
         threadPoolTaskExecutor.submit(runnable);
     }
+**/
 
-    **/
 
     public static void main(String[] args) throws  Exception {
         System.setProperty("DLog4jContextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
@@ -88,37 +105,29 @@ public class SyncerplusWebappApplication {
         application.addListeners(new ApplicationStartedEventListener());
         application.run(args);
 
-//        SpringApplication.run(SyncerplusWebappApplication.class, args);
-//         Map<String, Object> conf = new HashMap<String, Object>();
-//
-//        URL url = App.class.getResource("classpath:application.yml");
-//        System.out.println(url.getContent());
-//        Yaml yaml = new Yaml();
-//        //通过yaml对象将配置文件的输入流转换成map原始map对象
-//        Map map = yaml.loadAs(new FileInputStream(url.getPath()), Map.class);
-//        //递归map对象将配置加载到conf对象中
-//        YmlUtils.loadRecursion(map, "",conf);
-//        System.out.println(map.get("syncer.config.path.logfile"));
+        Runtime.getRuntime().addShutdownHook(new Thread(){
 
-
-
-
-//        System.out.println( EnvironmentUtils.searchByKey("syncer.config.path.logfile"));
-//        MDC.put("filePath", EnvironmentUtils.searchByKey("syncer.config.path.logfile"));
+            @Override
+            public void run() {
+                log.info("Shutdown hook data saving....");
+                saveAllData();
+            }
+        });
 
         if(!FileUtils.existsFile(SqliteUtil.getFilePath())){
             FileUtils.mkdirs(SqliteUtil.getFilePath());
         }
         if(!FileUtils.existsFile(SqliteUtil.getPath())){
-            log.info("初始化持久化文件..");
+            log.info("initialize data store file...");
             SqlFileExecutor.execute();
 //            SqliteUtil.runSqlScript();
         }else {
-            log.info("持久化文件存在,无需初始化持久化文件");
+            log.info("The data store file already exists and does not need to be initialized...");
         }
 
 
         loadingData();
+        cleanRubbishData();
 
         /**
          * 开启线程监控
@@ -129,9 +138,9 @@ public class SyncerplusWebappApplication {
          */
 
 
-
-
-        new Thread(new SqliteSettingPersistenceTask()).start();
+        ThreadPoolUtils.exec(new SqliteSettingPersistenceTask());
+        ThreadPoolUtils.exec(new DbDataCommitTask());
+        ThreadPoolUtils.exec(new OffsetCommitTask());
 
         String md5A="A239";
         String md5B="B240";
@@ -179,16 +188,55 @@ public class SyncerplusWebappApplication {
 
 
     private  static void loadingData() throws Exception {
-        TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-        List<TaskModel>taskModelList=taskMapper.selectAll();
+
+        List<TaskModel>taskModelList=SqliteOPUtils.selectAll();
         for (TaskModel taskModel:taskModelList){
             if(!taskModel.getStatus().equals(TaskStatusType.BROKEN.getCode())&&!taskModel.getStatus().equals(TaskStatusType.STOP.getCode())){
-                taskMapper.updateTaskStatusById(taskModel.getTaskId(),TaskStatusType.BROKEN.getCode());
+                SqliteOPUtils.updateTaskStatusById(taskModel.getTaskId(),TaskStatusType.BROKEN.getCode());
             }
         }
 
         log.info("同步服务初始化状态成功...");
     }
 
+    private static void cleanRubbishData(){
+        RubbishDataMapper rubbishDataMapper=SpringUtil.getBean(RubbishDataMapper.class);
+        rubbishDataMapper.deleteRubbishDataFromTaskBigKey();
+        rubbishDataMapper.deleteRubbishDataFromTaskDataAbandonCommand();
+        rubbishDataMapper.deleteRubbishDataFromTaskDataCompensation();
+        rubbishDataMapper.deleteRubbishDataFromTaskDataMonitor();
+        rubbishDataMapper.deleteRubbishDataFromTaskOffSet();
+        log.info("End of rubbish data cleaning");
+    }
 
+
+    /**
+     * 保存所有数据
+     */
+    private static void saveAllData(){
+        try {
+            Map<String, TaskDataEntity> aliveThreadHashMap= TaskDataManagerUtils.getAliveThreadHashMap();
+
+            aliveThreadHashMap.entrySet().forEach(data ->{
+
+                TaskModel model=data.getValue().getTaskModel();
+                if(data.getValue().getOffSetEntity()!=null){
+                    model.setOffset(data.getValue().getOffSetEntity().getReplOffset().get());
+                    if(!StringUtils.isEmpty(data.getValue().getOffSetEntity().getReplId())){
+                        model.setReplId(data.getValue().getOffSetEntity().getReplId());
+                    }
+                }
+
+                try {
+                    SpringUtil.getBean(TaskMapper.class).updateTask(model);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+
+            log.info("同步关闭保存数据成功");
+        }catch (Exception e){
+
+        }
+    }
 }

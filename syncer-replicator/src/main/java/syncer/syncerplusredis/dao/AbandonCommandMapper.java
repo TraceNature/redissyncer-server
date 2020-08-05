@@ -12,7 +12,7 @@ import java.util.List;
  * @Description 抛弃命令记录
  * @Date 2020/4/26
  */
-@Component
+//@Component
 @Mapper
 public interface AbandonCommandMapper {
     // 根据 ID 查询
@@ -28,7 +28,7 @@ public interface AbandonCommandMapper {
     @Insert("INSERT INTO t_abandon_command(taskId,groupId,command,key,value,type,ttl,exception,result,desc) VALUES(#{taskId},#{groupId},#{command},#{key},#{value},#{type},#{ttl},#{exception},#{result},#{desc})")
     boolean insertAbandonCommandModel(AbandonCommandModel abandonCommandModel)throws Exception;
 
-    @Insert("INSERT INTO t_abandon_command(taskId,command,key,type,exception,desc) VALUES(#{taskId},#{command},#{key},#{type},#{exception},#{desc})")
+    @Insert("INSERT INTO t_abandon_command(taskId,command,key,type,exception,desc,ttl,groupId) VALUES(#{taskId},#{command},#{key},#{type},#{exception},#{desc},#{ttl},#{groupId})")
     boolean insertSimpleAbandonCommandModel(AbandonCommandModel abandonCommandModel)throws Exception;
 
     @Delete("DELETE FROM t_abandon_command WHERE id=#{id}")

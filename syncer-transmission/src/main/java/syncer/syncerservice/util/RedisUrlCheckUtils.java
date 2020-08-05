@@ -96,7 +96,6 @@ public class RedisUrlCheckUtils {
             while (i > 0) {
                 try {
                     String png = (String) target.send("PING".getBytes());
-                    System.out.println(url.split("\\?")[0]+"------:"+png);
                     if ("PONG".equalsIgnoreCase(png)) {
                         log.info("心跳检测成功");
                         return true;

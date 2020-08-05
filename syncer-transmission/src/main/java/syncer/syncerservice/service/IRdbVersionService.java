@@ -18,5 +18,5 @@ public interface IRdbVersionService {
     RdbVersionModel findRdbVersionModelById(Integer id)throws Exception;
     RdbVersionModel findRdbVersionModelByRedisVersionAndRdbVersion(String redisVersion,Integer rdbVersion)throws Exception;
     boolean insertRdbVersionModel(RdbVersionModel rdbVersionModel)throws Exception;
-    RdbVersionModel updateRdbVersionModelById(Integer id, String redisVersion,Integer rdbVersion)throws Exception;
+    boolean updateRdbVersionModelById(Integer id, String redisVersion,Integer rdbVersion)throws Exception;
 }

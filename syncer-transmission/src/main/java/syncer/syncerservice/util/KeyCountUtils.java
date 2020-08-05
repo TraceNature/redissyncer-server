@@ -7,6 +7,7 @@ import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.dao.TaskMapper;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.entity.RedisURI;
+import syncer.syncerplusredis.util.SqliteOPUtils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerservice.pool.RedisClient;
 import syncer.syncerservice.util.regex.RegexUtil;
@@ -58,9 +59,9 @@ public class KeyCountUtils {
 
 
             TaskDataManagerUtils.get(taskId).getRdbKeyCount().set(keyCount);
-            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+//            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
 //            taskMapper.updateRdbKeyCountById(taskId,keyCount);
-            taskMapper.updateKeyCountById(taskId,keyCount,0L,0L);
+            SqliteOPUtils.updateKeyCountById(taskId,keyCount,0L,0L);
         }catch (Exception e){
             e.printStackTrace();
             log.warn("任务[{}]获取全量key数量失败",taskId);

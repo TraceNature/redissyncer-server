@@ -13,7 +13,7 @@ import java.util.List;
  * @Date 2020/3/10
  */
 
-@Component
+//@Component
 @Mapper
 public interface RdbVersionMapper  {
     // 根据 ID 查询
@@ -39,7 +39,7 @@ public interface RdbVersionMapper  {
     int countItem()throws Exception;
 
     @Select("UPDATE  t_rdb_version  set redis_version=#{redisVersion}, rdb_version =#{rdbVersion} WHERE id =#{id}")
-    RdbVersionModel updateRdbVersionModelById(@Param("id")Integer id,@Param("redisVersion") String redisVersion,@Param("rdbVersion")Integer rdbVersion)throws Exception;
+    boolean updateRdbVersionModelById(@Param("id")Integer id,@Param("redisVersion") String redisVersion,@Param("rdbVersion")Integer rdbVersion)throws Exception;
 
 
     @Insert({

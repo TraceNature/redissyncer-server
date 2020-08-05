@@ -1,6 +1,7 @@
 package syncer.syncerplusredis.entity.dto;
 
 import com.alibaba.fastjson.JSON;
+import io.swagger.annotations.ApiModel;
 import syncer.syncerplusredis.entity.dto.common.SyncDataDto;
 import lombok.*;
 
@@ -14,7 +15,6 @@ import java.io.Serializable;
 @Getter
 @Setter
 @EqualsAndHashCode
-
 public class RedisClusterDto extends SyncDataDto implements Serializable {
     private static final long serialVersionUID = -5809782578272943998L;
     @NotBlank(message = "源RedisCluster地址不能为空")

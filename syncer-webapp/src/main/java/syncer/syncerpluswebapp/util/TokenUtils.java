@@ -84,6 +84,10 @@ final public  class TokenUtils {
         deleteExpiryToken();
         if(tokenMap.containsKey(token)){
             Map<String,Object> tokenInfo =(Map<String,Object>)tokenMap.get(token);
+            if((Long)tokenInfo.get("expiryTime")-System.currentTimeMillis()<1000*60*10){
+                tokenInfo.put("expiryTime",System.currentTimeMillis()+EXPIRY_TIME);
+                tokenMap.put(token,tokenInfo);
+            }
             return (UserModel) tokenInfo.get("dbUser");
         }
         return null;
