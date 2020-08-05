@@ -1,7 +1,7 @@
 syncserver:   "http://114.67.67.7:8080"
-createtaskfile: "./tasks/createtask.json"
-gendataduration: 300
-datageninterval: 200
+createtaskfile: "./tasks/single2single.json"
+gendataduration: 60
+datageninterval: 20
 gendatathreads: 8
 bigkvkeysuffixlen: 4
 bigkvloopstep: 20

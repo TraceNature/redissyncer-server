@@ -1,22 +1,12 @@
 package cases
 
 import (
-	"context"
-	"errors"
-	"github.com/go-redis/redis/v7"
-	"github.com/panjf2000/ants/v2"
 	"github.com/tidwall/gjson"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"runtime"
-	"strconv"
-	"strings"
-	"sync"
-	"testcase/commons"
-	"testcase/compare"
-	"testcase/generatedata"
 	"testcase/globalzap"
 	"testcase/synctaskhandle"
 	"time"
@@ -31,6 +21,10 @@ const (
 	Case_Single2SingleWithDBMap
 	Case_Single2Cluster
 	Case_Cluster2Cluster
+	Case_ImportRdb2Single
+	Case_ImportAof2Single
+	Case_ImportRdb2Cluster
+	Case_ImportAof2Cluster
 )
 
 var CaseTypeMap = map[int32]string{
@@ -38,6 +32,10 @@ var CaseTypeMap = map[int32]string{
 	Case_Single2SingleWithDBMap: "Single2SingleWithDBMap",
 	Case_Single2Cluster:         "Single2Cluster",
 	Case_Cluster2Cluster:        "Cluster2Cluster",
+	Case_ImportRdb2Single:       "ImportRdb2Single",
+	Case_ImportAof2Single:       "ImportAof2Single",
+	Case_ImportRdb2Cluster:      "ImportRdb2Cluster",
+	Case_ImportAof2Cluster:      "ImportAof2Cluster",
 }
 
 func (ct CaseType) String() string {
@@ -50,29 +48,45 @@ func (ct CaseType) String() string {
 		return "Single2Cluster"
 	case Case_Cluster2Cluster:
 		return "Cluster2Cluster"
+	case Case_ImportRdb2Single:
+		return "ImportRdb2Single"
+	case Case_ImportAof2Single:
+		return "ImportAof2Single"
+	case Case_ImportRdb2Cluster:
+		return "ImportRdb2Cluster"
+	case Case_ImportAof2Cluster:
+		return "ImportAof2Cluster"
 	default:
 		return ""
 	}
 }
 
 type TestCase struct {
-	SyncServer              string   `yaml:"syncserver"`            //redissyncer server address
-	CreateTaskFile          string   `yaml:"createtaskfile"`        //任务创建json文件路径
-	GenDataDuration         int      `yaml:"gendataduration"`       //持续产生增量数据的时间,单位为秒
-	DataGenInterval         int64    `yaml:"datageninterval"`       //线程内数据生成间隔，单位为毫秒
-	GenDataThreads          int      `yaml:"gendatathreads"`        //持续生成数据的线程数量
-	BigKV_KeySuffix_Len     int      `yaml:"bigkvkeysuffixlen"`     //大key后缀位数，按位数生成key后缀
-	BigKV_Loopstep          int      `yaml:"bigkvloopstep"`         //大key循环次数，该参数决定大key value的长度
-	BigKV_EXPIRE            int      `yaml:"bigkvexpire"`           //大key过期时间，单位为秒
-	BigKV_ValuePrefix_Len   int      `yaml:"bigkvvalueprefixlen"`   //大key value前缀长度，按长度生成值的前缀
-	Increment_KeySuffix_Len int      `yaml:"incrementkeysuffixlen"` //增量数据key后缀位数，按位生成key后缀
-	Increment_Loopstep      int      `yaml:"incrementloopstep"`     //增量数据循环长度，影响增量数据value长度或操作次数
-	Increment_EXPIRE        int      `yaml:"incrementexpire"`       //增量数据过期时间，单位为秒
-	Increment_Threads       int      `yaml:"incrementthreads"`      //生成增量数据的线程数量
-	Compare_BatchSize       int64    `yaml:"comparebatchsize"`      //比较List、Set、Zset类型时的每批次值的数量
-	Compare_Threads         int      `yaml:"comparethreads"`        //比较db线程数量
-	Compare_TTLDiff         float64  `yaml:"comparettldiff"`        //TTL最小差值
-	CaseType                CaseType `yaml:"casetype"`              //案例类型编号，可以通过 listcases子命令查询对应的case编号
+	SyncServer                string   `yaml:"syncserver"` //redissyncer server address
+	SyncServerSshPort         string   `yaml:"syncserversshport"`
+	SyncServerOsUser          string   `yaml:"syncserverosuser"`          //redissyncer server操作系统用户
+	SyncServerOsUserPassword  string   `yaml:"syncserverosuserpassword"`  //redissyncer server操作系统用户密码
+	CreateTaskFile            string   `yaml:"createtaskfile"`            //任务创建json文件路径
+	GenDataDuration           int      `yaml:"gendataduration"`           //持续产生增量数据的时间,单位为秒
+	DataGenInterval           int64    `yaml:"datageninterval"`           //线程内数据生成间隔，单位为毫秒
+	GenDataThreads            int      `yaml:"gendatathreads"`            //持续生成数据的线程数量
+	BigKV_KeySuffix_Len       int      `yaml:"bigkvkeysuffixlen"`         //大key后缀位数，按位数生成key后缀
+	BigKV_Loopstep            int      `yaml:"bigkvloopstep"`             //大key循环次数，该参数决定大key value的长度
+	BigKV_EXPIRE              int      `yaml:"bigkvexpire"`               //大key过期时间，单位为秒
+	BigKV_ValuePrefix_Len     int      `yaml:"bigkvvalueprefixlen"`       //大key value前缀长度，按长度生成值的前缀
+	Increment_KeySuffix_Len   int      `yaml:"incrementkeysuffixlen"`     //增量数据key后缀位数，按位生成key后缀
+	Increment_Loopstep        int      `yaml:"incrementloopstep"`         //增量数据循环长度，影响增量数据value长度或操作次数
+	Increment_EXPIRE          int      `yaml:"incrementexpire"`           //增量数据过期时间，单位为秒
+	Increment_Threads         int      `yaml:"incrementthreads"`          //生成增量数据的线程数量
+	Compare_BatchSize         int64    `yaml:"comparebatchsize"`          //比较List、Set、Zset类型时的每批次值的数量
+	Compare_Threads           int      `yaml:"comparethreads"`            //比较db线程数量
+	Compare_TTLDiff           float64  `yaml:"comparettldiff"`            //TTL最小差值
+	GenRdbRedis               string   `yaml:"genrdbredis"`               //导入文件时生成rdb文件的redis服务器地址
+	GenRdbRedisPassword       string   `yaml:"genrdbredispassword"`       //导入文件案例中生成rdb文件的redis服务器密码
+	GenRdbRedisOsUser         string   `yaml:"genrdbredisosuser"`         //产生rdb文件的服务器操作系统user
+	GenRdbRedisOsUserPassword string   `yaml:"genrdbredisosuserpassword"` //产生rdb文件的服务器操作系统user's password
+	BakFilePath               string   `yaml:"bakfilepath"`               //rdb文件路径
+	CaseType                  CaseType `yaml:"casetype"`                  //案例类型编号，可以通过 listcases子命令查询对应的case编号
 }
 
 func NewTestCase() TestCase {
@@ -96,6 +110,39 @@ func NewTestCase() TestCase {
 	}
 
 	return tc
+}
+
+func (tc *TestCase) Exec() {
+	switch tc.CaseType.String() {
+	case "Single2Single":
+		logger.Sugar().Info("Execute " + tc.CaseType.String())
+		tc.Single2Single()
+	case "Single2SingleWithDBMap":
+		logger.Sugar().Info("Execute " + tc.CaseType.String())
+		tc.Single2SingleWithDBMap()
+	case "Single2Cluster":
+		logger.Sugar().Info("Execute " + tc.CaseType.String())
+		tc.Single2Cluster()
+	case "Cluster2Cluster":
+		logger.Sugar().Info("Execute " + tc.CaseType.String())
+		tc.Cluster2Cluster()
+	case "ImportRdb2Single":
+		logger.Sugar().Info("Execute " + tc.CaseType.String())
+		tc.ImportRdb2Single()
+	case "ImportAof2Single":
+		logger.Sugar().Info("Execute " + tc.CaseType.String())
+		tc.ImportAof2Single()
+	case "ImportRdb2Cluster":
+		logger.Sugar().Info("Execute " + tc.CaseType.String())
+		tc.ImportRdb2Cluster()
+	case "ImportAof2Cluster":
+		logger.Sugar().Info("Execute " + tc.CaseType.String())
+		tc.ImportAof2Cluster()
+	default:
+		logger.Sugar().Info("Nothing to be executed")
+		return
+	}
+
 }
 
 //解析yaml文件获取testcase
@@ -141,18 +188,38 @@ func (tc *TestCase) CheckSyncTaskStatus(taskids []string) {
 	for {
 		iscommandrunning := true
 		statusmap, err := synctaskhandle.GetTaskStatus(tc.SyncServer, taskids)
+
 		if err != nil {
 			logger.Sugar().Error(err)
 			os.Exit(1)
 		}
 
+		if len(statusmap) == 0 {
+			logger.Error("No status return")
+			os.Exit(1)
+		}
+
 		for k, v := range statusmap {
-			if v != "COMMANDRUNING" {
-				iscommandrunning = false
+
+			//fmt.Println(gjson.Get(v, "lastDataCommitIntervalTime").String())
+			if v == "" {
+				logger.Error("Task not exists ", zap.String("taskid", k))
+				os.Exit(1)
 			}
-			if v == "BROKEN" || v == "STOP" {
+
+			if gjson.Get(v, "status").String() == "COMMANDRUNING" {
+				if gjson.Get(v, "lastDataCommitIntervalTime").Int() < int64(60000) && gjson.Get(v, "lastDataUpdateIntervalTime").Int() < int64(60000) {
+					iscommandrunning = false
+				}
+			}
+			if gjson.Get(v, "status").String() == "BROKEN" {
 				logger.Error("sync task broken! ", zap.String("taskid", k), zap.String("task_status", v))
 				os.Exit(1)
+			}
+
+			if gjson.Get(v, "status").String() == "STOP" {
+				time.Sleep(5 * time.Second)
+				return
 			}
 		}
 
@@ -162,613 +229,5 @@ func (tc *TestCase) CheckSyncTaskStatus(taskids []string) {
 		time.Sleep(3 * time.Second)
 	}
 
-	time.Sleep(4 * time.Minute)
-}
-
-func (tc *TestCase) Exec() {
-	switch tc.CaseType.String() {
-	case "Single2Single":
-		tc.Single2Single()
-	case "Single2SingleWithDBMap":
-		tc.Single2SingleWithDBMap()
-	case "Single2Cluster":
-		tc.Single2Cluster()
-	case "Cluster2Cluster":
-		tc.Cluster2Cluster()
-	default:
-		logger.Sugar().Info("Nothing to be executed")
-		return
-	}
-}
-
-//基本测试案例单实例2单实例，无映射关系
-func (tc *TestCase) Single2Single() {
-	createjson := tc.ParseJsonFile(tc.CreateTaskFile)
-	increment_pool, _ := ants.NewPool(tc.Increment_Threads)
-	defer increment_pool.Release()
-
-	saddr := gjson.Get(string(createjson), "sourceRedisAddress").String()
-	taddr := gjson.Get(string(createjson), "targetRedisAddress").String()
-	spasswd := gjson.Get(string(createjson), "sourcePassword").String()
-	tpasswd := gjson.Get(string(createjson), "targetPassword").String()
-	taskname := gjson.Get(string(createjson), "taskName").String()
-
-	sopt := &redis.Options{
-		Addr: saddr,
-		DB:   0, // use default DB
-	}
-
-	if spasswd != "" {
-		sopt.Password = spasswd
-	}
-	sclient := commons.GetGoRedisClient(sopt)
-
-	topt := &redis.Options{
-		Addr: taddr,
-		DB:   0, // use default DB
-	}
-
-	if tpasswd != "" {
-		topt.Password = tpasswd
-	}
-
-	tclient := commons.GetGoRedisClient(topt)
-
-	defer sclient.Close()
-	defer tclient.Close()
-
-	//check redis 连通性
-	if !commons.CheckRedisClientConnect(sclient) {
-		logger.Sugar().Error(errors.New("Cannot connect source redis"))
-		os.Exit(1)
-	}
-	if !commons.CheckRedisClientConnect(tclient) {
-		logger.Sugar().Error(errors.New("Cannot connect target redis"))
-		os.Exit(1)
-	}
-
-	//check redissycner-server 是否可用
-
-	//清理redis
-	sclient.FlushAll()
-	tclient.FlushAll()
-
-	//生成垫底数据
-	bgkv := generatedata.GenBigKV{
-		KeySuffix:   commons.RandString(tc.BigKV_KeySuffix_Len),
-		Loopstep:    tc.BigKV_Loopstep,
-		EXPIRE:      time.Duration(tc.BigKV_EXPIRE) * time.Second,
-		ValuePrefix: commons.RandString(tc.BigKV_ValuePrefix_Len),
-	}
-	bgkv.GenerateBaseDataParallel(sclient)
-
-	//清理任务
-	logger.Sugar().Info("Clean Task beging...")
-	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
-	logger.Sugar().Info("Clean Task end")
-
-	//创建任务
-	logger.Sugar().Info("Create Task beging...")
-	taskids := synctaskhandle.CreateTask(tc.SyncServer, string(createjson))
-	logger.Sugar().Info("Task Id is: ", taskids)
-
-	//启动任务
-	for _, v := range taskids {
-		synctaskhandle.StartTask(tc.SyncServer, v)
-	}
-
-	logger.Sugar().Info("Create Task end")
-
-	//生成增量数据
-	d := time.Now().Add(time.Duration(tc.GenDataDuration) * time.Second)
-	ctx, cancel := context.WithDeadline(context.Background(), d)
-	defer cancel()
-
-	wg := sync.WaitGroup{}
-
-	for i := 0; i < tc.GenDataThreads; i++ {
-		bo := &generatedata.OptSingle{
-			RedisConn: sclient.Conn(),
-			KeySuffix: commons.RandString(tc.Increment_KeySuffix_Len),
-			Loopstep:  tc.Increment_Loopstep,
-			EXPIRE:    time.Duration(tc.Increment_EXPIRE) * time.Second,
-		}
-
-		wg.Add(1)
-		increment_pool.Submit(func() {
-			bo.KeepExecBasicOpt(ctx, time.Duration(tc.DataGenInterval)*time.Millisecond, false)
-			wg.Done()
-		})
-	}
-	wg.Wait()
-
-	//查看任务状态，直到COMMANDRUNING状态
-	tc.CheckSyncTaskStatus(taskids)
-	logger.Sugar().Info("Check task status end")
-
-	//停止任务
-	synctaskhandle.StopTaskByIds(tc.SyncServer, taskids)
-
-	//数据校验
-	compare := &compare.CompareSingle2Single{
-		Source:         sclient,
-		Target:         tclient,
-		BatchSize:      tc.Compare_BatchSize,
-		TTLDiff:        tc.Compare_TTLDiff,
-		CompareThreads: tc.Compare_Threads,
-	}
-
-	compare.CompareDB()
-}
-
-//Single2SingleWithDBMap,基本测试案例单实例2单实例，有映射关系
-func (tc TestCase) Single2SingleWithDBMap() {
-	createjson := tc.ParseJsonFile(tc.CreateTaskFile)
-
-	saddr := gjson.Get(string(createjson), "sourceRedisAddress").String()
-	taddr := gjson.Get(string(createjson), "targetRedisAddress").String()
-	spasswd := gjson.Get(string(createjson), "sourcePassword").String()
-	tpasswd := gjson.Get(string(createjson), "targetPassword").String()
-	taskname := gjson.Get(string(createjson), "taskName").String()
-	dbmap := gjson.Get(string(createjson), "dbMapper").Map()
-
-	increment_pool, err := ants.NewPool(len(dbmap))
-	if err != nil {
-		logger.Sugar().Error(err)
-		return
-	}
-
-	defer increment_pool.Release()
-
-	sopt := &redis.Options{
-		Addr: saddr,
-		DB:   0, // use default DB
-	}
-
-	if spasswd != "" {
-		sopt.Password = spasswd
-	}
-	sclient := commons.GetGoRedisClient(sopt)
-
-	topt := &redis.Options{
-		Addr: taddr,
-		DB:   0, // use default DB
-	}
-
-	if tpasswd != "" {
-		topt.Password = tpasswd
-	}
-
-	tclient := commons.GetGoRedisClient(topt)
-
-	defer sclient.Close()
-	defer tclient.Close()
-
-	//check redis 连通性
-	if !commons.CheckRedisClientConnect(sclient) {
-		logger.Sugar().Error(errors.New("Cannot connect source redis"))
-		os.Exit(1)
-	}
-	if !commons.CheckRedisClientConnect(tclient) {
-		logger.Sugar().Error(errors.New("Cannot connect target redis"))
-		os.Exit(1)
-	}
-
-	//check redissycner-server 是否可用
-
-	//清理redis
-	sclient.FlushAll()
-	tclient.FlushAll()
-
-	//生成垫底数据
-	for k, _ := range dbmap {
-		db, err := strconv.Atoi(k)
-		if err != nil {
-			logger.Sugar().Error(err)
-			return
-		}
-		sopt.DB = db
-		client := commons.GetGoRedisClient(sopt)
-		defer client.Close()
-		bgkv := generatedata.GenBigKV{
-			KeySuffix:   commons.RandString(tc.BigKV_KeySuffix_Len),
-			Loopstep:    tc.BigKV_Loopstep,
-			EXPIRE:      time.Duration(tc.BigKV_EXPIRE) * time.Second,
-			ValuePrefix: commons.RandString(tc.BigKV_ValuePrefix_Len),
-			DB:          db,
-		}
-		bgkv.GenerateBaseDataParallel(client)
-	}
-
-	//清理任务
-	logger.Sugar().Info("Clean Task beging...")
-	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
-	logger.Sugar().Info("Clean Task end")
-
-	//创建任务
-	logger.Sugar().Info("Create Task beging...")
-	taskids := synctaskhandle.CreateTask(tc.SyncServer, string(createjson))
-	logger.Sugar().Info("Task Id is: ", taskids)
-
-	//启动任务
-	for _, v := range taskids {
-		synctaskhandle.StartTask(tc.SyncServer, v)
-	}
-
-	logger.Sugar().Info("Create Task end")
-
-	//生成增量数据
-	d := time.Now().Add(time.Duration(tc.GenDataDuration) * time.Second)
-	ctx, cancel := context.WithDeadline(context.Background(), d)
-	defer cancel()
-
-	wg := sync.WaitGroup{}
-
-	for k, _ := range dbmap {
-		db, err := strconv.Atoi(k)
-		if err != nil {
-			logger.Sugar().Error(err)
-			return
-		}
-		sopt.DB = db
-		client := commons.GetGoRedisClient(sopt)
-		defer client.Close()
-
-		bo := &generatedata.OptSingle{
-			RedisConn: client.Conn(),
-			KeySuffix: commons.RandString(tc.Increment_KeySuffix_Len),
-			Loopstep:  tc.Increment_Loopstep,
-			EXPIRE:    time.Duration(tc.Increment_EXPIRE) * time.Second,
-			DB:        db,
-		}
-
-		wg.Add(1)
-		increment_pool.Submit(func() {
-			bo.KeepExecBasicOpt(ctx, time.Duration(tc.DataGenInterval)*time.Millisecond, false)
-			wg.Done()
-		})
-
-	}
-	wg.Wait()
-
-	//查看任务状态，直到COMMANDRUNING状态
-	tc.CheckSyncTaskStatus(taskids)
-	logger.Sugar().Info("Check task status end")
-
-	//停止任务
-	synctaskhandle.StopTaskByIds(tc.SyncServer, taskids)
-
-	//数据校验
-	for k, v := range dbmap {
-		sdb, err := strconv.Atoi(k)
-		if err != nil {
-			logger.Sugar().Error(err)
-			return
-		}
-
-		tdb, err := strconv.Atoi(v.Raw)
-		if err != nil {
-			logger.Sugar().Error(err)
-			return
-		}
-
-		sopt.DB = sdb
-		topt.DB = tdb
-
-		sclient := commons.GetGoRedisClient(sopt)
-		tclient := commons.GetGoRedisClient(topt)
-		defer sclient.Close()
-		defer tclient.Close()
-
-		compare := &compare.CompareSingle2Single{
-			Source:         sclient,
-			Target:         tclient,
-			BatchSize:      tc.Compare_BatchSize,
-			TTLDiff:        tc.Compare_TTLDiff,
-			CompareThreads: tc.Compare_Threads,
-			SourceDB:       sdb,
-			TargetDB:       tdb,
-		}
-
-		compare.CompareDB()
-	}
-}
-
-//基本测试案例单实例2Cluster，无映射关系
-func (tc *TestCase) Single2Cluster() {
-	createjson := tc.ParseJsonFile(tc.CreateTaskFile)
-	increment_pool, _ := ants.NewPool(tc.Increment_Threads)
-	defer increment_pool.Release()
-
-	saddr := gjson.Get(string(createjson), "sourceRedisAddress").String()
-	taddrs := gjson.Get(string(createjson), "targetRedisAddress").String()
-	spasswd := gjson.Get(string(createjson), "sourcePassword").String()
-	tpasswd := gjson.Get(string(createjson), "targetPassword").String()
-	taskname := gjson.Get(string(createjson), "taskName").String()
-
-	taddrsarray := strings.Split(taddrs, ";")
-
-	sopt := &redis.Options{
-		Addr: saddr,
-		DB:   0, // use default DB
-	}
-
-	if spasswd != "" {
-		sopt.Password = spasswd
-	}
-	sclient := commons.GetGoRedisClient(sopt)
-
-	topt := &redis.ClusterOptions{
-		Addrs: taddrsarray,
-	}
-
-	if tpasswd != "" {
-		topt.Password = tpasswd
-	}
-
-	tclient := redis.NewClusterClient(topt)
-
-	defer sclient.Close()
-	defer tclient.Close()
-
-	//check redis 连通性
-	if !commons.CheckRedisClientConnect(sclient) {
-		logger.Sugar().Error(errors.New("Cannot connect source redis"))
-		os.Exit(1)
-	}
-	if !commons.CheckRedisClusterClientConnect(tclient) {
-		logger.Sugar().Error(errors.New("Cannot connect target redis"))
-		os.Exit(1)
-	}
-
-	//check redissycner-server 是否可用
-
-	//清理redis
-	sclient.FlushAll()
-	tclient.FlushAll()
-
-	for _, v := range taddrsarray {
-		opt := &redis.Options{
-			Addr: v,
-		}
-
-		if tpasswd != "" {
-			opt.Password = tpasswd
-		}
-
-		client := redis.NewClient(opt)
-		defer client.Close()
-		client.FlushAll()
-
-	}
-
-	//生成垫底数据
-	bgkv := generatedata.GenBigKV{
-		KeySuffix:
-		commons.RandString(tc.BigKV_KeySuffix_Len),
-		Loopstep:    tc.BigKV_Loopstep,
-		EXPIRE:      time.Duration(tc.BigKV_EXPIRE) * time.Second,
-		ValuePrefix: commons.RandString(tc.BigKV_ValuePrefix_Len),
-	}
-	bgkv.GenerateBaseDataParallel(sclient)
-
-	//清理任务
-	logger.Sugar().Info("Clean Task beging...")
-	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
-	logger.Sugar().Info("Clean Task end")
-
-	//创建任务
-	logger.Sugar().Info("Create Task beging...")
-	taskids := synctaskhandle.CreateTask(tc.SyncServer, string(createjson))
-	logger.Sugar().Info("Task Id is: ", taskids)
-
-	//启动任务
-	for _, v := range taskids {
-		synctaskhandle.StartTask(tc.SyncServer, v)
-	}
-
-	logger.Sugar().Info("Create Task end")
-
-	//生成增量数据
-	d := time.Now().Add(time.Duration(tc.GenDataDuration) * time.Second)
-	ctx, cancel := context.WithDeadline(context.Background(), d)
-	defer cancel()
-
-	wg := sync.WaitGroup{}
-
-	for i := 0; i < tc.GenDataThreads; i++ {
-		bo := &generatedata.OptSingle{
-			RedisConn: sclient.Conn(),
-			KeySuffix: commons.RandString(tc.Increment_KeySuffix_Len),
-			Loopstep:  tc.Increment_Loopstep,
-			EXPIRE:    time.Duration(tc.Increment_EXPIRE) * time.Second,
-		}
-		wg.Add(1)
-		increment_pool.Submit(func() {
-			bo.KeepExecBasicOpt(ctx, time.Duration(tc.DataGenInterval)*time.Millisecond, true)
-			wg.Done()
-		})
-	}
-	wg.Wait()
-
-	//查看任务状态，直到COMMANDRUNING状态
-	tc.CheckSyncTaskStatus(taskids)
-	logger.Sugar().Info("Check task status end")
-
-	//停止任务
-	synctaskhandle.StopTaskByIds(tc.SyncServer, taskids)
-
-	//数据校验
-	compare := &compare.CompareSingle2Cluster{
-		Source:         sclient,
-		Target:         tclient,
-		BatchSize:      tc.Compare_BatchSize,
-		TTLDiff:        tc.Compare_TTLDiff,
-		CompareThreads: tc.Compare_Threads,
-	}
-
-	compare.CompareDB()
-}
-
-//基本测试案例Cluster2Cluster，无映射关系
-func (tc *TestCase) Cluster2Cluster() {
-	createjson := tc.ParseJsonFile(tc.CreateTaskFile)
-	increment_pool, _ := ants.NewPool(tc.Increment_Threads)
-	defer increment_pool.Release()
-
-	saddrs := gjson.Get(string(createjson), "sourceRedisAddress").String()
-	taddrs := gjson.Get(string(createjson), "targetRedisAddress").String()
-	spasswd := gjson.Get(string(createjson), "sourcePassword").String()
-	tpasswd := gjson.Get(string(createjson), "targetPassword").String()
-	taskname := gjson.Get(string(createjson), "taskName").String()
-
-	saddrsarray := strings.Split(saddrs, ";")
-	taddrsarray := strings.Split(taddrs, ";")
-
-	sopt := &redis.ClusterOptions{
-		Addrs: taddrsarray,
-	}
-
-	if spasswd != "" {
-		sopt.Password = spasswd
-	}
-
-	sclient := redis.NewClusterClient(sopt)
-
-	topt := &redis.ClusterOptions{
-		Addrs: taddrsarray,
-	}
-
-	if tpasswd != "" {
-		topt.Password = tpasswd
-	}
-
-	tclient := redis.NewClusterClient(topt)
-
-	defer sclient.Close()
-	defer tclient.Close()
-
-	//check redis 连通性
-	if !commons.CheckRedisClusterClientConnect(sclient) {
-		logger.Sugar().Error(errors.New("Cannot connect source redis"))
-		os.Exit(1)
-	}
-	if !commons.CheckRedisClusterClientConnect(tclient) {
-		logger.Sugar().Error(errors.New("Cannot connect target redis"))
-		os.Exit(1)
-	}
-
-	//check redissycner-server 是否可用
-
-	//清理redis
-	for _, v := range saddrsarray {
-		opt := &redis.Options{
-			Addr: v,
-		}
-
-		if tpasswd != "" {
-			opt.Password = tpasswd
-		}
-
-		client := redis.NewClient(opt)
-		defer client.Close()
-		client.FlushAll()
-
-	}
-
-	for _, v := range taddrsarray {
-		opt := &redis.Options{
-			Addr: v,
-		}
-
-		if tpasswd != "" {
-			opt.Password = tpasswd
-		}
-
-		client := redis.NewClient(opt)
-		defer client.Close()
-		client.FlushAll()
-
-	}
-
-	//生成垫底数据
-	bgkv := generatedata.GenBigKVCluster{
-		RedisClusterClient: sclient,
-		KeySuffix:          commons.RandString(tc.BigKV_KeySuffix_Len),
-		Loopstep:           tc.BigKV_Loopstep,
-		EXPIRE:             time.Duration(tc.BigKV_EXPIRE) * time.Second,
-		ValuePrefix:        commons.RandString(tc.BigKV_ValuePrefix_Len),
-	}
-	bgkv.GenerateBaseDataParallelCluster()
-
-	//清理任务
-	logger.Sugar().Info("Clean Task beging...")
-	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
-	logger.Sugar().Info("Clean Task end")
-
-	//创建任务
-	logger.Sugar().Info("Create Task beging...")
-	taskids := synctaskhandle.CreateTask(tc.SyncServer, string(createjson))
-	logger.Sugar().Info("Task Id is: ", taskids)
-
-	//启动任务
-	for _, v := range taskids {
-		synctaskhandle.StartTask(tc.SyncServer, v)
-	}
-
-	logger.Sugar().Info("Create Task end")
-
-	//生成增量数据
-	d := time.Now().Add(time.Duration(tc.GenDataDuration) * time.Second)
-	ctx, cancel := context.WithDeadline(context.Background(), d)
-	defer cancel()
-
-	wg := sync.WaitGroup{}
-
-	for i := 0; i < tc.GenDataThreads; i++ {
-		bo := &generatedata.OptCluster{
-			ClusterClient: sclient,
-			KeySuffix:     commons.RandString(tc.Increment_KeySuffix_Len),
-			Loopstep:      tc.Increment_Loopstep,
-			EXPIRE:        time.Duration(tc.Increment_EXPIRE) * time.Second,
-		}
-		wg.Add(1)
-		increment_pool.Submit(func() {
-			bo.KeepExecBasicOptCluster(ctx, time.Duration(tc.DataGenInterval)*time.Millisecond)
-			wg.Done()
-		})
-	}
-	wg.Wait()
-
-	//查看任务状态，直到COMMANDRUNING状态
-	tc.CheckSyncTaskStatus(taskids)
-	logger.Sugar().Info("Check task status end")
-
-	//停止任务
-	synctaskhandle.StopTaskByIds(tc.SyncServer, taskids)
-
-	//数据校验
-	for _, v := range taddrsarray {
-		opt := &redis.Options{
-			Addr: v,
-		}
-
-		if tpasswd != "" {
-			opt.Password = tpasswd
-		}
-
-		client := redis.NewClient(opt)
-		defer client.Close()
-
-		compare := &compare.CompareSingle2Cluster{
-			Source:         client,
-			Target:         tclient,
-			BatchSize:      tc.Compare_BatchSize,
-			TTLDiff:        tc.Compare_TTLDiff,
-			CompareThreads: tc.Compare_Threads,
-		}
-		compare.CompareDB()
-
-	}
-
+	//time.Sleep(3 * time.Second)
 }

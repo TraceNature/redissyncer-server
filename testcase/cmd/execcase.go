@@ -16,9 +16,12 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
+	"strings"
 	"testcase/cases"
+	"testcase/commons"
 )
 
 // execcaseCmd represents the execcase command
@@ -34,28 +37,9 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("execcase called")
 
-		//execfile := "./tasks/createtask.json"
-		//
-		//tc := &cases.TestCase{
-		//	SyncServer:      viper.GetViper().GetString("syncserver"),
-		//	CreateTaskFile:  execfile,
-		//	GenDataDuration: 60,
-		//	DataGenInterval: 1000,
-		//	GenDataThreads:  2,
-		//}
-		//tc.Single2Single()
 		filepath, err := cmd.Flags().GetString("filepath")
 		if err != nil {
 			logger.Sugar().Error(err)
-			return
-		}
-		dir, err := cmd.Flags().GetString("yamldir")
-		if err != nil {
-			logger.Sugar().Error(err)
-			return
-		}
-		if filepath == "" && dir == "" {
-			logger.Sugar().Info("filepath or yamldir must be set")
 			return
 		}
 
@@ -67,6 +51,46 @@ to quickly create a Cobra application.`,
 			return
 		}
 
+		dir, err := cmd.Flags().GetString("yamldir")
+		if err != nil {
+			logger.Sugar().Error(err)
+			return
+		}
+
+		if !commons.FileExists(dir) {
+			logger.Sugar().Error(errors.New("Director not exists"))
+			return
+		}
+
+		if !commons.IsDir(dir) {
+			logger.Sugar().Error(errors.New("Path not Director "))
+			return
+		}
+
+		files, err := commons.GetAllFiles(dir)
+		if err != nil {
+			logger.Sugar().Error(err)
+			return
+		}
+
+		fmt.Println(files)
+		yamlfiles := []string{}
+		for _, v := range files {
+			//过滤指定格式
+			ok := strings.HasSuffix(v, ".yml")
+			if ok {
+				yamlfiles = append(yamlfiles, v)
+			}
+		}
+
+		if len(yamlfiles) != 0 {
+			for _, v := range yamlfiles {
+				tc := cases.NewTestCase()
+				tc.ParseYamlFile(v)
+				fmt.Println(tc)
+				tc.Exec()
+			}
+		}
 	},
 }
 
@@ -74,6 +98,7 @@ func init() {
 
 	execcaseCmd.Flags().StringP("filepath", "f", "", "Case yaml file to describe case config")
 	execcaseCmd.Flags().StringP("yamldir", "d", "", "Director fo case yaml file ,exec all yamlfile in the directory")
+
 	rootCmd.AddCommand(execcaseCmd)
 
 }

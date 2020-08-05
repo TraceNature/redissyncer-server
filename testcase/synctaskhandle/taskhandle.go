@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/tidwall/gjson"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -18,6 +19,7 @@ const StartTaskPath = "/api/v2/starttask"
 const StopTaskPath = "/api/v2/stoptask"
 const RemoveTaskPath = "/api/v2/removetask"
 const ListTasksPath = "/api/v2/listtasks"
+const ImportFilePath = "/api/v2/file/createtask"
 
 type Request struct {
 	Server string
@@ -56,6 +58,31 @@ func (r Request) ExecRequest() (result string) {
 	return string(bodystr)
 }
 
+//创建导入文件任务
+func Import(syncserver string, createjson string) []string {
+	importreq := &Request{
+		Server: syncserver,
+		Api:    ImportFilePath,
+		Body:   createjson,
+	}
+
+	resp := importreq.ExecRequest()
+	taskids := gjson.Get(resp, "data").Array()
+	if len(taskids) == 0 {
+
+		logger.Error("task create faile", zap.Any("response_info", resp))
+		os.Exit(1)
+	}
+	taskidsstrarray := []string{}
+	for _, v := range taskids {
+		//fmt.Println(gjson.Get(v.String(), "taskId").String())
+		taskidsstrarray = append(taskidsstrarray, gjson.Get(v.String(), "taskId").String())
+	}
+
+	return taskidsstrarray
+
+}
+
 //创建同步任务
 func CreateTask(syncserver string, createjson string) []string {
 	createreq := &Request{
@@ -67,8 +94,8 @@ func CreateTask(syncserver string, createjson string) []string {
 	resp := createreq.ExecRequest()
 	taskids := gjson.Get(resp, "data").Array()
 	if len(taskids) == 0 {
-		logger.Sugar().Error(errors.New("task create faile"))
-		logger.Sugar().Info(resp)
+		logger.Sugar().Error(errors.New("task create faile \n"), resp)
+		//logger.Sugar().Info(resp)
 		os.Exit(1)
 	}
 	taskidsstrarray := []string{}
@@ -182,7 +209,7 @@ func GetTaskStatus(syncserver string, ids []string) (map[string]string, error) {
 
 	for _, v := range taskarray {
 		id := gjson.Get(v.String(), "taskId").String()
-		status := gjson.Get(v.String(), "status").String()
+		status := v.String()
 		statusmap[id] = status
 	}
 
