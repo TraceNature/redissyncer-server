@@ -7,6 +7,7 @@ import syncer.syncerpluscommon.entity.ResultMap;
 import syncer.syncerplusredis.dao.UserMapper;
 import syncer.syncerplusredis.model.User;
 import syncer.syncerplusredis.model.UserModel;
+import syncer.syncerplusredis.util.SqliteOPUtils;
 import syncer.syncerpluswebapp.util.TokenUtils;
 
 import javax.servlet.http.HttpSession;
@@ -21,11 +22,10 @@ import java.util.Map;
  */
 @RestController
 public class UserController {
-    @Autowired
-    UserMapper userMapper;
+
     @RequestMapping(value = "/login",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap login(@RequestBody @Validated User user) throws Exception {
-        List<UserModel> userModelList= userMapper.findUserByUsername(user.getUsername());
+        List<UserModel> userModelList= SqliteOPUtils.findUserByUsername(user.getUsername());
         if(userModelList!=null&&userModelList.size()>0){
             UserModel dbUser=userModelList.get(0);
             Map<String,String> map=new HashMap<>();
@@ -42,6 +42,7 @@ public class UserController {
 
     @RequestMapping(value = "/logout",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap logout() throws Exception {
+        
         return ResultMap.builder().code("2000").msg("success");
     }
 

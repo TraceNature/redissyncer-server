@@ -10,7 +10,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <version>2.0.8</version>
+    <version>3.0.1</version>
 
 
     <artifactId>syncer-replicator</artifactId>

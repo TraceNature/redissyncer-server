@@ -5,14 +5,20 @@ import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import syncer.syncerjedis.*;
+import syncer.syncerjedis.exceptions.JedisConnectionException;
 import syncer.syncerjedis.params.SetParams;
 import syncer.syncerpluscommon.config.ThreadPoolConfig;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.constant.PipeLineCompensatorEnum;
+import syncer.syncerplusredis.dao.DataCompensationMapper;
 import syncer.syncerplusredis.entity.EventEntity;
+import syncer.syncerplusredis.entity.SqliteCommitEntity;
 import syncer.syncerplusredis.entity.TaskDataEntity;
+import syncer.syncerplusredis.model.DataCompensationModel;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
+import syncer.syncerplusredis.util.TaskErrorUtils;
+import syncer.syncerservice.exception.KeyCompensationFailedException;
 import syncer.syncerservice.po.KVPersistenceDataEntity;
 import syncer.syncerservice.po.StringCompensatorEntity;
 import syncer.syncerservice.util.CommandCompensatorUtils;
@@ -22,9 +28,12 @@ import syncer.syncerservice.util.common.Strings;
 import syncer.syncerservice.util.jedis.ObjectUtils;
 import syncer.syncerservice.util.jedis.StringUtils;
 import syncer.syncerservice.util.jedis.cmd.JedisProtocolCommand;
+import syncer.syncerservice.util.taskutil.TaskGetUtils;
+import syncer.syncerservice.util.taskutil.taskServiceQueue.DbDataCommitQueue;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -53,6 +62,15 @@ public class JDJedisPipeLineClient implements JDRedisClient {
     private Lock commitLock=new ReentrantLock();
     private Lock compensatorLock=new ReentrantLock();
     private AtomicInteger commandNums=new AtomicInteger();
+    /**
+     * 被抛弃key阈值
+     */
+    private AtomicLong errorNums=new AtomicLong();
+
+    //错误次数
+    private long errorCount = 1;
+
+    private boolean connectError=false;
     static {
         threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
         threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
@@ -70,13 +88,17 @@ public class JDJedisPipeLineClient implements JDRedisClient {
 
     private CommandCompensatorUtils commandCompensatorUtils=new CommandCompensatorUtils();
 
-    public JDJedisPipeLineClient(String host, Integer port, String password, int count, String taskId) {
+    public JDJedisPipeLineClient(String host, Integer port, String password, int count,long errorCount, String taskId) {
 
         this.host = host;
         this.port = port;
         this.taskId = taskId;
         if (count != 0) {
             this.count = count;
+        }
+
+        if(errorCount>=-1L){
+            this.errorCount = errorCount;
         }
 
         if (null == config) {
@@ -103,8 +125,6 @@ public class JDJedisPipeLineClient implements JDRedisClient {
 
         //定时回收线程
         threadPoolTaskExecutor.execute(new JDJedisPipeLineClient.PipelineSubmitThread(taskId));
-
-
     }
 
 
@@ -958,7 +978,9 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                 //补偿入口
                 commitCompensator(resultList);
             }
-        }finally {
+        }catch (JedisConnectionException e){
+            brokenTaskByConnectError(e);
+        } finally {
             commitLock.unlock();
         }
 
@@ -1164,8 +1186,10 @@ public class JDJedisPipeLineClient implements JDRedisClient {
 
     }
 
-    void compensator(EventEntity eventEntity){
-
+    void compensator(EventEntity eventEntity) {
+        if (TaskDataManagerUtils.isTaskClose(taskId)&&taskId!=null) {
+            return;
+        }
         commitLock.lock();
         try {
             Jedis client=null;
@@ -1254,7 +1278,12 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                         result=client.sendCommand(JedisProtocolCommand.builder().raw(eventEntity.getCmd()).build(), eventEntity.getValueList());
                     }
                      **/
-                    result=client.sendCommand(JedisProtocolCommand.builder().raw(eventEntity.getCmd()).build(), eventEntity.getValueList());
+
+                    if(eventEntity.getValueList()==null){
+                        result=client.sendCommand(JedisProtocolCommand.builder().raw(eventEntity.getCmd()).build());
+                    }else{
+                        result=client.sendCommand(JedisProtocolCommand.builder().raw(eventEntity.getCmd()).build(), eventEntity.getValueList());
+                    }
 
                     //非幂等性命令
                 }else if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.APPEND)){
@@ -1281,11 +1310,28 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                 key= String.valueOf(eventEntity.getStringKey());
                 if(!commandCompensatorUtils.isObjectSuccess(result,command)){
                     log.error("command [{}]:key [{}]:response[{}]补偿失败，被抛弃",command,key,result);
+//                    StringBuilder stringBuilder=new StringBuilder(command);
+//                    stringBuilder.append(" ").append(key).append(" ").append(result);
+//
+//                    throw new KeyCompensationFailedException(stringBuilder.toString());
                 }
+                /**
+                 * todo 抛异常测试
+                 */
+//                throw new Exception();
             }catch (Exception e){
 
                 log.warn("key[{}]同步失败被抛弃,原因：[{}]",eventEntity.getStringKey(),e.getMessage());
+
+                if(errorCount>=0){
+                    long error=errorNums.incrementAndGet();
+                    if(error>errorCount){
+                        brokenTaskByConnectError("被抛弃key数量超过阈值["+errorCount+"]");
+                    }
+                }
+
                 e.printStackTrace();
+//                throw  e;
             }finally {
                 if(null!=client){
                     client.close();
@@ -1323,7 +1369,9 @@ public class JDJedisPipeLineClient implements JDRedisClient {
             List<Object> resultList = pipelined.syncAndReturnAll();
             //补偿入口
             commitCompensator(resultList);
-        }finally {
+        }catch (JedisConnectionException e){
+            brokenTaskByConnectError(e);
+        } finally {
             commitLock.unlock();
         }
     }
@@ -1352,12 +1400,30 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                  commitCompensator(resultList);
 
              }
+         }catch (JedisConnectionException e){
+             brokenTaskByConnectError(e);
          }finally {
              commitLock.unlock();
          }
 
     }
 
+
+    void brokenTaskByConnectError(Exception e){
+        if(!connectError){
+            TaskErrorUtils.brokenStatusAndLog(e,this.getClass(),taskId);
+            connectError=true;
+        }
+
+    }
+
+    void brokenTaskByConnectError(String msg){
+        if(!connectError){
+            TaskErrorUtils.brokenStatusAndLog(msg,this.getClass(),taskId);
+            connectError=true;
+        }
+
+    }
 
     //更新最后pipeline提交时间
 
@@ -1418,10 +1484,12 @@ public class JDJedisPipeLineClient implements JDRedisClient {
 //                    log.error("数据为空【{}】【{}】+i[{}],data[{}]",Strings.byteToString(cmd),data,i,JSON.toJSONString(kvPersistence.getKey(i)));
 ////                    continue;
 //                }
+
+//                !commandCompensatorUtils.isCommandSuccess(data,cmd,taskId,key)
                 if(!commandCompensatorUtils.isCommandSuccess(data,cmd,taskId,key)){
-                    log.error("pipeline返回[{}]:内存[{}] ",data,JSON.toJSONString(kvPersistence.getKey(i)));
                     log.error("Command[{}],KEY[{}]进入补偿机制：[{}] : RESPONSE[{}]->String[{}]",Strings.byteToString(kvPersistence.getKey(i).getCmd()), kvPersistence.getKey(i).getStringKey(),JSON.toJSONString(data),data,compensatorUtils.getRes(data));
                     newKvPersistence.addKey(kvPersistence.getKey(i));
+                    insertCompensationCommand(kvPersistence.getKey(i));
                 }
             }
 
@@ -1444,6 +1512,33 @@ public class JDJedisPipeLineClient implements JDRedisClient {
 
     }
 
+
+    void insertCompensationCommand(EventEntity data){
+        try {
+            String key=data.getStringKey();
+            if(StringUtils.isEmpty(key)){
+                key="";
+            }
+
+
+            DataCompensationModel dataCompensationModel=DataCompensationModel
+                    .builder()
+                    .command(Strings.byteToString(data.getCmd()))
+                    .groupId(TaskGetUtils.getRunningTaskGroupId(taskId))
+                    .key(key)
+                    .taskId(taskId)
+                    .times(1)
+                    .value("")
+                    .build();
+
+
+            DbDataCommitQueue.put(SqliteCommitEntity.builder().type(20).object(dataCompensationModel).msg("补偿数据写入").build());
+
+        }catch (Exception e){
+            e.printStackTrace();
+//            log.error("数据补偿记录写入失败[{}]:[{}]",Strings.byteToString(data.getCmd()),data.getStringKey());
+        }
+    }
 
     /**
      * 判断是否是setnx带时间(SET)的命令
@@ -1510,9 +1605,14 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                             Thread.currentThread().interrupt();
                             status = false;
                             addCommandNum();
-                            log.warn("task[{}]数据传输模保护状态退出,任务停止,ThreadName[{}]",taskId,Thread.currentThread().getName());
-                            pipelined.close();
-                            jedisPool.close();
+                            log.warn("task[{}]数据传输模保护状态退出,任务停止",taskId);
+                            try {
+                                pipelined.close();
+                                jedisPool.close();
+                            }catch (Exception e){
+
+                            }
+
                             break;
                         }
                     }

@@ -17,9 +17,7 @@ public class CompensatorUtils {
      * @return
      */
     public boolean isStringSuccess(String res){
-        if((!"OK".equalsIgnoreCase(res)&&!"PONG".equalsIgnoreCase(res))||res.indexOf("error")>=0){
-            return false;
-        }
+
 
         if("PONG".equalsIgnoreCase(res)){
             return true;
@@ -27,6 +25,15 @@ public class CompensatorUtils {
         if("OK".equalsIgnoreCase(res)){
             return true;
         }
+
+        if("null".equalsIgnoreCase(res)){
+            return true;
+        }
+
+        if((!"OK".equalsIgnoreCase(res)&&!"PONG".equalsIgnoreCase(res))||res.indexOf("error")>=0){
+            return false;
+        }
+
         return true;
     }
 

@@ -44,12 +44,12 @@ public class RdbController {
 
 
 
-    @ApiResponses({
-            @ApiResponse(code = 2000, message = "The request is successful", examples = @Example({
-                    @ExampleProperty(value = "{'user':'id'}", mediaType = "application/json")
-            })
-            )
-    })
+//    @ApiResponses({
+//            @ApiResponse(code = 2000, message = "The request is successful", examples = @Example({
+//                    @ExampleProperty(value = "{'user':'id'}", mediaType = "application/json")
+//            })
+//            )
+//    })
 
 //    @ApiImplicitParam(paramType = "header",name = "Syncer-Token",value ="token标记",dataType ="Integer"),
     @ApiImplicitParams({

@@ -46,6 +46,7 @@ public class RedisDataCommandUpTransmissionTask implements Runnable{
     private volatile OutputStream out ;
     private volatile AtomicInteger acc = new AtomicInteger(0);
     private Date time;
+    private boolean taskStatus=true;
     private Replicator r;
     static ThreadPoolConfig threadPoolConfig;
     static ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -107,7 +108,15 @@ public class RedisDataCommandUpTransmissionTask implements Runnable{
             r.addEventListener(new EventListener() {
                 @Override
                 public void onEvent(Replicator replicator, Event event) {
+                    if(taskStatus){
+                        try {
+                            taskStatus=false;
+                            TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),-1L, TaskStatusType.COMMANDRUNING);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
 
+                    }
 
                     if (event instanceof PreCommandSyncEvent) {
                         r.addRawByteListener(rawByteListener);

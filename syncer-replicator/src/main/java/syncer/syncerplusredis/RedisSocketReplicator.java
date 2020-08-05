@@ -147,6 +147,7 @@ public class RedisSocketReplicator extends AbstractReplicator {
         logger.info(reply);
         if(reply.indexOf("Can't SYNC while not connected with my master")>=0){
             if(count.get()>=3){
+                close();
                 throw new IncrementException("NOMASTERLINK Can't SYNC while not connected with my master");
 
             }

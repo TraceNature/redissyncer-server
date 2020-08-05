@@ -2,11 +2,10 @@ package syncer.syncerservice.persistence;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import syncer.syncerpluscommon.util.spring.SpringUtil;
-import syncer.syncerplusredis.dao.TaskMapper;
 import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.entity.thread.ThreadMsgEntity;
 import syncer.syncerplusredis.model.TaskModel;
+import syncer.syncerplusredis.util.SqliteOPUtils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerpluscommon.util.file.FileUtils;
 
@@ -27,20 +26,26 @@ public class SqliteSettingPersistenceTask  implements Runnable{
         while (true){
             try {
                 Map<String, TaskDataEntity> aliveThreadHashMap =TaskDataManagerUtils.getAliveThreadHashMap();
-                TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+
                 for (Map.Entry<String, TaskDataEntity> data:aliveThreadHashMap.entrySet()){
 
 
                     if(!(data.getValue().getRdbKeyCount().get()==0L
                             &&data.getValue().getAllKeyCount().get()==0L
                             &&data.getValue().getRealKeyCount().get()==0L)){
-                        taskMapper.updateKeyCountById(data.getKey(),data.getValue().getRdbKeyCount().get(),data.getValue().getAllKeyCount().get(),data.getValue().getRealKeyCount().get());
+                            SqliteOPUtils.updateKeyCountById(data.getKey(),data.getValue().getRdbKeyCount().get(),data.getValue().getAllKeyCount().get(),data.getValue().getRealKeyCount().get());
                     }
 
-                    if(data.getValue().getOffSetEntity().getReplOffset().get()>-1L){
-                        TaskModel sqliteTaskModel=taskMapper.findTaskById(data.getKey());
-                        if(!sqliteTaskModel.getOffset().equals(data.getValue().getOffSetEntity().getReplOffset().get())){
-                            taskMapper.updateOffset(data.getKey(),data.getValue().getOffSetEntity().getReplOffset().get());
+
+                    /**
+                     * todo
+                     * null异常
+                     */
+                    if(null!=data.getValue().getOffSetEntity().getReplOffset()&&data.getValue().getOffSetEntity().getReplOffset().get()>-1L){
+                        TaskModel sqliteTaskModel=SqliteOPUtils.findTaskById(data.getKey());
+
+                        if(null!=sqliteTaskModel&&null!=sqliteTaskModel.getOffset()&&!sqliteTaskModel.getOffset().equals(data.getValue().getOffSetEntity().getReplOffset().get())){
+                            SqliteOPUtils.updateOffset(data.getKey(),data.getValue().getOffSetEntity().getReplOffset().get());
                         }
                     }
                 }

@@ -37,7 +37,17 @@ public class TaskErrorUtils {
             ex.printStackTrace();
         }
         log.warn("任务Id【{}】任务启动/运行异常停止 ，Class【{}】,异常原因【{}】", taskId, clazz.toString(),e.getMessage());
+      e.printStackTrace();
     }
 
-
+    public  static void brokenStatusAndLog(String msg , Class clazz, String taskId){
+        try {
+            //清除内存信息并更新数据库状态
+            TaskDataManagerUtils.removeThread(taskId);
+        } catch (Exception ex) {
+            log.warn("任务Id【{}】任务启动/运行异常停止 ，Class【{}】,异常原因【{}】", taskId, clazz.toString(),msg);
+            ex.printStackTrace();
+        }
+        log.warn("任务Id【{}】任务启动/运行异常停止 ，Class【{}】,异常原因【{}】", taskId, clazz.toString(),msg);
+    }
 }

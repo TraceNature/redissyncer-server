@@ -7,11 +7,11 @@ import syncer.syncerservice.util.JDRedisClient.jimdb.JimDb2Client;
 public class JDRedisClientFactory {
 
 
-    public static JDRedisClient createJDRedisClient(RedisBranchTypeEnum branchTypeEnum,String host, Integer port, String password, int count,String taskId,String jimUrl, String cfsUrl) {
+    public static JDRedisClient createJDRedisClient(RedisBranchTypeEnum branchTypeEnum,String host, Integer port, String password, int count,long errorCount,String taskId,String jimUrl, String cfsUrl) {
         JDRedisClient redisClient = null;
         switch (branchTypeEnum) {
             case SINGLE:
-                redisClient = new JDJedisPipeLineClient(host,port,password,count,taskId);
+                redisClient = new JDJedisPipeLineClient(host,port,password,count,errorCount,taskId);
 //                redisClient = new JDRedisJedisPipeLineClient(host,port,password,count,taskId);
 //                redisClient = new JDRedisJedisClient(host,port,password);
                 break;

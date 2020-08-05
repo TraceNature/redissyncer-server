@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import syncer.syncerpluscommon.bean.PageBean;
 import syncer.syncerplusredis.dao.RdbVersionMapper;
 import syncer.syncerplusredis.model.RdbVersionModel;
+import syncer.syncerplusredis.util.SqliteOPUtils;
 import syncer.syncerservice.service.IRdbVersionService;
 
 import java.util.List;
@@ -17,14 +18,14 @@ import java.util.List;
  */
 @Service("rdbVersionService")
 public class RdbVersionServiceImpl implements IRdbVersionService {
-    @Autowired
-    private RdbVersionMapper rdbVersionMapper;
+
+
     @Override
     public PageBean<RdbVersionModel> findRdbVersionModelByPage(int currentPage, int pageSize) throws Exception {
         //设置分页信息，分别是当前页数和每页显示的总记录数【记住：必须在mapper接口中的方法执行之前设置该分页信息】
         PageHelper.startPage(currentPage, pageSize);
-        List<RdbVersionModel> allItems = rdbVersionMapper.selectAll();        //全部商品
-        int countNums = rdbVersionMapper.countItem();            //总记录数
+        List<RdbVersionModel> allItems = SqliteOPUtils.RdbVersionSelectAll();        //全部商品
+        int countNums = SqliteOPUtils.RdbVersioncountItem();            //总记录数
         PageBean<RdbVersionModel> pageData = new PageBean<>(currentPage, pageSize, countNums);
         pageData.setItems(allItems);
         return pageData;
@@ -32,31 +33,31 @@ public class RdbVersionServiceImpl implements IRdbVersionService {
 
     @Override
     public List<RdbVersionModel> selectAll() throws Exception {
-        return rdbVersionMapper.selectAll();
+        return SqliteOPUtils.RdbVersionSelectAll();
     }
 
     @Override
     public boolean deleteRdbVersionModelById(Integer id) throws Exception {
-        return rdbVersionMapper.deleteRdbVersionModelById(id);
+        return SqliteOPUtils.deleteRdbVersionModelById(id);
     }
 
     @Override
     public RdbVersionModel findRdbVersionModelById(Integer id) throws Exception {
-        return rdbVersionMapper.findRdbVersionModelById(id);
+        return SqliteOPUtils.findRdbVersionModelById(id);
     }
 
     @Override
     public RdbVersionModel findRdbVersionModelByRedisVersionAndRdbVersion(String redisVersion, Integer rdbVersion) throws Exception {
-        return rdbVersionMapper.findRdbVersionModelByRedisVersionAndRdbVersion(redisVersion,rdbVersion);
+        return SqliteOPUtils.findRdbVersionModelByRedisVersionAndRdbVersion(redisVersion,rdbVersion);
     }
 
     @Override
     public boolean insertRdbVersionModel(RdbVersionModel rdbVersionModel) throws Exception {
-        return rdbVersionMapper.insertRdbVersionModel(rdbVersionModel);
+        return SqliteOPUtils.insertRdbVersionModel(rdbVersionModel);
     }
 
     @Override
-    public RdbVersionModel updateRdbVersionModelById(Integer id, String redisVersion, Integer rdbVersion) throws Exception {
-        return rdbVersionMapper.updateRdbVersionModelById(id,redisVersion,rdbVersion);
+    public boolean updateRdbVersionModelById(Integer id, String redisVersion, Integer rdbVersion) throws Exception {
+        return SqliteOPUtils.updateRdbVersionModelById(id,redisVersion,rdbVersion);
     }
 }

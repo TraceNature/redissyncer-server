@@ -1,6 +1,7 @@
 package syncer.syncerservice.filter.redis_start_check_strategy;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.syncerjedis.exceptions.JedisDataException;
 import syncer.syncerplusredis.constant.RedisStartCheckTypeEnum;
@@ -29,6 +30,7 @@ import static syncer.syncerjedis.Protocol.Command.AUTH;
  */
 @AllArgsConstructor
 @Builder
+@Slf4j
 public class RedisStartCheckRedisUrlStrategy implements IRedisStartCheckBaseStrategy {
     private IRedisStartCheckBaseStrategy next;
     private JDRedisClient client;
@@ -141,7 +143,7 @@ public class RedisStartCheckRedisUrlStrategy implements IRedisStartCheckBaseStra
             Configuration tconfig = Configuration.valueOf(turi);
             //获取password
             if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
-                System.out.println("CheckRedisConnectStatus is success");
+                log.info("CheckRedisConnectStatus is success");
                 Object auth = target.send(AUTH, tconfig.getAuthPassword().getBytes());
             }
 
@@ -150,9 +152,8 @@ public class RedisStartCheckRedisUrlStrategy implements IRedisStartCheckBaseStra
             while (i > 0) {
                 try {
                     String png = (String) target.send("PING".getBytes());
-                    System.out.println(url.split("\\?")[0]+"------:"+png);
                     if ("PONG".equalsIgnoreCase(png)) {
-                        System.out.println("CheckRedisConnectStatus is success");
+                        log.info("CheckRedisConnectStatus is success");
                         return true;
                     }
                     i--;

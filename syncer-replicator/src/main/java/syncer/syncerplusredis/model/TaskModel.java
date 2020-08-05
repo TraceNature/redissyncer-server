@@ -1,11 +1,9 @@
 package syncer.syncerplusredis.model;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import lombok.*;
 import org.springframework.util.StringUtils;
 import syncer.syncerplusredis.constant.SyncType;
-import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.util.TimeUtils;
 
 import java.util.Date;
@@ -21,7 +19,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor                 //无参构造
+@NoArgsConstructor //无参构造
 
 public class TaskModel {
 
@@ -235,6 +233,8 @@ public class TaskModel {
     private Long realKeyCount=0L;
 
 
+
+
     /**
      * 是否是第一次创建
      */
@@ -263,6 +263,13 @@ public class TaskModel {
     //目标用户名
     @Builder.Default
     private String targetUserName="";
+
+
+    /**
+     * 错误数据总数
+     */
+    @Builder.Default
+    private Long errorCount=30L;
 
 
     public Map<String,Object>getDataAnalysis(){
@@ -394,11 +401,16 @@ public class TaskModel {
         return sourceRedisType;
     }
 
-    public TaskModel(String id,String taskId, String groupId, String taskName, String sourceRedisAddress, String sourcePassword, String targetRedisAddress, String targetPassword, String fileAddress, boolean autostart, boolean afresh, Integer batchSize, Integer tasktype, Integer offsetPlace, String taskMsg, Long offset, Integer status, double redisVersion, Integer rdbVersion, Integer syncType, Integer sourceRedisType, Integer targetRedisType, String sourceHost, String targetHost, Integer sourcePort
+    public TaskModel(String id,String taskId, String groupId, String taskName, String sourceRedisAddress, String sourcePassword,
+                     String targetRedisAddress, String targetPassword, String fileAddress, boolean autostart,
+                     boolean afresh, Integer batchSize, Integer tasktype, Integer offsetPlace, String taskMsg,
+                     Long offset, Integer status, double redisVersion, Integer rdbVersion, Integer syncType,
+                     Integer sourceRedisType, Integer targetRedisType, String sourceHost, String targetHost,
+                     Integer sourcePort
             , Integer targetPort, String dbMapper, String md5, String createTime, String updateTime
             , String dataAnalysis, String replId, Long rdbKeyCount, Long allKeyCount,
                      Long realKeyCount, Long lastKeyUpdateTime, Long lastKeyCommitTime,
-    boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName) {
+    boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName,Long errorCount) {
         this.id = id;
         this.taskId=taskId;
         this.groupId = groupId;
@@ -441,6 +453,7 @@ public class TaskModel {
         this.targetAcl=targetAcl;
         this.sourceUserName=sourceUserName;
         this.targetUserName=targetUserName;
+        this.errorCount=errorCount;
         setTargetRedisAddress(this.getTargetRedisAddress());
         setSourceRedisAddress(this.getSourceRedisAddress());
     }

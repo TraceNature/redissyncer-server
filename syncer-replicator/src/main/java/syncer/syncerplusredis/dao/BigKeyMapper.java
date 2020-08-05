@@ -13,7 +13,7 @@ import java.util.List;
  * @Date 2020/7/6
  */
 
-@Component
+//@Component
 @Mapper
 public interface BigKeyMapper {
     @Select("SELECT * FROM t_big_key WHERE taskId =#{taskId}")
@@ -28,4 +28,6 @@ public interface BigKeyMapper {
     @Delete("DELETE FROM t_big_key WHERE taskId=#{taskId}")
     void deleteBigKeyCommandModelByTaskId(@Param("taskId")String taskId)throws Exception;
 
+    @Delete("DELETE FROM t_big_key WHERE groupId=#{groupId}")
+    void deleteBigKeyCommandModelByGroupId(@Param("groupId")String groupId)throws Exception;
 }

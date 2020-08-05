@@ -15,6 +15,7 @@
 <!--			<Layout type="Log4j2Layout"/>-->
 		</Console>
 
+
 		<RollingRandomAccessFile
 				append="true"  immediateFlush="true" name="RollingRandomAccessFile" fileName="${logPath}/${logFile}.log"
 				filePattern="${logPath}/${logFile}-%d-%i.log" >
@@ -25,7 +26,7 @@
 			</Policies>
 			<Filters>
 				<!--匹配INFO级别以及以上级别,不匹配INFO级别以下级别,即: 匹配 >= INFO的级别-->
-				<ThresholdFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
+				<ThresholdFilter  level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
 			</Filters>
 			<DefaultRolloverStrategy max="20" />
 		</RollingRandomAccessFile>

@@ -15,6 +15,7 @@ import syncer.syncerplusredis.entity.RedisURI;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.model.RdbVersionModel;
 import syncer.syncerplusredis.model.TaskModel;
+import syncer.syncerplusredis.util.SqliteOPUtils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.code.CodeUtils;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
@@ -64,8 +65,8 @@ public class RedisStartSelectVersionStrategy implements IRedisStartCheckBaseStra
                 taskModel.setRedisVersion(Double.valueOf(version));
             }
 
-            RdbVersionMapper rdbVersionMapper= SpringUtil.getBean(RdbVersionMapper.class);
-            RdbVersionModel rdbVersion=rdbVersionMapper.findRdbVersionModelByRedisVersion(version);
+
+            RdbVersionModel rdbVersion= SqliteOPUtils.findRdbVersionModelByRedisVersion(version);
             if(rdbVersion==null){
                 rdbVersion=RdbVersionModel.builder()
                         .rdb_version(TaskDataManagerUtils.getRdbVersionMap().get(version))

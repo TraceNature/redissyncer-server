@@ -94,6 +94,7 @@ public class DtoToTaskModelUtils {
                     .targetAcl(redisClusterDto.isTargetAcl())
                     .targetUserName(redisClusterDto.getTargetUserName())
                     .syncType(SyncTypeUtils.getSyncType(redisClusterDto.getFileType()).getCode())
+                    .errorCount(redisClusterDto.getErrorCount())
                     .build();
 
 
@@ -252,7 +253,7 @@ public class DtoToTaskModelUtils {
                     .targetAcl(redisFileDataDto.isTargetAcl())
                     .targetUserName(redisFileDataDto.getTargetUserName())
                     .syncType(SyncTypeUtils.getSyncType(redisFileDataDto.getFileType()).getCode())
-
+                    .errorCount(redisFileDataDto.getErrorCount())
                     .build();
 
             if(redisFileDataDto.getDbMapper()!=null){
@@ -281,7 +282,7 @@ public class DtoToTaskModelUtils {
         String[] addressList=redisFileDataDto.getSourceRedisAddress().split(";");
         String taskId=null;
 
-        if(redisFileDataDto.getFileType().equals(SyncType.COMMANDDUMPUP.getFileType())){
+        if(!redisFileDataDto.getFileType().equals(SyncType.COMMANDDUMPUP.getFileType())){
             throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_SYNCTYPE_ERROR_CODE,TaskMsgConstant.TASK_MSG_SYNCTYPE_ERROR));
 
         }
@@ -328,6 +329,7 @@ public class DtoToTaskModelUtils {
                     .sourceUserName(redisFileDataDto.getSourceUserName())
                     .targetAcl(redisFileDataDto.isTargetAcl())
                     .targetUserName(redisFileDataDto.getTargetUserName())
+                    .errorCount(redisFileDataDto.getErrorCount())
                     .build();
 
                 if(redisFileDataDto.getDbMapper()!=null){

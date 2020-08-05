@@ -129,7 +129,11 @@ public class CommandCompensatorUtils {
         comanndResponseTypeMap.put("ZREVRANK",ComanndResponseType.builder().type(2).command("ZREVRANK").commandResponse("LONG").build());
         comanndResponseTypeMap.put("ZUNIONSTORE",ComanndResponseType.builder().type(2).command("ZUNIONSTORE").commandResponse("LONG").build());
         comanndResponseTypeMap.put("ZINTERSTORE",ComanndResponseType.builder().type(2).command("ZINTERSTORE").commandResponse("LONG").build());
-    }
+
+         comanndResponseTypeMap.put("ZPOPMAX",ComanndResponseType.builder().type(6).command("ZPOPMAX").commandResponse("LIST").build());
+         comanndResponseTypeMap.put("ZPOPMIN",ComanndResponseType.builder().type(6).command("ZPOPMIN").commandResponse("LIST").build());
+
+     }
 
 
 
@@ -166,6 +170,7 @@ public class CommandCompensatorUtils {
         comanndResponseTypeMap.put("SLAVEOF",ComanndResponseType.builder().type(1).command("SLAVEOF").commandResponse("OK").build());
 
 
+
         comanndResponseTypeMap.put("DEL",ComanndResponseType.builder().type(2).command("DEL").commandResponse("LONG").build());
         comanndResponseTypeMap.put("EXPIRE",ComanndResponseType.builder().type(2).command("EXPIRE").commandResponse("LONG").build());
         comanndResponseTypeMap.put("EXPIREAT",ComanndResponseType.builder().type(2).command("EXPIREAT").commandResponse("LONG").build());
@@ -177,6 +182,9 @@ public class CommandCompensatorUtils {
         comanndResponseTypeMap.put("RENAME",ComanndResponseType.builder().type(1).command("RENAME").commandResponse("OK").build());
         comanndResponseTypeMap.put("RENAMENX",ComanndResponseType.builder().type(1).command("RENAMENX").commandResponse("OK").build());
         comanndResponseTypeMap.put("RESTORE",ComanndResponseType.builder().type(1).command("RESTORE").commandResponse("OK").build());
+         comanndResponseTypeMap.put("RESTOREREPLACE",ComanndResponseType.builder().type(1).command("RESTOREREPLACE").commandResponse("OK").build());
+
+
 
     }
 

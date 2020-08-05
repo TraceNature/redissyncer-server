@@ -1,31 +1,26 @@
 package syncer.syncerplusredis.util;
 
-import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
-import javafx.concurrent.Task;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.syncerpluscommon.bean.PageBean;
 import syncer.syncerpluscommon.constant.ResultCodeAndMessage;
-import syncer.syncerpluscommon.entity.ResultMap;
+
+import syncer.syncerpluscommon.util.TaskCreateRunUtils;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.constant.TaskMsgConstant;
 import syncer.syncerplusredis.constant.TaskStatusType;
-import syncer.syncerplusredis.constant.TaskType;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
-import syncer.syncerplusredis.dao.TaskMapper;
-import syncer.syncerplusredis.entity.RedisURI;
+import syncer.syncerplusredis.dao.*;
 import syncer.syncerplusredis.entity.StartTaskEntity;
 import syncer.syncerplusredis.entity.TaskDataEntity;
+import syncer.syncerplusredis.entity.TaskOffsetEntity;
 import syncer.syncerplusredis.entity.dto.task.ListTaskMsgDto;
-import syncer.syncerplusredis.entity.dto.task.TaskMsgDto;
 import syncer.syncerplusredis.exception.TaskMsgException;
-import syncer.syncerplusredis.model.RdbVersionModel;
 import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.model.TaskModelResult;
-import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerplusredis.util.code.CodeUtils;
 
 import java.io.IOException;
@@ -37,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 
 
@@ -98,20 +94,23 @@ public class TaskDataManagerUtils {
      * @param taskDataEntity
      */
     public synchronized static void addMemAndDbThread(String threadId, TaskDataEntity taskDataEntity) throws Exception {
-        if(checkThreadMsg(taskDataEntity)){
-            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR));
-        }
 
-        if(checkDbThreadMsg(taskDataEntity.getTaskModel().getId())){
-            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-            taskMapper.insertTask(taskDataEntity.getTaskModel());
-        }else {
-            //已存在
-        }
+            if(checkThreadMsg(taskDataEntity)){
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR));
+            }
 
-        if(!aliveThreadHashMap.containsKey(threadId)){
-            aliveThreadHashMap.put(threadId,taskDataEntity);
-        }
+            if(checkDbThreadMsg(taskDataEntity.getTaskModel().getId())){
+//            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+//            taskMapper.insertTask(taskDataEntity.getTaskModel());
+                SqliteOPUtils.insertTask(taskDataEntity.getTaskModel());
+            }else {
+                //已存在
+            }
+
+            if(!aliveThreadHashMap.containsKey(threadId)){
+                aliveThreadHashMap.put(threadId,taskDataEntity);
+            }
+
     }
 
     /**
@@ -122,10 +121,18 @@ public class TaskDataManagerUtils {
      */
     public synchronized static void addDbThread(String threadId, TaskModel taskModel) throws Exception {
 
-        if(checkDbThreadMsg(threadId)){
-            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-            taskMapper.insertTask(taskModel);
-        }
+            if(checkDbThreadMsg(threadId)){
+//            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+//            taskMapper.insertTask(taskModel);
+                boolean status= SqliteOPUtils.insertTask(taskModel);
+                if(!status){
+                    throw new Exception("任务基本信息持久化失败");
+                }
+//            TaskOffsetMapper taskOffsetMapper=SpringUtil.getBean(TaskOffsetMapper.class);
+//            taskOffsetMapper.insetTaskOffset(TaskOffsetEntity.builder().taskId(taskModel.getTaskId()).replId(taskModel.getReplId()).offset(taskModel.getOffset()).build());
+//                SqliteOPUtils.insetTaskOffset(TaskOffsetEntity.builder().taskId(taskModel.getTaskId()).replId(taskModel.getReplId()).offset(taskModel.getOffset()).build());
+            }
+
     }
 
     /**
@@ -135,29 +142,57 @@ public class TaskDataManagerUtils {
      * @throws Exception
      */
     public synchronized static void addMemThread(String threadId, TaskDataEntity taskDataEntity) throws Exception {
-        if(checkThreadMsg(taskDataEntity)){
-            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR));
-        }
-        if(!aliveThreadHashMap.containsKey(threadId)){
-            aliveThreadHashMap.put(threadId,taskDataEntity);
-        }
+
+            if(checkThreadMsg(taskDataEntity)){
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR));
+            }
+            if(!aliveThreadHashMap.containsKey(threadId)){
+                aliveThreadHashMap.put(threadId,taskDataEntity);
+            }
+
     }
 
+    /**
+     * 把任务信息加入内存
+     * @param threadId
+     * @param taskDataEntity
+     * @throws Exception
+     */
+    public synchronized static void addMemThread(String threadId, TaskDataEntity taskDataEntity,boolean status) throws Exception {
 
+        if(checkThreadMsg(taskDataEntity)&&!status){
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR_CODE,TaskMsgConstant.TASK_MSG_TASKSETTING_ERROR));
+        }
+
+        if(status){
+            aliveThreadHashMap.put(threadId,taskDataEntity);
+        }else {
+            if(!aliveThreadHashMap.containsKey(threadId)){
+                aliveThreadHashMap.put(threadId,taskDataEntity);
+            }
+        }
+
+    }
 
     /**
      *
      * @param threadId
      */
     public synchronized static void removeThread(String threadId, Long offset) throws Exception {
-        if(aliveThreadHashMap.containsKey(threadId)){
-            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-            taskMapper.updateTaskStatusById(threadId, TaskStatusType.BROKEN.getCode());
-            if(offset!=null&&offset>-1L){
-                taskMapper.updateTaskOffsetById(threadId,offset);
+
+            if(aliveThreadHashMap.containsKey(threadId)){
+//            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+//            taskMapper.updateTaskStatusById(threadId, TaskStatusType.BROKEN.getCode());
+                SqliteOPUtils.updateTaskStatusById(threadId, TaskStatusType.BROKEN.getCode());
+
+                if(offset!=null&&offset>-1L){
+                    SqliteOPUtils.updateTaskOffsetById(threadId,offset);
+//                taskMapper.updateTaskOffsetById(threadId,offset);
+                }
+                aliveThreadHashMap.remove(threadId);
             }
-            aliveThreadHashMap.remove(threadId);
-        }
+
+
     }
 
 
@@ -169,21 +204,29 @@ public class TaskDataManagerUtils {
      * @throws Exception
      */
     public synchronized static void changeThreadStatus(String threadId, Long offset, TaskStatusType taskType) throws Exception {
-        if(aliveThreadHashMap.containsKey(threadId)){
-            TaskDataEntity taskDataEntity=aliveThreadHashMap.get(threadId);
-            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-            taskMapper.updateTaskStatusById(threadId, taskType.getCode());
-            if(offset!=null&&offset>-1L){
-                taskMapper.updateTaskOffsetById(threadId,offset);
-            }
-            if(taskType.getStatus().equals(ThreadStatusEnum.BROKEN)||taskType.getStatus().equals(ThreadStatusEnum.STOP)){
-                aliveThreadHashMap.remove(threadId);
-                taskDataEntity=null;
-            }else {
-                taskDataEntity.getTaskModel().setStatus(taskType.getCode());
+
+
+            if(aliveThreadHashMap.containsKey(threadId)){
+                TaskDataEntity taskDataEntity=aliveThreadHashMap.get(threadId);
+//            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+                SqliteOPUtils.updateTaskStatusById(threadId, taskType.getCode());
+//            taskMapper.updateTaskStatusById(threadId, taskType.getCode());
+                if(offset!=null&&offset>=-1L){
+//                taskMapper.updateTaskOffsetById(threadId,offset);
+
+                    SqliteOPUtils.updateTaskOffsetById(threadId,offset);
+                }
+                if(taskType.getStatus().equals(ThreadStatusEnum.BROKEN)||taskType.getStatus().equals(ThreadStatusEnum.STOP)){
+                    aliveThreadHashMap.remove(threadId);
+                    deleteTaskDataByTaskId(threadId);
+                    taskDataEntity=null;
+                }else {
+                    taskDataEntity.getTaskModel().setStatus(taskType.getCode());
+                }
+
             }
 
-        }
+
     }
 
 
@@ -193,16 +236,22 @@ public class TaskDataManagerUtils {
      * @throws Exception
      */
     public synchronized static void removeThread(String threadId) throws Exception {
-        if(aliveThreadHashMap.containsKey(threadId)){
-            TaskDataEntity data=aliveThreadHashMap.get(threadId);
-            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-            taskMapper.updateTaskStatusById(threadId, TaskStatusType.BROKEN.getCode());
-            if(data.getOffSetEntity().getReplOffset()!=null&&data.getOffSetEntity().getReplOffset().get()>-1){
-                taskMapper.updateTaskOffsetById(threadId,data.getOffSetEntity().getReplOffset().get());
+
+            if(aliveThreadHashMap.containsKey(threadId)){
+                TaskDataEntity data=aliveThreadHashMap.get(threadId);
+//            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+//            taskMapper.updateTaskStatusById(threadId, TaskStatusType.BROKEN.getCode());
+                SqliteOPUtils.updateTaskStatusById(threadId, TaskStatusType.BROKEN.getCode());
+                if(data.getOffSetEntity().getReplOffset()!=null&&data.getOffSetEntity().getReplOffset().get()>-1){
+                    SqliteOPUtils.updateTaskOffsetById(threadId,data.getOffSetEntity().getReplOffset().get());
+//                taskMapper.updateTaskOffsetById(threadId,data.getOffSetEntity().getReplOffset().get());
+                }
+                aliveThreadHashMap.remove(threadId);
             }
-            aliveThreadHashMap.remove(threadId);
-        }
+
     }
+
+
 
 
     /**
@@ -218,57 +267,68 @@ public class TaskDataManagerUtils {
             if(StringUtils.isEmpty(taskId)){
                 continue;
             }
-            if(aliveThreadHashMap.containsKey(taskId)){
-                TaskDataEntity data=aliveThreadHashMap.get(taskId);
-                try {
+            Lock lock=  TaskCreateRunUtils.getTaskLock(taskId);
+            lock.lock();
+            try {
+                if(aliveThreadHashMap.containsKey(taskId)){
+
                     try {
-                        data.getReplicator().close();
-                    } catch (IOException e) {
+                        TaskDataEntity data=aliveThreadHashMap.get(taskId);
+                        try {
+                            data.getReplicator().close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+
+                        changeThreadStatus(taskId,data.getOffSetEntity().getReplOffset().get(),TaskStatusType.STOP);
+
+                        StartTaskEntity startTaskEntity=StartTaskEntity
+                                .builder()
+                                .code("2000")
+                                .taskId(taskId)
+                                .msg("Task stopped successfully")
+                                .build();
+                        result.add(startTaskEntity);
+
+                    }catch (Exception e){
                         e.printStackTrace();
+                        StartTaskEntity startTaskEntity=StartTaskEntity
+                                .builder()
+                                .code("1000")
+                                .taskId(taskId)
+                                .msg("Task stopped fail")
+                                .build();
+                        result.add(startTaskEntity);
+                    }
+                }else{
+//                TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+//
+//                TaskModel taskModel=taskMapper.findTaskById(taskId);
+                    TaskModel taskModel=SqliteOPUtils.findTaskById(taskId);
+                    if(taskModel!=null){
+                        StartTaskEntity startTaskEntity=StartTaskEntity
+                                .builder()
+                                .code("1001")
+                                .taskId(taskId)
+                                .msg("The current task is not running")
+                                .build();
+                        result.add(startTaskEntity);
+                    }else {
+                        StartTaskEntity startTaskEntity=StartTaskEntity
+                                .builder()
+                                .code("1002")
+                                .taskId(taskId)
+                                .msg("The task does not exist. Please create the task first")
+                                .build();
+                        result.add(startTaskEntity);
                     }
 
-
-                    changeThreadStatus(taskId,data.getOffSetEntity().getReplOffset().get(),TaskStatusType.STOP);
-
-                    StartTaskEntity startTaskEntity=StartTaskEntity
-                            .builder()
-                            .code("2000")
-                            .taskId(taskId)
-                            .msg("Task stopped successfully")
-                            .build();
-                    result.add(startTaskEntity);
-
-                }catch (Exception e){
-                    StartTaskEntity startTaskEntity=StartTaskEntity
-                            .builder()
-                            .code("1000")
-                            .taskId(taskId)
-                            .msg("Task stopped fail")
-                            .build();
-                    result.add(startTaskEntity);
                 }
-            }else{
-                TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-                TaskModel taskModel=taskMapper.findTaskById(taskId);
-                if(taskModel!=null){
-                    StartTaskEntity startTaskEntity=StartTaskEntity
-                            .builder()
-                            .code("1000")
-                            .taskId(taskId)
-                            .msg("The current task is not running")
-                            .build();
-                    result.add(startTaskEntity);
-                }else {
-                    StartTaskEntity startTaskEntity=StartTaskEntity
-                            .builder()
-                            .code("1000")
-                            .taskId(taskId)
-                            .msg("The task does not exist. Please create the task first")
-                            .build();
-                    result.add(startTaskEntity);
-                }
-
+            }finally {
+                lock.unlock();
             }
+
         }
         return result;
     }
@@ -284,57 +344,69 @@ public class TaskDataManagerUtils {
         List<StartTaskEntity>result=new ArrayList<>();
 
         List<String>groupIds=groupIdList.stream().filter(groupId->!StringUtils.isEmpty(groupId)).collect(Collectors.toList());
-        TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+//        TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+
         groupIds.forEach(groupId-> {
             try {
-                List<TaskModel> taskModelList = taskMapper.findTaskByGroupId(groupId);
+
+//                List<TaskModel> taskModelList = taskMapper.findTaskByGroupId(groupId);
+                List<TaskModel> taskModelList =SqliteOPUtils.findTaskByGroupId(groupId);
                 taskModelList.forEach(taskModel -> {
-                    if (aliveThreadHashMap.containsKey(taskModel.getId())) {
-                        TaskDataEntity data = aliveThreadHashMap.get(taskModel.getId());
-                        try {
+                    Lock lock=  TaskCreateRunUtils.getTaskLock(taskModel.getId());
+                    lock.lock();
+                    try {
+                        if (aliveThreadHashMap.containsKey(taskModel.getId())) {
+                            TaskDataEntity data = aliveThreadHashMap.get(taskModel.getId());
+
+
                             try {
-                                data.getReplicator().close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                                try {
+                                    data.getReplicator().close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                                changeThreadStatus(taskModel.getId(), data.getOffSetEntity().getReplOffset().get(), TaskStatusType.STOP);
+                                StartTaskEntity startTaskEntity=StartTaskEntity
+                                        .builder()
+                                        .code("2000")
+                                        .taskId(taskModel.getId())
+                                        .msg("Task stopped successfully")
+                                        .build();
+                                result.add(startTaskEntity);
+                            } catch (Exception e) {
+                                StartTaskEntity startTaskEntity=StartTaskEntity
+                                        .builder()
+                                        .code("1000")
+                                        .taskId(taskModel.getId())
+                                        .msg("Task stopped fail")
+                                        .build();
+                                result.add(startTaskEntity);
                             }
-
-                            changeThreadStatus(taskModel.getId(), data.getOffSetEntity().getReplOffset().get(), TaskStatusType.STOP);
-                            StartTaskEntity startTaskEntity=StartTaskEntity
-                                    .builder()
-                                    .code("2000")
-                                    .taskId(taskModel.getId())
-                                    .msg("Task stopped successfully")
-                                    .build();
-                            result.add(startTaskEntity);
-                        } catch (Exception e) {
-                            StartTaskEntity startTaskEntity=StartTaskEntity
-                                    .builder()
-                                    .code("1000")
-                                    .taskId(taskModel.getId())
-                                    .msg("Task stopped fail")
-                                    .build();
-                            result.add(startTaskEntity);
-                        }
-                    } else {
-
-                        if (taskModel != null) {
-                            StartTaskEntity startTaskEntity=StartTaskEntity
-                                    .builder()
-                                    .code("1000")
-                                    .taskId(taskModel.getId())
-                                    .msg("The current task is not running")
-                                    .build();
-                            result.add(startTaskEntity);
                         } else {
-                            StartTaskEntity startTaskEntity=StartTaskEntity
-                                    .builder()
-                                    .code("1000")
-                                    .taskId(taskModel.getId())
-                                    .msg("The task does not exist. Please create the task first")
-                                    .build();
-                            result.add(startTaskEntity);
+
+                            if (taskModel != null) {
+                                StartTaskEntity startTaskEntity=StartTaskEntity
+                                        .builder()
+                                        .code("1001")
+                                        .taskId(taskModel.getId())
+                                        .msg("The current task is not running")
+                                        .build();
+                                result.add(startTaskEntity);
+                            } else {
+                                StartTaskEntity startTaskEntity=StartTaskEntity
+                                        .builder()
+                                        .code("1002")
+                                        .taskId(taskModel.getId())
+                                        .msg("The task does not exist. Please create the task first")
+                                        .build();
+                                result.add(startTaskEntity);
+                            }
                         }
+                    }finally {
+                        lock.unlock();
                     }
+
                 });
             } catch (Exception e) {
                 e.printStackTrace();
@@ -361,15 +433,24 @@ public class TaskDataManagerUtils {
             if(aliveThreadHashMap.containsKey(taskId)){
                 result.put(taskId,"Task is running");
             }else{
-                TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-                TaskModel taskModel=taskMapper.findTaskById(taskId);
-                if(taskModel!=null){
+//                TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+//                TaskModel taskModel=taskMapper.findTaskById(taskId);
+                TaskModel taskModel=SqliteOPUtils.findTaskById(taskId);
+                Lock lock=  TaskCreateRunUtils.getTaskLock(taskId);
+                lock.lock();
+                try {
+                    if(taskModel!=null){
 
-                    taskMapper.updateTaskStatusById(taskModel.getId(), TaskStatusType.BROKEN.getCode());
-                    result.put(taskId,"The task does not exist. Please create the task first");
-                }else {
+//                    taskMapper.updateTaskStatusById(taskModel.getId(), TaskStatusType.BROKEN.getCode());
+                        SqliteOPUtils.updateTaskStatusById(taskModel.getId(), TaskStatusType.BROKEN.getCode());
+                        result.put(taskId,"The task does not exist. Please create the task first");
+                    }else {
 
-                    result.put(taskId,"The task does not exist. Please create the task first");
+                        result.put(taskId,"The task does not exist. Please create the task first");
+                    }
+
+                }finally {
+                    lock.unlock();
                 }
 
 
@@ -385,8 +466,10 @@ public class TaskDataManagerUtils {
      * @throws Exception
      */
     public synchronized static List<TaskModelResult> listTaskList() throws Exception {
-        TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-        List<TaskModel>taskModelList=taskMapper.selectAll();
+//        TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+//        List<TaskModel>taskModelList=taskMapper.selectAll();
+
+        List<TaskModel>taskModelList=SqliteOPUtils.selectAll();
         List<TaskModelResult>taskModelResultList=new ArrayList<>();
         if(taskModelList==null||taskModelList.size()==0){
             return taskModelResultList;
@@ -555,7 +638,8 @@ public class TaskDataManagerUtils {
      */
     public synchronized static PageBean<TaskModelResult> listTaskListByPages(ListTaskMsgDto listTaskMsgDto) throws Exception {
         checklistTaskMsgDto(listTaskMsgDto);
-        TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+//        TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+
         if("bynames".equals(listTaskMsgDto.getRegulation().trim())){
             List<String>nameList=listTaskMsgDto.getTasknames().stream().filter(name->!name.isEmpty()).collect(Collectors.toList());
             if(nameList.size()==0){
@@ -565,7 +649,7 @@ public class TaskDataManagerUtils {
             List<TaskModelResult>listTaskList=new ArrayList<>();
             nameList.forEach(name-> {
                 try {
-                    listTaskList.addAll(toTaskModelResult(taskMapper.findTaskBytaskName(name)));
+                    listTaskList.addAll(toTaskModelResult(SqliteOPUtils.findTaskBytaskName(name)));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -575,8 +659,8 @@ public class TaskDataManagerUtils {
             return pageBean;
         }else if("all".equalsIgnoreCase(listTaskMsgDto.getRegulation().trim())){
             PageHelper.startPage(listTaskMsgDto.getCurrentPage(), listTaskMsgDto.getPageSize());
-            List<TaskModel> allItems = taskMapper.selectAll();        //全部商品
-            int countNums = taskMapper.countItem();            //总记录数
+            List<TaskModel> allItems = SqliteOPUtils.selectAll();        //全部商品
+            int countNums = SqliteOPUtils.countItem();            //总记录数
             PageBean<TaskModelResult> pageData = new PageBean<>(listTaskMsgDto.getCurrentPage(), listTaskMsgDto.getPageSize(), countNums);
             pageData.setItems(toTaskModelResult(allItems));
             return pageData ;
@@ -584,7 +668,7 @@ public class TaskDataManagerUtils {
 
             List<TaskModelResult> resultList=listTaskMsgDto.getTaskids().stream().filter(id->!StringUtils.isEmpty(id)).map(id->{
                 try {
-                    return toTaskModelResult(taskMapper.findTaskById(id));
+                    return toTaskModelResult(SqliteOPUtils.findTaskById(id));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -603,7 +687,7 @@ public class TaskDataManagerUtils {
             if(type==null){
                 throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_STATUS_NOT_FIND.getCode(),ResultCodeAndMessage.TASK_STATUS_NOT_FIND.getMsg()));
             }
-            List<TaskModelResult>resultList=taskMapper.findTaskBytaskStatus(type.getCode()).stream().filter(taskModel -> taskMapper!=null).map(taskModel ->{
+            List<TaskModelResult>resultList=SqliteOPUtils.findTaskBytaskStatus(type.getCode()).stream().filter(taskModel -> taskModel!=null).map(taskModel ->{
                 return toTaskModelResult(taskModel);
             }).collect(Collectors.toList());
             PageBean<TaskModelResult>pageBean=new PageBean<>(1,resultList.size(),resultList.size(),true);
@@ -617,7 +701,7 @@ public class TaskDataManagerUtils {
             List<TaskModelResult>listTaskList=new ArrayList<>();
             groupIdList.forEach(groupId-> {
                 try {
-                    listTaskList.addAll(toTaskModelResult(taskMapper.findTaskByGroupId(groupId)));
+                    listTaskList.addAll(toTaskModelResult(SqliteOPUtils.findTaskByGroupId(groupId)));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -639,7 +723,7 @@ public class TaskDataManagerUtils {
      */
     public synchronized static List<TaskModelResult> listTaskList(ListTaskMsgDto listTaskMsgDto) throws Exception {
         checklistTaskMsgDto(listTaskMsgDto);
-        TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+
         if("bynames".equals(listTaskMsgDto.getRegulation().trim())){
             List<String>nameList=listTaskMsgDto.getTasknames().stream().filter(name->!name.isEmpty()).collect(Collectors.toList());
             if(nameList.size()==0){
@@ -649,7 +733,7 @@ public class TaskDataManagerUtils {
             List<TaskModelResult>listTaskList=new ArrayList<>();
             nameList.forEach(name-> {
                 try {
-                    listTaskList.addAll(toTaskModelResult(taskMapper.findTaskBytaskName(name)));
+                    listTaskList.addAll(toTaskModelResult(SqliteOPUtils.findTaskBytaskName(name)));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -657,12 +741,12 @@ public class TaskDataManagerUtils {
 
             return listTaskList;
         }else if("all".equalsIgnoreCase(listTaskMsgDto.getRegulation().trim())){
-            return toTaskModelResult(taskMapper.selectAll());
+            return toTaskModelResult(SqliteOPUtils.selectAll());
         }else if("byids".equalsIgnoreCase(listTaskMsgDto.getRegulation().trim())){
 
             List<TaskModelResult> resultList=listTaskMsgDto.getTaskids().stream().filter(id->!StringUtils.isEmpty(id)).map(id->{
                 try {
-                    return toTaskModelResult(taskMapper.findTaskById(id));
+                    return toTaskModelResult(SqliteOPUtils.findTaskById(id));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -678,7 +762,7 @@ public class TaskDataManagerUtils {
             if(type==null){
                 throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_STATUS_NOT_FIND.getCode(),ResultCodeAndMessage.TASK_STATUS_NOT_FIND.getMsg()));
             }
-            List<TaskModelResult>resultList=taskMapper.findTaskBytaskStatus(type.getCode()).stream().filter(taskModel -> taskMapper!=null).map(taskModel ->{
+            List<TaskModelResult>resultList=SqliteOPUtils.findTaskBytaskStatus(type.getCode()).stream().filter(taskModel -> taskModel!=null).map(taskModel ->{
                 return toTaskModelResult(taskModel);
             }).collect(Collectors.toList());
 
@@ -691,7 +775,7 @@ public class TaskDataManagerUtils {
             List<TaskModelResult>listTaskList=new ArrayList<>();
             groupIdList.forEach(groupId-> {
                 try {
-                    listTaskList.addAll(toTaskModelResult(taskMapper.findTaskByGroupId(groupId)));
+                    listTaskList.addAll(toTaskModelResult(SqliteOPUtils.findTaskByGroupId(groupId)));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -711,54 +795,88 @@ public class TaskDataManagerUtils {
     public synchronized static List<StartTaskEntity> removeTask(List<String>taskIdList)throws Exception{
         List<StartTaskEntity>result=new ArrayList<>();
         taskIdList.stream().filter(taskId->taskId!=null).forEach(taskId->{
-            if(aliveThreadHashMap.containsKey(taskId)){
-                StartTaskEntity startTaskEntity=StartTaskEntity
-                        .builder()
-                        .code("1000")
-                        .taskId(taskId)
-                        .msg("task is running,please stop the task first")
-                        .build();
-                result.add(startTaskEntity);
-            }else {
-                TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-                try {
-                   if( taskMapper.findTaskById(taskId)!=null){
-                       taskMapper.deleteTaskById(taskId);
-                       StartTaskEntity startTaskEntity=StartTaskEntity
-                               .builder()
-                               .code("2000")
-                               .taskId(taskId)
-                               .msg("Delete successful")
-                               .build();
-                       result.add(startTaskEntity);
-
-                   }else {
-                       StartTaskEntity startTaskEntity=StartTaskEntity
-                               .builder()
-                               .code("1000")
-                               .taskId(taskId)
-                               .msg("Task does not exist")
-                               .build();
-                       result.add(startTaskEntity);
-
-                   }
-
-                } catch (Exception e) {
+            Lock lock=  TaskCreateRunUtils.getTaskLock(taskId);
+            lock.lock();
+            try {
+                if(aliveThreadHashMap.containsKey(taskId)){
                     StartTaskEntity startTaskEntity=StartTaskEntity
                             .builder()
-                            .code("1000")
+                            .code("1001")
                             .taskId(taskId)
-                            .msg("Delete failed")
+                            .msg("task is running,please stop the task first")
                             .build();
                     result.add(startTaskEntity);
-                }
+                }else {
+//                TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+                    try {
+                        if( SqliteOPUtils.findTaskById(taskId)!=null){
+                            SqliteOPUtils.deleteTaskById(taskId);
+                            StartTaskEntity startTaskEntity=StartTaskEntity
+                                    .builder()
+                                    .code("2000")
+                                    .taskId(taskId)
+                                    .msg("Delete successful")
+                                    .build();
+                            result.add(startTaskEntity);
 
+                        }else {
+                            StartTaskEntity startTaskEntity=StartTaskEntity
+                                    .builder()
+                                    .code("1002")
+                                    .taskId(taskId)
+                                    .msg("Task does not exist")
+                                    .build();
+                            result.add(startTaskEntity);
+
+                        }
+
+                    } catch (Exception e) {
+                        StartTaskEntity startTaskEntity=StartTaskEntity
+                                .builder()
+                                .code("1000")
+                                .taskId(taskId)
+                                .msg("Delete failed")
+                                .build();
+                        result.add(startTaskEntity);
+                    }
+
+                }
+            }finally {
+                lock.unlock();
             }
+
+
         });
         return result;
     }
 
 
+    static void deleteTaskDataByTaskId(String taskId){
+        try {
+            SpringUtil.getBean(AbandonCommandMapper.class).deleteAbandonCommandModelByTaskId(taskId);
+            SpringUtil.getBean(BigKeyMapper.class).deleteBigKeyCommandModelByTaskId(taskId);
+            SpringUtil.getBean(BigKeyMapper.class).deleteBigKeyCommandModelByTaskId(taskId);
+            SpringUtil.getBean(DataMonitorMapper.class).deleteDataMonitorModelByTaskId(taskId);
+            SpringUtil.getBean(TaskOffsetMapper.class).delOffsetEntityByTaskId(taskId);
+            SpringUtil.getBean(DataCompensationMapper.class).deleteDataCompensationModelByTaskId(taskId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    static void deleteTaskDataByGroupId(String groupId){
+        try {
+            SpringUtil.getBean(AbandonCommandMapper.class).deleteAbandonCommandModelByGroupId(groupId);
+            SpringUtil.getBean(BigKeyMapper.class).deleteBigKeyCommandModelByGroupId(groupId);
+            SpringUtil.getBean(BigKeyMapper.class).deleteBigKeyCommandModelByGroupId(groupId);
+            SpringUtil.getBean(DataMonitorMapper.class).deleteDataMonitorModelByGroupId(groupId);
+            SpringUtil.getBean(TaskOffsetMapper.class).delOffsetEntityByGroupId(groupId);
+            SpringUtil.getBean(DataCompensationMapper.class).deleteDataCompensationModelByGroupId(groupId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * 根据GroupId删除任务
@@ -769,42 +887,50 @@ public class TaskDataManagerUtils {
     public static List<StartTaskEntity>removeTaskByGroupId(List<String> groupIdList) throws Exception {
         List<StartTaskEntity>result=new ArrayList<>();
         for (String groupId:groupIdList){
-            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-            List<TaskModel>taskModelList=taskMapper.findTaskByGroupId(groupId);
+            List<TaskModel>taskModelList=SqliteOPUtils.findTaskByGroupId(groupId);
             for (TaskModel taskModel:taskModelList){
-                if(aliveThreadHashMap.containsKey(taskModel.getId())){
-                    StartTaskEntity startTaskEntity=StartTaskEntity
-                            .builder()
-                            .code("1000")
-                            .taskId(taskModel.getId())
-                            .groupId(taskModel.getGroupId())
-                            .msg("["+groupId+"]task is running,please stop the task first")
-                            .build();
-                    result.add(startTaskEntity);
-
-                }else {
-                    try {
-                        taskMapper.deleteTaskById(taskModel.getId());
+                Lock lock=  TaskCreateRunUtils.getTaskLock(taskModel.getId());
+                lock.lock();
+                try {
+                    if(aliveThreadHashMap.containsKey(taskModel.getId())){
                         StartTaskEntity startTaskEntity=StartTaskEntity
                                 .builder()
-                                .code("2000")
+                                .code("1001")
                                 .taskId(taskModel.getId())
                                 .groupId(taskModel.getGroupId())
-                                .msg("["+groupId+"]Delete successful")
+                                .msg("task is running,please stop the task first")
                                 .build();
                         result.add(startTaskEntity);
 
-                    } catch (Exception e) {
-                        StartTaskEntity startTaskEntity=StartTaskEntity
-                                .builder()
-                                .code("1000")
-                                .taskId(taskModel.getId())
-                                .groupId(taskModel.getGroupId())
-                                .msg("["+groupId+"]Delete failed")
-                                .build();
-                        result.add(startTaskEntity);
+                    }else {
+
+                        try {
+                            SqliteOPUtils.deleteTaskById(taskModel.getId());
+                            StartTaskEntity startTaskEntity=StartTaskEntity
+                                    .builder()
+                                    .code("2000")
+                                    .taskId(taskModel.getId())
+                                    .groupId(taskModel.getGroupId())
+                                    .msg("Delete successful")
+                                    .build();
+                            result.add(startTaskEntity);
+
+                        } catch (Exception e) {
+                            StartTaskEntity startTaskEntity=StartTaskEntity
+                                    .builder()
+                                    .code("1000")
+                                    .taskId(taskModel.getId())
+                                    .groupId(taskModel.getGroupId())
+                                    .msg("Delete failed")
+                                    .build();
+                            result.add(startTaskEntity);
+                        }
                     }
+                }finally {
+                    lock.unlock();
                 }
+
+
             }
         }
 
@@ -843,9 +969,9 @@ public class TaskDataManagerUtils {
     public synchronized static void updateTaskOffset(String taskId)throws Exception{
         if(aliveThreadHashMap.containsKey(taskId)){
             TaskDataEntity data=aliveThreadHashMap.get(taskId);
-            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+//            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
             if(data.getOffSetEntity().getReplOffset()!=null&&data.getOffSetEntity().getReplOffset().get()>-1L){
-                taskMapper.updateTaskOffsetById(taskId,data.getOffSetEntity().getReplOffset().get());
+                SqliteOPUtils.updateTaskOffsetById(taskId,data.getOffSetEntity().getReplOffset().get());
             }
         }
 
@@ -860,8 +986,8 @@ public class TaskDataManagerUtils {
     public synchronized static void updateThreadStatusAndMsg(String taskId,String msg,TaskStatusType taskStatusType) throws Exception {
         if(aliveThreadHashMap.containsKey(taskId)){
             TaskDataEntity data=aliveThreadHashMap.get(taskId);
-            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-            taskMapper.updateTaskMsgAndStatusById( taskStatusType.getCode(),msg,taskId);
+//            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+            SqliteOPUtils.updateTaskMsgAndStatusById( taskStatusType.getCode(),msg,taskId);
             data.getTaskModel().setStatus(taskStatusType.getCode());
             data.getTaskModel().setTaskMsg(msg);
             if(taskStatusType.equals(TaskStatusType.BROKEN)||taskStatusType.equals(TaskStatusType.STOP)){
@@ -879,8 +1005,8 @@ public class TaskDataManagerUtils {
     public synchronized static void updateThreadMsg(String taskId,String msg) throws Exception {
         if(aliveThreadHashMap.containsKey(taskId)){
             TaskDataEntity data=aliveThreadHashMap.get(taskId);
-            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-            taskMapper.updateTaskMsgById(msg,taskId);
+//            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+            SqliteOPUtils.updateTaskMsgById(msg,taskId);
             data.getTaskModel().setTaskMsg(msg);
         }
     }
@@ -893,8 +1019,8 @@ public class TaskDataManagerUtils {
     public synchronized static void updateThreadStatus(String taskId,TaskStatusType taskStatusType) throws Exception {
         if(aliveThreadHashMap.containsKey(taskId)){
             TaskDataEntity data=aliveThreadHashMap.get(taskId);
-            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-            taskMapper.updateTaskStatusById(taskId, taskStatusType.getCode());
+//            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+            SqliteOPUtils.updateTaskStatusById(taskId, taskStatusType.getCode());
             data.getTaskModel().setStatus(taskStatusType.getCode());
             if(taskStatusType.getStatus().equals(ThreadStatusEnum.BROKEN)
                     ||taskStatusType.getStatus().equals(ThreadStatusEnum.STOP)){
@@ -909,7 +1035,7 @@ public class TaskDataManagerUtils {
      * @param taskId
      * @return
      */
-    public static boolean isTaskClose(String taskId){
+    public static synchronized boolean isTaskClose(String taskId){
         if(aliveThreadHashMap.containsKey(taskId)){
             TaskModel taskModel=aliveThreadHashMap.get(taskId).getTaskModel();
             if(taskModel.getStatus().equals(TaskStatusType.BROKEN.getCode())||taskModel.getStatus().equals(TaskStatusType.STOP.getCode())){
@@ -920,6 +1046,9 @@ public class TaskDataManagerUtils {
 
         return true;
     }
+
+
+
 
 
     public static boolean containsKey(String key){
@@ -949,9 +1078,9 @@ public class TaskDataManagerUtils {
 
     public synchronized  static  boolean checkDbThreadMsg(String taskId){
         AtomicBoolean status= new AtomicBoolean(false);
-        TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
+//        TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
         try {
-           TaskModel taskModel= taskMapper.findTaskById(taskId);
+           TaskModel taskModel= SqliteOPUtils.findTaskById(taskId);
             if(taskModel==null){
                 status.set(true);
             }
