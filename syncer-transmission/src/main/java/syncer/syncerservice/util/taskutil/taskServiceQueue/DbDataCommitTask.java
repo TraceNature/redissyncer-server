@@ -1,8 +1,6 @@
 package syncer.syncerservice.util.taskutil.taskServiceQueue;
 
 import lombok.extern.slf4j.Slf4j;
-import syncer.syncerplusredis.dao.BigKeyMapper;
-import syncer.syncerplusredis.dao.DataCompensationMapper;
 import syncer.syncerplusredis.entity.SqliteCommitEntity;
 import syncer.syncerplusredis.model.BigKeyModel;
 import syncer.syncerplusredis.model.DataCompensationModel;
@@ -21,6 +19,7 @@ public class DbDataCommitTask  implements Runnable{
     public void run() {
         while (true){
             try {
+
                 Object object=DbDataCommitQueue.take();
                 SqliteCommitEntity sqliteCommitEntity=null;
 

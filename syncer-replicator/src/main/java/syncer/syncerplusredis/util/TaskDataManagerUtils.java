@@ -987,9 +987,10 @@ public class TaskDataManagerUtils {
         if(aliveThreadHashMap.containsKey(taskId)){
             TaskDataEntity data=aliveThreadHashMap.get(taskId);
 //            TaskMapper taskMapper= SpringUtil.getBean(TaskMapper.class);
-            SqliteOPUtils.updateTaskMsgAndStatusById( taskStatusType.getCode(),msg,taskId);
+
             data.getTaskModel().setStatus(taskStatusType.getCode());
             data.getTaskModel().setTaskMsg(msg);
+            SqliteOPUtils.updateTaskMsgAndStatusById( taskStatusType.getCode(),msg,taskId);
             if(taskStatusType.equals(TaskStatusType.BROKEN)||taskStatusType.equals(TaskStatusType.STOP)){
                 updateTaskOffset(taskId);
                 aliveThreadHashMap.remove(taskId);

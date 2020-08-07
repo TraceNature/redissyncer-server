@@ -27,6 +27,8 @@ public class OffsetCommitTask implements Runnable{
                                     .replId(data.getValue().getOffSetEntity().getReplId())
                                     .offset(data.getValue().getOffSetEntity().getReplOffset().get())
                                     .build());
+
+
                         }
 
                     }

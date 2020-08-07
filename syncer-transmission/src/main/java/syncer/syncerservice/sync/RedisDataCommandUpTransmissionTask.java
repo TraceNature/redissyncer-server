@@ -155,8 +155,9 @@ public class RedisDataCommandUpTransmissionTask implements Runnable{
                     }
                 }
             });
-            r.open(taskId);
             TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),-1L, TaskStatusType.RUN);
+            r.open(taskId);
+
 
         }catch (Exception e){
             try {

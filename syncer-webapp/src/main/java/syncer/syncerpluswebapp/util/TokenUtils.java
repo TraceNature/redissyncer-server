@@ -16,10 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 final public  class TokenUtils {
 
-    public static long EXPIRY_TIME = 1000*60*30;//过期时间30分钟
+    public static long EXPIRY_TIME = 1000*60*60*24*7;//过期时间30分钟
+
     public static Map<String,Object> tokenMap = new ConcurrentHashMap<>();
-
-
 
     /**
      * 用userId添加token
@@ -32,6 +31,15 @@ final public  class TokenUtils {
         tokenInfo.put("dbUser",user);
         tokenMap.put(token,tokenInfo);
         return token;
+    }
+
+
+    public static boolean  delToken(String  token){
+
+        if(tokenMap.containsKey(token)){
+            tokenMap.remove(token);
+        }
+        return true;
     }
 
     /**
@@ -84,7 +92,7 @@ final public  class TokenUtils {
         deleteExpiryToken();
         if(tokenMap.containsKey(token)){
             Map<String,Object> tokenInfo =(Map<String,Object>)tokenMap.get(token);
-            if((Long)tokenInfo.get("expiryTime")-System.currentTimeMillis()<1000*60*10){
+            if((Long)tokenInfo.get("expiryTime")-System.currentTimeMillis()<1000*60*60*6){
                 tokenInfo.put("expiryTime",System.currentTimeMillis()+EXPIRY_TIME);
                 tokenMap.put(token,tokenInfo);
             }

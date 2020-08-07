@@ -1,4 +1,4 @@
-/*
+package syncer.syncerplusredis.entity;/*
  * Copyright 2016-2018 Leon Chen
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-package syncer.syncerplusredis.entity;
 
 
-
+import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.util.objectutil.Strings;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InvalidObjectException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -46,18 +50,21 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
 
     private String string;
 
+    private transient String user;
+    private transient boolean ssl;
     private transient String host;
     private transient String path;
     private transient String query;
     private transient int port = -1;
     private transient String scheme;
+    private transient String password;
     private transient String userInfo;
     private transient String fragment;
     private transient String authority;
     private transient FileType fileType;
 
     private transient URI uri;
-    transient Map<String, String> parameters = new HashMap<>();
+    public  Map<String, String> parameters = new HashMap<>();
 
     public RedisURI(String uri) throws URISyntaxException {
         parse(uri);
@@ -90,6 +97,14 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
         return port;
     }
 
+    public boolean isSsl() {
+        return ssl;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
     public String getHost() {
         return host;
     }
@@ -104,6 +119,10 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
 
     public String getScheme() {
         return scheme;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public String getUserInfo() {
@@ -173,10 +192,17 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
 
     private void parse(String uri) throws URISyntaxException {
         this.uri = new URI(uri);
-        if (this.uri.getScheme() != null && "redis".equalsIgnoreCase(this.uri.getScheme())) {
-            this.scheme = "redis";
+        if (this.uri.getScheme() != null) {
+            if (this.uri.getScheme().equalsIgnoreCase("redis")) {
+                this.scheme = "redis";
+            } else if (this.uri.getScheme().equalsIgnoreCase("rediss")) {
+                this.scheme = "rediss";
+                this.ssl = true;
+            } else {
+                throw new URISyntaxException(uri, "scheme must be [redis] or [rediss].");
+            }
         } else {
-            throw new URISyntaxException(uri, "scheme must be [redis].");
+            throw new URISyntaxException(uri, "scheme must be [redis] or [rediss].");
         }
         this.host = this.uri.getHost();
         this.path = this.uri.getPath();
@@ -193,9 +219,24 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
             }
         }
 
-        String rawQuery = this.uri.getRawQuery();
+        if (this.userInfo != null) {
+            int idx = this.userInfo.indexOf(':');
+            if (idx < 0) {
+                this.user = this.userInfo;
+            } else if (idx == 0) {
+                this.password = this.userInfo.substring(idx + 1);
+            } else /*（idx > 0）*/{
+                this.user = this.userInfo.substring(0, idx);
+                String password = this.userInfo.substring(idx + 1);
+                if (password != null && password.length() != 0) {
+                    this.password = password;
+                }
+            }
+        }
 
-        if (rawQuery == null) {
+        String rawQuery = this.uri.getRawQuery();
+        if (rawQuery == null)
+        {
             return;
         }
 
@@ -226,14 +267,17 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
     }
 
     private static String decode(String s) {
-        if (s == null) {
+        if (s == null)
+        {
             return null;
         }
         int n = s.length();
-        if (n == 0) {
+        if (n == 0)
+        {
             return s;
         }
-        if (s.indexOf('%') < 0) {
+        if (s.indexOf('%') < 0)
+        {
             return s;
         }
 
@@ -246,7 +290,8 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
         while (i < n) {
             if (c != '%') {
                 sb.append(c);
-                if (++i >= n) {
+                if (++i >= n)
+                {
                     break;
                 }
                 c = s.charAt(i);
@@ -255,11 +300,13 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
             bb.clear();
             while (true) {
                 bb.put(decode(s.charAt(++i), s.charAt(++i)));
-                if (++i >= n) {
+                if (++i >= n)
+                {
                     break;
                 }
                 c = s.charAt(i);
-                if (c != '%') {
+                if (c != '%')
+                {
                     break;
                 }
             }
@@ -272,13 +319,16 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
     }
 
     private static int decode(char c) {
-        if ((c >= '0') && (c <= '9')) {
+        if ((c >= '0') && (c <= '9'))
+        {
             return c - '0';
         }
-        if ((c >= 'a') && (c <= 'f')) {
+        if ((c >= 'a') && (c <= 'f'))
+        {
             return c - 'a' + 10;
         }
-        if ((c >= 'A') && (c <= 'F')) {
+        if ((c >= 'A') && (c <= 'F'))
+        {
             return c - 'A' + 10;
         }
         return -1;
@@ -290,16 +340,19 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
 
     private static String encode(String s) {
         int n = s.length();
-        if (n == 0) {
+        if (n == 0)
+        {
             return s;
         }
 
         int i = 0;
         while (true) {
-            if (s.charAt(i) >= '\u0080') {
+            if (s.charAt(i) >= '\u0080')
+            {
                 break;
             }
-            if (++i >= n) {
+            if (++i >= n)
+            {
                 return s;
             }
         }
@@ -310,9 +363,12 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
         StringBuilder sb = new StringBuilder();
         while (bb.hasRemaining()) {
             int b = bb.get() & 0xFF;
-            if (b >= 0x80) {
+            if (b >= 0x80)
+            {
                 appendEscape(sb, (byte) b);
-            } else {
+            }
+            else
+            {
                 sb.append((char) b);
             }
         }

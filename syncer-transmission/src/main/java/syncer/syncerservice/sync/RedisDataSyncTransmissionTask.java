@@ -187,13 +187,13 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                 }
             }));
 
-
+            //任务运行
+            TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.RUN);
 
 
             replicationHandler.open(taskModel.getId());
 
-            //任务运行
-            TaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.RUN);
+
 
 //        }catch (IOException e){
 //            //failover

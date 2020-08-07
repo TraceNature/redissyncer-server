@@ -1,6 +1,8 @@
 package syncer.syncerpluscommon.entity;
 
+import com.alibaba.fastjson.JSON;
 import org.springframework.stereotype.Component;
+import syncer.syncerpluscommon.util.common.ServletUtils;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -43,6 +45,16 @@ public class ResultMap extends HashMap<String, Object>implements Serializable {
     public ResultMap add(String key,Object value) {
         this.put(key, value);
         return this;
+    }
+
+
+    public ResultMap status(int status) {
+        ServletUtils.response().setStatus(status);
+        return this;
+    }
+
+    public String json(){
+        return JSON.toJSONString(this);
     }
 
     public  ResultMap start() {

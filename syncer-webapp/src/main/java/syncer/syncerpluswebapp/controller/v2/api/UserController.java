@@ -42,7 +42,13 @@ public class UserController {
 
     @RequestMapping(value = "/logout",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResultMap logout() throws Exception {
-        
+
+        return ResultMap.builder().code("2000").msg("success");
+    }
+
+    @RequestMapping(value = "/logoutByToken",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    public ResultMap logout(String token) throws Exception {
+        TokenUtils.delToken(token);
         return ResultMap.builder().code("2000").msg("success");
     }
 

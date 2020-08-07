@@ -19,6 +19,8 @@ package syncer.syncerplusredis.util.objectutil;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -28,6 +30,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * @since 2.6.0
  */
 public class Strings {
+    private static final char[] HEX_ARRAY = new char[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     public static String toString(Object object) {
         return toString(object, UTF_8);
@@ -68,5 +71,24 @@ public class Strings {
 
     public static CharBuffer decode(Charset charset, ByteBuffer buffer) {
         return charset.decode(buffer);
+    }
+
+    public static String mask(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return bytesToHex(digest.digest(password.getBytes(UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            return "mask(password)";
+        }
+    }
+
+    public static String bytesToHex(byte[] bytes) {
+        char[] ary = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            ary[j * 2] = HEX_ARRAY[v >>> 4];
+            ary[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+        return new String(ary);
     }
 }

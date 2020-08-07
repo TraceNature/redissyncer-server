@@ -100,12 +100,13 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
                 addAnalysisMap(batchedKeyValuePair.getDataType());
             }
 
+            if(batchedKeyValuePair.getBatch()==1){
+                dataEntity.getAllKeyCount().incrementAndGet();
+            }
             //计算分片数量
             if(batchedKeyValuePair.getBatch()==0){
 
                 if(!StringUtils.isEmpty(batchedKeyValuePair.getKey())){
-                    dataEntity.getAllKeyCount().incrementAndGet();
-
                     try {
 
                         BigKeyModel bigKeyModel=BigKeyModel

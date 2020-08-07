@@ -1,4 +1,4 @@
-/*
+package syncer.syncerplusredis.entity;/*
  * Copyright 2016-2018 Leon Chen
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,20 +14,26 @@
  * limitations under the License.
  */
 
-package syncer.syncerplusredis.entity;
+
+
+import syncer.syncerplusredis.entity.RedisURI;
+import syncer.syncerplusredis.entity.SslConfiguration;
+import syncer.syncerplusredis.net.SslContextFactory;
+import syncer.syncerplusredis.util.objectutil.Strings;
+
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.Serializable;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+
 
 /**
  * @author Leon Chen
  * @since 2.1.0
  */
-public class Configuration implements Serializable {
+public class Configuration {
 
     private Configuration() {
     }
@@ -64,7 +70,7 @@ public class Configuration implements Serializable {
     /**
      * connection retry times. if retries <= 0 then always retry
      */
-    private volatile int retries = 5;
+    private int retries = 5;
 
     /**
      * retry time interval
@@ -75,6 +81,13 @@ public class Configuration implements Serializable {
      * redis input stream buffer size
      */
     private int bufferSize = 8 * 1024;
+
+    /**
+     * auth user (redis 6.0)
+     *
+     * @since 3.4.0
+     */
+    private String authUser = null;
 
     /**
      * auth password
@@ -126,6 +139,13 @@ public class Configuration implements Serializable {
     private SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 
     /**
+     * ssl context factory
+     *
+     * @since 3.4.0
+     */
+    private SslContextFactory sslContextFactory;
+
+    /**
      * ssl parameters
      */
     private SSLParameters sslParameters;
@@ -174,6 +194,15 @@ public class Configuration implements Serializable {
 
     public Configuration setRetries(int retries) {
         this.retries = retries;
+        return this;
+    }
+
+    public String getAuthUser() {
+        return authUser;
+    }
+
+    public Configuration setAuthUser(String authUser) {
+        this.authUser = authUser;
         return this;
     }
 
@@ -326,6 +355,15 @@ public class Configuration implements Serializable {
         return this;
     }
 
+    public SslContextFactory getSslContextFactory() {
+        return sslContextFactory;
+    }
+
+    public Configuration setSslContextFactory(SslContextFactory sslContextFactory) {
+        this.sslContextFactory = sslContextFactory;
+        return this;
+    }
+
     public SSLParameters getSslParameters() {
         return sslParameters;
     }
@@ -341,6 +379,17 @@ public class Configuration implements Serializable {
 
     public Configuration setHostnameVerifier(HostnameVerifier hostnameVerifier) {
         this.hostnameVerifier = hostnameVerifier;
+        return this;
+    }
+
+    public Configuration merge(SslConfiguration sslConfiguration) {
+        if (sslConfiguration == null){
+            return this;
+        }
+        this.setSslParameters(sslConfiguration.getSslParameters());
+        this.setSslSocketFactory(sslConfiguration.getSslSocketFactory());
+        this.setHostnameVerifier(sslConfiguration.getHostnameVerifier());
+        this.setSslContextFactory(sslConfiguration.getSslContextFactory());
         return this;
     }
 
@@ -367,6 +416,9 @@ public class Configuration implements Serializable {
         }
         if (parameters.containsKey("bufferSize")) {
             configuration.setBufferSize(getInt(parameters.get("bufferSize"), 8 * 1024));
+        }
+        if (parameters.containsKey("authUser")) {
+            configuration.setAuthPassword(parameters.get("authUser"));
         }
         if (parameters.containsKey("authPassword")) {
             configuration.setAuthPassword(parameters.get("authPassword"));
@@ -401,24 +453,38 @@ public class Configuration implements Serializable {
         if (parameters.containsKey("replOffset")) {
             configuration.setReplOffset(getLong(parameters.get("replOffset"), -1L));
         }
+        // redis 6
+        if (uri.isSsl()) {
+            configuration.setSsl(true);
+        }
+        if (uri.getUser() != null) {
+            configuration.setAuthUser(uri.getUser());
+        }
+        if (uri.getPassword() != null) {
+            configuration.setAuthPassword(uri.getPassword());
+        }
         return configuration;
     }
 
     private static boolean getBool(String value, boolean defaultValue) {
-        if (value == null) {
+        if (value == null)
+        {
             return defaultValue;
         }
-        if ("false".equals(value)|| "no".equals(value)) {
+        if (value.equals("false") || value.equals("no"))
+        {
             return false;
         }
-        if ("true".equals(value) ||"yes".equals(value)) {
+        if (value.equals("true") || value.equals("yes"))
+        {
             return true;
         }
         return defaultValue;
     }
 
     private static int getInt(String value, int defaultValue) {
-        if (value == null) {
+        if (value == null)
+        {
             return defaultValue;
         }
         try {
@@ -429,7 +495,8 @@ public class Configuration implements Serializable {
     }
 
     private static long getLong(String value, long defaultValue) {
-        if (value == null) {
+        if (value == null)
+        {
             return defaultValue;
         }
         try {
@@ -449,7 +516,8 @@ public class Configuration implements Serializable {
                 ", retries=" + retries +
                 ", retryTimeInterval=" + retryTimeInterval +
                 ", bufferSize=" + bufferSize +
-                ", authPassword='" + authPassword + '\'' +
+                ", authUser='" + authUser + '\'' +
+                ", authPassword='" + Strings.mask(authPassword) + '\'' +
                 ", discardRdbEvent=" + discardRdbEvent +
                 ", asyncCachedBytes=" + asyncCachedBytes +
                 ", rateLimit=" + rateLimit +
@@ -458,6 +526,7 @@ public class Configuration implements Serializable {
                 ", useDefaultExceptionListener=" + useDefaultExceptionListener +
                 ", ssl=" + ssl +
                 ", sslSocketFactory=" + sslSocketFactory +
+                ", sslContextFactory=" + sslContextFactory +
                 ", sslParameters=" + sslParameters +
                 ", hostnameVerifier=" + hostnameVerifier +
                 ", replId='" + replId + '\'' +

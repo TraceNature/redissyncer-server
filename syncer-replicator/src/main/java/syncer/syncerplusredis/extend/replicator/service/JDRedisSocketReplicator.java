@@ -174,14 +174,40 @@ public class JDRedisSocketReplicator extends AbstractReplicator implements Seria
 
     protected void establishConnection() throws IOException {
         connect();
+
+
         if (configuration.getAuthPassword() != null) {
-            auth(configuration.getAuthPassword());
+             auth(configuration.getAuthUser(), configuration.getAuthPassword());
+//            auth(configuration.getAuthPassword());
         }
         sendPing();
         sendSlavePort();
         sendSlaveIp();
         sendSlaveCapa("eof");
         sendSlaveCapa("psync2");
+    }
+
+    protected void auth(String user, String password) throws IOException {
+        if (password != null) {
+            // sha256 mask password
+            String mask = "#" + Strings.mask(password);
+            logger.info("AUTH {} {}", user, mask);
+            if (user != null) {
+                send("AUTH".getBytes(), user.getBytes(), password.getBytes());
+            } else {
+                send("AUTH".getBytes(), password.getBytes());
+            }
+            final String reply = Strings.toString(reply());
+            logger.info(reply);
+            if ("OK".equals(reply)) {
+                return;
+            }
+            if (reply.contains("no password")) {
+                logger.warn("[AUTH {} {}] failed. {}", user, mask, reply);
+                return;
+            }
+            throw new AssertionError("[AUTH " + user + " " + mask + "] failed. " + reply);
+        }
     }
 
     protected void auth(String password) throws IOException {

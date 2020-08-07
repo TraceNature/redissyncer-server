@@ -84,7 +84,7 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
                 return;
             }
 
-
+            TaskDataManagerUtils.get(taskId).getRealKeyCount().incrementAndGet();
 
             DB db = batchedKeyValuePair.getDb();
             DB newDb=new DB();
