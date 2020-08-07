@@ -8,7 +8,7 @@ import (
 func TestBaseCase(t *testing.T) {
 	duration := 5 * time.Second
 	genreport := false
-	creattaskfile := "../createtask.json"
+	creattaskfile := "../single2single.json"
 	loopstep := 1
 	syncserver := "http://114.67.67.7:8080"
 

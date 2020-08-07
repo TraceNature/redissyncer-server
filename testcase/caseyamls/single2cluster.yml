@@ -1,7 +1,7 @@
 syncserver:   "http://114.67.67.7:8080"
 createtaskfile: "./tasks/single2cluster.json"
-gendataduration: 300
-datageninterval: 300
+gendataduration: 60
+datageninterval: 30
 gendatathreads: 4
 bigkvkeysuffixlen: 4
 bigkvloopstep: 100

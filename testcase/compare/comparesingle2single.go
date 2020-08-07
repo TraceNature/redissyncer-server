@@ -45,7 +45,7 @@ func (compare *CompareSingle2Single) CompareDB() {
 
 	for {
 		result, c, err := compare.Source.Scan(cursor, "*", compare.BatchSize).Result()
-
+		
 		if err != nil {
 			zaplogger.Sugar().Info(result, c, err)
 			return
@@ -67,6 +67,7 @@ func (compare *CompareSingle2Single) CompareDB() {
 		if c == 0 {
 			break
 		}
+
 		select {
 		case <-ticker.C:
 			zaplogger.Sugar().Info("Comparing...")
