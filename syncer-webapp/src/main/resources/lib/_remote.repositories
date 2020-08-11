@@ -1,0 +1,4 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu May 21 11:15:12 CST 2020
+jim-cli-api-syncer-2.1.4.jar>=
+jim-cli-api-syncer-2.1.4.pom>=
