@@ -83,7 +83,11 @@ func (tc *TestCase) Single2Cluster() {
 		client.FlushAll()
 
 	}
-
+	//清理任务
+	logger.Sugar().Info("Clean Task beging...")
+	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
+	logger.Sugar().Info("Clean Task end")
+	
 	//生成垫底数据
 	bgkv := generatedata.GenBigKV{
 		KeySuffix:
@@ -93,11 +97,6 @@ func (tc *TestCase) Single2Cluster() {
 		ValuePrefix: commons.RandString(tc.BigKV_ValuePrefix_Len),
 	}
 	bgkv.GenerateBaseDataParallel(sclient)
-
-	//清理任务
-	logger.Sugar().Info("Clean Task beging...")
-	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
-	logger.Sugar().Info("Clean Task end")
 
 	//创建任务
 	logger.Sugar().Info("Create Task beging...")
@@ -168,7 +167,7 @@ func (tc *TestCase) Cluster2Cluster() {
 	taddrsarray := strings.Split(taddrs, ";")
 
 	sopt := &redis.ClusterOptions{
-		Addrs: taddrsarray,
+		Addrs: saddrsarray,
 	}
 
 	if spasswd != "" {
@@ -233,6 +232,11 @@ func (tc *TestCase) Cluster2Cluster() {
 
 	}
 
+	//清理任务
+	logger.Sugar().Info("Clean Task beging...")
+	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
+	logger.Sugar().Info("Clean Task end")
+
 	//生成垫底数据
 	bgkv := generatedata.GenBigKVCluster{
 		RedisClusterClient: sclient,
@@ -242,11 +246,6 @@ func (tc *TestCase) Cluster2Cluster() {
 		ValuePrefix:        commons.RandString(tc.BigKV_ValuePrefix_Len),
 	}
 	bgkv.GenerateBaseDataParallelCluster()
-
-	//清理任务
-	logger.Sugar().Info("Clean Task beging...")
-	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
-	logger.Sugar().Info("Clean Task end")
 
 	//创建任务
 	logger.Sugar().Info("Create Task beging...")
