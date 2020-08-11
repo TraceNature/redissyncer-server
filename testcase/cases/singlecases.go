@@ -68,6 +68,11 @@ func (tc *TestCase) Single2Single() {
 	sclient.FlushAll()
 	tclient.FlushAll()
 
+	//清理任务
+	logger.Sugar().Info("Clean Task beging...")
+	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
+	logger.Sugar().Info("Clean Task end")
+
 	//生成垫底数据
 	bgkv := generatedata.GenBigKV{
 		KeySuffix:   commons.RandString(tc.BigKV_KeySuffix_Len),
@@ -76,11 +81,6 @@ func (tc *TestCase) Single2Single() {
 		ValuePrefix: commons.RandString(tc.BigKV_ValuePrefix_Len),
 	}
 	bgkv.GenerateBaseDataParallel(sclient)
-
-	//清理任务
-	logger.Sugar().Info("Clean Task beging...")
-	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
-	logger.Sugar().Info("Clean Task end")
 
 	//创建任务
 	logger.Sugar().Info("Create Task beging...")
@@ -195,6 +195,11 @@ func (tc TestCase) Single2SingleWithDBMap() {
 	sclient.FlushAll()
 	tclient.FlushAll()
 
+	//清理任务
+	logger.Sugar().Info("Clean Task beging...")
+	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
+	logger.Sugar().Info("Clean Task end")
+	
 	//生成垫底数据
 	for k, _ := range dbmap {
 		db, err := strconv.Atoi(k)
@@ -214,11 +219,6 @@ func (tc TestCase) Single2SingleWithDBMap() {
 		}
 		bgkv.GenerateBaseDataParallel(client)
 	}
-
-	//清理任务
-	logger.Sugar().Info("Clean Task beging...")
-	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
-	logger.Sugar().Info("Clean Task end")
 
 	//创建任务
 	logger.Sugar().Info("Create Task beging...")

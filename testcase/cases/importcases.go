@@ -222,6 +222,11 @@ func (tc *TestCase) ImportAof2Single() {
 	sclient.FlushAll()
 	tclient.FlushAll()
 
+	//清理任务
+	logger.Sugar().Info("Clean Task beging...")
+	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
+	logger.Sugar().Info("Clean Task end")
+
 	//生成垫底数据
 	bgkv := generatedata.GenBigKV{
 		KeySuffix:   commons.RandString(tc.BigKV_KeySuffix_Len),
@@ -284,11 +289,6 @@ func (tc *TestCase) ImportAof2Single() {
 	}
 	logger.Sugar().Info(string(cprdbtosyncserver))
 
-	//清理任务
-	logger.Sugar().Info("Clean Task beging...")
-	synctaskhandle.RemoveTaskByName(tc.SyncServer, taskname)
-	logger.Sugar().Info("Clean Task end")
-
 	//创建任务
 	logger.Sugar().Info("Create Task beging...")
 	taskids := synctaskhandle.Import(tc.SyncServer, string(createjson))
@@ -320,6 +320,8 @@ func (tc *TestCase) ImportAof2Single() {
 	compare.CompareDB()
 }
 
-func (tc *TestCase) ImportRdb2Cluster() {}
+func (tc *TestCase) ImportRdb2Cluster() {
+	
+}
 
 func (tc *TestCase) ImportAof2Cluster() {}
