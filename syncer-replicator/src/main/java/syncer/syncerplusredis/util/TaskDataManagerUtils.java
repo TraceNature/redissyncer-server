@@ -565,12 +565,16 @@ public class TaskDataManagerUtils {
                 if(rate>1.0){
                     rate=1.0;
                 }
+
             }else {
                 rate=0.0;
             }
 
             if(allKeyCount>=taskModel.getRdbKeyCount()||taskModel.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())){
                 rate=1.0;
+            }
+            if(allKeyCount==0&&taskModel.getRdbKeyCount()==0){
+                rate=0.0;
             }
             rate2Int=Integer.parseInt(new DecimalFormat("0").format(rate*100));
 

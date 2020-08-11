@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import syncer.syncerpluscommon.entity.ResultMap;
 import syncer.syncerpluswebapp.util.TokenUtils;
+import syncer.syncerservice.util.common.Strings;
 import syncer.syncerservice.util.jedis.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +34,7 @@ public class UserFilter implements HandlerInterceptor {
             response.setContentType("application/json; charset=utf-8");
 
             returnJson(response,ResultMap.builder().code("100").msg("no token").json());
+
             return false;
         }else{
             if(!TokenUtils.checkToken(token)){

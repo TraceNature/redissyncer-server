@@ -69,6 +69,7 @@ public class TaskGroupServiceImpl implements ISyncerService {
                 lock.lock();
                 try {
                     taskModel.setGroupId(groupId);
+                    taskModel.setStatus(TaskStatusType.STOP.getCode());
                     TaskDataManagerUtils.addDbThread(taskModel.getId(),taskModel);
                     if(taskModel.isAutostart()){
                         TaskModel testTaskModel=new TaskModel();
@@ -148,6 +149,7 @@ public class TaskGroupServiceImpl implements ISyncerService {
                 lock.lock();
                 try {
                     taskModel.setGroupId(groupId);
+                    taskModel.setStatus(TaskStatusType.STOP.getCode());
                     TaskDataManagerUtils.addDbThread(taskModel.getId(),taskModel);
 
                     if(taskModel.isAutostart()){
