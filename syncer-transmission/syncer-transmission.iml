@@ -83,7 +83,7 @@
     <orderEntry type="module-library">
       <library name="Maven: com.jd.jim.cli:jim-cli-api:syncer-2.1.4">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/com/jd/jim/cli/jim-cli-api/syncer-2.1.4/jim-cli-api-syncer-2.1.4.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/jim-cli-api-syncer-2.1.4.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

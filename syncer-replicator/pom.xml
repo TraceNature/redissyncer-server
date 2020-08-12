@@ -40,7 +40,13 @@
             <scope>compile</scope>
         </dependency>
 
-
+        <dependency>
+            <groupId>com.jd.jim.cli</groupId>
+            <artifactId>jim-cli-api</artifactId>
+            <version>syncer-2.1.4</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../lib/jim-cli-api-syncer-2.1.4.jar</systemPath>
+        </dependency>
 
     </dependencies>
 
