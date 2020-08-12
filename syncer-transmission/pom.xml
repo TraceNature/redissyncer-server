@@ -84,7 +84,7 @@
             <artifactId>jim-cli-api</artifactId>
             <version>syncer-2.1.4</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/jim-cli-api-syncer-2.1.4.jar</systemPath>
+            <systemPath>${project.basedir}/../syncer-webapp/src/main/resources/lib/jim-cli-api-syncer-2.1.4.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -177,14 +177,14 @@
         </pluginManagement>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>8</source>
                     <target>8</target>
-
                 </configuration>
             </plugin>
+
         </plugins>
     </build>
 </project>
