@@ -79,7 +79,13 @@
 <!--            <version>3.11.4</version>-->
 <!--        </dependency>-->
 
-
+        <dependency>
+            <groupId>com.jd.jim.cli</groupId>
+            <artifactId>jim-cli-api</artifactId>
+            <version>syncer-2.1.4</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/jim-cli-api-syncer-2.1.4.jar</systemPath>
+        </dependency>
 
         <dependency>
             <artifactId>syncer-replicator</artifactId>
@@ -176,6 +182,7 @@
                 <configuration>
                     <source>8</source>
                     <target>8</target>
+
                 </configuration>
             </plugin>
         </plugins>
