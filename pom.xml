@@ -20,14 +20,14 @@
     </parent>
     <groupId>syncer</groupId>
     <artifactId>redis-syncer</artifactId>
-    <version>1.0</version>
+    <version>3.0</version>
     <name>redis-syncer</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
         <java.version>1.8</java.version>
         <fastjson.version>1.2.62</fastjson.version>
-
+        <syncer.version>3.0.1</syncer.version>
         <jackson-version>2.9.9</jackson-version>
     </properties>
 
@@ -243,6 +243,7 @@
 <!--        </dependency>-->
 
     </dependencies>
+
 
 <!--    <build>-->
 <!--        <pluginManagement>&lt;!&ndash; lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) &ndash;&gt;-->

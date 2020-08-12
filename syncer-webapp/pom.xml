@@ -5,12 +5,12 @@
     <parent>
         <artifactId>redis-syncer</artifactId>
         <groupId>syncer</groupId>
-        <version>1.0</version>
+        <version>3.0</version>
     </parent>
 
     <groupId>syncer</groupId>
     <artifactId>syncer-webapp</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <name>syncer-webapp</name>
     <description>Demo project for Spring Boot</description>
 
@@ -171,26 +171,58 @@
                             <type>${project.packaging}</type>
                             <overWrite>true</overWrite>
                             <outputDirectory>${project.basedir}</outputDirectory>
-                            <destFileName>${project.artifactId}-${project.version}.jar</destFileName>
+                            <destFileName>${parent.artifactId}-${syncer.version}.jar</destFileName>
                         </artifactItem>
                     </artifactItems>
                 </configuration>
             </plugin>
-
-            <!--Docker maven plugin-->
             <plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>dockerfile-maven-plugin</artifactId>
                 <version>1.4.10</version>
                 <configuration>
-                    <repository>${project.artifactId}</repository>
-                    <contextDirectory>./</contextDirectory>
-                    <tag>${project.version}</tag>
+                    <repository>${project.parent.artifactId}</repository>
+                    <contextDirectory>../</contextDirectory>
+                    <tag>${syncer.version}</tag>
                     <buildArgs>
-                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+                        <JAR_FILE>${project.parent.artifactId}-${syncer.version}.jar</JAR_FILE>
+                        <!--                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>-->
                     </buildArgs>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>default</id>
+
+                        <goals>
+                            <goal>build</goal>
+                            <!--                            <goal>push</goal>-->
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
+            <!--Docker maven plugin-->
+<!--            <plugin>-->
+<!--                <groupId>com.spotify</groupId>-->
+<!--                <artifactId>dockerfile-maven-plugin</artifactId>-->
+<!--                <version>1.4.10</version>-->
+<!--                <configuration>-->
+<!--                    <repository>${project.artifactId}</repository>-->
+<!--                    <contextDirectory>./</contextDirectory>-->
+<!--                    <tag>${project.version}</tag>-->
+<!--                    <buildArgs>-->
+<!--                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>-->
+<!--                    </buildArgs>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>default</id>-->
+<!--                        <goals>-->
+<!--                            <goal>build</goal>-->
+<!--&lt;!&ndash;                            <goal>push</goal>&ndash;&gt;-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
 <!--            <plugin>-->
 <!--                <artifactId>maven-compiler-plugin</artifactId>-->
 <!--                <configuration>-->
