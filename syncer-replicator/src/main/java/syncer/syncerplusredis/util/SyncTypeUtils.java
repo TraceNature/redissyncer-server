@@ -1,6 +1,5 @@
 package syncer.syncerplusredis.util;
 
-import javafx.concurrent.Task;
 import syncer.syncerplusredis.constant.*;
 import syncer.syncerplusredis.entity.FileType;
 
