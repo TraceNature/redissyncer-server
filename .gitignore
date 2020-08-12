@@ -15,6 +15,7 @@
 # Package Files #
 #*.jar
 **/target/*.jar
+**/syncer-*/*.jar
 *.war
 *.nar
 *.ear
