@@ -173,13 +173,16 @@ public class RedisStartCheckRedisUrlStrategy implements IRedisStartCheckBaseStra
             throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,clientName + ":连接链接不正确"));
         } catch (JedisDataException e) {
             //TaskMsgException(name + ":" + e.getMessage());
-            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,clientName + ":" + e.getMessage()));
+            StringBuilder stringBuilder=new StringBuilder("[").append(clientName).append("]").append("节点连接失败 原因: [").append(e.getMessage()).append(" ]");
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,stringBuilder.toString()));
         } catch (TaskRestoreException e) {
             //TaskMsgException(name + ":error:" + e.getMessage());
-            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,clientName + ":" + e.getMessage()));
+            StringBuilder stringBuilder=new StringBuilder("[").append(clientName).append("]").append("节点连接失败 原因: [").append(e.getMessage()).append(" ]");
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,stringBuilder.toString()));
         } catch (Exception e) {
             // TaskMsgException(name + ":error:" + e.getMessage());
-            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,clientName + ":" + e.getMessage()));
+            StringBuilder stringBuilder=new StringBuilder("[").append(clientName).append("]").append("节点连接失败 原因: [").append(e.getMessage()).append(" ]");
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,stringBuilder.toString()));
         } finally {
             if (null != target) {
                 target.close();

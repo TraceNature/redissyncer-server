@@ -113,7 +113,7 @@ public class TaskModel {
      * offset地址
      */
     @Builder.Default
-    private Long offset=-1L;
+    private volatile Long offset=-1L;
 
 
 
@@ -218,19 +218,19 @@ public class TaskModel {
      * 全量key的数量
      */
     @Builder.Default
-    private Long rdbKeyCount=0L;
+    private volatile Long rdbKeyCount=0L;
 
     /**
      * 从运行到现在的key总量
     */
     @Builder.Default
-    private Long allKeyCount=0L;
+    private volatile Long allKeyCount=0L;
 
     /**
      * 同步到目标的key数量
      */
     @Builder.Default
-    private Long realKeyCount=0L;
+    private volatile Long realKeyCount=0L;
 
 
 
@@ -244,12 +244,12 @@ public class TaskModel {
     /**
      * 当前Key的最后一次更新时间（数据流入）
      */
-    private long lastKeyUpdateTime=0L;
+    private volatile  long lastKeyUpdateTime=0L;
 
     /**
      * 当前Key的最后一次pipeline提交时间（数据流出）
      */
-    private long lastKeyCommitTime=0L;
+    private volatile long lastKeyCommitTime=0L;
 
     @Builder.Default
     private boolean sourceAcl=false;
@@ -269,7 +269,7 @@ public class TaskModel {
      * 错误数据总数
      */
     @Builder.Default
-    private Long errorCount=30L;
+    private volatile Long errorCount=30L;
 
 
     public Map<String,Object>getDataAnalysis(){

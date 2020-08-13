@@ -39,6 +39,8 @@ logging:
 
 syncer:
   config:
+    auth:
+      status: true
     path:
       logfile: ./log
       datafile: ./

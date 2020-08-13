@@ -32,7 +32,14 @@ final public  class TokenUtils {
         tokenMap.put(token,tokenInfo);
         return token;
     }
-
+    public static String  putTokenMap(String token,UserModel user){
+        Map<String,Object> tokenInfo = new HashMap<>();
+        tokenInfo.put("token", token);
+        tokenInfo.put("expiryTime",System.currentTimeMillis()+EXPIRY_TIME);
+        tokenInfo.put("dbUser",user);
+        tokenMap.put(token,tokenInfo);
+        return token;
+    }
 
     public static boolean  delToken(String  token){
 

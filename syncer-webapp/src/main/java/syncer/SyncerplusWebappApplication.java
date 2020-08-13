@@ -51,8 +51,8 @@ import java.util.Map;
 @EnableWebSocketMessageBroker
 public class SyncerplusWebappApplication {
 
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
+//    @Autowired
+//    private SimpMessagingTemplate messagingTemplate;
     @Autowired
     ThreadPoolTaskExecutor threadPoolTaskExecutor;
 

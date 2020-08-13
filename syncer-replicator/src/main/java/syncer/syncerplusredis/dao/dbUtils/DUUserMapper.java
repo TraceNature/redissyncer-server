@@ -35,4 +35,9 @@ public class DUUserMapper implements UserMapper {
         List<UserModel> data=SqlUtils.getForList(UserModel.class,sql,objects);
         return data;
     }
+
+    @Override
+    public boolean updateUserPasswordById(int id, String password) throws Exception {
+        return false;
+    }
 }

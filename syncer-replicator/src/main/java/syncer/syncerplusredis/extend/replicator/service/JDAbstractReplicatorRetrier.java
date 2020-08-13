@@ -44,7 +44,7 @@ public abstract class JDAbstractReplicatorRetrier implements JDReplicatorRetrier
 //                    reset();
                 }
                 if (!open()) {
-                    reset();
+//                    reset();
                     close(null);
                     sleep(interval);
                     continue;
