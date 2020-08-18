@@ -6,7 +6,7 @@ syncerplus:
     #池中空闲连接回收未使用的时间  例：1800000毫秒未使用则回收  默认值是30分钟。1800000
     idleTimeRunsMillis: 100000
     #最小池大小
-    minPoolSize: 1
+    minPoolSize: 3
     #最大池大小
     maxPoolSize: 10
     #连接超时时间
@@ -39,14 +39,18 @@ logging:
 
 syncer:
   config:
-    auth:
-      status: true
+    auth: true
+    swagger: false
     path:
       logfile: ./log
       datafile: ./
 
 
-
+info:
+  app:
+    name: redis syncer
+    version: 3.0.1
+    description: redis数据同步服务
 
 spring:
   datasource:
@@ -57,7 +61,7 @@ spring:
     password:
 
     hikari:
-      maximum-pool-size: 1
+      maximum-pool-size: 3
       connection-timeout: 300000
       minimum-idle: 1
 

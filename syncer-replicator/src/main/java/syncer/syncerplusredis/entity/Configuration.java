@@ -70,7 +70,7 @@ public class Configuration {
     /**
      * connection retry times. if retries <= 0 then always retry
      */
-    private int retries = 5;
+    private int retries = 3;
 
     /**
      * retry time interval

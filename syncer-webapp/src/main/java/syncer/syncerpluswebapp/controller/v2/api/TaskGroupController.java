@@ -32,7 +32,9 @@ import syncer.syncerservice.filter.strategy_type.RedisTaskStrategyGroupType;
 import syncer.syncerservice.service.ISyncerService;
 import syncer.syncerservice.util.DtoToTaskModelUtils;
 import syncer.syncerservice.util.RedisUrlCheckUtils;
+import syncer.syncerservice.util.common.Montitor;
 
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.Arrays;
@@ -57,6 +59,9 @@ public class TaskGroupController {
 
     @Autowired
     ISyncerService taskGroupService;
+
+    @Autowired
+    Montitor montitor;
     /**
      * 创建同步任务
      * @param redisClusterDto
@@ -100,9 +105,22 @@ public class TaskGroupController {
 //    })
     public ResultMap createTask( @RequestBody @Validated RedisClusterDto params) throws Exception {
         List<TaskModel> taskModelList= DtoToTaskModelUtils.getTaskModelList(params,false);
+
+
         for (TaskModel taskModel : taskModelList) {
             RedisTaskStrategyGroupSelecter.select(RedisTaskStrategyGroupType.SYNCGROUP,null,taskModel,redisPoolProps).run(null,taskModel,redisPoolProps);
         }
+
+
+        double montitors = new BigDecimal((float)montitor.jvmMemoryUsed()/montitor.jvmMemoryMax()).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+        if(montitors>=0.80){
+            return ResultMap.builder().code("1005").msg("当前系统已处于高负载状态,已开启任务数量限制，请稍后再创建任务");
+        }
+
+//        if(montitors>=0.80){
+//            return ResultMap.builder().code("1000").msg("当前系统已处于高负载状态,已开启任务数量限制，请稍后再创建任务");
+//        }
+
 
         return taskGroupService.createRedisToRedisTask(taskModelList);
     }
@@ -191,6 +209,12 @@ public class TaskGroupController {
         if(StringUtils.isEmpty(params.getTaskid())&&StringUtils.isEmpty(params.getGroupId())){
             return  ResultMap.builder().code("4000").msg("taskid或GroupId不能为空");
         }
+
+//        double montitors = new BigDecimal((float)montitor.jvmMemoryUsed()/montitor.jvmMemoryMax()).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+//        if(montitors>=0.80){
+//            return ResultMap.builder().code("1005").msg("当前系统已处于高负载状态,已开启任务数量限制，请稍后再创建任务");
+//        }
+
         if(!StringUtils.isEmpty(params.getTaskid())){
             ResultMap resultMap=taskGroupService.startSyncerTask(Arrays.asList(params));
             return  resultMap.code("2000").msg("The request is successful");

@@ -38,7 +38,6 @@ import java.util.Map;
 @Slf4j
 public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
     protected int retries = 0;
-
     protected abstract boolean isManualClosed();
 
     protected abstract boolean open() throws IOException, IncrementException;
@@ -80,6 +79,7 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
 
 
         if (exception != null) {
+
             throw exception;
         }
 
@@ -101,17 +101,36 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
 //                    reset();
                 }
                 if (!open()) {
-                    reset();
+//                    reset();
                     close(null);
                     sleep(interval);
+
+                    if (TaskDataManagerUtils.get(taskId).getTaskModel().getStatus().equals(TaskStatusType.RDBRUNING.getCode()) && taskId != null) {
+                        log.error("全量阶段异常 同步失败 本阶段禁止重试...");
+                        throw new IncrementException("全量阶段异常 同步失败 本阶段禁止重试...");
+//                        break;
+                    }else {
+                        System.out.println("-------------------异常code: "+TaskDataManagerUtils.get(taskId).getTaskModel().getStatus()+":"+taskId);
+                    }
                     continue;
                 }
                 exception = null;
                 break;
             } catch (IOException | UncheckedIOException e) {
+
                 exception = translate(e);
                 close(exception);
                 sleep(interval);
+
+                if (TaskDataManagerUtils.get(taskId).getTaskModel().getStatus().equals(TaskStatusType.RDBRUNING.getCode()) && taskId != null) {
+                    try {
+                        log.error("全量阶段异常 同步失败 本阶段禁止重试...");
+                        TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"全量阶段异常 同步失败 本阶段禁止重试...", TaskStatusType.BROKEN);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                    throw e;
+                }
             } catch (IncrementException e) {
                 try {
                     TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
@@ -119,7 +138,9 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
+
                 log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,e.getMessage());
+                break;
             }
         }
 

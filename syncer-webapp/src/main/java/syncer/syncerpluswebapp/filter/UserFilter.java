@@ -1,10 +1,8 @@
 package syncer.syncerpluswebapp.filter;
 
-import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
-import org.springframework.core.env.ConfigurableEnvironment;
+
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -32,13 +30,30 @@ public class UserFilter implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
 
-        String tokenFilterStatus=env.getProperty("syncer.config.auth.status");
+
+        String tokenFilterStatus=env.getProperty("syncer.config.auth");
+        String swaggerFilterStatus=env.getProperty("syncer.config.swagger");
+
+
+        if("false".equalsIgnoreCase(swaggerFilterStatus)){
+            String url=request.getRequestURI();
+            if(url.equalsIgnoreCase("/csrf")||url.equalsIgnoreCase("/error")||url.contains("/swagger-ui.html")||url.contains("/webjars/")||url.contains("/swagger-resources")||url.contains("/swagger-ui.html/swagger-resources/")||url.equalsIgnoreCase("/v2/api-docs")){
+                return true;
+            }
+        }
+
 
         if("false".equalsIgnoreCase(tokenFilterStatus)){
             return true;
         }
 
         String token=request.getHeader(TokenNameUtils.TOKEN_NAME);
+
+
+
+//        if("tokenuuidpreqwertgnkoipudw".equalsIgnoreCase(token)){
+//            return true;
+//        }
 
         if(StringUtils.isEmpty(token)){
             response.setStatus(403);

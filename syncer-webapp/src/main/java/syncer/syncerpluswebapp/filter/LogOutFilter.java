@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import syncer.syncerpluscommon.entity.ResultMap;
+import syncer.syncerpluscommon.util.common.TokenNameUtils;
 import syncer.syncerpluswebapp.util.TokenUtils;
 import syncer.syncerservice.util.jedis.StringUtils;
 
@@ -24,7 +25,9 @@ public class LogOutFilter implements HandlerInterceptor {
             throws Exception {
 
 
-        String token=request.getHeader("X-Token");
+        String token=request.getHeader(TokenNameUtils.TOKEN_NAME);
+
+
 
         if(!StringUtils.isEmpty(token)){
             TokenUtils.delToken(token);

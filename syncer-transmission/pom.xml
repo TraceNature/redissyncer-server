@@ -105,6 +105,15 @@
         </dependency>
 
 
+
+
+        <dependency>
+            <groupId>com.github.icecooly</groupId>
+            <artifactId>FastHttpClient</artifactId>
+            <version>1.7</version>
+        </dependency>
+
+
         <!-- https://mvnrepository.com/artifact/org.mapdb/mapdb -->
 <!--        <dependency>-->
 <!--            <groupId>org.mapdb</groupId>-->

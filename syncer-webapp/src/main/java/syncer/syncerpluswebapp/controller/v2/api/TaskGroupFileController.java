@@ -22,6 +22,9 @@ import syncer.syncerservice.filter.redis_start_check_strategy.RedisTaskStrategyG
 import syncer.syncerservice.filter.strategy_type.RedisTaskStrategyGroupType;
 import syncer.syncerservice.service.ISyncerService;
 import syncer.syncerservice.util.DtoToTaskModelUtils;
+import syncer.syncerservice.util.common.Montitor;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 import static syncer.syncerpluswebapp.config.swagger.model.GlobalString.*;
@@ -40,7 +43,8 @@ public class TaskGroupFileController {
 
     @Autowired
     ISyncerService taskGroupService;
-
+    @Autowired
+    Montitor montitor;
 
     @ApiJsonObject(name = "manager-createtask", value = {
             @ApiJsonProperty(name = JSON_FILE_ADDRESS,required = false),
@@ -66,6 +70,7 @@ public class TaskGroupFileController {
     public ResultMap createtask(@RequestBody @Validated RedisFileDataDto redisFileDataDto) throws Exception {
         List<TaskModel> taskModelList= DtoToTaskModelUtils.getTaskModelList(redisFileDataDto,false);
 
+
         /**
          * 检查策略
          */
@@ -73,6 +78,11 @@ public class TaskGroupFileController {
 
         for (TaskModel taskModel : taskModelList) {
             RedisTaskStrategyGroupSelecter.select(RedisTaskStrategyGroupType.FILEGROUP,null,taskModel,redisPoolProps).run(null,taskModel,redisPoolProps);
+        }
+
+        double montitors = new BigDecimal((float)montitor.jvmMemoryUsed()/montitor.jvmMemoryMax()).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+        if(montitors>=0.80){
+            return ResultMap.builder().code("1005").msg("当前系统已处于高负载状态,已开启任务数量限制，请稍后再创建任务");
         }
 
         return taskGroupService.createRedisToRedisTask(taskModelList);
