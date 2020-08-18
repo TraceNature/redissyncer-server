@@ -181,7 +181,7 @@
                 <artifactId>dockerfile-maven-plugin</artifactId>
                 <version>1.4.10</version>
                 <configuration>
-                    <repository>${project.parent.artifactId}</repository>
+                    <repository>redissyncer</repository>
                     <contextDirectory>../</contextDirectory>
                     <tag>${syncer.version}</tag>
                     <buildArgs>
