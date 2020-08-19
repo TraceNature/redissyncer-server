@@ -27,6 +27,9 @@ public class TaskDataEntity {
     private OffSetEntity offSetEntity;
     private Replicator replicator;
 
+
+
+
     @Builder.Default
     private AtomicLong rdbKeyCount=new AtomicLong(0);
 
@@ -38,4 +41,13 @@ public class TaskDataEntity {
 
     @Builder.Default
     private AtomicInteger abandonKeyCount=new AtomicInteger(0);
+
+
+    /**
+     * 被抛弃key阈值
+     */
+    @Builder.Default
+    private AtomicLong errorNums = new AtomicLong(0L);
+
+
 }

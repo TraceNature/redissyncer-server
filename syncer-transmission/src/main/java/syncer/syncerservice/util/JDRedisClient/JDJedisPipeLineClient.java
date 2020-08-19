@@ -64,7 +64,7 @@ public class JDJedisPipeLineClient implements JDRedisClient {
     /**
      * 被抛弃key阈值
      */
-    private AtomicLong errorNums = new AtomicLong();
+//    private AtomicLong errorNums = new AtomicLong();
 
     //错误次数
     private long errorCount = 1;
@@ -1309,9 +1309,11 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                 log.warn("key[{}]同步失败被抛弃,原因：[{}]", eventEntity.getStringKey(), e.getMessage());
 
                 if (errorCount >= 0) {
-                    long error = errorNums.incrementAndGet();
-                    if (error > errorCount) {
-                        brokenTaskByConnectError("被抛弃key数量超过阈值[" + errorCount + "]");
+
+//                    long error = errorNums.incrementAndGet();
+                    long error=TaskDataManagerUtils.get(taskId).getErrorNums().incrementAndGet();
+                    if (error >= errorCount) {
+                        brokenTaskByConnectError("被抛弃key数量到达阈值[" + errorCount + "]");
                     }
                 }
 

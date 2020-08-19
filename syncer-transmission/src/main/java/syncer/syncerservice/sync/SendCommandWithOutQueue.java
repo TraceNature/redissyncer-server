@@ -16,6 +16,8 @@ import syncer.syncerplusredis.rdb.iterable.datatype.BatchedKeyValuePair;
 import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerplusredis.util.DataTypeUtils;
 import syncer.syncerplusredis.util.SqliteOPUtils;
+import syncer.syncerplusredis.util.TaskDataManagerUtils;
+import syncer.syncerplusredis.util.TaskErrorUtils;
 import syncer.syncerservice.compensator.ISyncerCompensator;
 import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.filter.KeyValueRunFilterChain;
@@ -59,7 +61,10 @@ public class SendCommandWithOutQueue {
                 if(null!=keyValueEventEntity){
                     filterChain.run(r,keyValueEventEntity);
                 }
+
                 DataCleanUtils.cleanData(keyValueEventEntity);
+
+
 //                throw new FilterNodeException("测试异常");
             }catch (Exception e){
                 Event event=keyValueEventEntity.getEvent();
@@ -120,7 +125,6 @@ public class SendCommandWithOutQueue {
                     }
 
 
-
                     SqliteOPUtils.insertSimpleAbandonCommandModel(AbandonCommandModel
                             .builder()
                             .command(command)
@@ -137,7 +141,15 @@ public class SendCommandWithOutQueue {
                     log.error("[{}]抛弃key:{}信息写入数据库失败,原因[{}]",taskId, keyName,ez.getMessage());
                     ez.printStackTrace();
                 }
+                long errorCount=TaskDataManagerUtils.get(taskId).getTaskModel().getErrorCount();
+                if (errorCount >= 0) {
+//                    long error = errorNums.incrementAndGet();
 
+                    long error= TaskDataManagerUtils.get(taskId).getErrorNums().incrementAndGet();
+                    if (error >= errorCount) {
+                        TaskErrorUtils.brokenStatusAndLog("被抛弃key数量到达阈值[" + errorCount + "]", this.getClass(), taskId);
+                    }
+                }
                 log.error("[{}]抛弃key:{} ,class:[{}]:原因[{}]",taskId, keyName,event.getClass().toString(),e.getMessage());
                 DataCleanUtils.cleanData(keyValueEventEntity,event);
                 e.printStackTrace();

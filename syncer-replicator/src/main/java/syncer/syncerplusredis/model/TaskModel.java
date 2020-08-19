@@ -266,10 +266,10 @@ public class TaskModel {
 
 
     /**
-     * 错误数据总数
+     * 错误数据总数  30L
      */
     @Builder.Default
-    private volatile Long errorCount=30L;
+    private volatile Long errorCount=1L;
 
 
     public Map<String,Object>getDataAnalysis(){
