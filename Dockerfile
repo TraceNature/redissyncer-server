@@ -4,7 +4,7 @@
 #CMD java -jar app.jar
 
 # 基础镜像
-FROM openjdk:8-jdk-alpine
+FROM openjdk:8u262-jdk
 
 #ENV JAVA_TOOL_OPTIONS=" -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Xms512m -Xmx2G"
 ENV JAVA_TOOL_OPTIONS=" -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1 -Xms512m"
