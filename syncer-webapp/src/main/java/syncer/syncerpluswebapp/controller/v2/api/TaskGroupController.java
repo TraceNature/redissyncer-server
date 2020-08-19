@@ -1,6 +1,7 @@
 package syncer.syncerpluswebapp.controller.v2.api;
 
 import io.swagger.annotations.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
@@ -52,6 +53,7 @@ import static syncer.syncerpluswebapp.config.swagger.model.GlobalString.*;
 @RestController
 @RequestMapping(value = "/api/v2")
 @Validated
+@Slf4j
 public class TaskGroupController {
 
     @Autowired
@@ -526,6 +528,9 @@ public class TaskGroupController {
         }
         return key;
     }
+
+
+
 
 
 
