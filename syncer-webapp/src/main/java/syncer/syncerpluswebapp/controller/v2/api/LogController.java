@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @Description 描述
  * @Date 2020/7/2
  */
-@Controller
+//@Controller
 public class LogController {
     @RequestMapping(value = "/log")
     public String logPage(){

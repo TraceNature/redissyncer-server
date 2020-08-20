@@ -66,17 +66,27 @@ spring:
       minimum-idle: 1
 
   application:
-    name: test-thymelead
-  thymeleaf:
-    cache: false
-    prefix: classpath:/templates/
-    suffix: .html
-    mode: HTML
-    encoding: UTF-8
-    servlet:
-      content-type: text/html
+    name: redis-syncer
+
+  boot:
+    admin:
+      client:
+        url: http://localhost:8090
+        username: admin
+        password: admin
+#  thymeleaf:
+#    cache: false
+#    prefix: classpath:/templates/
+#    suffix: .html
+#    mode: HTML
+#    encoding: UTF-8
+#    servlet:
+#      content-type: text/html
 #    schema: classpath:init.sql
 #    initialization-mode: ALWAYS
+
+
+
 management:
   endpoints:
     web:
