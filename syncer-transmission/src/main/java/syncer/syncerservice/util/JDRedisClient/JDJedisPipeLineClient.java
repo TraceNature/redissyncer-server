@@ -1431,7 +1431,6 @@ public class JDJedisPipeLineClient implements JDRedisClient {
     int getCommandNums(List<Object> resultList) {
         int num = 0;
         for (Object result : resultList) {
-
             if (null != result && !"PONG".equalsIgnoreCase(compensatorUtils.getRes(result))) {
                 num++;
             }

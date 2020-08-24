@@ -108,6 +108,9 @@ public class TaskGroupController {
     public ResultMap createTask( @RequestBody @Validated RedisClusterDto params) throws Exception {
         List<TaskModel> taskModelList= DtoToTaskModelUtils.getTaskModelList(params,false);
 
+        if(null==taskModelList||taskModelList.size()==0){
+            return ResultMap.builder().code("1000").msg("任务列表为空，请检查填入任务信息");
+        }
 
         for (TaskModel taskModel : taskModelList) {
             RedisTaskStrategyGroupSelecter.select(RedisTaskStrategyGroupType.SYNCGROUP,null,taskModel,redisPoolProps).run(null,taskModel,redisPoolProps);

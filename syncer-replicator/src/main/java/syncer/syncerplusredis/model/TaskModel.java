@@ -265,12 +265,15 @@ public class TaskModel {
     private String targetUserName="";
 
 
+
+
     /**
      * 错误数据总数  30L
      */
     @Builder.Default
     private volatile Long errorCount=1L;
-
+    @Builder.Default
+    private String expandJson="";
 
     public Map<String,Object>getDataAnalysis(){
         Map mapObj =null;
@@ -410,7 +413,7 @@ public class TaskModel {
             , Integer targetPort, String dbMapper, String md5, String createTime, String updateTime
             , String dataAnalysis, String replId, Long rdbKeyCount, Long allKeyCount,
                      Long realKeyCount, Long lastKeyUpdateTime, Long lastKeyCommitTime,
-    boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName,Long errorCount) {
+    boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName,Long errorCount,String expandJson) {
         this.id = id;
         this.taskId=taskId;
         this.groupId = groupId;
@@ -454,8 +457,10 @@ public class TaskModel {
         this.sourceUserName=sourceUserName;
         this.targetUserName=targetUserName;
         this.errorCount=errorCount;
+        this.expandJson=expandJson;
         setTargetRedisAddress(this.getTargetRedisAddress());
         setSourceRedisAddress(this.getSourceRedisAddress());
+
     }
 
     public String getId() {

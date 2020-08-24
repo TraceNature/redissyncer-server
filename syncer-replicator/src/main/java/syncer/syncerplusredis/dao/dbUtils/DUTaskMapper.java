@@ -314,4 +314,9 @@ public class DUTaskMapper implements TaskMapper {
         Object[]objects={rdbKeyCount,allKeyCount,realKeyCount,id};
         return Type2TypeUtils.int2boolean(SqlUtils.update(sql,objects));
     }
+
+    @Override
+    public boolean updateExpandTaskModelById(String id, String expandJson) {
+        return false;
+    }
 }

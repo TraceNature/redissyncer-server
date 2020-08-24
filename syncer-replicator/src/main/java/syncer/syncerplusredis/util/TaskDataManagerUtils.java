@@ -1,5 +1,6 @@
 package syncer.syncerplusredis.util;
 
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import lombok.Getter;
 import lombok.Setter;
@@ -997,6 +998,7 @@ public class TaskDataManagerUtils {
             SqliteOPUtils.updateTaskMsgAndStatusById( taskStatusType.getCode(),msg,taskId);
             if(taskStatusType.equals(TaskStatusType.BROKEN)||taskStatusType.equals(TaskStatusType.STOP)){
                 updateTaskOffset(taskId);
+                TaskDataManagerUtils.updateBrokenResult(taskId,msg);
                 aliveThreadHashMap.remove(taskId);
             }
 //            if(taskStatusType.getStatus().equals(ThreadStatusEnum.BROKEN)
@@ -1093,6 +1095,39 @@ public class TaskDataManagerUtils {
             status.set(true);
         }
         return status.get();
+    }
+
+
+    /**
+     * 将内存相关字段入库
+     * @param taskId
+     */
+    public synchronized static void updateExpandTaskModel(String taskId){
+        if(aliveThreadHashMap.containsKey(taskId)){
+            TaskDataEntity dataEntity=aliveThreadHashMap.get(taskId);
+            try {
+                SqliteOPUtils.updateExpandTaskModelById(taskId, JSON.toJSONString(dataEntity.getExpandTaskModel()));
+            } catch (Exception e) {
+                log.error("[{}]更新扩展字段失败",taskId);
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    /**
+     * 更新BrokenResult
+     * @param taskId
+     * @param brokenResult
+     */
+    public synchronized static void updateBrokenResult(String taskId,String brokenResult){
+        if(aliveThreadHashMap.containsKey(taskId)){
+            TaskDataEntity dataEntity=aliveThreadHashMap.get(taskId);
+            if(null!=dataEntity.getExpandTaskModel()){
+                dataEntity.getExpandTaskModel().setBrokenResult(brokenResult);
+                updateExpandTaskModel(taskId);
+            }
+        }
     }
 
 

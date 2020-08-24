@@ -15,6 +15,7 @@ import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.entity.dto.task.TaskStartMsgDto;
 import syncer.syncerplusredis.entity.thread.OffSetEntity;
 import syncer.syncerplusredis.exception.TaskMsgException;
+import syncer.syncerplusredis.model.ExpandTaskModel;
 import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.util.SqliteOPUtils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
@@ -271,6 +272,7 @@ public class TaskGroupServiceImpl implements ISyncerService {
                 }else {
                      id=singleRedisService.runSyncerTask(taskModel);
                 }
+
 
                 StartTaskEntity startTaskEntity=StartTaskEntity
                         .builder()

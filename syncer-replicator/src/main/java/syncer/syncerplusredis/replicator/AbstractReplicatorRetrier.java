@@ -124,8 +124,10 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
 
                 if (TaskDataManagerUtils.get(taskId).getTaskModel().getStatus().equals(TaskStatusType.RDBRUNING.getCode()) && taskId != null) {
                     try {
-                        log.error("全量阶段异常 同步失败 本阶段禁止重试...");
-                        TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"全量阶段异常 同步失败 本阶段禁止重试...", TaskStatusType.BROKEN);
+                        String msg="全量阶段异常 同步失败 本阶段禁止重试...";
+                        log.error(msg);
+
+                        TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,msg, TaskStatusType.BROKEN);
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
