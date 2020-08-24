@@ -28,7 +28,7 @@ func (tc *TestCase) ImportRdb2Single() {
 	taddr := gjson.Get(string(createjson), "targetRedisAddress").String()
 	tpasswd := gjson.Get(string(createjson), "targetPassword").String()
 	taskname := gjson.Get(string(createjson), "taskName").String()
-	fileaddr := gjson.Get(string(createjson), "fileAddress").String()
+	//fileaddr := gjson.Get(string(createjson), "fileAddress").String()
 
 	sopt := &redis.Options{
 		Addr: saddr,
