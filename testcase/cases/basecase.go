@@ -203,7 +203,7 @@ func (tc *TestCase) CheckSyncTaskStatus(taskids []string) {
 
 		for k, v := range statusmap {
 
-			//fmt.Println(gjson.Get(v, "lastDataCommitIntervalTime").String())
+			fmt.Println(v)
 			if v == "" {
 				logger.Error("Task not exists ", zap.String("taskid", k))
 				os.Exit(1)
@@ -220,7 +220,6 @@ func (tc *TestCase) CheckSyncTaskStatus(taskids []string) {
 			}
 
 			if gjson.Get(v, "status").String() == "STOP" {
-				fmt.Println("status is STOP")
 				time.Sleep(20 * time.Second)
 			}
 		}
