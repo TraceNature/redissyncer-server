@@ -122,7 +122,7 @@ func (tc *TestCase) ImportRdb2Single() {
 	defer session.Close()
 
 	rdbip := strings.Split(tc.GenRdbRedis, ":")[0]
-	sshcmd := "ssh-keyscan " + syncserverip + " >> ~/.ssh/known_hosts;" +
+	sshcmd := "ssh-keyscan " + rdbip + " >> ~/.ssh/known_hosts;" +
 		"sshpass -p " + tc.GenRdbRedisOsUserPassword + " scp " + tc.GenRdbRedisOsUser + "@" + rdbip + ":" + tc.DumpFilePath + " " + tc.SyncOsFilePath + ";"
 	fmt.Println(sshcmd)
 
