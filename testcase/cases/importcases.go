@@ -123,7 +123,7 @@ func (tc *TestCase) ImportRdb2Single() {
 
 	rdbip := strings.Split(tc.GenRdbRedis, ":")[0]
 	sshcmd := "ssh-keyscan " + syncserverip + " >> ~/.ssh/known_hosts;" +
-		"sshpass -p " + tc.GenRdbRedisOsUserPassword + " scp " + tc.GenRdbRedisOsUser + "@" + rdbip + ":" + tc.BakFilePath + " " + fileaddr + ";"
+		"sshpass -p " + tc.GenRdbRedisOsUserPassword + " scp " + tc.GenRdbRedisOsUser + "@" + rdbip + ":" + tc.DumpFilePath + " " + tc.SyncOsFilePath + ";"
 	fmt.Println(sshcmd)
 
 	cprdbtosyncserver, err := session.CombinedOutput(sshcmd)
@@ -180,7 +180,7 @@ func (tc *TestCase) ImportAof2Single() {
 	taddr := gjson.Get(string(createjson), "targetRedisAddress").String()
 	tpasswd := gjson.Get(string(createjson), "targetPassword").String()
 	taskname := gjson.Get(string(createjson), "taskName").String()
-	fileaddr := gjson.Get(string(createjson), "fileAddress").String()
+	//fileaddr := gjson.Get(string(createjson), "fileAddress").String()
 
 	sopt := &redis.Options{
 		Addr: saddr,
@@ -277,8 +277,8 @@ func (tc *TestCase) ImportAof2Single() {
 
 	rdbip := strings.Split(tc.GenRdbRedis, ":")[0]
 	sshcmd := "ssh-keyscan " + syncserverip + " >> ~/.ssh/known_hosts;" +
-		"rm -fr " + fileaddr + ";" + "mkdir -p " + fileaddr + ";" +
-		"sshpass -p " + tc.GenRdbRedisOsUserPassword + " scp " + tc.GenRdbRedisOsUser + "@" + rdbip + ":" + tc.BakFilePath + " " + fileaddr + ";"
+		"cd " + tc.SyncOsFilePath + ";" + "rm -fr *.aof ;" +
+		"sshpass -p " + tc.GenRdbRedisOsUserPassword + " scp " + tc.GenRdbRedisOsUser + "@" + rdbip + ":" + tc.DumpFilePath + " " + tc.SyncOsFilePath + ";"
 	fmt.Println(sshcmd)
 
 	cprdbtosyncserver, err := session.CombinedOutput(sshcmd)
@@ -321,7 +321,7 @@ func (tc *TestCase) ImportAof2Single() {
 }
 
 func (tc *TestCase) ImportRdb2Cluster() {
-	
+
 }
 
 func (tc *TestCase) ImportAof2Cluster() {}
