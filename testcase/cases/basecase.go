@@ -209,11 +209,16 @@ func (tc *TestCase) CheckSyncTaskStatus(taskids []string) {
 				os.Exit(1)
 			}
 
-			if gjson.Get(v, "status").String() == "COMMANDRUNING" || gjson.Get(v, "status").String() == "RDBRUNING" {
+			if gjson.Get(v, "status").String() == "COMMANDRUNING" {
 				if gjson.Get(v, "lastDataCommitIntervalTime").Int() < int64(60000) && gjson.Get(v, "lastDataUpdateIntervalTime").Int() < int64(60000) {
 					iscommandrunning = false
 				}
 			}
+
+			if gjson.Get(v, "status").String() == "RDBRUNING" {
+				iscommandrunning = false
+			}
+
 			if gjson.Get(v, "status").String() == "BROKEN" {
 				logger.Error("sync task broken! ", zap.String("taskid", k), zap.String("task_status", v))
 				os.Exit(1)
