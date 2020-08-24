@@ -1,6 +1,6 @@
 {
-  "fileAddress": "/root/bakdata/",
-  "targetRedisAddress": "114.67.83.163:6379",
+  "fileAddress": "/data",
+  "targetRedisAddress": "10.0.1.102:6379",
   "targetPassword": "redistest0102",
   "taskName": "importaofcase",
   "autostart": true,
