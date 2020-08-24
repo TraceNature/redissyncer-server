@@ -219,8 +219,7 @@ func (tc *TestCase) CheckSyncTaskStatus(taskids []string) {
 			}
 
 			if gjson.Get(v, "status").String() == "STOP" {
-				time.Sleep(5 * time.Second)
-				return
+				time.Sleep(10 * time.Second)
 			}
 		}
 
@@ -229,6 +228,4 @@ func (tc *TestCase) CheckSyncTaskStatus(taskids []string) {
 		}
 		time.Sleep(3 * time.Second)
 	}
-
-	//time.Sleep(3 * time.Second)
 }
