@@ -1,6 +1,0 @@
-- [ ] compare 模块多线程改造
-- [ ] Single2SingleWithDbMap编写
-- [x] yaml编排测试用例
-- [ ] redis conn健康检查和重试
-- [ ] 重新部署redis集群，指定master和slave
-- [ ] 细化redis基础命令
