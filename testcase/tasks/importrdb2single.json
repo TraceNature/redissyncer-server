@@ -1,6 +1,6 @@
 {
-  "fileAddress": "/root/bakdata/dump.rdb",
-  "targetRedisAddress": "114.67.83.163:6379",
+  "fileAddress": "/home/redissyncer/redissyncer/data/dump.rdb",
+  "targetRedisAddress": "10.0.1.102:6379",
   "targetPassword": "redistest0102",
   "taskName": "importrdbcase",
   "autostart": true,
