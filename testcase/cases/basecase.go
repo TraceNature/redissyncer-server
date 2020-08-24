@@ -1,6 +1,7 @@
 package cases
 
 import (
+	"fmt"
 	"github.com/tidwall/gjson"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
@@ -219,6 +220,7 @@ func (tc *TestCase) CheckSyncTaskStatus(taskids []string) {
 			}
 
 			if gjson.Get(v, "status").String() == "STOP" {
+				fmt.Println("status is STOP")
 				time.Sleep(20 * time.Second)
 			}
 		}
