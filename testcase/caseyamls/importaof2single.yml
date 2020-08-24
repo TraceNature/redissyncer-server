@@ -8,7 +8,7 @@ genrdbredispassword: "redistest0102"
 genrdbredisosuser: "root"
 genrdbredisosuserpassword: "Git785230"
 dumpfilepath: "/root/redis-compose/data/appendonly.aof"
-syncosfilepath: "/home/redissyncer/redissyncer/data/appendonly.aof"
+syncosfilepath: "/home/redissyncer/redissyncer/data/"
 gendataduration: 60
 datageninterval: 20
 gendatathreads: 4
