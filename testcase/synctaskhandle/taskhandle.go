@@ -69,7 +69,6 @@ func Import(syncserver string, createjson string) []string {
 	resp := importreq.ExecRequest()
 	taskids := gjson.Get(resp, "data").Array()
 	if len(taskids) == 0 {
-
 		logger.Error("task create faile", zap.Any("response_info", resp))
 		os.Exit(1)
 	}

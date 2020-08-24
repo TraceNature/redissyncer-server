@@ -1,5 +1,5 @@
 {
-  "fileAddress": "/home/redissyncer/redissyncer/data/dump.rdb",
+  "fileAddress": "/data/dump.rdb",
   "targetRedisAddress": "10.0.1.102:6379",
   "targetPassword": "redistest0102",
   "taskName": "importrdbcase",

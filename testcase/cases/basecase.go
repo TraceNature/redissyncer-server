@@ -85,7 +85,8 @@ type TestCase struct {
 	GenRdbRedisPassword       string   `yaml:"genrdbredispassword"`       //导入文件案例中生成rdb文件的redis服务器密码
 	GenRdbRedisOsUser         string   `yaml:"genrdbredisosuser"`         //产生rdb文件的服务器操作系统user
 	GenRdbRedisOsUserPassword string   `yaml:"genrdbredisosuserpassword"` //产生rdb文件的服务器操作系统user's password
-	BakFilePath               string   `yaml:"bakfilepath"`               //rdb文件路径
+	DumpFilePath              string   `yaml:"dumpfilepath"`              //rdb文件路径
+	SyncOsFilePath            string   `yaml:"syncosfilepath"`            //dump 或 aof文件或目录的操作系统路径
 	CaseType                  CaseType `yaml:"casetype"`                  //案例类型编号，可以通过 listcases子命令查询对应的case编号
 }
 
