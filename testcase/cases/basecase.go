@@ -1,7 +1,6 @@
 package cases
 
 import (
-	"fmt"
 	"github.com/tidwall/gjson"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
@@ -223,7 +222,7 @@ func (tc *TestCase) CheckSyncTaskStatus(taskids []string) {
 				return
 			}
 		}
-		fmt.Println(statusmap)
+
 		if iscommandrunning {
 			break
 		}
