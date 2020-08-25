@@ -24,29 +24,13 @@
 
 
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>junit</groupId>-->
-<!--            <artifactId>junit</artifactId>-->
-<!--            <version>4.11</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
 
-<!--        <dependency>-->
-<!--            <groupId>redis.clients</groupId>-->
-<!--            <artifactId>jedis</artifactId>-->
-<!--            <version>3.1.0-m4</version>-->
-<!--        </dependency>-->
         <dependency>
             <artifactId>syncer-jedis</artifactId>
             <groupId>syncer</groupId>
             <version>2.0.8</version>
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>redis.clients</groupId>-->
-        <!--            <artifactId>jedis</artifactId>-->
-        <!--            <version>3.2.0-SNAPSHOT</version>-->
-        <!--        </dependency>-->
-        <!-- https://mvnrepository.com/artifact/commons-pool/commons-pool -->
+
         <dependency>
             <groupId>commons-pool</groupId>
             <artifactId>commons-pool</artifactId>
@@ -60,11 +44,6 @@
         </dependency>
 
 
-<!--        <dependency>-->
-<!--            <groupId>commons-beanutils</groupId>-->
-<!--            <artifactId>commons-beanutils</artifactId>-->
-<!--            <version>1.9.3</version>-->
-<!--        </dependency>-->
 
         <dependency>
             <groupId>syncer</groupId>
@@ -73,11 +52,6 @@
             <scope>compile</scope>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.redisson</groupId>-->
-<!--            <artifactId>redisson</artifactId>-->
-<!--            <version>3.11.4</version>-->
-<!--        </dependency>-->
 
         <dependency>
             <groupId>com.jd.jim.cli</groupId>
@@ -105,43 +79,17 @@
         </dependency>
 
 
-
-
-        <dependency>
-            <groupId>com.github.icecooly</groupId>
-            <artifactId>FastHttpClient</artifactId>
-            <version>1.7</version>
-        </dependency>
-
-
         <!-- https://mvnrepository.com/artifact/org.mapdb/mapdb -->
 <!--        <dependency>-->
 <!--            <groupId>org.mapdb</groupId>-->
 <!--            <artifactId>mapdb</artifactId>-->
 <!--            <version>1.0.9</version>-->
 <!--        </dependency>-->
-        <!-- common tool end -->
-<!--        <dependency>-->
-<!--            <groupId>com.google.guava</groupId>-->
-<!--            <artifactId>guava</artifactId>-->
-<!--            <version>19.0</version>-->
-<!--        </dependency>-->
 
-        <!-- common tool begin -->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.commons</groupId>-->
-<!--            <artifactId>commons-lang3</artifactId>-->
-<!--            <version>3.3.2</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>commons-io</groupId>-->
-<!--            <artifactId>commons-io</artifactId>-->
-<!--            <version>2.4</version>-->
-<!--        </dependency>-->
     </dependencies>
 
     <build>
-        <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+        <pluginManagement>
             <plugins>
                 <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
                 <plugin>
@@ -186,7 +134,6 @@
         </pluginManagement>
         <plugins>
             <plugin>
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>8</source>

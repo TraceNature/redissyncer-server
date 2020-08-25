@@ -28,27 +28,8 @@
                     <artifactId>commons-logging</artifactId>
                     <groupId>commons-logging</groupId>
                 </exclusion>
-<!--                <exclusion>-->
-<!--                    <groupId>org.jboss.logging</groupId>-->
-<!--                    <artifactId>jboss-logging</artifactId>-->
-<!--                </exclusion>-->
             </exclusions>
-<!--            <scope>compile</scope>-->
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>syncer</groupId>-->
-<!--            <artifactId>syncerplus-service</artifactId>-->
-<!--            <version>1.0.3</version>-->
-<!--            <scope>compile</scope>-->
-<!--         <exclusions>-->
-<!--               <exclusion>-->
-<!--                  <groupId>redis.clients</groupId>-->
-<!--              </exclusion>-->
-<!--           </exclusions>-->
-<!--        </dependency>-->
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-log4j2 -->
-
 
         <dependency>
             <groupId>redis.clients</groupId>
@@ -67,11 +48,6 @@
             <version>3.0.1</version>
             <scope>compile</scope>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-starter-actuator</artifactId>-->
-<!--        </dependency>-->
 
 
         <dependency>
@@ -92,20 +68,6 @@
             <artifactId>spring-boot-admin-starter-client</artifactId>
             <version>2.2.2</version>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-starter-thymeleaf</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.assertj</groupId>-->
-<!--            <artifactId>assertj-core</artifactId>-->
-<!--        </dependency>-->
-        <!--        <dependency>-->
-<!--            <groupId>org.springframework</groupId>-->
-<!--            <artifactId>spring-jdbc</artifactId>-->
-<!--            <version>5.2.7.RELEASE</version>-->
-<!--        </dependency>-->
 
         <dependency>
             <groupId>com.jd.jim.cli</groupId>
@@ -208,47 +170,11 @@
 
                         <goals>
                             <goal>build</goal>
-                            <!--                            <goal>push</goal>-->
+                            <!--<goal>push</goal>-->
                         </goals>
                     </execution>
                 </executions>
             </plugin>
-            <!--Docker maven plugin-->
-<!--            <plugin>-->
-<!--                <groupId>com.spotify</groupId>-->
-<!--                <artifactId>dockerfile-maven-plugin</artifactId>-->
-<!--                <version>1.4.10</version>-->
-<!--                <configuration>-->
-<!--                    <repository>${project.artifactId}</repository>-->
-<!--                    <contextDirectory>./</contextDirectory>-->
-<!--                    <tag>${project.version}</tag>-->
-<!--                    <buildArgs>-->
-<!--                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>-->
-<!--                    </buildArgs>-->
-<!--                </configuration>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>default</id>-->
-<!--                        <goals>-->
-<!--                            <goal>build</goal>-->
-<!--&lt;!&ndash;                            <goal>push</goal>&ndash;&gt;-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
-<!--            <plugin>-->
-<!--                <artifactId>maven-compiler-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    <source>1.8</source>-->
-<!--                    <target>1.8</target>-->
-<!--                    <encoding>UTF-8</encoding>-->
-<!--                    <compilerArguments>-->
-<!--                        <verbose />-->
-<!--                        &lt;!&ndash; 将jdk的依赖jar打入项目中，这样项目中使用的jdk的依赖就尅正常使用 &ndash;&gt;-->
-<!--                        <bootclasspath>${java.home}/lib/rt.jar;${java.home}/lib/jce.jar;${java.home}/lib/jsse.jar</bootclasspath>-->
-<!--                    </compilerArguments>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
         </plugins>
 
 

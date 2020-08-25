@@ -195,7 +195,7 @@ public class JDRedisLettuceClient implements JDRedisClient {
             if(highVersion){
                 return syncCommands.restore(Strings.byteToString(key),serializedValue,RestoreArgs.Builder.ttl(ttl).replace());
             }else {
-                if(syncCommands.del(new String[]{Strings.byteToString(key)})>=-1){
+                if(syncCommands.del(Strings.byteToString(key))>=-1){
                     return syncCommands.restore(Strings.byteToString(key),ttl,serializedValue);
                 }else {
                     return syncCommands.restore(Strings.byteToString(key),ttl,serializedValue);

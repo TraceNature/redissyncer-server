@@ -16,7 +16,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ExpandTaskModel {
     @Builder.Default
-    private String brokenResult="";
+    private String brokenReason="";
+
 
 
 

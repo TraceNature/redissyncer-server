@@ -45,22 +45,9 @@
         </dependency>
 
 
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-<!--            <exclusions>-->
-<!--                &lt;!&ndash; 这一部分是Springboot启动不使用tomcat应用服务器，和本次log4j2的配置无关 &ndash;&gt;-->
-<!--&lt;!&ndash;                <exclusion>&ndash;&gt;-->
-<!--&lt;!&ndash;                    <groupId>org.springframework.boot</groupId>&ndash;&gt;-->
-<!--&lt;!&ndash;                    <artifactId>spring-boot-starter-tomcat</artifactId>&ndash;&gt;-->
-<!--&lt;!&ndash;                </exclusion>&ndash;&gt;-->
-<!--                &lt;!&ndash; 移除Springboot默认的日志框架 &ndash;&gt;-->
-<!--                <exclusion>-->
-<!--                    <groupId>org.springframework.boot</groupId>-->
-<!--                    <artifactId>spring-boot-starter-logging</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
             <exclusions>
 
                 <exclusion>
@@ -114,11 +101,6 @@
             <version>2.0.1</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.baomidou</groupId>-->
-<!--            <artifactId>mybatis-plus-boot-starter</artifactId>-->
-<!--            <version>3.3.1.tmp</version>-->
-<!--        </dependency>-->
 
         <!--springboot程序测试依赖，如果是自动创建项目默认添加-->
         <dependency>
@@ -161,26 +143,16 @@
             <version>${fastjson.version}</version>
         </dependency>
 
-                <dependency>
-                    <groupId>com.jd.jim.cli</groupId>
-                    <artifactId>jim-cli-api</artifactId>
-                    <version>syncer-2.1.4</version>
-                </dependency>
+        <dependency>
+            <groupId>com.jd.jim.cli</groupId>
+            <artifactId>jim-cli-api</artifactId>
+            <version>syncer-2.1.4</version>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>io.springfox</groupId>-->
-<!--            <artifactId>springfox-swagger2</artifactId>-->
-<!--            <version>2.6.1</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>io.springfox</groupId>-->
-<!--            <artifactId>springfox-swagger-ui</artifactId>-->
-<!--            <version>2.6.1</version>-->
-<!--        </dependency>-->
 
         <dependency>
             <groupId>io.springfox</groupId>
@@ -200,102 +172,37 @@
         </dependency>
 
 
-
+        <!--        <dependency>-->
+        <!--            <groupId>com.jd.jim.cli</groupId>-->
+        <!--            <artifactId>jim-cli-jedis</artifactId>-->
+        <!--            <version>1.4.9-SNAPSHOT</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.jd.jim.cli</groupId>-->
+        <!--            <artifactId>jim-cli-api</artifactId>-->
+        <!--            <version>1.4.9-SNAPSHOT</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.jd.security.codesec</groupId>-->
+        <!--            <artifactId>ajdv</artifactId>-->
+        <!--            <version>0.1</version>-->
+        <!--        </dependency>-->
 
         <!--        <dependency>-->
-<!--            <groupId>com.jd.jim.cli</groupId>-->
-<!--            <artifactId>jim-cli-jedis</artifactId>-->
-<!--            <version>1.4.9-SNAPSHOT</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.jd.jim.cli</groupId>-->
-<!--            <artifactId>jim-cli-api</artifactId>-->
-<!--            <version>1.4.9-SNAPSHOT</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.jd.security.codesec</groupId>-->
-<!--            <artifactId>ajdv</artifactId>-->
-<!--            <version>0.1</version>-->
-<!--        </dependency>-->
-
-<!--        <dependency>-->
-<!--            <groupId>com.jd.jim.cli</groupId>-->
-<!--            <artifactId>jim-cli-api</artifactId>-->
-<!--            <version>2.1.4</version>-->
-<!--        </dependency>-->
+        <!--            <groupId>com.jd.jim.cli</groupId>-->
+        <!--            <artifactId>jim-cli-api</artifactId>-->
+        <!--            <version>2.1.4</version>-->
+        <!--        </dependency>-->
 
 
-        <!--jackson-->
-<!--        <dependency>-->
-<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
-<!--            <artifactId>jackson-core</artifactId>-->
-<!--            <version>${jackson-version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
-<!--            <artifactId>jackson-databind</artifactId>-->
-<!--            <version>${jackson-version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
-<!--            <artifactId>jackson-annotations</artifactId>-->
-<!--            <version>${jackson-version}</version>-->
-<!--        </dependency>-->
 
     </dependencies>
+    <repositories>
 
-
-<!--    <build>-->
-<!--        <pluginManagement>&lt;!&ndash; lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) &ndash;&gt;-->
-<!--            <plugins>-->
-<!--                &lt;!&ndash; clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle &ndash;&gt;-->
-<!--                <plugin>-->
-<!--                    <artifactId>maven-clean-plugin</artifactId>-->
-<!--                    <version>3.1.0</version>-->
-<!--                </plugin>-->
-<!--                &lt;!&ndash; default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging &ndash;&gt;-->
-<!--                <plugin>-->
-<!--                    <artifactId>maven-resources-plugin</artifactId>-->
-<!--                    <version>3.0.2</version>-->
-<!--                </plugin>-->
-<!--                <plugin>-->
-<!--                    <artifactId>maven-compiler-plugin</artifactId>-->
-<!--                    <version>3.8.0</version>-->
-<!--                </plugin>-->
-<!--                <plugin>-->
-<!--                    <artifactId>maven-surefire-plugin</artifactId>-->
-<!--                    <version>2.22.1</version>-->
-<!--                </plugin>-->
-<!--                <plugin>-->
-<!--                    <artifactId>maven-jar-plugin</artifactId>-->
-<!--                    <version>3.0.2</version>-->
-<!--                </plugin>-->
-<!--                <plugin>-->
-<!--                    <artifactId>maven-install-plugin</artifactId>-->
-<!--                    <version>2.5.2</version>-->
-<!--                </plugin>-->
-<!--                <plugin>-->
-<!--                    <artifactId>maven-deploy-plugin</artifactId>-->
-<!--                    <version>2.8.2</version>-->
-<!--                </plugin>-->
-<!--                &lt;!&ndash; site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle &ndash;&gt;-->
-<!--                <plugin>-->
-<!--                    <artifactId>maven-site-plugin</artifactId>-->
-<!--                    <version>3.7.1</version>-->
-<!--                </plugin>-->
-<!--                <plugin>-->
-<!--                    <artifactId>maven-project-info-reports-plugin</artifactId>-->
-<!--                    <version>3.0.0</version>-->
-<!--                </plugin>-->
-<!--            </plugins>-->
-<!--        </pluginManagement>-->
-<!--    </build>-->
-<repositories>
-
-<!--    <repository>-->
-<!--        <id>snapshots</id>-->
-<!--        <name>JD maven2 repository-snapshots</name>-->
-<!--        <url>http://artifactory.jd.com/libs-snapshots-local</url>-->
-<!--    </repository>-->
-</repositories>
+        <!--    <repository>-->
+        <!--        <id>snapshots</id>-->
+        <!--        <name>JD maven2 repository-snapshots</name>-->
+        <!--        <url>http://artifactory.jd.com/libs-snapshots-local</url>-->
+        <!--    </repository>-->
+    </repositories>
 </project>

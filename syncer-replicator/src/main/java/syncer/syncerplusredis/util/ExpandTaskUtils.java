@@ -17,8 +17,13 @@ public class ExpandTaskUtils {
         ExpandTaskModel expand=null;
         try {
             expand= JSON.parseObject(taskModel.getExpandJson(), ExpandTaskModel.class);
+            expand.setBrokenReason("");
+            taskModel.setExpandJson(JSON.toJSONString(expand));
+            SqliteOPUtils.updateExpandTaskModelById(taskModel.getId(), JSON.toJSONString(dataEntity.getExpandTaskModel()));
         }catch (Exception e){
+
             expand=new ExpandTaskModel();
+            taskModel.setExpandJson(JSON.toJSONString(expand));
             log.error("[{}]任务扩展JSON逆序列化失败,重新置零",taskModel.getId());
             e.printStackTrace();
 

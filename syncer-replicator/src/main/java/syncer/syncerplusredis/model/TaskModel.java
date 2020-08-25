@@ -1,5 +1,6 @@
 package syncer.syncerplusredis.model;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import lombok.*;
 import org.springframework.util.StringUtils;
@@ -274,6 +275,13 @@ public class TaskModel {
     private volatile Long errorCount=1L;
     @Builder.Default
     private String expandJson="";
+
+    public String getExpandJson() {
+        if (StringUtils.isEmpty(this.expandJson)){
+            this.expandJson= JSON.toJSONString(new ExpandTaskModel());
+        }
+        return this.expandJson;
+    }
 
     public Map<String,Object>getDataAnalysis(){
         Map mapObj =null;

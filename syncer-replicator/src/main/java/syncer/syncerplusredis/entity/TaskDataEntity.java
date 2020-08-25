@@ -51,4 +51,6 @@ public class TaskDataEntity {
     private AtomicLong errorNums = new AtomicLong(0L);
 
 
+
+
 }

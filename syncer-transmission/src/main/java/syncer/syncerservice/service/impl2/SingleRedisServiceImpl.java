@@ -76,6 +76,7 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
                     .build();
             dataEntity.getOffSetEntity().getReplOffset().set(taskModel.getOffset());
         }else {
+
             dataEntity=TaskDataEntity.builder()
                     .taskModel(taskModel)
                     .offSetEntity(OffSetEntity.builder().replId("").build())

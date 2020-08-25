@@ -193,16 +193,10 @@ public class JDJedisPipeLineClient implements JDRedisClient {
 
     void cleanData(String keyName) {
         try {
-            if (incrMap.containsKey(keyName)) {
-                incrMap.remove(keyName);
-            }
-            if (incrDoubleMap.containsKey(keyName)) {
-                incrDoubleMap.remove(keyName);
-            }
+            incrMap.remove(keyName);
+            incrDoubleMap.remove(keyName);
 
-            if (appendMap.containsKey(keyName)) {
-                appendMap.remove(keyName);
-            }
+            appendMap.remove(keyName);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1535,10 +1529,7 @@ public class JDJedisPipeLineClient implements JDRedisClient {
      */
     boolean isSetNxWithTime(byte[] cmd, byte[]... args) {
         String command = Strings.byteToString(cmd).trim().toUpperCase();
-        if ("SET".equalsIgnoreCase(command) && args.length == 5) {
-            return true;
-        }
-        return false;
+        return "SET".equalsIgnoreCase(command) && args.length == 5;
     }
 
 

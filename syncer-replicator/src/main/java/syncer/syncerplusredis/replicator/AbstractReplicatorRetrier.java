@@ -101,7 +101,7 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
 //                    reset();
                 }
                 if (!open()) {
-//                    reset();
+                    reset();
                     close(null);
                     sleep(interval);
 
