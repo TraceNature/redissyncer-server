@@ -983,6 +983,7 @@ public class TaskDataManagerUtils {
                 if(taskStatusType.equals(TaskStatusType.BROKEN)){
                     TaskDataManagerUtils.updateBrokenResult(taskId,msg);
                 }else {
+                    data.getTaskModel().setTaskMsg("任务主动关闭或停止");
                     TaskDataManagerUtils.updateBrokenResult(taskId,"");
                 }
 

@@ -237,7 +237,7 @@ public class TaskGroupServiceImpl implements ISyncerService {
                 }
 
                 TaskModel taskModel= SqliteOPUtils.findTaskById(taskStartDto.getTaskid());
-
+                taskModel.setTaskMsg("");
                     /**
                      * todo offset更新
                      */
