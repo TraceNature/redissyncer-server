@@ -12,6 +12,7 @@ import syncer.syncerpluscommon.constant.ResultCodeAndMessage;
 
 import syncer.syncerpluscommon.util.TaskCreateRunUtils;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
+import syncer.syncerplusredis.constant.SyncType;
 import syncer.syncerplusredis.constant.TaskMsgConstant;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
@@ -543,7 +544,12 @@ public class TaskDataManagerUtils {
             }
 
             if(allKeyCount>=taskModel.getRdbKeyCount()||taskModel.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())){
-                rate=1.0;
+                if(!taskModel.getSyncType().equals(SyncType.SYNC.getCode())){
+                    rate=0.0;
+                }else{
+                    rate=1.0;
+                }
+
             }
             if(allKeyCount==0&&taskModel.getRdbKeyCount()==0){
                 rate=0.0;
@@ -1120,4 +1126,26 @@ public class TaskDataManagerUtils {
     }
 
 
+    public static synchronized void updateTaskAllkeys(String taskId,int count){
+        try {
+            if(containsKey(taskId)){
+                TaskDataManagerUtils.get(taskId).getRdbKeyCount().addAndGet(count);
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public static synchronized void updateTasksetRdbkeys(String taskId,long fileSize){
+        try {
+            if(containsKey(taskId)){
+                TaskDataManagerUtils.get(taskId).getRdbKeyCount().set(fileSize);
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 }

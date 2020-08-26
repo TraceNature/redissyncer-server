@@ -73,7 +73,8 @@ public class TaskGroupFileController {
     public ResultMap createtask(@RequestBody @Validated RedisFileDataDto redisFileDataDto) throws Exception {
         List<TaskModel> taskModelList= DtoToTaskModelUtils.getTaskModelList(redisFileDataDto,false);
 
-        log.info(JSON.toJSONString(taskModelList));
+
+//        log.info(JSON.toJSONString(taskModelList));
 
         if(null==taskModelList||taskModelList.size()==0){
             return ResultMap.builder().code("1000").msg("任务列表为空，请检查填入任务信息(文件是否存在)");

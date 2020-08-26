@@ -32,7 +32,6 @@ import static syncer.syncerplusredis.replicator.Constants.*;
 public class ReplyParser {
     private final RedisCodec codec;
     private final RedisInputStream in;
-
     public ReplyParser(RedisInputStream in) {
         this(in, null);
     }

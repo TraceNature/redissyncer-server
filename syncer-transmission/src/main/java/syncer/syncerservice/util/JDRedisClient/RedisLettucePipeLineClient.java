@@ -1,5 +1,7 @@
 package syncer.syncerservice.util.JDRedisClient;
 
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import syncer.syncerpluscommon.config.ThreadPoolConfig;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
@@ -10,6 +12,8 @@ import syncer.syncerservice.util.CommandCompensatorUtils;
 import syncer.syncerservice.util.CompensatorUtils;
 import syncer.syncerservice.util.EliminationAlgorithm.lru.LruCache;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +46,10 @@ public class RedisLettucePipeLineClient implements JDRedisClient {
     /**
      * 被抛弃key阈值
      */
-//    private AtomicLong errorNums = new AtomicLong();
+
+
+    private RedisClient client;
+
 
     //错误次数
     private long errorCount = 1;
@@ -78,7 +85,15 @@ public class RedisLettucePipeLineClient implements JDRedisClient {
 
 
         int timeout = 50000;
+        RedisURI redisUri = RedisURI.builder()
+                .withHost(host)
+                .withPort(port)
+                .withPassword(password)
+                .withTimeout(Duration.of(30, ChronoUnit.SECONDS))
+                .build();
 
+        client = RedisClient.create(redisUri);
+//        client.
 
         //定时回收线程
 //        threadPoolTaskExecutor.execute(new JDJedisPipeLineClient.PipelineSubmitThread(taskId));

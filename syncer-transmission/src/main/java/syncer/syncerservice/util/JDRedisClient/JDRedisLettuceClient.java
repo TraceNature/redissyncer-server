@@ -22,6 +22,7 @@ import syncer.syncerservice.util.jedis.StringUtils;
 
 public class JDRedisLettuceClient implements JDRedisClient {
     RedisCommands<String, String> syncCommands;
+
     private Integer currentDbNum=0;
     public JDRedisLettuceClient() {
         RedisClient client = RedisClient.create(RedisURI.create("redis://192.168.37.128:7000"));
