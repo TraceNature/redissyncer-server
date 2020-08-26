@@ -27,6 +27,7 @@
 
 #idea ignore
 **/.idea
+*.iml
 
 # vscode
 **/.vscode
