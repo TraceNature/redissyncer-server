@@ -1,30 +1,23 @@
 package syncer.syncerplusredis.replicator;
 
-import syncer.syncerplusredis.cmd.jimdb.JimDbFirstCommandParser;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.event.PostCommandSyncEvent;
 import syncer.syncerplusredis.event.PreCommandSyncEvent;
-import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.io.PeekableInputStream;
 import syncer.syncerplusredis.io.RedisInputStream;
 import syncer.syncerplusredis.rdb.RdbParser;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
-import syncer.syncerplusredis.util.TaskMsgUtils;
 import syncer.syncerplusredis.util.objectutil.Strings;
 import syncer.syncerplusredis.util.type.Tuples;
 import lombok.extern.slf4j.Slf4j;
 import syncer.syncerplusredis.exception.IncrementException;
 import syncer.syncerplusredis.cmd.*;
-
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.Objects;
 
-import static syncer.syncerplusredis.util.type.Tuples.of;
 
 /**
  * 在线混合文件
@@ -85,7 +78,6 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
             conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0; Windows NT; DigExt)");
             //得到输入流
             InputStream in = conn.getInputStream();
-
 
             Objects.requireNonNull(in);
             Objects.requireNonNull(configuration);

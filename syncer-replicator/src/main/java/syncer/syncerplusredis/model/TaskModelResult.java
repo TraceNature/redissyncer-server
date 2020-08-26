@@ -83,6 +83,13 @@ public class TaskModelResult implements Serializable {
     @Builder.Default
     private String taskMsg="";
 
+
+    /**
+     * 异常原因
+     */
+    @Builder.Default
+    private String brokenReason="";
+
     /**
      * offset地址
      */
@@ -184,6 +191,9 @@ public class TaskModelResult implements Serializable {
      *上次数据流出间隔时间
      */
     private long lastDataCommitIntervalTime;
+
+
+
 
 
 }

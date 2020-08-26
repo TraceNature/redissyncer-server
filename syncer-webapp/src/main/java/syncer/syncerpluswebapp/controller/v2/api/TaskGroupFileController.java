@@ -1,7 +1,9 @@
 package syncer.syncerpluswebapp.controller.v2.api;
+import com.alibaba.fastjson.JSON;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,6 +39,7 @@ import static syncer.syncerpluswebapp.config.swagger.model.GlobalString.*;
 @RestController
 @RequestMapping(value = "/api/v2/file")
 @Validated
+@Slf4j
 public class TaskGroupFileController {
     @Autowired
     RedisPoolProps redisPoolProps;
@@ -70,6 +73,12 @@ public class TaskGroupFileController {
     public ResultMap createtask(@RequestBody @Validated RedisFileDataDto redisFileDataDto) throws Exception {
         List<TaskModel> taskModelList= DtoToTaskModelUtils.getTaskModelList(redisFileDataDto,false);
 
+
+//        log.info(JSON.toJSONString(taskModelList));
+
+        if(null==taskModelList||taskModelList.size()==0){
+            return ResultMap.builder().code("1000").msg("任务列表为空，请检查填入任务信息(文件是否存在)");
+        }
 
         /**
          * 检查策略

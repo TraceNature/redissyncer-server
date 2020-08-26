@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import syncer.syncerplusredis.entity.thread.OffSetEntity;
+import syncer.syncerplusredis.model.ExpandTaskModel;
 import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.replicator.Replicator;
 
@@ -26,8 +27,8 @@ public class TaskDataEntity {
     private  TaskModel taskModel;
     private OffSetEntity offSetEntity;
     private Replicator replicator;
-
-
+    @Builder.Default
+    private ExpandTaskModel expandTaskModel=new ExpandTaskModel();
 
 
     @Builder.Default
@@ -48,6 +49,8 @@ public class TaskDataEntity {
      */
     @Builder.Default
     private AtomicLong errorNums = new AtomicLong(0L);
+
+
 
 
 }

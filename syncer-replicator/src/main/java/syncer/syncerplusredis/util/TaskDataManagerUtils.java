@@ -1,5 +1,7 @@
 package syncer.syncerplusredis.util;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +12,7 @@ import syncer.syncerpluscommon.constant.ResultCodeAndMessage;
 
 import syncer.syncerpluscommon.util.TaskCreateRunUtils;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
+import syncer.syncerplusredis.constant.SyncType;
 import syncer.syncerplusredis.constant.TaskMsgConstant;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
@@ -19,6 +22,7 @@ import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.entity.TaskOffsetEntity;
 import syncer.syncerplusredis.entity.dto.task.ListTaskMsgDto;
 import syncer.syncerplusredis.exception.TaskMsgException;
+import syncer.syncerplusredis.model.ExpandTaskModel;
 import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.model.TaskModelResult;
 import syncer.syncerplusredis.util.code.CodeUtils;
@@ -488,41 +492,10 @@ public class TaskDataManagerUtils {
      */
     public synchronized static List<TaskModelResult> toTaskModelResult(List<TaskModel>taskModelList) throws Exception {
 
-        List<TaskModelResult>taskModelResultList=taskModelList.stream().filter(taskModel -> taskModel!=null).map(taskModel -> toTaskModelResult(taskModel)).collect(Collectors.toList());
-
-//        List<TaskModelResult>taskModelResultList=new ArrayList<>();
-
-//        for (TaskModel taskModel:taskModelList){
-//            if(taskModel==null){
-//                continue;
-//            }
-//            TaskModelResult taskModelResult=TaskModelResult
-//                    .builder()
-//                    .taskId(taskModel.getId())
-//                    .afresh(taskModel.isAfresh())
-//                    .autostart(taskModel.isAutostart())
-//                    .batchSize(taskModel.getBatchSize())
-//                    .fileAddress(taskModel.getFileAddress())
-//                    .groupId(taskModel.getGroupId())
-//                    .offset(taskModel.getOffset())
-//                    .taskName(taskModel.getTaskName())
-//                    .taskMsg(taskModel.getTaskMsg())
-//                    .tasktype(SyncTypeUtils.getTaskType(taskModel.getTasktype()))
-//                    .syncType(SyncTypeUtils.getSyncType(taskModel.getSyncType()))
-//                    .sourceRedisAddress(taskModel.getSourceRedisAddress())
-//                    .targetRedisAddress(taskModel.getTargetRedisAddress())
-//                    .redisVersion(taskModel.getRedisVersion())
-//                    .rdbVersion(taskModel.getRdbVersion())
-//                    .offsetPlace(SyncTypeUtils.getOffsetPlace(taskModel.getOffsetPlace()))
-//                    .sourceRedisType(SyncTypeUtils.getRedisBranchType(taskModel.getSourceRedisType()))
-//                    .targetRedisType(SyncTypeUtils.getRedisBranchType(taskModel.getTargetRedisType()))
-//                    .status(SyncTypeUtils.getTaskStatusType(taskModel.getStatus()))
-//                    .dbMapper(taskModel.getDbMapping())
-//                    .build();
-//
-//            taskModelResultList.add(taskModelResult);
-//
-//        }
+        List<TaskModelResult>taskModelResultList=taskModelList.stream()
+                .filter(taskModel -> taskModel!=null)
+                .map(taskModel -> toTaskModelResult(taskModel))
+                .collect(Collectors.toList());
 
         return taskModelResultList;
     }
@@ -571,7 +544,12 @@ public class TaskDataManagerUtils {
             }
 
             if(allKeyCount>=taskModel.getRdbKeyCount()||taskModel.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())){
-                rate=1.0;
+                if(!taskModel.getSyncType().equals(SyncType.SYNC.getCode())){
+                    rate=0.0;
+                }else{
+                    rate=1.0;
+                }
+
             }
             if(allKeyCount==0&&taskModel.getRdbKeyCount()==0){
                 rate=0.0;
@@ -596,6 +574,16 @@ public class TaskDataManagerUtils {
         }catch (Exception e){
             log.error("[{}]最后一次数据流出时间间隔计算失败",taskModel.getId());
         }
+
+        String brokenResult="";
+        try {
+            brokenResult=JSON.parseObject(taskModel.getExpandJson(), ExpandTaskModel.class).getBrokenReason();
+
+        }catch (Exception e){
+            log.error("brokenResult获取失败");
+            e.printStackTrace();
+        }
+
       TaskModelResult result=  TaskModelResult
                 .builder()
                 .taskId(taskModel.getId())
@@ -607,6 +595,7 @@ public class TaskDataManagerUtils {
                 .offset(taskModel.getOffset())
                 .taskName(taskModel.getTaskName())
                 .taskMsg(taskModel.getTaskMsg())
+                .brokenReason(brokenResult)
                 .tasktype(SyncTypeUtils.getTaskType(taskModel.getTasktype()))
                 .syncType(SyncTypeUtils.getSyncType(taskModel.getSyncType()))
                 .sourceRedisAddress(taskModel.getSourceRedisAddress())
@@ -997,6 +986,13 @@ public class TaskDataManagerUtils {
             SqliteOPUtils.updateTaskMsgAndStatusById( taskStatusType.getCode(),msg,taskId);
             if(taskStatusType.equals(TaskStatusType.BROKEN)||taskStatusType.equals(TaskStatusType.STOP)){
                 updateTaskOffset(taskId);
+                if(taskStatusType.equals(TaskStatusType.BROKEN)){
+                    TaskDataManagerUtils.updateBrokenResult(taskId,msg);
+                }else {
+                    data.getTaskModel().setTaskMsg("任务主动关闭或停止");
+                    TaskDataManagerUtils.updateBrokenResult(taskId,"");
+                }
+
                 aliveThreadHashMap.remove(taskId);
             }
 //            if(taskStatusType.getStatus().equals(ThreadStatusEnum.BROKEN)
@@ -1096,4 +1092,60 @@ public class TaskDataManagerUtils {
     }
 
 
+    /**
+     * 将内存相关字段入库
+     * @param taskId
+     */
+    public synchronized static void updateExpandTaskModel(String taskId){
+        if(aliveThreadHashMap.containsKey(taskId)){
+            TaskDataEntity dataEntity=aliveThreadHashMap.get(taskId);
+            try {
+                SqliteOPUtils.updateExpandTaskModelById(taskId, JSON.toJSONString(dataEntity.getExpandTaskModel()));
+            } catch (Exception e) {
+                log.error("[{}]更新扩展字段失败",taskId);
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    /**
+     * 更新BrokenResult
+     * @param taskId
+     * @param brokenResult
+     */
+    public synchronized static void updateBrokenResult(String taskId,String brokenResult){
+        if(aliveThreadHashMap.containsKey(taskId)){
+            TaskDataEntity dataEntity=aliveThreadHashMap.get(taskId);
+            if(null!=dataEntity.getExpandTaskModel()){
+                dataEntity.getTaskModel().setExpandJson(JSON.toJSONString(dataEntity.getExpandTaskModel()));
+                dataEntity.getExpandTaskModel().setBrokenReason(brokenResult);
+                updateExpandTaskModel(taskId);
+            }
+        }
+    }
+
+
+    public static synchronized void updateTaskAllkeys(String taskId,int count){
+        try {
+            if(containsKey(taskId)){
+                TaskDataManagerUtils.get(taskId).getRdbKeyCount().addAndGet(count);
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public static synchronized void updateTasksetRdbkeys(String taskId,long fileSize){
+        try {
+            if(containsKey(taskId)){
+                TaskDataManagerUtils.get(taskId).getRdbKeyCount().set(fileSize);
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 }

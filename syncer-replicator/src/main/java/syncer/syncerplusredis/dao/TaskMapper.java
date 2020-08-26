@@ -16,22 +16,22 @@ import java.util.List;
 @Mapper
 public interface TaskMapper  {
     // 根据 ID 查询
-    @Select("SELECT * FROM t_task")
+    @Select("SELECT * FROM t_task order by createTime desc")
     List<TaskModel> selectAll()throws Exception;
 
-    @Select("SELECT * FROM t_task WHERE id =#{id} limit 1")
+    @Select("SELECT * FROM t_task WHERE id =#{id} order by createTime desc limit 1")
     TaskModel findTaskById(@Param("id") String id)throws Exception;
 
     @Select("select count(*) from t_task")
     int countItem()throws Exception;
 
-    @Select("SELECT * FROM t_task WHERE taskName =#{taskName}")
+    @Select("SELECT * FROM t_task WHERE taskName =#{taskName} order by createTime desc")
     List<TaskModel> findTaskBytaskName(@Param("taskName") String taskName)throws Exception;
 
     @Select("SELECT * FROM t_task WHERE md5 =#{md5}")
     List<TaskModel> findTaskBytaskMd5(@Param("md5") String md5)throws Exception;
 
-    @Select("SELECT * FROM t_task WHERE status =#{status}")
+    @Select("SELECT * FROM t_task WHERE status =#{status} order by createTime desc")
     List<TaskModel> findTaskBytaskStatus(@Param("status") Integer status)throws Exception;
 
     @Select("SELECT * FROM t_task WHERE groupId =#{groupId}")
@@ -115,6 +115,8 @@ public interface TaskMapper  {
     @Update("UPDATE t_task set  rdbKeyCount=#{rdbKeyCount}, allKeyCount=#{allKeyCount},realKeyCount=#{realKeyCount} where id=#{id}")
     boolean updateKeyCountById(@Param("id")String id,@Param("rdbKeyCount")Long rdbKeyCount,@Param("allKeyCount")Long allKeyCount,@Param("realKeyCount")Long realKeyCount)throws Exception;
 
+    @Update("UPDATE t_task set  expandJson=#{expandJson} where id=#{id}")
+    boolean updateExpandTaskModelById(@Param("id")String id,@Param("expandJson")String expandJson);
 
 //    @Update({
 //            "<script>",

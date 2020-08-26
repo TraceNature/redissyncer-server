@@ -1,5 +1,6 @@
 package syncer.syncerservice.service.impl2;
 
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -12,7 +13,9 @@ import syncer.syncerplusredis.entity.StartTaskEntity;
 import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.entity.thread.OffSetEntity;
 import syncer.syncerplusredis.exception.TaskMsgException;
+import syncer.syncerplusredis.model.ExpandTaskModel;
 import syncer.syncerplusredis.model.TaskModel;
+import syncer.syncerplusredis.util.ExpandTaskUtils;
 import syncer.syncerplusredis.util.SyncTypeUtils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TaskErrorUtils;
@@ -73,13 +76,15 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
                     .build();
             dataEntity.getOffSetEntity().getReplOffset().set(taskModel.getOffset());
         }else {
+
             dataEntity=TaskDataEntity.builder()
                     .taskModel(taskModel)
                     .offSetEntity(OffSetEntity.builder().replId("").build())
                     .build();
         }
 
-
+        //初始化ExpandTaskModel
+        ExpandTaskUtils.loadingExpandTaskData(taskModel,dataEntity);
 
         TaskDataManagerUtils.addMemThread(taskModel.getId(),dataEntity,true);
         //创建中
@@ -161,6 +166,9 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
         }
 
         dataEntity.getTaskModel().setStatus(TaskStatusType.CREATING.getCode());
+
+        //初始化ExpandTaskModel
+        ExpandTaskUtils.loadingExpandTaskData(taskModel,dataEntity);
 
         TaskDataManagerUtils.addMemThread(taskModel.getId(),dataEntity,true);
 

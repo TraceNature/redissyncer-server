@@ -140,7 +140,9 @@ public class SqliteOPUtils {
         return taskMapper.updateTask(taskModel);
     }
 
-
+    public static boolean updateExpandTaskModelById(String id,String expandJson)throws Exception{
+        return taskMapper.updateExpandTaskModelById(id,expandJson);
+    }
 
     public static  boolean insetTaskOffset(TaskOffsetEntity taskOffsetEntity)throws Exception{
         return taskOffsetMapper.insetTaskOffset(taskOffsetEntity);
@@ -159,6 +161,8 @@ public class SqliteOPUtils {
          return abandonCommandMapper.insertSimpleAbandonCommandModel(abandonCommandModel);
 
     }
+
+
 
 
     public static  boolean insertDataCompensationModel(DataCompensationModel abandonCommandModel)throws Exception{

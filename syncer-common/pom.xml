@@ -32,12 +32,6 @@
     </properties>
 
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>junit</groupId>-->
-<!--            <artifactId>junit</artifactId>-->
-<!--            <version>4.11</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
 
 
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
@@ -84,14 +78,6 @@
             <artifactId>oshi-json</artifactId>
             <version>3.6.1</version>
         </dependency>
-        <!--系统使用率导包结束-->
-
-
-<!--        <dependency>-->
-<!--            <groupId>org.apache.logging.log4j</groupId>-->
-<!--            <artifactId>log4j-core</artifactId>-->
-<!--            <version>2.11.0</version>-->
-<!--        </dependency>-->
 
         <!-- https://mvnrepository.com/artifact/commons-discovery/commons-discovery -->
         <dependency>
@@ -113,17 +99,7 @@
             <version>1.9.2</version>
         </dependency>
 
-<!--        &lt;!&ndash;jedis所需jar&ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>redis.clients</groupId>-->
-<!--            <artifactId>jedis</artifactId>-->
-<!--            <version>${jedis.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>commons-pool</groupId>-->
-<!--            <artifactId>commons-pool</artifactId>-->
-<!--            <version>${pool.version}</version>-->
-<!--        </dependency>-->
+
         <dependency>
             <groupId>com.beust</groupId>
             <artifactId>jcommander</artifactId>
@@ -137,37 +113,7 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/../lib/jim-cli-api-syncer-2.1.4.jar</systemPath>
         </dependency>
-        <!--使用LogBack和SLF4j作为日志-->
-<!--        <dependency>-->
-<!--            <groupId>org.slf4j</groupId>-->
-<!--            <artifactId>slf4j-api</artifactId>-->
-<!--            <version>${slf4j.version}</version>-->
-<!--        </dependency>-->
 
-
-<!--        <dependency>-->
-<!--            <groupId>org.slf4j</groupId>-->
-<!--            <artifactId>jcl-over-slf4j</artifactId>-->
-<!--            <version>${slf4j.version}</version>-->
-<!--        </dependency>-->
-
-<!--        <dependency>-->
-<!--            <groupId>ch.qos.logback</groupId>-->
-<!--            <artifactId>logback-classic</artifactId>-->
-<!--            <version>${logback.version}</version>-->
-<!--        </dependency>-->
-
-<!--        <dependency>-->
-<!--            <groupId>ch.qos.logback</groupId>-->
-<!--            <artifactId>logback-core</artifactId>-->
-<!--            <version>${logback.version}</version>-->
-<!--        </dependency>-->
-
-<!--        <dependency>-->
-<!--            <groupId>ch.qos.logback</groupId>-->
-<!--            <artifactId>logback-access</artifactId>-->
-<!--            <version>${logback.version}</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>commons-dbcp</groupId>
             <artifactId>commons-dbcp</artifactId>
@@ -179,24 +125,6 @@
             <artifactId>hibernate-validator</artifactId>
             <version>6.0.18.Final</version>
         </dependency>
-
-
-        <!--        <dependency>-->
-<!--            <groupId>org.apache.shiro</groupId>-->
-<!--            <artifactId>shiro-spring</artifactId>-->
-<!--            <version>${shiro-spring.version}</version>-->
-<!--        </dependency>-->
-
-<!--        <dependency>-->
-<!--            <groupId>org.apache.shiro</groupId>-->
-<!--            <artifactId>shiro-ehcache</artifactId>-->
-<!--            <version>${shiro-spring.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.github.pagehelper</groupId>-->
-<!--            <artifactId>pagehelper</artifactId>-->
-<!--            <version>5.1.11</version>-->
-<!--        </dependency>-->
 
     </dependencies>
 

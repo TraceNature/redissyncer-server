@@ -30,16 +30,17 @@
 
 * 3.X
   
-- [ ] key过滤    
+- [ ] key过滤 
 - [ ] 命令过滤
-- [ ] 限制任务数，根据内存容量限制创建任务
+- [x] 限制任务数，根据内存容量限制创建任务
 - [ ] 内存级别双向同步
-- [ ] 集成log4j2,日志可通过application.yml或启动参数配置，默认输出位置 ./log
+- [x] 集成log4j2,日志可通过application.yml或启动参数配置，默认输出位置 ./log
 - [ ] 数据校验，由goclient集成
-- [ ]  incr 、incrby等命令幂等操作
-- [ ]  swagger 补充api说明
+- [x]  incr 、incrby等命令幂等操作
+- [x]  swagger 补充api说明
 - [ ] goclient 适应v2 api
 - [ ] goclient 实现交互模式类似redis-cli
+- [ ] 目标为rediscluster 实现pipeline写入
 * testcase完善，形成完整回归测试案例
    - [x] single2single
    - [ ] single2single with dbmap
