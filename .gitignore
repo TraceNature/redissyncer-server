@@ -28,6 +28,7 @@
 #idea ignore
 **/.idea
 *.iml
+**/syncer.db
 
 # vscode
 **/.vscode
