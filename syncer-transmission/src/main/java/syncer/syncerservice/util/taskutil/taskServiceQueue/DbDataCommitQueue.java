@@ -28,6 +28,10 @@ public class DbDataCommitQueue {
         return null;
     }
 
+    public static void close(){
+//        queue.c
+    }
+
     public static int size(){
       return queue.size();
     }

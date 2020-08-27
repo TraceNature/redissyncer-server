@@ -10,7 +10,7 @@
 
     <groupId>syncer</groupId>
     <artifactId>syncer-webapp</artifactId>
-    <version>3.0.1</version>
+    <version>3.1.0</version>
     <name>syncer-webapp</name>
     <description>Demo project for Spring Boot</description>
 

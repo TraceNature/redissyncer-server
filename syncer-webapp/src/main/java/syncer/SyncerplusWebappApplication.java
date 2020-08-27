@@ -50,6 +50,7 @@ import java.util.Map;
 @Slf4j
 @EnableWebSocketMessageBroker
 public class SyncerplusWebappApplication {
+    public static final String version="3.1.0";
 
 //    @Autowired
 //    private SimpMessagingTemplate messagingTemplate;
@@ -102,9 +103,11 @@ public class SyncerplusWebappApplication {
          */
 
         SpringApplication application = new SpringApplication(SyncerplusWebappApplication.class);
+
+
         application.addListeners(new ApplicationStartedEventListener());
         application.run(args);
-
+        log.info("syncer version:[{}]",version);
         Runtime.getRuntime().addShutdownHook(new Thread(){
 
             @Override

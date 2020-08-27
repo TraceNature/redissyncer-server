@@ -16,7 +16,6 @@ public class TaskErrorUtils {
     public  static void updateStatusAndLog(Exception e, Class clazz, String taskId, TaskDataEntity dataEntity){
 
         try {
-            TaskDataManagerUtils.updateBrokenResult(taskId,e.getMessage());
             //清除内存信息并更新数据库状态
             TaskDataManagerUtils.removeThread(taskId,dataEntity.getOffSetEntity().getReplOffset().get());
         } catch (Exception ex) {
