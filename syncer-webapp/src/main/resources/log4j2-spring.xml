@@ -6,6 +6,7 @@
 		<Property name="LOG_PATTERN"
 				  value="%d{yyyy-MM-dd HH:mm:ss.SSS}|[%5p ]|[%t] -> %c{1}#%M:%L | %msg%n%xwEx" />
 		<property name="logFile">syncer-log</property>
+		<Property name="logFileName" value="${sys:logFileName}"/>
 		<Property name="logLevel" value="${sys:logLevel}"/>
 	</properties>
 
@@ -17,7 +18,7 @@
 
 
 		<RollingRandomAccessFile
-				append="true"  immediateFlush="true" name="RollingRandomAccessFile" fileName="${logPath}/${logFile}.log"
+				append="true"  immediateFlush="true" name="RollingRandomAccessFile" fileName="${logPath}/${logFileName}"
 				filePattern="${logPath}/${logFile}-%d-%i.log" >
 			<PatternLayout pattern="${LOG_PATTERN}" />
 			<Policies>

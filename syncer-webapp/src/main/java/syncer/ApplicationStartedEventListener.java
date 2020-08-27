@@ -32,8 +32,10 @@ public class ApplicationStartedEventListener implements ApplicationListener, Ord
             String somePropLevel = environment.getProperty("logging.level.root");
 
             String someProp = environment.getProperty("syncer.config.path.logfile");
+            String logfileNameProp = environment.getProperty("syncer.config.path.logfileName");
             System.setProperty("logPath", someProp);
             System.setProperty("logLevel", somePropLevel);
+            System.setProperty("logFileName", logfileNameProp);
             System.setProperty("Log4jContextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
 
         }

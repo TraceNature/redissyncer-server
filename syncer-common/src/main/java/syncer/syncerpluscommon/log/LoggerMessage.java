@@ -1,9 +1,6 @@
 package syncer.syncerpluscommon.log;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /**
  * @author zhanenqiang
@@ -13,6 +10,7 @@ import lombok.Setter;
 @Getter@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class LoggerMessage {
     private String body;
     private String timestamp;
