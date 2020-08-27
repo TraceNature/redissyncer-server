@@ -30,6 +30,8 @@ import syncer.syncerplusredis.entity.TaskDataEntity;
 import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.util.SqliteOPUtils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
+import syncer.syncerpluswebapp.thread.TailLogThread;
+import syncer.syncerpluswebapp.util.EnvironmentUtils;
 import syncer.syncerservice.persistence.SqliteSettingPersistenceTask;
 import syncer.syncerpluscommon.util.file.FileUtils;
 import syncer.syncerservice.task.OffSetCommitEntity;
@@ -55,6 +57,7 @@ public class SyncerplusWebappApplication {
 //    private SimpMessagingTemplate messagingTemplate;
     @Autowired
     ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
 
 //    int info=1;
 //    @Scheduled(fixedRate = 1000)
@@ -87,8 +90,8 @@ public class SyncerplusWebappApplication {
         };
         threadPoolTaskExecutor.submit(runnable);
     }
-**/
 
+**/
 
     public static void main(String[] args) throws  Exception {
         System.setProperty("DLog4jContextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
@@ -141,7 +144,8 @@ public class SyncerplusWebappApplication {
         ThreadPoolUtils.exec(new SqliteSettingPersistenceTask());
         ThreadPoolUtils.exec(new DbDataCommitTask());
         ThreadPoolUtils.exec(new OffsetCommitTask());
-
+        String logFilePath=EnvironmentUtils.searchByKey("syncer.config.path.logfile")+"/"+EnvironmentUtils.searchByKey("syncer.config.path.logfileName");
+//        ThreadPoolUtils.exec(new TailLogThread(logFilePath));
         String md5A="A239";
         String md5B="B240";
 

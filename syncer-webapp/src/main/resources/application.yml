@@ -34,7 +34,10 @@ logging:
   level:
     root: INFO
 #syncer配置以及数据文件存路径路径配置
-
+  file: ${syncer.config.path.logfile}/${syncer.config.path.logfileName}
+#  file:
+#    path: ${syncer.config.path.logfile}
+#    name: ${syncer.config.path.logfileName}
 
 
 syncer:
@@ -43,6 +46,7 @@ syncer:
     swagger: false
     path:
       logfile: ./log
+      logfileName: syncer-log.log
       datafile: ./
 
 
@@ -71,7 +75,7 @@ spring:
   boot:
     admin:
       client:
-        url:
+        url: 
         username: admin
         password: admin
         instance:
@@ -87,6 +91,8 @@ spring:
 #    schema: classpath:init.sql
 #    initialization-mode: ALWAYS
 
+#    path: ${syncer.config.path.logfile}
+#    name: ${syncer.config.path.logfileName}
 
 
 management:
@@ -95,6 +101,8 @@ management:
       exposure:
         include: "*"
         exclude:
+    logfile:
+      external-file: ${syncer.config.path.logfile}/${syncer.config.path.logfileName}  #指向日志文件地址，需与LogBack配置的日志地址一致
     jmx:
       exposure:
         include:
