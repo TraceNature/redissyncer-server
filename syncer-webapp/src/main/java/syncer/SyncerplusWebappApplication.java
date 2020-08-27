@@ -147,7 +147,7 @@ public class SyncerplusWebappApplication {
         ThreadPoolUtils.exec(new SqliteSettingPersistenceTask());
         ThreadPoolUtils.exec(new DbDataCommitTask());
         ThreadPoolUtils.exec(new OffsetCommitTask());
-        String logFilePath=EnvironmentUtils.searchByKey("syncer.config.path.logfile")+"/"+EnvironmentUtils.searchByKey("syncer.config.path.logfileName");
+//        String logFilePath=EnvironmentUtils.searchByKey("syncer.config.path.logfile")+"/"+EnvironmentUtils.searchByKey("syncer.config.path.logfileName");
 //        ThreadPoolUtils.exec(new TailLogThread(logFilePath));
         String md5A="A239";
         String md5B="B240";
