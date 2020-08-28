@@ -263,7 +263,7 @@ public class DtoToTaskModelUtils {
             }
 
             taskModel.setSyncType(getFileType(redisFileDataDto.getFileType()));
-            taskModel.setMd5(getFileTaskMd5(taskModel));
+            taskModel.setMd5(getTaskMd5(taskModel));
             taskModelList.add(taskModel);
         }
 
@@ -338,7 +338,7 @@ public class DtoToTaskModelUtils {
                     taskModel.setDbMapper(JSON.toJSONString(new HashMap<>()));
                 }
 
-                taskModel.setMd5(getCommandUpTaskMd5(taskModel));
+                taskModel.setMd5(getTaskMd5(taskModel));
                 taskModelList.add(taskModel);
         }
 
@@ -380,29 +380,6 @@ public class DtoToTaskModelUtils {
             stringBuilder.append("_");
         }
 
-        if(!StringUtils.isEmpty(taskModel.getTaskName())){
-            stringBuilder.append(taskModel.getTaskName());
-            stringBuilder.append("_");
-        }else {
-            stringBuilder.append("null");
-            stringBuilder.append("_");
-        }
-
-        String md5= MD5Utils.getMD5(stringBuilder.toString());
-        return md5;
-    }
-
-
-    public synchronized static String getFileTaskMd5(TaskModel taskModel){
-        StringBuilder stringBuilder=new StringBuilder();
-        if(!StringUtils.isEmpty(taskModel.getTargetRedisAddress())){
-            stringBuilder.append(taskModel.getTargetRedisAddress());
-            stringBuilder.append("_");
-        }else {
-            stringBuilder.append("null");
-            stringBuilder.append("_");
-        }
-
 
         if(!StringUtils.isEmpty(taskModel.getFileAddress())){
             stringBuilder.append(taskModel.getFileAddress());
@@ -419,40 +396,14 @@ public class DtoToTaskModelUtils {
             stringBuilder.append("null");
             stringBuilder.append("_");
         }
+
+
         String md5= MD5Utils.getMD5(stringBuilder.toString());
         return md5;
     }
 
 
-    public synchronized static String getCommandUpTaskMd5(TaskModel taskModel){
-        StringBuilder stringBuilder=new StringBuilder();
-        if(!StringUtils.isEmpty(taskModel.getSourceRedisAddress())){
-            stringBuilder.append(taskModel.getSourceRedisAddress());
-            stringBuilder.append("_");
-        }else {
-            stringBuilder.append("null");
-            stringBuilder.append("_");
-        }
 
-
-        if(!StringUtils.isEmpty(taskModel.getFileAddress())){
-            stringBuilder.append(taskModel.getFileAddress());
-            stringBuilder.append("_");
-        }else {
-            stringBuilder.append("null");
-            stringBuilder.append("_");
-        }
-
-        if(!StringUtils.isEmpty(taskModel.getTaskName())){
-            stringBuilder.append(taskModel.getTaskName());
-            stringBuilder.append("_");
-        }else {
-            stringBuilder.append("null");
-            stringBuilder.append("_");
-        }
-        String md5= MD5Utils.getMD5(stringBuilder.toString());
-        return md5;
-    }
 
     public synchronized static Integer getFileType(FileType fileType){
         if(FileType.SYNC.equals(fileType)){

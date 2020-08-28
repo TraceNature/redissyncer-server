@@ -1303,11 +1303,11 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                 log.warn("key[{}]同步失败被抛弃,原因：[{}]", eventEntity.getStringKey(), e.getMessage());
 
                 if (errorCount >= 0) {
-
 //                    long error = errorNums.incrementAndGet();
                     long error=TaskDataManagerUtils.get(taskId).getErrorNums().incrementAndGet();
+
                     if (error >= errorCount) {
-                        brokenTaskByConnectError("被抛弃key数量到达阈值[" + errorCount + "]");
+                        brokenTaskByConnectError("被抛弃key数量到达阈值[" + errorCount + "],exception reason["+e.getMessage()+"]");
                     }
                 }
 

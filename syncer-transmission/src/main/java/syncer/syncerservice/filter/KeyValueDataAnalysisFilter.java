@@ -127,7 +127,7 @@ public class KeyValueDataAnalysisFilter implements CommonFilter{
                         log.error("大key统计入库失败：[{}]", Strings.toString(batchedKeyValuePair.getKey()));
                     }
 
-                    log.warn("大key统计：{}", Strings.toString(batchedKeyValuePair.getKey()));
+                    log.warn("大key统计：[{}],db: [{}]", Strings.toString(batchedKeyValuePair.getKey()),batchedKeyValuePair.getDb().getDbNumber());
                 }
 
                 addAnalysisMap(DataType.FRAGMENTATION);
