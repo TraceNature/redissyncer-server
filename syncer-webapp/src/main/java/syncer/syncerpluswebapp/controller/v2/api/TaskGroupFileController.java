@@ -17,6 +17,7 @@ import syncer.syncerplusredis.entity.dto.FileCommandBackupDataDto;
 import syncer.syncerplusredis.entity.dto.RedisFileDataDto;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.model.TaskModel;
+import syncer.syncerpluswebapp.config.submit.Resubmit;
 import syncer.syncerpluswebapp.config.swagger.model.ApiJsonObject;
 import syncer.syncerpluswebapp.config.swagger.model.ApiJsonProperty;
 import syncer.syncerpluswebapp.config.swagger.model.ApiJsonResult;
@@ -70,6 +71,7 @@ public class TaskGroupFileController {
 
 
     @RequestMapping(value = "/createtask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    @Resubmit(delaySeconds = 10)
     public ResultMap createtask(@RequestBody @Validated RedisFileDataDto redisFileDataDto) throws Exception {
         List<TaskModel> taskModelList= DtoToTaskModelUtils.getTaskModelList(redisFileDataDto,false);
 
@@ -107,6 +109,7 @@ public class TaskGroupFileController {
      */
 
     @RequestMapping(value = "/edittask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    @Resubmit(delaySeconds = 10)
     public ResultMap editTaskByTaskId(@RequestBody @Validated RedisFileDataDto fileDataDto)throws Exception {
         List<TaskModel> taskModelList= DtoToTaskModelUtils.getTaskModelList(fileDataDto,false);
         TaskModel taskModel=taskModelList.get(0);
@@ -122,6 +125,7 @@ public class TaskGroupFileController {
      * @throws TaskMsgException
      */
     @RequestMapping(value = "/createCommandDumpUpTask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    @Resubmit(delaySeconds = 10)
     public ResultMap creatCommandDumpUptask(@RequestBody @Validated FileCommandBackupDataDto redisFileDataDto) throws Exception {
         redisFileDataDto.setFileType(FileType.COMMANDDUMPUP);
         List<TaskModel> taskModelList= DtoToTaskModelUtils.getTaskModelList(redisFileDataDto,false);

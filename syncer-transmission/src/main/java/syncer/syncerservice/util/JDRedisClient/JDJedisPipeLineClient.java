@@ -3,11 +3,12 @@ package syncer.syncerservice.util.JDRedisClient;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
 import syncer.syncerjedis.*;
 import syncer.syncerjedis.exceptions.JedisConnectionException;
 import syncer.syncerjedis.params.SetParams;
-import syncer.syncerpluscommon.config.ThreadPoolConfig;
+
+import syncer.syncerpluscommon.util.ThreadPoolUtils;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.constant.PipeLineCompensatorEnum;
 import syncer.syncerplusredis.dao.DataCompensationMapper;
@@ -56,8 +57,7 @@ public class JDJedisPipeLineClient implements JDRedisClient {
     private Date date = new Date();
     //任务id
     private String taskId;
-    static ThreadPoolConfig threadPoolConfig;
-    static ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
     private Lock commitLock = new ReentrantLock();
     private Lock compensatorLock = new ReentrantLock();
     private AtomicInteger commandNums = new AtomicInteger();
@@ -71,10 +71,6 @@ public class JDJedisPipeLineClient implements JDRedisClient {
 
     private boolean connectError = false;
 
-    static {
-        threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
-        threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
-    }
 
     //补偿存储
     private KVPersistenceDataEntity kvPersistence = new KVPersistenceDataEntity();
@@ -124,7 +120,7 @@ public class JDJedisPipeLineClient implements JDRedisClient {
         pipelined = jdJedis.pipelined();
 
         //定时回收线程
-        threadPoolTaskExecutor.execute(new JDJedisPipeLineClient.PipelineSubmitThread(taskId));
+        ThreadPoolUtils.execute(new JDJedisPipeLineClient.PipelineSubmitThread(taskId));
     }
 
 
@@ -1303,11 +1299,11 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                 log.warn("key[{}]同步失败被抛弃,原因：[{}]", eventEntity.getStringKey(), e.getMessage());
 
                 if (errorCount >= 0) {
-
 //                    long error = errorNums.incrementAndGet();
                     long error=TaskDataManagerUtils.get(taskId).getErrorNums().incrementAndGet();
+
                     if (error >= errorCount) {
-                        brokenTaskByConnectError("被抛弃key数量到达阈值[" + errorCount + "]");
+                        brokenTaskByConnectError("被抛弃key数量到达阈值[" + errorCount + "],exception reason["+e.getMessage()+"]");
                     }
                 }
 

@@ -24,6 +24,7 @@ import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerplusredis.model.TaskModelResult;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 
+import syncer.syncerpluswebapp.config.submit.Resubmit;
 import syncer.syncerpluswebapp.config.swagger.CommonData;
 import syncer.syncerpluswebapp.config.swagger.model.ApiJsonObject;
 import syncer.syncerpluswebapp.config.swagger.model.ApiJsonProperty;
@@ -105,6 +106,7 @@ public class TaskGroupController {
 //            @ApiResponse(code = 4024,message = "targetRedisVersion can not be empty /targetRedisVersion error"),
 //            @ApiResponse(code = 4027,message = "incrementtype参数错误 只能为（beginbuffer/endbuffer）")
 //    })
+    @Resubmit(delaySeconds = 10)
     public ResultMap createTask( @RequestBody @Validated RedisClusterDto params) throws Exception {
         List<TaskModel> taskModelList= DtoToTaskModelUtils.getTaskModelList(params,false);
 
@@ -162,7 +164,7 @@ public class TaskGroupController {
 //            @ApiResponse(code = 1002,message = "The task does not exist. Please create the task first"),
 //            @ApiResponse(code = 4000,message = "taskids或GroupId不能为空  【外层code】")
 //    })
-
+    @Resubmit(delaySeconds = 10)
     public ResultMap stopTask( @RequestBody @Validated TaskMsgDto params) throws Exception {
         List<StartTaskEntity> msg=null;
         if(params.getTaskids()==null&&params.getGroupIds()==null){
@@ -209,7 +211,7 @@ public class TaskGroupController {
 //            @ApiResponse(code=2000,message="OK")
 //    })
 
-
+    @Resubmit(delaySeconds = 10)
     public ResultMap startTask( @RequestBody @Validated TaskStartMsgDto params) throws Exception {
         if(StringUtils.isEmpty(params.getTaskid())&&StringUtils.isEmpty(params.getGroupId())){
             return  ResultMap.builder().code("4000").msg("taskid或GroupId不能为空");
@@ -359,7 +361,7 @@ public class TaskGroupController {
 //            @ApiResponse(code = 2000,message = "Delete successful"),
 //            @ApiResponse(code=2000,message="OK")
 //    })
-
+    @Resubmit(delaySeconds = 10)
     public ResultMap deleteTask(@RequestBody @Validated TaskMsgDto params) throws Exception {
         List<StartTaskEntity> msg=null;
         if(params.getTaskids()==null&&params.getGroupIds()==null){

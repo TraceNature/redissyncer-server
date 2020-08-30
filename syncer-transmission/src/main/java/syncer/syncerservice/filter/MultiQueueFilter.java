@@ -1,9 +1,8 @@
 package syncer.syncerservice.filter;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import syncer.syncerpluscommon.config.ThreadPoolConfig;
-import syncer.syncerpluscommon.util.spring.SpringUtil;
+
+import syncer.syncerpluscommon.util.ThreadPoolUtils;
 import syncer.syncerplusredis.cmd.impl.DefaultCommand;
 import syncer.syncerplusredis.constant.RedisBranchTypeEnum;
 import syncer.syncerplusredis.constant.TaskRunTypeEnum;
@@ -19,8 +18,6 @@ import syncer.syncerservice.util.HashUtils;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClient;
 import syncer.syncerservice.util.JDRedisClient.JDRedisClientFactory;
 import syncer.syncerservice.util.KVUtils;
-import syncer.syncerservice.util.queue.DbMapLocalDiskMemoryQueue;
-import syncer.syncerservice.util.queue.LocalDiskMemoryQueue;
 import syncer.syncerservice.util.queue.LocalMemoryQueue;
 import syncer.syncerservice.util.queue.SyncerQueue;
 
@@ -41,16 +38,11 @@ public class MultiQueueFilter implements CommonFilter {
     private Replicator r;
     private String taskId;
     private int batchSize;
-    static ThreadPoolConfig threadPoolConfig;
-    static ThreadPoolTaskExecutor threadPoolTaskExecutor;
     private volatile Map<Integer, SyncerQueue<KeyValueEventEntity>> queueMap = new ConcurrentHashMap<>();
 
     private volatile Map<Integer, ISyncerCompensator> iSyncerCompensatorMap = new ConcurrentHashMap<>();
     private final Integer QUEUE_SIZE=1;
-    static {
-        threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
-        threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
-    }
+
 
     public MultiQueueFilter(RedisBranchTypeEnum branchTypeEnum, RedisSyncDataDto syncDataDto, String type, Replicator r, String taskId,int batchSize) {
         this.branchTypeEnum = branchTypeEnum;
@@ -77,7 +69,7 @@ public class MultiQueueFilter implements CommonFilter {
             queueMap.put(i, queue);
             ISyncerCompensator syncerCompensator=ISyncerCompensatorFactory.createJDRedisClient(branchTypeEnum,taskId,client);
             iSyncerCompensatorMap.put(i,syncerCompensator);
-            threadPoolTaskExecutor.execute(SendCommandTask
+            ThreadPoolUtils.execute(SendCommandTask
                     .builder()
                     .r(r)
                     .filterChain(KeyValueRunFilterChain.builder().commonFilterList(commonFilterList).build())

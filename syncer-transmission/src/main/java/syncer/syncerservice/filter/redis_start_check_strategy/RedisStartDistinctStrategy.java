@@ -44,8 +44,6 @@ public class RedisStartDistinctStrategy implements IRedisStartCheckBaseStrategy 
     @Override
     public void run(JDRedisClient client, TaskModel taskModel, RedisPoolProps redisPoolProps) throws Exception {
 
-
-
         List<TaskModel> taskModelList= SqliteOPUtils.findTaskBytaskMd5(taskModel.getMd5());
         if(taskModelList!=null&&taskModelList.size()>0){
             throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_MSG_TASKSETTING_ERROR.getCode(),ResultCodeAndMessage.TASK_MSG_TASKSETTING_ERROR.getMsg()));

@@ -147,7 +147,7 @@ public class SendCommandWithOutQueue {
 
                     long error= TaskDataManagerUtils.get(taskId).getErrorNums().incrementAndGet();
                     if (error >= errorCount) {
-                        TaskErrorUtils.brokenStatusAndLog("被抛弃key数量到达阈值[" + errorCount + "]", this.getClass(), taskId);
+                        TaskErrorUtils.brokenStatusAndLog("被抛弃key数量到达阈值[" + errorCount + "],exception reason["+e.getMessage()+"]", this.getClass(), taskId);
                     }
                 }
                 log.error("[{}]抛弃key:{} ,class:[{}]:原因[{}]",taskId, keyName,event.getClass().toString(),e.getMessage());
