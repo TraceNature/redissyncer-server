@@ -2,8 +2,7 @@ package syncer.syncerservice.util.JDRedisClient;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import syncer.syncerpluscommon.config.ThreadPoolConfig;
+
 import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerservice.po.KVPersistenceDataEntity;
@@ -38,8 +37,7 @@ public class RedisLettucePipeLineClient implements JDRedisClient {
     private Date date = new Date();
     //任务id
     private String taskId;
-    static ThreadPoolConfig threadPoolConfig;
-    static ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
     private Lock commitLock = new ReentrantLock();
     private Lock compensatorLock = new ReentrantLock();
     private AtomicInteger commandNums = new AtomicInteger();
@@ -56,10 +54,7 @@ public class RedisLettucePipeLineClient implements JDRedisClient {
 
     private boolean connectError = false;
 
-    static {
-        threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
-        threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
-    }
+
 
     //补偿存储
     private KVPersistenceDataEntity kvPersistence = new KVPersistenceDataEntity();

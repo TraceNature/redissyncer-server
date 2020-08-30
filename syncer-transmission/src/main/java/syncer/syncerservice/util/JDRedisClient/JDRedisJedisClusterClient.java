@@ -1,11 +1,8 @@
 package syncer.syncerservice.util.JDRedisClient;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import syncer.syncerjedis.JedisCluster;
 import syncer.syncerjedis.params.SetParams;
-import syncer.syncerpluscommon.config.ThreadPoolConfig;
-import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerservice.cmd.ClusterProtocolCommand;
 import syncer.syncerservice.util.common.Strings;
@@ -20,17 +17,13 @@ import java.util.Set;
 @Slf4j
 public class JDRedisJedisClusterClient implements JDRedisClient {
 
-    static ThreadPoolConfig threadPoolConfig;
-    static ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
 
     private String host;
     //任务id
     private String taskId;
     private JedisCluster redisClient;
-    static {
-        threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
-        threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
-    }
+
 
 
 

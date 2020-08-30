@@ -55,8 +55,8 @@ public class SyncerplusWebappApplication {
 
 //    @Autowired
 //    private SimpMessagingTemplate messagingTemplate;
-    @Autowired
-    ThreadPoolTaskExecutor threadPoolTaskExecutor;
+//    @Autowired
+//    ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
 
 //    int info=1;
@@ -114,6 +114,7 @@ public class SyncerplusWebappApplication {
             public void run() {
                 log.info("Shutdown hook data saving....");
                 saveAllData();
+                ThreadPoolUtils.shutdown();
             }
         });
 

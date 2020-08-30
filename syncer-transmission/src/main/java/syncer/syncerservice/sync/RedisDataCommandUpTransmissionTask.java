@@ -2,9 +2,8 @@ package syncer.syncerservice.sync;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.StringUtils;
-import syncer.syncerpluscommon.config.ThreadPoolConfig;
+import syncer.syncerpluscommon.util.ThreadPoolUtils;
 import syncer.syncerpluscommon.util.file.FileUtils;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
 import syncer.syncerplusredis.cmd.Command;
@@ -48,12 +47,8 @@ public class RedisDataCommandUpTransmissionTask implements Runnable{
     private Date time;
     private boolean taskStatus=true;
     private Replicator r;
-    static ThreadPoolConfig threadPoolConfig;
-    static ThreadPoolTaskExecutor threadPoolTaskExecutor;
-    static {
-        threadPoolConfig = SpringUtil.getBean(ThreadPoolConfig.class);
-        threadPoolTaskExecutor = threadPoolConfig.threadPoolTaskExecutor();
-    }
+
+
 
     public RedisDataCommandUpTransmissionTask(TaskModel taskModel) {
         this.taskModel = taskModel;
@@ -79,7 +74,7 @@ public class RedisDataCommandUpTransmissionTask implements Runnable{
             log.warn("命令备份任务Id【{}】异常停止，停止原因【{}】", taskId, e.getMessage());
         }
 
-        threadPoolTaskExecutor.execute(new sumbitTask());
+        ThreadPoolUtils.execute(new sumbitTask());
     }
 
     @Override
