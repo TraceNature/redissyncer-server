@@ -16,75 +16,39 @@
 
 package syncer.syncerplusredis.cmd.impl;
 
-import syncer.syncerplusredis.util.objectutil.ByteArrayMap;
-
-import java.util.Map;
-
 /**
  * @author Leon Chen
  * @since 2.1.0
  */
-public class HSetCommand extends GenericKeyCommand {
-
+public class HSetCommand_old extends GenericKeyCommand {
 
     private static final long serialVersionUID = 1L;
 
-    private Map<byte[], byte[]> fields = new ByteArrayMap();
     private byte[] field;
     private byte[] value;
 
-    public HSetCommand() {
+    public HSetCommand_old() {
     }
 
-    public HSetCommand(byte[] key, byte[] field, byte[] value) {
+    public HSetCommand_old(byte[] key, byte[] field, byte[] value) {
         super(key);
         this.field = field;
         this.value = value;
-        this.fields.put(field, value);
     }
 
-    public HSetCommand(byte[] key, Map<byte[], byte[]> fields) {
-        super(key);
-        this.fields = fields;
-    }
-
-    /**
-     * @deprecated Use {@link #getFields()} instead. will remove this method in 4.0.0
-     */
-    @Deprecated
     public byte[] getField() {
         return field;
     }
 
-    /**
-     * @deprecated Use {@link #setFields(Map)} instead. will remove this method in 4.0.0
-     */
-    @Deprecated
     public void setField(byte[] field) {
         this.field = field;
     }
 
-    /**
-     * @deprecated Use {@link #getFields()} instead. will remove this method in 4.0.0
-     */
-    @Deprecated
     public byte[] getValue() {
         return value;
     }
 
-    /**
-     * @deprecated Use {@link #setFields(Map)} instead. will remove this method in 4.0.0
-     */
-    @Deprecated
     public void setValue(byte[] value) {
         this.value = value;
-    }
-
-    public Map<byte[], byte[]> getFields() {
-        return fields;
-    }
-
-    public void setFields(Map<byte[], byte[]> fields) {
-        this.fields = fields;
     }
 }
