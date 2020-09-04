@@ -19,6 +19,9 @@ package syncer.syncerplusredis.cmd.parser;
 import syncer.syncerplusredis.cmd.CommandParser;
 import syncer.syncerplusredis.cmd.impl.HSetCommand;
 import syncer.syncerplusredis.cmd.CommandParsers;
+import syncer.syncerplusredis.util.objectutil.ByteArrayMap;
+
+import static syncer.syncerplusredis.cmd.CommandParsers.toBytes;
 
 /**
  * @author Leon Chen
@@ -27,15 +30,30 @@ import syncer.syncerplusredis.cmd.CommandParsers;
 public class HSetParser implements CommandParser<HSetCommand> {
 
     @Override
+    @SuppressWarnings("deprecation")
     public HSetCommand parse(Object[] command) {
         int idx = 1;
-        byte[] key = CommandParsers.toBytes(command[idx]);
+        byte[] key = toBytes(command[idx]);
         idx++;
-        byte[] field = CommandParsers.toBytes(command[idx]);
-        idx++;
-        byte[] value = CommandParsers.toBytes(command[idx]);
-        idx++;
-        return new HSetCommand(key, field, value);
+        ByteArrayMap fields = new ByteArrayMap();
+        byte[] firstField = null;
+        byte[] firstValue = null;
+        while (idx < command.length) {
+            byte[] field = toBytes(command[idx]);
+            idx++;
+            byte[] value = idx == command.length ? null : toBytes(command[idx]);
+            idx++;
+            if (firstField == null) {
+                firstField = field;
+            }
+            if (firstValue == null) {
+                firstValue = value;
+            }
+            fields.put(field, value);
+        }
+        HSetCommand hSetCommand =  new HSetCommand(key, fields);
+        hSetCommand.setField(firstField);
+        hSetCommand.setValue(firstValue);
+        return hSetCommand;
     }
-
 }
