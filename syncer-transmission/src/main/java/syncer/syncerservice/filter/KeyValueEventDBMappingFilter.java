@@ -69,7 +69,7 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
             try {
                 dbMapping(eventEntity,newDb);
             } catch (KeyWeed0utException e) {
-                log.info("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                log.debug("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
                 //抛弃此kv
                 return;
             }
@@ -92,7 +92,7 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
             try {
                 dbMapping(eventEntity,newDb);
             } catch (KeyWeed0utException e) {
-                log.info("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                log.debug("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
                 //抛弃此kv
                 return;
             }
@@ -108,7 +108,7 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
                     commanddbMapping(eventEntity,commDbNum,defaultCommand);
                 } catch (KeyWeed0utException e) {
                     //抛弃此kv
-                    log.info("增量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                    log.debug("增量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
                     return;
                 }
             }else{
@@ -116,7 +116,7 @@ public class KeyValueEventDBMappingFilter implements CommonFilter {
                     commanddbMapping(eventEntity,dbNum);
                 } catch (KeyWeed0utException e) {
                     //抛弃此kv
-                    log.info("增量数据key[{}]不符合DB映射规则，被抛弃.. 原因[{}]", JSON.toJSONString(eventEntity),e.getMessage());
+                    log.debug("增量数据key[{}]不符合DB映射规则，被抛弃.. 原因[{}]", JSON.toJSONString(eventEntity),e.getMessage());
                     return;
                 }
             }
