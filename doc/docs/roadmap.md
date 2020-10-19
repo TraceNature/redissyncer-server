@@ -38,18 +38,18 @@
 - [ ] 数据校验，由goclient集成
 - [x]  incr 、incrby等命令幂等操作
 - [x]  swagger 补充api说明
-- [ ] goclient 适应v2 api
-- [ ] goclient 实现交互模式类似redis-cli
+- [x] goclient 适应v2 api
+- [x] goclient 实现交互模式类似redis-cli
 - [ ] 目标为rediscluster 实现pipeline写入
 * testcase完善，形成完整回归测试案例
    - [x] single2single
-   - [ ] single2single with dbmap
+   - [x] single2single with dbmap
    - [x] single2single 断点续传
    - [x] single2cluster
    - [x]  group2cluster
-   - [ ]  group2cluster 断点续传
-   - [ ] rdb导入
-   - [ ] aof导入
+   - [x]  group2cluster 断点续传
+   - [x] rdb导入
+   - [x] aof导入
 
 
 * 4.X
