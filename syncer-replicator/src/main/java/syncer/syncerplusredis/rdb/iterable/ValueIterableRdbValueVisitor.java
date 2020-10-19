@@ -22,7 +22,7 @@ import syncer.syncerplusredis.rdb.BaseRdbParser;
 import syncer.syncerplusredis.rdb.DefaultRdbValueVisitor;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerplusredis.util.objectutil.Strings;
-
+import syncer.syncerplusredis.rdb.datatype.Module;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.AbstractMap;
