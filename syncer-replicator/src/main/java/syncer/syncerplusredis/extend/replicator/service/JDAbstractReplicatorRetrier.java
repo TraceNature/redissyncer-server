@@ -5,16 +5,12 @@ package syncer.syncerplusredis.extend.replicator.service;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.exception.IncrementException;
-import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.replicator.Replicator;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
-import syncer.syncerplusredis.util.TaskMsgUtils;
 import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Arrays;
-import java.util.Map;
+
 @Slf4j
 public abstract class JDAbstractReplicatorRetrier implements JDReplicatorRetrier {
     protected Integer retries = 0;

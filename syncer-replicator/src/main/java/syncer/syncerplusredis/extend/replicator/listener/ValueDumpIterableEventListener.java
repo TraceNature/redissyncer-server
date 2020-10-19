@@ -1,7 +1,7 @@
 package syncer.syncerplusredis.extend.replicator.listener;
 
 import syncer.syncerplusredis.event.Event;
-
+import syncer.syncerplusredis.rdb.datatype.Module;
 import syncer.syncerplusredis.rdb.dump.datatype.DumpKeyValuePair;
 import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueByteArrayIterator;
 import syncer.syncerplusredis.rdb.iterable.datatype.KeyStringValueMapEntryIterator;
