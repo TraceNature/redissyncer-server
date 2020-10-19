@@ -25,7 +25,7 @@ import syncer.syncerplusredis.util.objectutil.ByteArrayList;
 import syncer.syncerplusredis.util.objectutil.ByteArrayMap;
 import syncer.syncerplusredis.util.objectutil.ByteArraySet;
 import syncer.syncerplusredis.rdb.datatype.*;
-
+import syncer.syncerplusredis.rdb.datatype.Module;
 import java.util.*;
 
 import static syncer.syncerplusredis.replicator.Constants.RDB_TYPE_SET;
