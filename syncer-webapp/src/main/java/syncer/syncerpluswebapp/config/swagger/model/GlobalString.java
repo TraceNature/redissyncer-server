@@ -35,19 +35,19 @@ public class GlobalString {
     @ApiSingleParam(value = "提交批次大小(缺省为 500)", example = "500",type = Integer.class)
     public static final String JSON_BATCHSIZE= "batchSize";
 
-    @ApiSingleParam(value = "db库映射关系", example = "{'0':1,'1':2}")
+    @ApiSingleParam(value = "db库映射关系", example = "'{'0':1,'1':2}'")
     public static final String JSON_DBMAPPER= "dbMapper";
 
-    @ApiSingleParam(value = "taskids", example = "['XXXXX1','XXXXX2']",type=String.class)
+    @ApiSingleParam(value = "taskids", example = "'['XXXXX1','XXXXX2']'",type=String.class)
     public static final String JSON_TASKIDS= "taskids";
 
-    @ApiSingleParam(value = "groupIds", example = "['XXXXX1','XXXXX2']",type=String.class)
+    @ApiSingleParam(value = "groupIds", example = "'['XXXXX1','XXXXX2']'",type=String.class)
     public static final String JSON_TGROUPIDS= "groupIds";
 
     @ApiSingleParam(value = "是否从头开始（断点续传） 缺省为true", example = "true",type = Boolean.class)
     public static final String JSON_AUTO_AFRESH= "afresh";
 
-    @ApiSingleParam(value = "data", example =" [\n" +
+    @ApiSingleParam(value = "data", example =" '[\n" +
             "        {\n" +
             "            \"code\": \"2000\",\n" +
             "            \"taskId\": \"F70C4C70B8E64A349D2DC7AD22D01656\",\n" +
@@ -55,7 +55,7 @@ public class GlobalString {
             "            \"msg\": \"Task created successfully and entered running state\",\n" +
             "            \"data\": null\n" +
             "        }\n" +
-            "    ]")
+            "    ]'")
     public static final String JSON_RESULT_DATA= "data";
 
     @ApiSingleParam(value = "code值", example = "2000")
@@ -75,27 +75,27 @@ public class GlobalString {
     public static final String JSON_STOPTASK_RESULT_DATA= "data";
 
 
-    @ApiSingleParam(value = "data", example =" [\n" +
+    @ApiSingleParam(value = "data", example =" '[\n" +
             "        {\n" +
             "            \"code\": \"2000\",\n" +
             "            \"taskId\": \"F70C4C70B8E64A349D2DC7AD22D01656\",\n" +
             "            \"msg\": \"OK\",\n" +
             "        }\n" +
-            "    ]")
+            "    ]'")
     public static final String JSON_STARTASK_RESULT_DATA= "data";
 
 
     @ApiSingleParam(value = "查询规则", example = "all ['bynames','all','byids','bystatus','byGroupIds']")
     public static final String JSON_SELECT_TASKNAME= "regulation";
 
-    @ApiSingleParam(value = "tasknames", example = "['XXXXX1','XXXXX2']")
+    @ApiSingleParam(value = "tasknames", example = "'['XXXXX1','XXXXX2']'")
     public static final String JSON_TASKNAMES= "tasknames";
-    @ApiSingleParam(value = "tasknames", example = "['XXXXX1','XXXXX2']")
+    @ApiSingleParam(value = "tasknames", example = "'['XXXXX1','XXXXX2']'")
     public static final String JSON_TASKSTATUS= "taskstatus";
 
 
 
-    @ApiSingleParam(value = "data", example ="[\n" +
+    @ApiSingleParam(value = "data", example ="'[\n" +
             "        {\n" +
             "            \"taskId\": \"9D9DA1AC971E45CF9A8732F11CA00063\",\n" +
             "            \"groupId\": \"9D9DA1AC971E45CF9A8732F11CA00063\",\n" +
@@ -140,16 +140,16 @@ public class GlobalString {
             "            \"lastDataUpdateIntervalTime\": 1596424410409,\n" +
             "            \"lastDataCommitIntervalTime\": 1596424410409\n" +
             "        }\n" +
-            "    ]")
+            "    ]'")
     public static final String JSON_LISTS_RESULT_DATA= "data";
 
 
-    @ApiSingleParam(value = "data", example =" [\n" +
+    @ApiSingleParam(value = "data", example =" '[\n" +
             "        {\n" +
             "            \"code\": \"2000\",\n" +
             "            \"taskId\": \"F70C4C70B8E64A349D2DC7AD22D01656\",\n" +
             "            \"msg\": \"OK\",\n" +
             "        }\n" +
-            "    ]")
+            "    ]'")
     public static final String JSON_REMOVETASK_RESULT_DATA= "data";
 }
