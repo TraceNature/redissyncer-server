@@ -51,6 +51,7 @@ import static syncer.syncerpluswebapp.config.swagger.model.GlobalString.*;
  * @Description 描述
  * @Date 2020/3/14
  */
+@Api("/api/v2")
 @RestController
 @RequestMapping(value = "/api/v2")
 @Validated
@@ -74,9 +75,6 @@ public class TaskGroupController {
     @ApiOperation(value = "创建实时同步任务接口", notes = "用于在线(SYNC)任务创建")
 
     @RequestMapping(value = "/createtask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
-
-
-
     @ApiJsonObject(name = "manager-checkManager", value = {
             @ApiJsonProperty(name = JSON_SOURCE_REDIS_ADDRESS,required = true),
             @ApiJsonProperty(name = JSON_SOURCE_REDIS_PASSWORD),
@@ -140,19 +138,19 @@ public class TaskGroupController {
      * @param taskMsgDto
      * @return
      */
-    @RequestMapping(value = "/stoptask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
 
 
-    @ApiJsonObject(name = "manager-stopTask", value = {
-            @ApiJsonProperty(name = JSON_TASKIDS,required = false),
-            @ApiJsonProperty(name = JSON_TGROUPIDS,required = false)
-    }, result = @ApiJsonResult(value = {
-                    JSON_RESULT_CODE,
-                    JSON_RESULT_MSG,
-                    JSON_STOPTASK_RESULT_DATA
-            }))
-    @ApiImplicitParam(name = "params", required = true, dataType = "manager-stopTask")
-    @ApiResponses({@ApiResponse(response=String.class,code = 200, message = "OK", reference = "manager-stopTask")})
+
+//    @ApiJsonObject(name = "manager-stopTask", value = {
+//            @ApiJsonProperty(name = JSON_TASKIDS,required = false),
+//            @ApiJsonProperty(name = JSON_TGROUPIDS,required = false)
+//    }, result = @ApiJsonResult(value = {
+//                    JSON_RESULT_CODE,
+//                    JSON_RESULT_MSG,
+//                    JSON_STOPTASK_RESULT_DATA
+//            }))
+//    @ApiImplicitParam(name = "params", required = true, dataType = "manager-stopTask")
+//    @ApiResponses({@ApiResponse(response=String.class,code = 200, message = "OK", reference = "manager-stopTask")})
 
 
 //    @ApiResponses({
@@ -164,6 +162,8 @@ public class TaskGroupController {
 //            @ApiResponse(code = 1002,message = "The task does not exist. Please create the task first"),
 //            @ApiResponse(code = 4000,message = "taskids或GroupId不能为空  【外层code】")
 //    })
+    @ApiOperation("停止任务")
+    @RequestMapping(value = "/stoptask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     @Resubmit(delaySeconds = 10)
     public ResultMap stopTask( @RequestBody @Validated TaskMsgDto params) throws Exception {
         List<StartTaskEntity> msg=null;
@@ -251,21 +251,21 @@ public class TaskGroupController {
 //    })
 
 
-
-    @ApiJsonObject(name = "manager-listtasks", value = {
-            @ApiJsonProperty(name = JSON_SELECT_TASKNAME),
-            @ApiJsonProperty(name = JSON_TASKNAMES),
-            @ApiJsonProperty(name = JSON_TASKSTATUS),
-            @ApiJsonProperty(name = JSON_TASKIDS),
-            @ApiJsonProperty(name = JSON_TGROUPIDS)
-    },
-            result = @ApiJsonResult(type = CommonData.RESULT_TYPE_NORMAL_FINAL,name = "data",value = {
-                    JSON_RESULT_CODE,
-                    JSON_RESULT_MSG,
-                    JSON_LISTS_RESULT_DATA
-            }))
-    @ApiImplicitParam(name = "params", required = true, dataType = "manager-listtasks")
-    @ApiResponses({@ApiResponse(response=String.class,code = 200, message = "OK", reference = "manager-listtasks")})
+    @ApiOperation("任务查询")
+//    @ApiJsonObject(name = "manager-listtasks", value = {
+//            @ApiJsonProperty(name = JSON_SELECT_TASKNAME),
+//            @ApiJsonProperty(name = JSON_TASKNAMES),
+//            @ApiJsonProperty(name = JSON_TASKSTATUS),
+//            @ApiJsonProperty(name = JSON_TASKIDS),
+//            @ApiJsonProperty(name = JSON_TGROUPIDS)
+//    },
+//            result = @ApiJsonResult(type = CommonData.RESULT_TYPE_NORMAL_FINAL,name = "data",value = {
+//                    JSON_RESULT_CODE,
+//                    JSON_RESULT_MSG,
+//                    JSON_LISTS_RESULT_DATA
+//            }))
+//    @ApiImplicitParam(name = "params", required = true, dataType = "manager-listtasks")
+//    @ApiResponses({@ApiResponse(response=String.class,code = 200, message = "OK", reference = "manager-listtasks")})
 
 //    @ApiResponses({
 //            @ApiResponse(code=400,message="信息传入错误(请检查JSON格式是否正确) 错误请求...."),
@@ -278,7 +278,7 @@ public class TaskGroupController {
 //            @ApiResponse(code = 4012,message = "groupIds不能有为空"),
 //    })
 
-    public ResultMap listTask(@ApiIgnore @RequestBody @Validated ListTaskMsgDto params) throws Exception {
+    public ResultMap listTask(@RequestBody @Validated ListTaskMsgDto params) throws Exception {
         List<TaskModelResult>  listCreateThread=TaskDataManagerUtils.listTaskList(params);
         return  ResultMap.builder().code("2000").msg("The request is successful").data(listCreateThread);
     }
@@ -316,7 +316,7 @@ public class TaskGroupController {
             @ApiResponse(code = 4012,message = "groupIds不能有为空"),
     })
 
-    public ResultMap listTaskByPage(@ApiIgnore  @RequestBody @Validated ListTaskMsgDto listTaskMsgDto) throws Exception {
+    public ResultMap listTaskByPage(@RequestBody @Validated ListTaskMsgDto listTaskMsgDto) throws Exception {
         PageBean<TaskModelResult> listCreateThread=TaskDataManagerUtils.listTaskListByPages(listTaskMsgDto);
         return  ResultMap.builder().code("2000").msg("The request is successful").data(listCreateThread);
     }

@@ -2,6 +2,7 @@ package syncer.syncerpluswebapp.controller.v2.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import syncer.syncerpluscommon.entity.ResultMap;
 import syncer.syncerplusredis.dao.DashBoardMapper;
@@ -23,7 +24,7 @@ public class CommonController {
     @Autowired
     private DashBoardMapper dashBoardMapper;
 
-    @RequestMapping("/dashboardInfo")
+    @RequestMapping(value = "/dashboardInfo",method = {RequestMethod.GET,RequestMethod.POST})
     public ResultMap dashboard(){
         Map<String ,Integer>data=new HashMap<>();
         data.put("taskCount",dashBoardMapper.taskCount());
@@ -33,7 +34,7 @@ public class CommonController {
         return ResultMap.builder().code("2000").data(data).msg("success");
     }
 
-    @RequestMapping("/chardashboardInfo")
+    @RequestMapping(value = "/chardashboardInfo" ,method = {RequestMethod.GET,RequestMethod.POST})
     public ResultMap chardashboard(){
         Map<String ,Object>data=new HashMap<>();
         String []legendData=new String[]{"实时同步", "RDB导入", "在线RDB导入", "AOF导入", "在线AOF导入","MIXED导入","在线MIXED导入"};

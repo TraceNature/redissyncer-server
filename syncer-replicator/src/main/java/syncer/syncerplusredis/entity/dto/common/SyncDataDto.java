@@ -1,5 +1,6 @@
 package syncer.syncerplusredis.entity.dto.common;
 
+import io.swagger.annotations.ApiModelProperty;
 import syncer.syncerplusredis.constant.RedisType;
 import syncer.syncerplusredis.entity.FileType;
 import syncer.syncerplusredis.entity.RedisInfo;
@@ -27,6 +28,7 @@ public class SyncDataDto implements Serializable {
     private long idleTimeRunsMillis;
     private int diffVersion;
     private String pipeline;
+    @ApiModelProperty(value = "redis db映射关系", allowableValues = "当由此描述时任务按对应关系同步，未列出db不同步 ;无该字段的情况源与目标db一一对应,无该字段迁移源redis所有db库")
     private Map<Integer,Integer>dbMapper;
     private Set<String> sourceUris;
     private Set<String>targetUris;
