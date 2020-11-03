@@ -20,7 +20,7 @@ public class ValidatorConfiguration {
      * spring 在此基础上进行了扩展
      * 添加了MethodValidationPostProcessor拦截器
      * 可以实现对方法参数的校验
-     *
+     *ohzngwen    jjj
      * @return
      */
     @Bean
@@ -36,7 +36,7 @@ public class ValidatorConfiguration {
                 .byProvider(HibernateValidator.class)
                 .configure()
                 //快速返回模式，有一个验证失败立即返回错误信息
-                .failFast(true)
+//                .failFast(true)
                 .buildValidatorFactory()
                 .getValidator();
     }
