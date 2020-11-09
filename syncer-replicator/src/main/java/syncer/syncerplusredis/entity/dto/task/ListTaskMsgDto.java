@@ -15,8 +15,8 @@ import java.util.List;
 @Setter
 @ApiModel(value = "任务查询", description = "任务查询")
 public class ListTaskMsgDto {
-    @ApiModelProperty(value = "任务查询规则", required = true,
-            allowableValues = "all,bynames,byids,bygroupids,bystatus",
+    @ApiModelProperty(name="任务查询规则",value = "任务查询规则", required = true,
+            allowableValues = "all,bynames,byids,bygroupids,bystatus",notes = "任务查询规则",
             example = "bystatus")
     @NotBlank(message = "regulation不能为空")
     private String regulation;

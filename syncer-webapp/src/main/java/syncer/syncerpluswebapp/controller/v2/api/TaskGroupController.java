@@ -68,7 +68,6 @@ public class TaskGroupController {
     Montitor montitor;
     /**
      * 创建同步任务
-     * @param redisClusterDto
      * @return
      * @throws TaskMsgException
      */
@@ -138,32 +137,28 @@ public class TaskGroupController {
      * @param taskMsgDto
      * @return
      */
-
-
-
-//    @ApiJsonObject(name = "manager-stopTask", value = {
-//            @ApiJsonProperty(name = JSON_TASKIDS,required = false),
-//            @ApiJsonProperty(name = JSON_TGROUPIDS,required = false)
-//    }, result = @ApiJsonResult(value = {
-//                    JSON_RESULT_CODE,
-//                    JSON_RESULT_MSG,
-//                    JSON_STOPTASK_RESULT_DATA
-//            }))
-//    @ApiImplicitParam(name = "params", required = true, dataType = "manager-stopTask")
-//    @ApiResponses({@ApiResponse(response=String.class,code = 200, message = "OK", reference = "manager-stopTask")})
-
-
-//    @ApiResponses({
-//            @ApiResponse(code=2000,message="Task stopped successfully"),
-//            @ApiResponse(code=400,message="信息传入错误(请检查JSON格式是否正确) 错误请求...."),
-//            @ApiResponse(code = 500,message = "服务器开小差了..."),
-//            @ApiResponse(code = 1000,message = "Task stopped fail"),
-//            @ApiResponse(code = 1001,message = "The current task is not running"),
-//            @ApiResponse(code = 1002,message = "The task does not exist. Please create the task first"),
-//            @ApiResponse(code = 4000,message = "taskids或GroupId不能为空  【外层code】")
-//    })
     @ApiOperation("停止任务")
     @RequestMapping(value = "/stoptask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "success", responseContainer = "Map",
+                    examples = @Example({
+                            @ExampleProperty(value = "{\n" +
+                                    "    \"msg\": \"The request is successful\",\n" +
+                                    "    \"code\": \"2000\",\n" +
+                                    "    \"data\": [\n" +
+                                    "        {\n" +
+                                    "            \"code\": \"2000\",\n" +
+                                    "            \"taskId\": \"DE034278589D47FAB92D3B3DCBC668D1\",\n" +
+                                    "            \"groupId\": null,\n" +
+                                    "            \"msg\": \"Task stopped successfully\",\n" +
+                                    "            \"data\": null\n" +
+                                    "        }\n" +
+                                    "    ]\n" +
+                                    "}", mediaType = "application/json")
+                    })),
+            @ApiResponse(code = 400, message = "parameters are not correct"),
+            @ApiResponse(code = 404, message = "path is not correct")
+    })
     @Resubmit(delaySeconds = 10)
     public ResultMap stopTask( @RequestBody @Validated TaskMsgDto params) throws Exception {
         List<StartTaskEntity> msg=null;
@@ -184,33 +179,27 @@ public class TaskGroupController {
      * @return
      */
     @RequestMapping(value = "/starttask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
-
-//
-//    @ApiJsonObject(name = "manager-starttask", value = {
-//            @ApiJsonProperty(name = JSON_TASKIDS),
-//            @ApiJsonProperty(name = JSON_TGROUPIDS),
-//            @ApiJsonProperty(name = JSON_AUTO_AFRESH)
-//
-//    },
-//            result = @ApiJsonResult(type = CommonData.RESULT_TYPE_NORMAL_FINAL,name = "data",value = {
-//                    JSON_RESULT_CODE,
-//                    JSON_RESULT_MSG,
-//                    JSON_STARTASK_RESULT_DATA
-//            }))
-    @ApiImplicitParam(name = "params", required = true, dataType = "manager-starttask")
-    @ApiResponses({@ApiResponse(response=String.class,code = 200, message = "OK", reference = "manager-starttask")})
-
-
-//    @ApiResponses({
-//            @ApiResponse(code=400,message="信息传入错误(请检查JSON格式是否正确) 错误请求...."),
-//            @ApiResponse(code = 500,message = "服务器开小差了..."),
-//            @ApiResponse(code = 1000,message = "Error_msg"),
-//            @ApiResponse(code = 1001,message = "The task is running"),
-//            @ApiResponse(code = 1002,message = "The task has not been created yet"),
-//            @ApiResponse(code = 1004,message = "GroupId不存在"),
-//            @ApiResponse(code=2000,message="OK")
-//    })
-
+    @ApiOperation("启动任务")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "success", responseContainer = "Map",
+                    examples = @Example({
+                            @ExampleProperty(value = "{\n" +
+                                    "    \"msg\": \"The request is successful\",\n" +
+                                    "    \"code\": \"2000\",\n" +
+                                    "    \"data\": [\n" +
+                                    "        {\n" +
+                                    "            \"code\": \"2000\",\n" +
+                                    "            \"taskId\": \"DE034278589D47FAB92D3B3DCBC668D1\",\n" +
+                                    "            \"groupId\": null,\n" +
+                                    "            \"msg\": \"OK\",\n" +
+                                    "            \"data\": null\n" +
+                                    "        }\n" +
+                                    "    ]\n" +
+                                    "}", mediaType = "application/json")
+                    })),
+            @ApiResponse(code = 400, message = "parameters are not correct"),
+            @ApiResponse(code = 404, message = "path is not correct")
+    })
     @Resubmit(delaySeconds = 10)
     public ResultMap startTask( @RequestBody @Validated TaskStartMsgDto params) throws Exception {
         if(StringUtils.isEmpty(params.getTaskid())&&StringUtils.isEmpty(params.getGroupId())){
@@ -301,8 +290,6 @@ public class TaskGroupController {
      * @return
      */
     @RequestMapping(value = "/listtasksByPage",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
-
-
     @ApiImplicitParams({
 
             @ApiImplicitParam(paramType = "query",name = "regulation",value ="查询规则['bynames','all','byids','bystatus','byGroupIds']",dataType ="String",required = false),
@@ -313,8 +300,6 @@ public class TaskGroupController {
             @ApiImplicitParam(paramType = "query",name = "currentPage",value ="当前页数",dataType ="Integer",required = false),
             @ApiImplicitParam(paramType = "query",name = "pageSize",value ="页数大小",dataType ="Integer",required = false),
     })
-
-
     @ApiResponses({
             @ApiResponse(code=400,message="信息传入错误(请检查JSON格式是否正确) 错误请求...."),
             @ApiResponse(code=4000,message="taskids或GroupId不能为空"),
@@ -338,39 +323,27 @@ public class TaskGroupController {
      * @return
      */
     @RequestMapping(value = "/removetask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
-
-//    @ApiImplicitParams({
-//            @ApiImplicitParam(paramType = "query",name = "taskids",value ="taskId List ['taskId1','taskId2']",dataType ="String",required = false),
-//            @ApiImplicitParam(paramType = "query",name = "groupIds",value ="groupId List ['groupId1','groupId2']",dataType ="String",required = false)
-//    })
-
-
-//
-//    @ApiJsonObject(name = "manager-removetask", value = {
-//            @ApiJsonProperty(name = JSON_TASKIDS),
-//            @ApiJsonProperty(name = JSON_TGROUPIDS)
-//    },
-//            result = @ApiJsonResult(type = CommonData.RESULT_TYPE_NORMAL_FINAL,name = "data",value = {
-//                    JSON_RESULT_CODE,
-//                    JSON_RESULT_MSG,
-//                    JSON_REMOVETASK_RESULT_DATA
-//            }))
-    @ApiImplicitParam(name = "params", required = true, dataType = "manager-removetask")
-    @ApiResponses({@ApiResponse(response=String.class,code = 200, message = "OK", reference = "manager-removetask")})
-
-
-//    @ApiResponses({
-//            @ApiResponse(code=400,message="信息传入错误(请检查JSON格式是否正确) 错误请求...."),
-//            @ApiResponse(code=4000,message="taskids或GroupId不能为空"),
-//            @ApiResponse(code=2000,message="The request is successful"),
-//
-//            @ApiResponse(code = 500,message = "服务器开小差了..."),
-//            @ApiResponse(code = 1000,message = "Delete failed"),
-//            @ApiResponse(code = 1001,message = "task is running,please stop the task first"),
-//            @ApiResponse(code = 1002,message = "Task does not exist"),
-//            @ApiResponse(code = 2000,message = "Delete successful"),
-//            @ApiResponse(code=2000,message="OK")
-//    })
+    @ApiOperation("删除任务")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "success", responseContainer = "Map",
+                    examples = @Example({
+                            @ExampleProperty(value = "{\n" +
+                                    "    \"msg\": \"The request is successful\",\n" +
+                                    "    \"code\": \"2000\",\n" +
+                                    "    \"data\": [\n" +
+                                    "        {\n" +
+                                    "            \"code\": \"2000\",\n" +
+                                    "            \"taskId\": \"DE034278589D47FAB92D3B3DCBC668D1\",\n" +
+                                    "            \"groupId\": null,\n" +
+                                    "            \"msg\": \"Delete successful\",\n" +
+                                    "            \"data\": null\n" +
+                                    "        }\n" +
+                                    "    ]\n" +
+                                    "}", mediaType = "application/json")
+                    })),
+            @ApiResponse(code = 400, message = "parameters are not correct"),
+            @ApiResponse(code = 404, message = "path is not correct")
+    })
     @Resubmit(delaySeconds = 10)
     public ResultMap deleteTask(@RequestBody @Validated TaskMsgDto params) throws Exception {
         List<StartTaskEntity> msg=null;
