@@ -3,6 +3,7 @@
 RedisSyncer是一个redis同步工具，应用于redis单实例及集群同步
 
 ## 项目目标
+
 * 基于java编写服务化的redis同步服务；
 * 基于redis迁移服务开发Cui及Gui可视化界面方便使用；
 * 覆盖单实例多版本、多实例多版本、全量+增量、增量等多个场景；
@@ -10,7 +11,9 @@ RedisSyncer是一个redis同步工具，应用于redis单实例及集群同步
 * 易于与现有云环境集成；
 
 ## Quick start
+
 请参阅[Quick Start Guide](doc/docs/quickstart.md),文档包括构建及部署方法及基本使用方法
 
 ## RoadMap
+
 请参阅　[RoadMap](doc/docs/roadmap.md)
