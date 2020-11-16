@@ -10,7 +10,7 @@ import java.util.List;
 
 @Getter
 @Setter
-@ApiModel(value = "停止任务", description = "停止任务")
+@ApiModel(value = "任务描述", description = "任务描述")
 public class TaskMsgDto {
 
     //    @NotEmpty(message = "taskids不能为空")

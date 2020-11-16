@@ -1,5 +1,5 @@
 package syncer.syncerpluswebapp.controller.v2.api;
-import com.alibaba.fastjson.JSON;
+//import com.alibaba.fastjson.JSON;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -18,9 +18,9 @@ import syncer.syncerplusredis.entity.dto.RedisFileDataDto;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.model.TaskModel;
 import syncer.syncerpluswebapp.config.submit.Resubmit;
-import syncer.syncerpluswebapp.config.swagger.model.ApiJsonObject;
-import syncer.syncerpluswebapp.config.swagger.model.ApiJsonProperty;
-import syncer.syncerpluswebapp.config.swagger.model.ApiJsonResult;
+//import syncer.syncerpluswebapp.config.swagger.model.ApiJsonObject;
+//import syncer.syncerpluswebapp.config.swagger.model.ApiJsonProperty;
+//import syncer.syncerpluswebapp.config.swagger.model.ApiJsonResult;
 import syncer.syncerservice.filter.redis_start_check_strategy.RedisTaskStrategyGroupSelecter;
 import syncer.syncerservice.filter.strategy_type.RedisTaskStrategyGroupType;
 import syncer.syncerservice.service.ISyncerService;
@@ -30,7 +30,7 @@ import syncer.syncerservice.util.common.Montitor;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static syncer.syncerpluswebapp.config.swagger.model.GlobalString.*;
+//import static syncer.syncerpluswebapp.config.swagger.model.GlobalString.*;
 
 /**
  * @author zhanenqiang
@@ -50,22 +50,22 @@ public class TaskGroupFileController {
     @Autowired
     Montitor montitor;
 
-    @ApiJsonObject(name = "manager-createtask", value = {
-            @ApiJsonProperty(name = JSON_FILE_ADDRESS,required = false),
-            @ApiJsonProperty(name = JSON_TARGET_REDIS_ADDRESS,required = true),
-            @ApiJsonProperty(name = JSON_TARGET_REDIS_PASSWORD),
-            @ApiJsonProperty(name = JSON_TARGET_REDIS_VERION,required = true),
-            @ApiJsonProperty(name = JSON_TASKNAME,required = true),
-            @ApiJsonProperty(name = JSON_AUTO_START),
-            @ApiJsonProperty(name = JSON_BATCHSIZE),
-            @ApiJsonProperty(name = JSON_DBMAPPER),
-            @ApiJsonProperty(name = JSON_FILE_TYPE)
-
-    }, result = @ApiJsonResult(value = {
-            JSON_RESULT_CODE,
-            JSON_RESULT_MSG,
-            JSON_RESULT_DATA
-    }))
+//    @ApiJsonObject(name = "manager-createtask", value = {
+//            @ApiJsonProperty(name = JSON_FILE_ADDRESS,required = false),
+//            @ApiJsonProperty(name = JSON_TARGET_REDIS_ADDRESS,required = true),
+//            @ApiJsonProperty(name = JSON_TARGET_REDIS_PASSWORD),
+//            @ApiJsonProperty(name = JSON_TARGET_REDIS_VERION,required = true),
+//            @ApiJsonProperty(name = JSON_TASKNAME,required = true),
+//            @ApiJsonProperty(name = JSON_AUTO_START),
+//            @ApiJsonProperty(name = JSON_BATCHSIZE),
+//            @ApiJsonProperty(name = JSON_DBMAPPER),
+//            @ApiJsonProperty(name = JSON_FILE_TYPE)
+//
+//    }, result = @ApiJsonResult(value = {
+//            JSON_RESULT_CODE,
+//            JSON_RESULT_MSG,
+//            JSON_RESULT_DATA
+//    }))
     @ApiImplicitParam(name = "redisFileDataDto", required = true, dataType = "manager-stopTask")
     @ApiResponses({@ApiResponse(response=String.class,code = 200, message = "OK", reference = "manager-stopTask")})
 
