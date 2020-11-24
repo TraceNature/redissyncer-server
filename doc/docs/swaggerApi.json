@@ -1,0 +1,2313 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "RedisSyncer",
+    "version": "last"
+  },
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "RDB版本映射管理接口",
+      "description": "Rdb Controller"
+    },
+    {
+      "name": "common-controller",
+      "description": "Common Controller"
+    },
+    {
+      "name": "task-group-controller",
+      "description": "Task Group Controller"
+    },
+    {
+      "name": "task-group-file-controller",
+      "description": "Task Group File Controller"
+    },
+    {
+      "name": "user-controller",
+      "description": "User Controller"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/api/v2/getRdbListByPage": {
+      "post": {
+        "tags": [
+          "RDB版本映射管理接口"
+        ],
+        "summary": "分页获取Redis版本与RDB映射版本列表",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "currentPage",
+            "in": "query",
+            "required": false,
+            "description": "当前页码",
+            "type": "string"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "description": "当前页数目",
+            "type": "string"
+          },
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "title": "PageParamBean",
+              "type": "object",
+              "properties": {
+                "currentPage": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "pageSize": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              },
+              "$$ref": "#/components/schemas/PageParamBean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/deleteRdbVersion": {
+      "post": {
+        "tags": [
+          "RDB版本映射管理接口"
+        ],
+        "summary": "删除Redis版本与RDB映射版本信息",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "title": "RdbVersionModel",
+              "required": [
+                "redis_version"
+              ],
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "rdb_version": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "redis_version": {
+                  "type": "string"
+                }
+              },
+              "$$ref": "#/components/schemas/RdbVersionModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/insetRdbVersion": {
+      "post": {
+        "tags": [
+          "RDB版本映射管理接口"
+        ],
+        "summary": "插入Redis版本与RDB映射版本信息",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "title": "RdbVersionModel",
+              "required": [
+                "redis_version"
+              ],
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "rdb_version": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "redis_version": {
+                  "type": "string"
+                }
+              },
+              "$$ref": "#/components/schemas/RdbVersionModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/updateRdbVersion": {
+      "post": {
+        "tags": [
+          "RDB版本映射管理接口"
+        ],
+        "summary": "更新Redis版本与RDB映射版本信息",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "title": "RdbVersionModel",
+              "required": [
+                "redis_version"
+              ],
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "rdb_version": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "redis_version": {
+                  "type": "string"
+                }
+              },
+              "$$ref": "#/components/schemas/RdbVersionModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/getRdbList": {
+      "post": {
+        "tags": [
+          "RDB版本映射管理接口"
+        ],
+        "summary": "获取Redis版本与RDB映射版本列表",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "raw",
+            "in": "body",
+            "description": "raw paramter",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/info/chardashboardInfo": {
+      "get": {
+        "tags": [
+          "common-controller"
+        ],
+        "summary": "chardashboard",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "raw",
+            "in": "body",
+            "description": "raw paramter",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "common-controller"
+        ],
+        "summary": "chardashboard",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "raw",
+            "in": "body",
+            "description": "raw paramter",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/info/dashboardInfo": {
+      "get": {
+        "tags": [
+          "common-controller"
+        ],
+        "summary": "dashboard",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "raw",
+            "in": "body",
+            "description": "raw paramter",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "common-controller"
+        ],
+        "summary": "dashboard",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "raw",
+            "in": "body",
+            "description": "raw paramter",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/checktask": {
+      "post": {
+        "tags": [
+          "task-group-controller"
+        ],
+        "summary": "checkTask",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "title": "RedisSyncNumCheckDto",
+              "required": [
+                "sourceRedisAddress",
+                "targetRedisAddress"
+              ],
+              "type": "object",
+              "properties": {
+                "sourcePassword": {
+                  "type": "string"
+                },
+                "sourceRedisAddress": {
+                  "type": "string"
+                },
+                "sourceRedisAddressSet": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "targetPassword": {
+                  "type": "string"
+                },
+                "targetRedisAddress": {
+                  "type": "string"
+                },
+                "targetRedisAddressSet": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "$$ref": "#/components/schemas/RedisSyncNumCheckDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/edittask": {
+      "post": {
+        "tags": [
+          "task-group-controller"
+        ],
+        "summary": "editTaskByTaskId",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "title": "RedisClusterDto",
+              "required": [
+                "sourcePassword",
+                "sourceRedisAddress",
+                "targetPassword",
+                "targetRedisAddress"
+              ],
+              "type": "object",
+              "properties": {
+                "afresh": {
+                  "type": "boolean",
+                  "description": "任务是否从头开始",
+                  "example": false
+                },
+                "autostart": {
+                  "type": "boolean",
+                  "description": "是否自动启动",
+                  "example": false
+                },
+                "batchSize": {
+                  "type": "integer",
+                  "description": "pipline没次提交的最到key的数量",
+                  "format": "int32"
+                },
+                "bigKeySize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "dbMapper": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "description": "redis db映射关系"
+                },
+                "diffVersion": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errorCount": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "fileAddress": {
+                  "type": "string"
+                },
+                "fileType": {
+                  "type": "string",
+                  "enum": [
+                    "AOF",
+                    "COMMANDDUMPUP",
+                    "MIXED",
+                    "ONLINEAOF",
+                    "ONLINEMIXED",
+                    "ONLINERDB",
+                    "RDB",
+                    "SYNC"
+                  ]
+                },
+                "idleTimeRunsMillis": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "maxPoolSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "maxWaitTime": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "minPoolSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "offsetPlace": {
+                  "type": "string"
+                },
+                "pipeline": {
+                  "type": "string"
+                },
+                "redistype": {
+                  "type": "string"
+                },
+                "sourceAcl": {
+                  "type": "boolean"
+                },
+                "sourcePassword": {
+                  "type": "string",
+                  "description": "源redis密码"
+                },
+                "sourceRedisAddress": {
+                  "type": "string",
+                  "description": "源redis地址",
+                  "enum": [
+                    "cluster集群模式下地址由';'分割，如' 10.0.0.1:6379;10.0.0.2:6379'"
+                  ]
+                },
+                "sourceUris": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "sourceUserName": {
+                  "type": "string"
+                },
+                "targetAcl": {
+                  "type": "boolean"
+                },
+                "targetPassword": {
+                  "type": "string",
+                  "description": "目标redis密码"
+                },
+                "targetRedisAddress": {
+                  "type": "string",
+                  "description": "目标redis地址",
+                  "enum": [
+                    "当目标redis为单实例或proxy时，填写单一地址即可，当目标redis为集群且需要借助jedis访问集群时地址用';'分割，'192.168.0.1:6379;192.168.0.3:6379;192.168.0.3:6379'",
+                    "目标redis地址"
+                  ]
+                },
+                "targetRedisVersion": {
+                  "type": "string"
+                },
+                "targetUriData": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "title": "RedisInfo",
+                    "type": "object",
+                    "properties": {
+                      "rdbVersion": {
+                        "type": "integer",
+                        "format": "int32"
+                      },
+                      "redisURI": {
+                        "title": "RedisURI",
+                        "type": "object",
+                        "properties": {
+                          "authority": {
+                            "type": "string"
+                          },
+                          "fileType": {
+                            "type": "string",
+                            "enum": [
+                              "AOF",
+                              "COMMANDDUMPUP",
+                              "MIXED",
+                              "ONLINEAOF",
+                              "ONLINEMIXED",
+                              "ONLINERDB",
+                              "RDB",
+                              "SYNC"
+                            ]
+                          },
+                          "fragment": {
+                            "type": "string"
+                          },
+                          "host": {
+                            "type": "string"
+                          },
+                          "parameters": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            }
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "path": {
+                            "type": "string"
+                          },
+                          "port": {
+                            "type": "integer",
+                            "format": "int32"
+                          },
+                          "query": {
+                            "type": "string"
+                          },
+                          "scheme": {
+                            "type": "string"
+                          },
+                          "ssl": {
+                            "type": "boolean"
+                          },
+                          "user": {
+                            "type": "string"
+                          },
+                          "userInfo": {
+                            "type": "string"
+                          }
+                        },
+                        "$$ref": "#/components/schemas/RedisURI"
+                      },
+                      "redisVersion": {
+                        "type": "string"
+                      },
+                      "uri": {
+                        "type": "string"
+                      }
+                    },
+                    "$$ref": "#/components/schemas/RedisInfo"
+                  }
+                },
+                "targetUris": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "targetUserName": {
+                  "type": "string"
+                },
+                "taskId": {
+                  "type": "string"
+                },
+                "taskName": {
+                  "type": "string",
+                  "description": "任务名"
+                },
+                "tasktype": {
+                  "type": "string",
+                  "description": "任务类型",
+                  "enum": [
+                    "默认值为500"
+                  ]
+                },
+                "timeBetweenEvictionRunsMillis": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "$$ref": "#/components/schemas/RedisClusterDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/listtasksByPage": {
+      "post": {
+        "tags": [
+          "task-group-controller"
+        ],
+        "summary": "listTaskByPage",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "currentPage",
+            "in": "query",
+            "required": false,
+            "description": "当前页数",
+            "type": "string"
+          },
+          {
+            "name": "groupIds",
+            "in": "query",
+            "required": false,
+            "description": "groupId List ['groupId1','groupId2']",
+            "type": "string"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "description": "页数大小",
+            "type": "string"
+          },
+          {
+            "name": "regulation",
+            "in": "query",
+            "required": false,
+            "description": "查询规则['bynames','all','byids','bystatus','byGroupIds']",
+            "type": "string"
+          },
+          {
+            "name": "taskids",
+            "in": "query",
+            "required": false,
+            "description": "taskId List ['taskId1','taskId2']",
+            "type": "string"
+          },
+          {
+            "name": "tasknames",
+            "in": "query",
+            "required": false,
+            "description": "taskId List ['taskId1','taskId2']",
+            "type": "string"
+          },
+          {
+            "name": "taskstatus",
+            "in": "query",
+            "required": false,
+            "description": "任务状态",
+            "type": "string"
+          },
+          {
+            "name": "root",
+            "in": "body",
+            "description": "任务查询",
+            "schema": {
+              "title": "任务查询",
+              "required": [
+                "regulation"
+              ],
+              "type": "object",
+              "properties": {
+                "currentPage": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "groupIds": {
+                  "type": "array",
+                  "description": "任务组id",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "pageSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "regulation": {
+                  "type": "string",
+                  "description": "任务查询规则",
+                  "example": "bystatus",
+                  "enum": [
+                    "all",
+                    "bygroupids",
+                    "byids",
+                    "bynames",
+                    "bystatus"
+                  ]
+                },
+                "taskids": {
+                  "type": "array",
+                  "description": "任务id",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "tasknames": {
+                  "type": "array",
+                  "description": "任务名称",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "taskstatus": {
+                  "type": "string",
+                  "description": "任务状态",
+                  "example": "COMMANDRUNING",
+                  "enum": [
+                    "BROKEN",
+                    "COMMANDRUNING",
+                    "CREATED",
+                    "CREATING",
+                    "PAUSE",
+                    "RDBRUNING",
+                    "RUN",
+                    "STOP"
+                  ]
+                }
+              },
+              "description": "任务查询",
+              "$$ref": "#/components/schemas/任务查询"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/listtasks": {
+      "post": {
+        "tags": [
+          "task-group-controller"
+        ],
+        "summary": "任务查询",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "description": "任务查询",
+            "schema": {
+              "title": "任务查询",
+              "required": [
+                "regulation"
+              ],
+              "type": "object",
+              "properties": {
+                "currentPage": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "groupIds": {
+                  "type": "array",
+                  "description": "任务组id",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "pageSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "regulation": {
+                  "type": "string",
+                  "description": "任务查询规则",
+                  "example": "bystatus",
+                  "enum": [
+                    "all",
+                    "bygroupids",
+                    "byids",
+                    "bynames",
+                    "bystatus"
+                  ]
+                },
+                "taskids": {
+                  "type": "array",
+                  "description": "任务id",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "tasknames": {
+                  "type": "array",
+                  "description": "任务名称",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "taskstatus": {
+                  "type": "string",
+                  "description": "任务状态",
+                  "example": "COMMANDRUNING",
+                  "enum": [
+                    "BROKEN",
+                    "COMMANDRUNING",
+                    "CREATED",
+                    "CREATING",
+                    "PAUSE",
+                    "RDBRUNING",
+                    "RUN",
+                    "STOP"
+                  ]
+                }
+              },
+              "description": "任务查询",
+              "$$ref": "#/components/schemas/任务查询"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "success"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/stoptask": {
+      "post": {
+        "tags": [
+          "task-group-controller"
+        ],
+        "summary": "停止任务",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "description": "任务描述",
+            "schema": {
+              "title": "任务描述",
+              "type": "object",
+              "properties": {
+                "groupIds": {
+                  "type": "array",
+                  "description": "任务组id",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "taskids": {
+                  "type": "array",
+                  "description": "任务id",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "description": "任务描述",
+              "$$ref": "#/components/schemas/任务描述"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "success"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/createtask": {
+      "post": {
+        "tags": [
+          "task-group-controller"
+        ],
+        "summary": "创建实时同步任务接口",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "title": "RedisClusterDto",
+              "required": [
+                "sourcePassword",
+                "sourceRedisAddress",
+                "targetPassword",
+                "targetRedisAddress"
+              ],
+              "type": "object",
+              "properties": {
+                "afresh": {
+                  "type": "boolean",
+                  "description": "任务是否从头开始",
+                  "example": false
+                },
+                "autostart": {
+                  "type": "boolean",
+                  "description": "是否自动启动",
+                  "example": false
+                },
+                "batchSize": {
+                  "type": "integer",
+                  "description": "pipline没次提交的最到key的数量",
+                  "format": "int32"
+                },
+                "bigKeySize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "dbMapper": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "description": "redis db映射关系"
+                },
+                "diffVersion": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errorCount": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "fileAddress": {
+                  "type": "string"
+                },
+                "fileType": {
+                  "type": "string",
+                  "enum": [
+                    "AOF",
+                    "COMMANDDUMPUP",
+                    "MIXED",
+                    "ONLINEAOF",
+                    "ONLINEMIXED",
+                    "ONLINERDB",
+                    "RDB",
+                    "SYNC"
+                  ]
+                },
+                "idleTimeRunsMillis": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "maxPoolSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "maxWaitTime": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "minPoolSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "offsetPlace": {
+                  "type": "string"
+                },
+                "pipeline": {
+                  "type": "string"
+                },
+                "redistype": {
+                  "type": "string"
+                },
+                "sourceAcl": {
+                  "type": "boolean"
+                },
+                "sourcePassword": {
+                  "type": "string",
+                  "description": "源redis密码"
+                },
+                "sourceRedisAddress": {
+                  "type": "string",
+                  "description": "源redis地址",
+                  "enum": [
+                    "cluster集群模式下地址由';'分割，如' 10.0.0.1:6379;10.0.0.2:6379'"
+                  ]
+                },
+                "sourceUris": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "sourceUserName": {
+                  "type": "string"
+                },
+                "targetAcl": {
+                  "type": "boolean"
+                },
+                "targetPassword": {
+                  "type": "string",
+                  "description": "目标redis密码"
+                },
+                "targetRedisAddress": {
+                  "type": "string",
+                  "description": "目标redis地址",
+                  "enum": [
+                    "当目标redis为单实例或proxy时，填写单一地址即可，当目标redis为集群且需要借助jedis访问集群时地址用';'分割，'192.168.0.1:6379;192.168.0.3:6379;192.168.0.3:6379'",
+                    "目标redis地址"
+                  ]
+                },
+                "targetRedisVersion": {
+                  "type": "string"
+                },
+                "targetUriData": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "title": "RedisInfo",
+                    "type": "object",
+                    "properties": {
+                      "rdbVersion": {
+                        "type": "integer",
+                        "format": "int32"
+                      },
+                      "redisURI": {
+                        "title": "RedisURI",
+                        "type": "object",
+                        "properties": {
+                          "authority": {
+                            "type": "string"
+                          },
+                          "fileType": {
+                            "type": "string",
+                            "enum": [
+                              "AOF",
+                              "COMMANDDUMPUP",
+                              "MIXED",
+                              "ONLINEAOF",
+                              "ONLINEMIXED",
+                              "ONLINERDB",
+                              "RDB",
+                              "SYNC"
+                            ]
+                          },
+                          "fragment": {
+                            "type": "string"
+                          },
+                          "host": {
+                            "type": "string"
+                          },
+                          "parameters": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            }
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "path": {
+                            "type": "string"
+                          },
+                          "port": {
+                            "type": "integer",
+                            "format": "int32"
+                          },
+                          "query": {
+                            "type": "string"
+                          },
+                          "scheme": {
+                            "type": "string"
+                          },
+                          "ssl": {
+                            "type": "boolean"
+                          },
+                          "user": {
+                            "type": "string"
+                          },
+                          "userInfo": {
+                            "type": "string"
+                          }
+                        },
+                        "$$ref": "#/components/schemas/RedisURI"
+                      },
+                      "redisVersion": {
+                        "type": "string"
+                      },
+                      "uri": {
+                        "type": "string"
+                      }
+                    },
+                    "$$ref": "#/components/schemas/RedisInfo"
+                  }
+                },
+                "targetUris": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "targetUserName": {
+                  "type": "string"
+                },
+                "taskId": {
+                  "type": "string"
+                },
+                "taskName": {
+                  "type": "string",
+                  "description": "任务名"
+                },
+                "tasktype": {
+                  "type": "string",
+                  "description": "任务类型",
+                  "enum": [
+                    "默认值为500"
+                  ]
+                },
+                "timeBetweenEvictionRunsMillis": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "$$ref": "#/components/schemas/RedisClusterDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/removetask": {
+      "post": {
+        "tags": [
+          "task-group-controller"
+        ],
+        "summary": "删除任务",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "description": "任务描述",
+            "schema": {
+              "title": "任务描述",
+              "type": "object",
+              "properties": {
+                "groupIds": {
+                  "type": "array",
+                  "description": "任务组id",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "taskids": {
+                  "type": "array",
+                  "description": "任务id",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "description": "任务描述",
+              "$$ref": "#/components/schemas/任务描述"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "success"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/starttask": {
+      "post": {
+        "tags": [
+          "task-group-controller"
+        ],
+        "summary": "启动任务",
+        "description": "",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "description": "启动任务",
+            "schema": {
+              "title": "启动任务",
+              "required": [
+                "taskid"
+              ],
+              "type": "object",
+              "properties": {
+                "afresh": {
+                  "type": "boolean",
+                  "description": "是否从头开始同步任务",
+                  "example": false
+                },
+                "groupId": {
+                  "type": "string",
+                  "description": "任务组id",
+                  "example": "DE034278589D47FAB92D3B3DCBC668D1"
+                },
+                "taskid": {
+                  "type": "string",
+                  "description": "任务id",
+                  "example": "DE034278589D47FAB92D3B3DCBC668D1"
+                }
+              },
+              "description": "启动任务",
+              "$$ref": "#/components/schemas/启动任务"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "msg": "The request is successful",
+              "code": "2000",
+              "data": [
+                {
+                  "code": "2000",
+                  "taskId": "DE034278589D47FAB92D3B3DCBC668D1",
+                  "groupId": null,
+                  "msg": "OK",
+                  "data": null
+                }
+              ],
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/file/createCommandDumpUpTask": {
+      "post": {
+        "tags": [
+          "task-group-file-controller"
+        ],
+        "summary": "creatCommandDumpUptask",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "title": "FileCommandBackupDataDto",
+              "required": [
+                "fileAddress",
+                "sourceRedisAddress",
+                "taskName"
+              ],
+              "type": "object",
+              "properties": {
+                "autostart": {
+                  "type": "boolean"
+                },
+                "bigKeySize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "dbMapper": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "description": "redis db映射关系"
+                },
+                "diffVersion": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errorCount": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "fileAddress": {
+                  "type": "string"
+                },
+                "fileType": {
+                  "type": "string",
+                  "enum": [
+                    "AOF",
+                    "COMMANDDUMPUP",
+                    "MIXED",
+                    "ONLINEAOF",
+                    "ONLINEMIXED",
+                    "ONLINERDB",
+                    "RDB",
+                    "SYNC"
+                  ]
+                },
+                "idleTimeRunsMillis": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "maxPoolSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "maxWaitTime": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "minPoolSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "pipeline": {
+                  "type": "string"
+                },
+                "redistype": {
+                  "type": "string"
+                },
+                "sourceAcl": {
+                  "type": "boolean"
+                },
+                "sourcePassword": {
+                  "type": "string"
+                },
+                "sourceRedisAddress": {
+                  "type": "string"
+                },
+                "sourceUris": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "sourceUserName": {
+                  "type": "string"
+                },
+                "targetAcl": {
+                  "type": "boolean"
+                },
+                "targetRedisVersion": {
+                  "type": "string"
+                },
+                "targetUriData": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "title": "RedisInfo",
+                    "type": "object",
+                    "properties": {
+                      "rdbVersion": {
+                        "type": "integer",
+                        "format": "int32"
+                      },
+                      "redisURI": {
+                        "title": "RedisURI",
+                        "type": "object",
+                        "properties": {
+                          "authority": {
+                            "type": "string"
+                          },
+                          "fileType": {
+                            "type": "string",
+                            "enum": [
+                              "AOF",
+                              "COMMANDDUMPUP",
+                              "MIXED",
+                              "ONLINEAOF",
+                              "ONLINEMIXED",
+                              "ONLINERDB",
+                              "RDB",
+                              "SYNC"
+                            ]
+                          },
+                          "fragment": {
+                            "type": "string"
+                          },
+                          "host": {
+                            "type": "string"
+                          },
+                          "parameters": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            }
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "path": {
+                            "type": "string"
+                          },
+                          "port": {
+                            "type": "integer",
+                            "format": "int32"
+                          },
+                          "query": {
+                            "type": "string"
+                          },
+                          "scheme": {
+                            "type": "string"
+                          },
+                          "ssl": {
+                            "type": "boolean"
+                          },
+                          "user": {
+                            "type": "string"
+                          },
+                          "userInfo": {
+                            "type": "string"
+                          }
+                        },
+                        "$$ref": "#/components/schemas/RedisURI"
+                      },
+                      "redisVersion": {
+                        "type": "string"
+                      },
+                      "uri": {
+                        "type": "string"
+                      }
+                    },
+                    "$$ref": "#/components/schemas/RedisInfo"
+                  }
+                },
+                "targetUris": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "targetUserName": {
+                  "type": "string"
+                },
+                "taskId": {
+                  "type": "string"
+                },
+                "taskName": {
+                  "type": "string"
+                },
+                "timeBetweenEvictionRunsMillis": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "$$ref": "#/components/schemas/FileCommandBackupDataDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/file/createtask": {
+      "post": {
+        "tags": [
+          "task-group-file-controller"
+        ],
+        "summary": "createtask",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "title": "RedisFileDataDto",
+              "required": [
+                "fileAddress",
+                "targetRedisAddress",
+                "taskName"
+              ],
+              "type": "object",
+              "properties": {
+                "autostart": {
+                  "type": "boolean"
+                },
+                "batchSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "bigKeySize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "dbMapper": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "description": "redis db映射关系"
+                },
+                "diffVersion": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errorCount": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "fileAddress": {
+                  "type": "string"
+                },
+                "fileType": {
+                  "type": "string",
+                  "enum": [
+                    "AOF",
+                    "COMMANDDUMPUP",
+                    "MIXED",
+                    "ONLINEAOF",
+                    "ONLINEMIXED",
+                    "ONLINERDB",
+                    "RDB",
+                    "SYNC"
+                  ]
+                },
+                "idleTimeRunsMillis": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "maxPoolSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "maxWaitTime": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "minPoolSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "pipeline": {
+                  "type": "string"
+                },
+                "redistype": {
+                  "type": "string"
+                },
+                "sourceAcl": {
+                  "type": "boolean"
+                },
+                "sourceUris": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "sourceUserName": {
+                  "type": "string"
+                },
+                "targetAcl": {
+                  "type": "boolean"
+                },
+                "targetPassword": {
+                  "type": "string"
+                },
+                "targetRedisAddress": {
+                  "type": "string"
+                },
+                "targetRedisVersion": {
+                  "type": "string"
+                },
+                "targetUriData": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "title": "RedisInfo",
+                    "type": "object",
+                    "properties": {
+                      "rdbVersion": {
+                        "type": "integer",
+                        "format": "int32"
+                      },
+                      "redisURI": {
+                        "title": "RedisURI",
+                        "type": "object",
+                        "properties": {
+                          "authority": {
+                            "type": "string"
+                          },
+                          "fileType": {
+                            "type": "string",
+                            "enum": [
+                              "AOF",
+                              "COMMANDDUMPUP",
+                              "MIXED",
+                              "ONLINEAOF",
+                              "ONLINEMIXED",
+                              "ONLINERDB",
+                              "RDB",
+                              "SYNC"
+                            ]
+                          },
+                          "fragment": {
+                            "type": "string"
+                          },
+                          "host": {
+                            "type": "string"
+                          },
+                          "parameters": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            }
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "path": {
+                            "type": "string"
+                          },
+                          "port": {
+                            "type": "integer",
+                            "format": "int32"
+                          },
+                          "query": {
+                            "type": "string"
+                          },
+                          "scheme": {
+                            "type": "string"
+                          },
+                          "ssl": {
+                            "type": "boolean"
+                          },
+                          "user": {
+                            "type": "string"
+                          },
+                          "userInfo": {
+                            "type": "string"
+                          }
+                        },
+                        "$$ref": "#/components/schemas/RedisURI"
+                      },
+                      "redisVersion": {
+                        "type": "string"
+                      },
+                      "uri": {
+                        "type": "string"
+                      }
+                    },
+                    "$$ref": "#/components/schemas/RedisInfo"
+                  }
+                },
+                "targetUris": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "targetUserName": {
+                  "type": "string"
+                },
+                "taskId": {
+                  "type": "string"
+                },
+                "taskName": {
+                  "type": "string"
+                },
+                "timeBetweenEvictionRunsMillis": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "$$ref": "#/components/schemas/RedisFileDataDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/file/edittask": {
+      "post": {
+        "tags": [
+          "task-group-file-controller"
+        ],
+        "summary": "editTaskByTaskId",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "title": "RedisFileDataDto",
+              "required": [
+                "fileAddress",
+                "targetRedisAddress",
+                "taskName"
+              ],
+              "type": "object",
+              "properties": {
+                "autostart": {
+                  "type": "boolean"
+                },
+                "batchSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "bigKeySize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "dbMapper": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "description": "redis db映射关系"
+                },
+                "diffVersion": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errorCount": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "fileAddress": {
+                  "type": "string"
+                },
+                "fileType": {
+                  "type": "string",
+                  "enum": [
+                    "AOF",
+                    "COMMANDDUMPUP",
+                    "MIXED",
+                    "ONLINEAOF",
+                    "ONLINEMIXED",
+                    "ONLINERDB",
+                    "RDB",
+                    "SYNC"
+                  ]
+                },
+                "idleTimeRunsMillis": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "maxPoolSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "maxWaitTime": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "minPoolSize": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "pipeline": {
+                  "type": "string"
+                },
+                "redistype": {
+                  "type": "string"
+                },
+                "sourceAcl": {
+                  "type": "boolean"
+                },
+                "sourceUris": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "sourceUserName": {
+                  "type": "string"
+                },
+                "targetAcl": {
+                  "type": "boolean"
+                },
+                "targetPassword": {
+                  "type": "string"
+                },
+                "targetRedisAddress": {
+                  "type": "string"
+                },
+                "targetRedisVersion": {
+                  "type": "string"
+                },
+                "targetUriData": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "title": "RedisInfo",
+                    "type": "object",
+                    "properties": {
+                      "rdbVersion": {
+                        "type": "integer",
+                        "format": "int32"
+                      },
+                      "redisURI": {
+                        "title": "RedisURI",
+                        "type": "object",
+                        "properties": {
+                          "authority": {
+                            "type": "string"
+                          },
+                          "fileType": {
+                            "type": "string",
+                            "enum": [
+                              "AOF",
+                              "COMMANDDUMPUP",
+                              "MIXED",
+                              "ONLINEAOF",
+                              "ONLINEMIXED",
+                              "ONLINERDB",
+                              "RDB",
+                              "SYNC"
+                            ]
+                          },
+                          "fragment": {
+                            "type": "string"
+                          },
+                          "host": {
+                            "type": "string"
+                          },
+                          "parameters": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            }
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "path": {
+                            "type": "string"
+                          },
+                          "port": {
+                            "type": "integer",
+                            "format": "int32"
+                          },
+                          "query": {
+                            "type": "string"
+                          },
+                          "scheme": {
+                            "type": "string"
+                          },
+                          "ssl": {
+                            "type": "boolean"
+                          },
+                          "user": {
+                            "type": "string"
+                          },
+                          "userInfo": {
+                            "type": "string"
+                          }
+                        },
+                        "$$ref": "#/components/schemas/RedisURI"
+                      },
+                      "redisVersion": {
+                        "type": "string"
+                      },
+                      "uri": {
+                        "type": "string"
+                      }
+                    },
+                    "$$ref": "#/components/schemas/RedisInfo"
+                  }
+                },
+                "targetUris": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "targetUserName": {
+                  "type": "string"
+                },
+                "taskId": {
+                  "type": "string"
+                },
+                "taskName": {
+                  "type": "string"
+                },
+                "timeBetweenEvictionRunsMillis": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "$$ref": "#/components/schemas/RedisFileDataDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/changePassword": {
+      "post": {
+        "tags": [
+          "user-controller"
+        ],
+        "summary": "changePassword",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "title": "ChangeUser",
+              "required": [
+                "newPassword",
+                "password"
+              ],
+              "type": "object",
+              "properties": {
+                "newPassword": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              },
+              "$$ref": "#/components/schemas/ChangeUser"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/info": {
+      "get": {
+        "tags": [
+          "user-controller"
+        ],
+        "summary": "info",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "description": "token",
+            "type": "string"
+          },
+          {
+            "name": "raw",
+            "in": "body",
+            "description": "raw paramter",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "user-controller"
+        ],
+        "summary": "info",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "description": "token",
+            "type": "string"
+          },
+          {
+            "name": "raw",
+            "in": "body",
+            "description": "raw paramter",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": [
+          "user-controller"
+        ],
+        "summary": "login",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "title": "User",
+              "required": [
+                "password",
+                "username"
+              ],
+              "type": "object",
+              "properties": {
+                "password": {
+                  "type": "string"
+                },
+                "username": {
+                  "type": "string"
+                }
+              },
+              "$$ref": "#/components/schemas/User"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "tags": [
+          "user-controller"
+        ],
+        "summary": "logout",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "raw",
+            "in": "body",
+            "description": "raw paramter",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    },
+    "/logoutByToken": {
+      "post": {
+        "tags": [
+          "user-controller"
+        ],
+        "summary": "logout",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "description": "token",
+            "type": "string"
+          },
+          {
+            "name": "raw",
+            "in": "body",
+            "description": "raw paramter",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "default": "OK"
+            }
+          }
+        }
+      }
+    }
+  }
+}
