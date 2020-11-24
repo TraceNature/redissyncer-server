@@ -15,7 +15,8 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.1.6.RELEASE</version>
+<!--        <version>2.1.6.RELEASE</version>-->
+        <version>2.3.4.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>syncer</groupId>
@@ -87,6 +88,13 @@
             <version>2.9.8</version>
         </dependency>
 
+        <!--添加热部署-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+            <scope>true</scope>
+        </dependency>
 
         <!-- SQLite 驱动 -->
         <dependency>
@@ -143,29 +151,40 @@
             <version>${fastjson.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.jd.jim.cli</groupId>
-            <artifactId>jim-cli-api</artifactId>
-            <version>syncer-2.1.4</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.jd.jim.cli</groupId>-->
+<!--            <artifactId>jim-cli-api</artifactId>-->
+<!--            <version>syncer-2.1.4</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
-
+<!--        <dependency>-->
+<!--            <groupId>com.github.xiaoymin</groupId>-->
+<!--            <artifactId>knife4j-spring-boot-starter</artifactId>-->
+<!--            <version>2.0.4</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>2.9.2</version>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>3.0.0</version>
         </dependency>
 
 
         <dependency>
             <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-            <version>2.9.2</version>
+            <artifactId>springfox-bean-validators</artifactId>
+            <version>3.0.0</version>
         </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>com.github.xiaoymin</groupId>-->
+<!--            <artifactId>knife4j-spring-boot-starter</artifactId>-->
+<!--            <version>3.0.1</version>-->
+<!--        </dependency>-->
+
 
         <dependency>
             <groupId>com.google.guava</groupId>

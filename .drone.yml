@@ -1,0 +1,13 @@
+
+kind: pipeline
+name: redissyncer-service
+
+workspace:
+  base: /java
+  path: src/TraceNature/rediscompare
+
+steps:
+- name: build
+  image: maven:3-jdk-8
+  commands:
+  - mvn clean package -Ddockerfile.skip
