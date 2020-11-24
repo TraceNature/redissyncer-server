@@ -24,7 +24,7 @@ syncerplus:
 
 #logging:
 server:
-  port: 8080
+  port: 8081
 #  config: log/logback.xml
 #logging:
 #  config: config/logback.xml
@@ -59,7 +59,7 @@ info:
 spring:
   datasource:
     driver-class-name: org.sqlite.JDBC
-    url: jdbc:sqlite:${syncer.config.path.datafile}config/syncer.db
+    url: jdbc:sqlite:${syncer.config.path.datafile}data/syncer.db
 #    url: jdbc:sqlite:D:\github\redissyncer-service\data\syncer.db
     username:
     password:

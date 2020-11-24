@@ -120,6 +120,7 @@ public class JDJedisPipeLineClient implements JDRedisClient {
         pipelined = jdJedis.pipelined();
 
         //定时回收线程
+
         ThreadPoolUtils.execute(new JDJedisPipeLineClient.PipelineSubmitThread(taskId));
     }
 
@@ -1371,7 +1372,7 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                 List<Object> resultList = pipelined.syncAndReturnAll();
                 //补偿入口
                 commitCompensator(resultList);
-            } else if (num >= 0 && time > 3000) {
+            } else if (num >= 0 && time > 1000) {
                 List<Object> resultList = pipelined.syncAndReturnAll();
                 //补偿入口
                 commitCompensator(resultList);
@@ -1576,7 +1577,7 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                             while (System.currentTimeMillis() - time.getTime() < 1000 * 60 * 1) {
                                 submitCommandNum();
                                 try {
-                                    Thread.sleep(2000);
+                                    Thread.sleep(1000);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }

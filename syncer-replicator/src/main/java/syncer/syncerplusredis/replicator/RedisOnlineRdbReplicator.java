@@ -16,12 +16,14 @@
 
 package syncer.syncerplusredis.replicator;
 
+import syncer.syncerpluscommon.util.taskType.SyncerTaskType;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.exception.IncrementException;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.io.RedisInputStream;
 import syncer.syncerplusredis.rdb.RdbParser;
+import syncer.syncerplusredis.util.MultiSyncTaskManagerutils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -83,7 +85,11 @@ public class RedisOnlineRdbReplicator extends AbstractReplicator {
 
         }catch (Exception e){
             try {
-                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"文件在线读取异常", TaskStatusType.BROKEN);
+                if(!SyncerTaskType.isMultiTask(taskId)){
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"文件在线读取异常", TaskStatusType.BROKEN);
+                }else {
+                    MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId,"文件在线读取异常", TaskStatusType.BROKEN);
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -143,7 +149,12 @@ public class RedisOnlineRdbReplicator extends AbstractReplicator {
             new RdbParser(inputStream, this).parse();
         } catch (EOFException ignore) {
             try {
-                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,ignore.getMessage(), TaskStatusType.BROKEN);
+                if(!SyncerTaskType.isMultiTask(taskId)){
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,ignore.getMessage(), TaskStatusType.BROKEN);
+                }else {
+                    MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId,ignore.getMessage(), TaskStatusType.BROKEN);
+                }
+
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

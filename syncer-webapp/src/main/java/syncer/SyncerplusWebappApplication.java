@@ -3,46 +3,45 @@ package syncer;
 
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import syncer.syncerpluscommon.log.LoggerMessage;
-import syncer.syncerpluscommon.log.LoggerQueue;
 import syncer.syncerpluscommon.service.SqlFileExecutor;
 import syncer.syncerpluscommon.util.ThreadPoolUtils;
 import syncer.syncerpluscommon.util.db.SqliteUtil;
 import syncer.syncerpluscommon.util.spring.SpringUtil;
-import syncer.syncerplusredis.constant.SyncType;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.dao.RubbishDataMapper;
 import syncer.syncerplusredis.dao.TaskMapper;
 import syncer.syncerplusredis.entity.TaskDataEntity;
+import syncer.syncerplusredis.entity.muli.multisync.ParentMultiTaskModel;
 import syncer.syncerplusredis.model.TaskModel;
+import syncer.syncerplusredis.util.MultiSyncTaskManagerutils;
 import syncer.syncerplusredis.util.SqliteOPUtils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
-import syncer.syncerpluswebapp.thread.TailLogThread;
-import syncer.syncerpluswebapp.util.EnvironmentUtils;
+import syncer.syncerservice.MultiMasterReplication.multiSync.RedisMultiSyncBreakingRingByAuxiliaryKeyTransmissionTask;
 import syncer.syncerservice.persistence.SqliteSettingPersistenceTask;
 import syncer.syncerpluscommon.util.file.FileUtils;
-import syncer.syncerservice.task.OffSetCommitEntity;
+import syncer.syncerplusredis.entity.muli.multisync.MultiTaskModel;
+import syncer.syncerservice.po.FlushCommandStatus;
 import syncer.syncerservice.task.OffsetCommitTask;
+import syncer.syncerservice.util.circle.MultiSyncCircle;
 import syncer.syncerservice.util.jedis.StringUtils;
-import syncer.syncerservice.util.taskutil.taskServiceQueue.DbDataCommitQueue;
 import syncer.syncerservice.util.taskutil.taskServiceQueue.DbDataCommitTask;
 
-import javax.annotation.PostConstruct;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 @SpringBootApplication
@@ -67,7 +66,6 @@ public class SyncerplusWebappApplication {
     /**
      * 推送日志到/topic/pullLogger
      */
-
 /**
     @PostConstruct
     public void pushLogger(){
@@ -107,6 +105,66 @@ public class SyncerplusWebappApplication {
         SpringApplication application = new SpringApplication(SyncerplusWebappApplication.class);
         application.addListeners(new ApplicationStartedEventListener());
         application.run(args);
+
+
+
+
+        /**
+
+        String aParentId="111";
+        String bParentId="222";
+        String aNodeId="1";
+        String bNodeId="2";
+        String taskId="11111";
+
+        MultiTaskModel sourcemultiTaskModel=MultiTaskModel.builder().redisAddress("redis://114.67.100.239:6379?authPassword=redistest0102")
+                .nodeId(aNodeId).taskId(taskId).parentId(aParentId).host("114.67.100.240").status(3).password("redistest0102").port(6379).build();
+        MultiTaskModel  targetmultiTaskModel=MultiTaskModel.builder().redisAddress("redis://114.67.100.240:6379?authPassword=redistest0102").status(3)
+                .nodeId(bNodeId)  .taskId(taskId).parentId(bParentId).host("114.67.100.239").password("redistest0102").port(6379).build();
+
+        ParentMultiTaskModel parentMultiTaskModel=ParentMultiTaskModel.builder().taskId(taskId).taskName(taskId)
+                .redisNodeA(Arrays.asList(sourcemultiTaskModel))
+                .redisNodeB(Arrays.asList(targetmultiTaskModel))
+                .build();
+        MulitSyncTaskManagerutils.addTask(parentMultiTaskModel);
+        Map<String,Map<String, AtomicLong>>nodeGroupData=new ConcurrentHashMap<>();
+        nodeGroupData.put(aNodeId,new ConcurrentHashMap<String, AtomicLong>());
+        nodeGroupData.put(bNodeId,new ConcurrentHashMap<String, AtomicLong>());
+
+
+        Map<String, FlushCommandStatus>flushCommandStatus=new ConcurrentHashMap<>();
+        flushCommandStatus.put(aNodeId, FlushCommandStatus.builder().type(-1).num(new AtomicInteger(0)).db(-1).status(new AtomicBoolean(false)).build());
+        flushCommandStatus.put(bNodeId,FlushCommandStatus.builder().type(-1).num(new AtomicInteger(0)).db(-1).status(new AtomicBoolean(false)).build());
+
+        Map<String, AtomicInteger>dbData=new ConcurrentHashMap<>();
+        dbData.put(aNodeId,new AtomicInteger(0));
+        dbData.put(bNodeId,new AtomicInteger(0));
+
+        MultiSyncCircle circle=MultiSyncCircle.builder().nodeGroupData(nodeGroupData)
+                .dbData(dbData)
+                .flushCommandStatus(flushCommandStatus)
+                .nodeCount(2)
+                .nodeStatus(new AtomicInteger(0))
+                .nodeSuccessStatus(new AtomicBoolean(true))
+                .build();
+//        new Thread(new RedisMultiSyncBreakingRingByAuxiliaryKeyTransmissionTask(targetmultiTaskModel,"222",circle)).start();
+        ThreadPoolUtils.exec(new RedisMultiSyncBreakingRingByAuxiliaryKeyTransmissionTask(sourcemultiTaskModel,aNodeId,bNodeId,circle));
+        ThreadPoolUtils.exec(new RedisMultiSyncBreakingRingByAuxiliaryKeyTransmissionTask(targetmultiTaskModel,bNodeId,aNodeId,circle));
+
+
+         */
+//        new Thread(()->{
+//            while (true){
+//                System.out.println(JSON.toJSONString(nodeGroupData));
+//                try {
+//                    Thread.sleep(100);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//        }).start();
+
 
         Runtime.getRuntime().addShutdownHook(new Thread(){
 
@@ -152,8 +210,8 @@ public class SyncerplusWebappApplication {
 
 
 
-//        Thread threadA=new Thread(new RedisDataMultiSyncTransmissionTask("redis://114.67.100.239:20001?authPassword=redistest0102", "114.67.100.240",20001,md5A,md5B,"A239"));
-//        Thread threadB=new Thread(new RedisDataMultiSyncTransmissionTask("redis://114.67.100.240:20001?authPassword=redistest0102","114.67.100.239",20001,md5A,md5B,"B240"));
+//        Thread threadA=new Thread(new RedisDataMultiSyncTransmissionTask("redis://114.67.100.239:6379?authPassword=redistest0102", "114.67.100.240",6379,md5A,md5B,"A239",1));
+//        Thread threadB=new Thread(new RedisDataMultiSyncTransmissionTask("redis://114.67.100.240:6379?authPassword=redistest0102","114.67.100.239",6379,md5A,md5B,"B240",2));
 
 //        Thread threadA=new Thread(new RedisDataMultiSyncTransmissionTask("redis://10.0.1.45:20001?authPassword=redistest0102","10.0.1.46",20001,md5A,md5B,"A239"));
 //        Thread threadB=new Thread(new RedisDataMultiSyncTransmissionTask("redis://10.0.1.46:20001?authPassword=redistest0102","10.0.1.45",20001,md5A,md5B,"B240"));
@@ -193,7 +251,6 @@ public class SyncerplusWebappApplication {
 
 
     private  static void loadingData() throws Exception {
-
         List<TaskModel>taskModelList=SqliteOPUtils.selectAll();
         for (TaskModel taskModel:taskModelList){
             if(!taskModel.getStatus().equals(TaskStatusType.BROKEN.getCode())&&!taskModel.getStatus().equals(TaskStatusType.STOP.getCode())){

@@ -26,10 +26,7 @@ import springfox.documentation.spi.service.contexts.RequestMappingContext;
 import springfox.documentation.spring.web.paths.PathMappingAdjuster;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.spring.web.plugins.DocumentationPluginsManager;
-import springfox.documentation.spring.web.scanners.ApiDescriptionReader;
-import springfox.documentation.spring.web.scanners.ApiListingScanner;
-import springfox.documentation.spring.web.scanners.ApiListingScanningContext;
-import springfox.documentation.spring.web.scanners.ApiModelReader;
+import springfox.documentation.spring.web.scanners.*;
 import syncer.syncerpluswebapp.config.swagger.ModelCache;
 
 import java.util.*;
@@ -96,6 +93,9 @@ public class ApiListingJsonScanner extends ApiListingScanner {
                 .splitToList(apiDescription.getPath());
     }
 
+
+
+
     @Override
     public Multimap<String, ApiListing> scan(ApiListingScanningContext context) {
         final Multimap<String, ApiListing> apiListingMap = LinkedListMultimap.create();
@@ -144,6 +144,7 @@ public class ApiListingJsonScanner extends ApiListingScanner {
                     .resourcePath()
                     .or(o)
                     .orNull();
+
 
             PathProvider pathProvider = documentationContext.getPathProvider();
             String basePath = pathProvider.getApplicationBasePath();

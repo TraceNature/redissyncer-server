@@ -42,11 +42,15 @@ import java.util.stream.Collectors;
 
 /**
  * @author zhanenqiang
- * @Description 任务内存状态管理
+ * @Description 单项同步任务内存状态管理
  * @Date 2020/3/11
  */
 @Slf4j
 public class TaskDataManagerUtils {
+
+
+
+
     @Getter
     @Setter
     private static Map<String, TaskDataEntity> aliveThreadHashMap=new ConcurrentHashMap<String,TaskDataEntity>();
@@ -141,7 +145,7 @@ public class TaskDataManagerUtils {
 
     /**
      * 把任务信息加入内存
-     * @param threadId
+     * @param threadIdis
      * @param taskDataEntity
      * @throws Exception
      */

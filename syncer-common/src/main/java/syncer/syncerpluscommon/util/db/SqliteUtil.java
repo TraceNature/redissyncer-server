@@ -86,6 +86,10 @@ public class SqliteUtil {
         return sqliteProperties.getFilePath();
     }
 
+    public static String getSysPath(){
+        return System.getProperty("user.dir");
+    }
+
     private static void execute(final Connection conn) throws Exception {
         ScriptRunner runner = new ScriptRunner(conn);
         // doesn't print logger

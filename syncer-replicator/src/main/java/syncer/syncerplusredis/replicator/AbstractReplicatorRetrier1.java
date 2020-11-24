@@ -17,9 +17,11 @@
 package syncer.syncerplusredis.replicator;
 
 import lombok.extern.slf4j.Slf4j;
+import syncer.syncerpluscommon.util.taskType.SyncerTaskType;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.exception.IncrementException;
+import syncer.syncerplusredis.util.MultiSyncTaskManagerutils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 
 import java.io.IOException;
@@ -111,7 +113,12 @@ public abstract class AbstractReplicatorRetrier1 implements ReplicatorRetrier {
 
                 //待验证
                 try {
-                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
+                    if(!SyncerTaskType.isMultiTask(taskId)){
+                        TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
+                    }else {
+                        MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId,e.getMessage(), TaskStatusType.BROKEN);
+                    }
+
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -120,7 +127,12 @@ public abstract class AbstractReplicatorRetrier1 implements ReplicatorRetrier {
 
             } catch (IncrementException e) {
                 try {
-                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
+                    if(!SyncerTaskType.isMultiTask(taskId)){
+                        TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
+                    }else {
+                        MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId,e.getMessage(), TaskStatusType.BROKEN);
+                    }
+
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -130,18 +142,33 @@ public abstract class AbstractReplicatorRetrier1 implements ReplicatorRetrier {
 
         }
 
+        if(!SyncerTaskType.isMultiTask(taskId)){
+            if(!TaskDataManagerUtils.isTaskClose(taskId)){
+                System.out.println("-------------------------over");
+                try {
 
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,exception.getMessage(), TaskStatusType.BROKEN);
 
-        if(!TaskDataManagerUtils.isTaskClose(taskId)){
-            System.out.println("-------------------------over");
-            try {
-                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,exception.getMessage(), TaskStatusType.BROKEN);
-
-            } catch (Exception e) {
-                e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,exception);
             }
-            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,exception);
+        }else {
+            if(!MultiSyncTaskManagerutils.isTaskClose(taskId)){
+                System.out.println("-------------------------over");
+                try {
+
+                    MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId,exception.getMessage(), TaskStatusType.BROKEN);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId,exception);
+            }
         }
+
+
 
 
 

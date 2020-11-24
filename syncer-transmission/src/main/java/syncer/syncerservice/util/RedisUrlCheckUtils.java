@@ -447,7 +447,7 @@ public class RedisUrlCheckUtils {
             version = getRedisBuffer(info,type);
 
         } catch (Exception e) {
-
+            e.printStackTrace();
         } finally {
             if (target != null) {
                 target.close();

@@ -78,6 +78,35 @@ public class TaskCheckUtils {
 
 
     /**
+     * 根据uri获取RDB版本
+     * @param uri
+     * @param userRedisVersion
+     * @return
+     */
+    public static Integer getRdbVersionByRedisVersion(String uri,String userRedisVersion){
+        String redisVersion = null;
+        try {
+             redisVersion = RedisUrlCheckUtils.selectSyncerVersion(uri);
+        } catch (Exception e) {
+            redisVersion="0";
+        }
+        Integer userRdbVersion = RedisUrlCheckUtils.getRdbVersion(userRedisVersion);
+        Integer rdbVersion = RedisUrlCheckUtils.getRdbVersion(redisVersion);
+        log.warn("版本号获取：{}",uri.split("\\?")[0]);
+        log.warn("自动获取redis版本号：{} ,对应rdb版本号：{},手动输入版本号：{}，对应rdb版本号：{}",redisVersion,rdbVersion,userRdbVersion,rdbVersion);
+        if (rdbVersion == 0) {
+            if (userRdbVersion == 0) {
+                return  -1;
+//                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_MSG_ERROR_CODE,TaskMsgConstant.TASK_MSG_REDIS_MSG_ERROR));
+            } else {
+                return  userRdbVersion;
+            }
+        } else {
+            return rdbVersion;
+        }
+    }
+
+    /**
      * 更新uri
      *
      * @param redisClusterDto

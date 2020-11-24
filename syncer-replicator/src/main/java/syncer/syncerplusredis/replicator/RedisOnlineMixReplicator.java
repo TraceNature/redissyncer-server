@@ -1,5 +1,6 @@
 package syncer.syncerplusredis.replicator;
 
+import syncer.syncerpluscommon.util.taskType.SyncerTaskType;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.event.PostCommandSyncEvent;
@@ -7,6 +8,7 @@ import syncer.syncerplusredis.event.PreCommandSyncEvent;
 import syncer.syncerplusredis.io.PeekableInputStream;
 import syncer.syncerplusredis.io.RedisInputStream;
 import syncer.syncerplusredis.rdb.RdbParser;
+import syncer.syncerplusredis.util.MultiSyncTaskManagerutils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.objectutil.Strings;
 import syncer.syncerplusredis.util.type.Tuples;
@@ -97,7 +99,11 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
 
         } catch (Exception e) {
             try {
-                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"文件在线读取异常", TaskStatusType.BROKEN);
+                if(!SyncerTaskType.isMultiTask(taskId)){
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"文件在线读取异常", TaskStatusType.BROKEN);
+                }else {
+                    MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId,"文件在线读取异常", TaskStatusType.BROKEN);
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -231,8 +237,11 @@ public class RedisOnlineMixReplicator extends AbstractReplicator {
 
         } catch (Exception ignore) {
             try {
-                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,ignore.getMessage(), TaskStatusType.BROKEN);
-
+                if(!SyncerTaskType.isMultiTask(taskId)){
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,ignore.getMessage(), TaskStatusType.BROKEN);
+                }else {
+                    MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId,ignore.getMessage(), TaskStatusType.BROKEN);
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

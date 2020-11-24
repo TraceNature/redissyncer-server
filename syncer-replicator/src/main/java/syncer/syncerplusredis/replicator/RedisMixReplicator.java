@@ -16,6 +16,7 @@
 
 package syncer.syncerplusredis.replicator;
 
+import syncer.syncerpluscommon.util.taskType.SyncerTaskType;
 import syncer.syncerplusredis.cmd.jimdb.JimDbFirstCommandParser;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.Configuration;
@@ -26,6 +27,7 @@ import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.io.PeekableInputStream;
 import syncer.syncerplusredis.io.RedisInputStream;
 import syncer.syncerplusredis.rdb.RdbParser;
+import syncer.syncerplusredis.util.MultiSyncTaskManagerutils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 import syncer.syncerplusredis.util.objectutil.Strings;
@@ -82,7 +84,12 @@ public class RedisMixReplicator extends AbstractReplicator {
             in = new FileInputStream(filePath);
         } catch (FileNotFoundException e) {
             try {
-                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"文件读取异常", TaskStatusType.BROKEN);
+                if(!SyncerTaskType.isMultiTask(taskId)){
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"文件读取异常", TaskStatusType.BROKEN);
+                }else{
+                    MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId,"文件读取异常", TaskStatusType.BROKEN);
+
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -235,7 +242,13 @@ public class RedisMixReplicator extends AbstractReplicator {
 
         } catch (Exception e) {
             try {
-                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
+                if(!SyncerTaskType.isMultiTask(taskId)){
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
+                }else {
+                    MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId,e.getMessage(), TaskStatusType.BROKEN);
+
+                }
+
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

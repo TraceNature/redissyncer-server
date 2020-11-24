@@ -125,7 +125,12 @@
             <artifactId>hibernate-validator</artifactId>
             <version>6.0.18.Final</version>
         </dependency>
-
+        <!-- 对象拷贝 -->
+        <dependency>
+            <groupId>uk.com.robust-it</groupId>
+            <artifactId>cloning</artifactId>
+            <version>1.9.12</version>
+        </dependency>
     </dependencies>
 
     <build>

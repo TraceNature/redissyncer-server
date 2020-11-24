@@ -100,6 +100,21 @@ public class Strings {
         return res;
     }
 
+    public static String byteToStrings(byte[]... bytes) {
+        Objects.requireNonNull(bytes);
+        StringBuilder stringBuilder=new StringBuilder();
+
+        for (int i=0;i<bytes.length;i++){
+            try {
+                String strContent = new String(bytes[i], "utf-8");
+                stringBuilder.append(strContent).append(" ");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        return stringBuilder.toString();
+    }
+
     public static String[]byteToString(List<byte[]> bytes) {
         Objects.requireNonNull(bytes);
         String[]res=new String[bytes.size()];

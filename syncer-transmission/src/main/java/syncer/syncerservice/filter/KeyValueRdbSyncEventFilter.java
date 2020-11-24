@@ -204,6 +204,17 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
             Long duNum=db.getDbNumber();
             long ttl=ms;
             if (valueDump.getValue() != null) {
+                if(null==ms||ms<=0L){
+                    ttl=0L;
+                }
+                if (redisVersion< 3.0) {
+                    String res=client.restoreReplace(duNum,valueDump.getKey(), ttl, valueDump.getValue(),false);
+                    iSyncerCompensator.restoreReplace(duNum,valueDump.getKey(), ttl, valueDump.getValue(),false,res);
+                } else {
+                    String res=client.restoreReplace(duNum,valueDump.getKey(), ttl, valueDump.getValue());
+                    iSyncerCompensator.restoreReplace(duNum,valueDump.getKey(), ttl, valueDump.getValue(),res);
+                }
+                /**
                     if (ms == null || ms <= 0L) {
                         if (redisVersion< 3.0) {
                             String res=client.restoreReplace(duNum,valueDump.getKey(), 0, valueDump.getValue(),false);
@@ -221,6 +232,7 @@ public class KeyValueRdbSyncEventFilter implements CommonFilter {
                             iSyncerCompensator.restoreReplace(duNum,valueDump.getKey(), ttl, valueDump.getValue(),res);
                         }
                     }
+                 **/
             }
         }
 

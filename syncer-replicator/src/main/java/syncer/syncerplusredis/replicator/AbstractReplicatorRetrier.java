@@ -16,11 +16,13 @@
 
 package syncer.syncerplusredis.replicator;
 
+import syncer.syncerpluscommon.util.taskType.SyncerTaskType;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.constant.ThreadStatusEnum;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.exception.IncrementException;
 import syncer.syncerplusredis.exception.TaskMsgException;
+import syncer.syncerplusredis.util.MultiSyncTaskManagerutils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -105,13 +107,25 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
                     close(null);
                     sleep(interval);
 
-                    if (TaskDataManagerUtils.get(taskId).getTaskModel().getStatus().equals(TaskStatusType.RDBRUNING.getCode()) && taskId != null) {
-                        log.error("全量阶段异常 同步失败 本阶段禁止重试...");
-                        throw new IncrementException("全量阶段异常 同步失败 本阶段禁止重试...");
+                    if(!SyncerTaskType.isMultiTask(taskId)){
+                        if (TaskDataManagerUtils.get(taskId).getTaskModel().getStatus().equals(TaskStatusType.RDBRUNING.getCode()) && taskId != null) {
+                            log.error("全量阶段异常 同步失败 本阶段禁止重试...");
+                            throw new IncrementException("全量阶段异常 同步失败 本阶段禁止重试...");
 //                        break;
+                        }else {
+                            System.out.println("-------------------异常code: "+TaskDataManagerUtils.get(taskId).getTaskModel().getStatus()+":"+taskId);
+                        }
                     }else {
-                        System.out.println("-------------------异常code: "+TaskDataManagerUtils.get(taskId).getTaskModel().getStatus()+":"+taskId);
+                        //双向同步状态
+                        if (MultiSyncTaskManagerutils.getTaskStatus(taskId).equals(TaskStatusType.RDBRUNING.getCode()) && taskId != null) {
+                            log.error("全量阶段异常 同步失败 本阶段禁止重试...");
+                            throw new IncrementException("全量阶段异常 同步失败 本阶段禁止重试...");
+//                        break;
+                        }else {
+                            System.out.println("-------------------异常code: "+TaskDataManagerUtils.get(taskId).getTaskModel().getStatus()+":"+taskId);
+                        }
                     }
+
                     continue;
                 }
                 exception = null;
@@ -122,20 +136,40 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
                 close(exception);
                 sleep(interval);
 
-                if (TaskDataManagerUtils.get(taskId).getTaskModel().getStatus().equals(TaskStatusType.RDBRUNING.getCode()) && taskId != null) {
-                    try {
-                        String msg="全量阶段异常 同步失败 本阶段禁止重试...";
-                        log.error(msg);
+                if(!SyncerTaskType.isMultiTask(taskId)){
+                    if (TaskDataManagerUtils.get(taskId).getTaskModel().getStatus().equals(TaskStatusType.RDBRUNING.getCode()) && taskId != null) {
+                        try {
+                            String msg="全量阶段异常 同步失败 本阶段禁止重试...";
+                            log.error(msg);
 
-                        TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,msg, TaskStatusType.BROKEN);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
+                            TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,msg, TaskStatusType.BROKEN);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                        throw e;
                     }
-                    throw e;
+                }else{
+                    if (MultiSyncTaskManagerutils.getTaskStatus(taskId).equals(TaskStatusType.RDBRUNING.getCode()) && taskId != null) {
+                        try {
+                            String msg="全量阶段异常 同步失败 本阶段禁止重试...";
+                            log.error(msg);
+
+                            MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId,msg, TaskStatusType.BROKEN);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                        throw e;
+                    }
                 }
+
             } catch (IncrementException e) {
                 try {
-                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
+
+                    if(!SyncerTaskType.isMultiTask(taskId)){
+                        TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,e.getMessage(), TaskStatusType.BROKEN);
+                    }else {
+                        MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId,e.getMessage(),TaskStatusType.BROKEN);
+                    }
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -149,8 +183,11 @@ public abstract class AbstractReplicatorRetrier implements ReplicatorRetrier {
         if (exception != null){
 
             try {
-                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,exception.getMessage(), TaskStatusType.BROKEN);
-
+                if(!SyncerTaskType.isMultiTask(taskId)){
+                    TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,exception.getMessage(), TaskStatusType.BROKEN);
+                }else {
+                    MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId, exception.getMessage(),TaskStatusType.BROKEN);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

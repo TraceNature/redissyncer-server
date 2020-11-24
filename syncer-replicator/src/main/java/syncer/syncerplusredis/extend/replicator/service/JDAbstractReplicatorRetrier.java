@@ -2,11 +2,13 @@ package syncer.syncerplusredis.extend.replicator.service;
 
 
 
+import syncer.syncerpluscommon.util.taskType.SyncerTaskType;
 import syncer.syncerplusredis.constant.TaskStatusType;
 import syncer.syncerplusredis.entity.Configuration;
 import syncer.syncerplusredis.exception.IncrementException;
 import syncer.syncerplusredis.exception.TaskMsgException;
 import syncer.syncerplusredis.replicator.Replicator;
+import syncer.syncerplusredis.util.MultiSyncTaskManagerutils;
 import syncer.syncerplusredis.util.TaskDataManagerUtils;
 import syncer.syncerplusredis.util.TaskMsgUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -74,13 +76,26 @@ public abstract class JDAbstractReplicatorRetrier implements JDReplicatorRetrier
         retry(replicator);
 
 
-        try {
-            TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"重试多次后失败", TaskStatusType.BROKEN);
+        if(!SyncerTaskType.isMultiTask(taskId)){
+            try {
+                TaskDataManagerUtils.updateThreadStatusAndMsg(taskId,"重试多次后失败", TaskStatusType.BROKEN);
 
-        } catch (Exception e) {
-            e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId);
+        }else{
+            try {
+                MultiSyncTaskManagerutils.setGlobalNodeStatus(taskId,"重试多次后失败", TaskStatusType.BROKEN);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            log.warn("双向任务Id【{}】异常停止，停止原因【{}】", taskId);
+
         }
-        log.warn("任务Id【{}】异常停止，停止原因【{}】", taskId);
+
+
 //        if (exception != null) {
 //            throw exception;
 //        }else if(retries >=configuration.getRetries()){

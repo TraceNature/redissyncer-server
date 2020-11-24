@@ -88,8 +88,8 @@ public class RedisDataMultiSyncTransmissionTask implements Runnable {
             config.setTestOnReturn(true);
             config.setBlockWhenExhausted(true);
             config.setTestOnBorrow(true);
-//            JedisPool pool = new JedisPool(config, host, port, 100000,"redistest0102",0);
-            JedisPool pool = new JedisPool(config, host, port, 100000);
+            JedisPool pool = new JedisPool(config, host, port, 100000,"redistest0102",0);
+//            JedisPool pool = new JedisPool(config, host, port, 100000);
             Jedis client=pool.getResource();
 //            client.auth("redistest0102");
 //        RedisClient clientB=new RedisClient(host,port);
