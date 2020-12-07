@@ -1,4 +1,5 @@
 # RedisSyncer
+[English](README_en.md)
 
 RedisSyncer是一个redis同步工具，应用于redis单实例及集群同步
 
@@ -15,6 +16,5 @@ RedisSyncer是一个redis同步工具，应用于redis单实例及集群同步
 请参阅[Quick Start Guide](doc/docs/quickstart.md),文档包括构建及部署方法及基本使用方法
 
 ## RoadMap
-
 
 请参阅　[RoadMap](doc/docs/roadmap.md)
