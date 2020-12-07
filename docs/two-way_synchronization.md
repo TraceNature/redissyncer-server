@@ -27,7 +27,7 @@ For instance,we have 2 redis instance to sync each other and call them redis1 an
    5-1 写入set2 Write data to set2
    5-2 写入redis2 Write data to redis2
 
-![wo-way_synchronization](../img/Two-way_synchronization.png)
+![wo-way_synchronization](images/Two-way_synchronization.png)
 
 为什么增加第五步改变redis1->redis2增量任务行为呢？
 Why change behavior step2?
@@ -64,4 +64,4 @@ Step 2-2 write data to redis2 directly,because at that time no task write off se
    5-1 从k1来的增量数据写入set2
    5-2 写入redis2
 
-![wo-way_synchronization_kafka](../img/Two-way_synchronization_kafka.png)
+![wo-way_synchronization_kafka](images/Two-way_synchronization_kafka.png)
