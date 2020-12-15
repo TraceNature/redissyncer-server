@@ -81,7 +81,6 @@ public class JDJedisPipeLineClient implements JDRedisClient {
     private Map<String, StringCompensatorEntity> appendMap = new LruCache<>(1000);
     private Map<String, Float> incrDoubleMap = new LruCache<>(1000);
 
-
     private CommandCompensatorUtils commandCompensatorUtils = new CommandCompensatorUtils();
 
     public JDJedisPipeLineClient(String host, Integer port, String password, int count, long errorCount, String taskId) {

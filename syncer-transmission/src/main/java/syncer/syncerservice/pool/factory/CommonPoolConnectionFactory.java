@@ -16,7 +16,7 @@ import static syncer.syncerjedis.Protocol.Command.AUTH;
 public class CommonPoolConnectionFactory extends BasePoolableObjectFactory {
     @Getter
     @Setter
-    RedisURI redisURI;//redis链接
+    RedisURI redisUri;//redis链接
     int minActive;
     int maxActive;
     long maxWait;
@@ -24,7 +24,7 @@ public class CommonPoolConnectionFactory extends BasePoolableObjectFactory {
     long idleTimeRunsMillis;
 
     public CommonPoolConnectionFactory(int minActive, int maxActive, long maxWait, RedisURI redisURI, long timeBetweenEvictionRunsMillis, long idleTimeRunsMillis) {
-        this.redisURI = redisURI;
+        this.redisUri = redisURI;
         this.minActive = minActive;
         this.maxActive = maxActive;
         this.maxWait = maxWait;
@@ -39,8 +39,8 @@ public class CommonPoolConnectionFactory extends BasePoolableObjectFactory {
      */
     @Override
     public Object makeObject() throws Exception {
-        RedisClient redisClient = new RedisClient(redisURI.getHost(), redisURI.getPort());
-        Configuration tconfig = Configuration.valueOf(redisURI);
+        RedisClient redisClient = new RedisClient(redisUri.getHost(), redisUri.getPort());
+        Configuration tconfig = Configuration.valueOf(redisUri);
 
         //获取password
         if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {

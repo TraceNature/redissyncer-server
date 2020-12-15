@@ -69,14 +69,12 @@ public class SingleRedisServiceImpl implements IRedisTaskService {
         if(taskModel.getSyncType().equals(SyncType.SYNC.getCode())||taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())){
            //获取offset和服务id
             String[] data = RedisUrlCheckUtils.selectSyncerBuffer(taskModel.getSourceUri(), SyncTypeUtils.getOffsetPlace(taskModel.getOffsetPlace()).getOffsetPlace());
-
             dataEntity=TaskDataEntity.builder()
                     .taskModel(taskModel)
                     .offSetEntity(OffSetEntity.builder().replId(data[1]).build())
                     .build();
             dataEntity.getOffSetEntity().getReplOffset().set(taskModel.getOffset());
         }else {
-
             dataEntity=TaskDataEntity.builder()
                     .taskModel(taskModel)
                     .offSetEntity(OffSetEntity.builder().replId("").build())
