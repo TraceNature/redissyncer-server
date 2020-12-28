@@ -77,7 +77,7 @@ redissyncer是一个用于redis同步的多任务服务端引擎。
 
 ### 流程架构图
 
-![架构图](../img/introduction/architectrue.jpg)
+![架构图](images/introduction/architectrue.jpg)
 
 ### 迁移过程
 

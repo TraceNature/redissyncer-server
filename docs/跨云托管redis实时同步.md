@@ -16,7 +16,7 @@
 
 为了解决上述难点和挑战，实现跨云托管redis全量和增量同步，需要引入两类工具。一类工具是一种特殊的redis proxy，该代理的主要作用是redis入库数据在保证顺序的前提下分流；另一类工具提供redis rdb文件或aof文件的解析和写入。
 
-![cloudredissync](../img/cloudredissync.png)
+![cloudredissync](images/cloudredissync.png)
 
 ### 数据复制流程
 

@@ -1,5 +1,7 @@
 # Quick Start Guid
 
+[English](quickstart_en.md)
+
 ## 构建与启动
 
 ### 构建jar包

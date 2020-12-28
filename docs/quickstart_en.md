@@ -1,5 +1,7 @@
 # Quick Start Guid
 
+[简体中文](quickstart.md)
+
 ## Build and Start
 
 ### Build jar package
