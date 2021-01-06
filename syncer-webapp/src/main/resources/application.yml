@@ -1,0 +1,129 @@
+
+syncerplus:
+  redispool:
+    #池中空闲链接回收线程执行间隔时间  例：每隔1000毫秒执行一次回收函数
+    timeBetweenEvictionRunsMillis: 200
+    #池中空闲连接回收未使用的时间  例：1800000毫秒未使用则回收  默认值是30分钟。1800000
+    idleTimeRunsMillis: 100000
+    #最小池大小
+    minPoolSize: 3
+    #最大池大小
+    maxPoolSize: 10
+    #连接超时时间
+    maxWaitTime: 10000
+
+  poolconfig:
+    #核心池大小
+    corePoolSize: 100
+    #最大池大小
+    maxPoolSize: 1500
+    #队列最大长度
+    queueCapacity: 1600
+    #线程池维护线程所允许的空闲时间
+    keepAliveSeconds: 300
+
+#logging:
+server:
+  port: 8081
+#  config: log/logback.xml
+#logging:
+#  config: config/logback.xml
+
+logging:
+
+  level:
+    root: INFO
+#syncer配置以及数据文件存路径路径配置
+  file: ${syncer.config.path.logfile}/${syncer.config.path.logfileName}
+#  file:
+#    path: ${syncer.config.path.logfile}
+#    name: ${syncer.config.path.logfileName}
+
+
+syncer:
+  config:
+    auth: false
+    swagger: false
+    path:
+      logfile: ./log
+      logfileName: syncer-log.log
+      datafile: ./
+
+
+info:
+  app:
+    name: redis syncer
+    version: 3.0.1
+    description: redis数据同步服务
+
+spring:
+  jackson:
+    default-property-inclusion: non_null
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:${syncer.config.path.datafile}data/syncer.db
+#    url: jdbc:sqlite:D:\github\redissyncer-service\data\syncer.db
+    username:
+    password:
+
+    hikari:
+      maximum-pool-size: 1
+      connection-timeout: 300000
+      minimum-idle: 1
+
+  application:
+    name: redis-syncer
+
+  boot:
+    admin:
+      client:
+        url: 
+        username: admin
+        password: admin
+        instance:
+          service-url:
+#  thymeleaf:
+#    cache: false
+#    prefix: classpath:/templates/
+#    suffix: .html
+#    mode: HTML
+#    encoding: UTF-8
+#    servlet:
+#      content-type: text/html
+#    schema: classpath:init.sql
+#    initialization-mode: ALWAYS
+
+#    path: ${syncer.config.path.logfile}
+#    name: ${syncer.config.path.logfileName}
+
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+        exclude:
+    logfile:
+      external-file: ${syncer.config.path.logfile}/${syncer.config.path.logfileName}  #指向日志文件地址，需与LogBack配置的日志地址一致
+    jmx:
+      exposure:
+        include:
+  endpoint:
+    health:
+      #显示详细信息
+      show-details: always
+
+
+
+
+mybatis-plus:
+  mapper-locations: classpath:dao/*.xml
+  type-aliases-package: syncer.transmission.mapper
+  global-config:
+    id-type: 0
+    field-strategy: 2
+    capital-mode: true
+    refresh-mapper: true
+
+
