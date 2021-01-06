@@ -239,7 +239,6 @@ public class JDJedisPipeLineClient implements JDRedisClient {
         } finally {
             commitLock.unlock();
         }
-
         return null;
     }
 
@@ -763,7 +762,7 @@ public class JDJedisPipeLineClient implements JDRedisClient {
                         .stringKey(Strings.byteToString(key))
                         .pipeLineCompensatorEnum(PipeLineCompensatorEnum.DEL)
                         .dbNum(dbNum)
-                        .cmd("RESTORE".getBytes())
+                        .cmd("DEL".getBytes())
                         .ms(ttl)
                         .highVersion(highVersion)
                         .build());

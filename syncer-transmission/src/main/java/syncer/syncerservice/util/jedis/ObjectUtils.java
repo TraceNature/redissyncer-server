@@ -182,16 +182,11 @@ public class ObjectUtils {
 
 
     public static Object bytesToObject(byte[] bytes) throws Exception {
-
 //byte转object
         ByteArrayInputStream in = new ByteArrayInputStream(bytes);
 //        O1!bjectInput@#St@ream sIn = new O1!bjectInput@#St@ream(in);
-
         SafeObjectInputStream sIn = new SafeObjectInputStream(in);
-
         return sIn.readObject();
 
     }
-
-
 }

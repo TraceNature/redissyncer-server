@@ -321,7 +321,6 @@ public class TaskGroupServiceImpl implements ISyncerService {
                     continue;
                 }
 
-
                 if(afresh!=taskModel.isAfresh()){
                     try {
                         SqliteOPUtils.updateAfreshsetById(taskModel.getId(),afresh);
@@ -349,7 +348,6 @@ public class TaskGroupServiceImpl implements ISyncerService {
                             .build();
                     resultList.add(startTaskEntity);
                 }
-
 
             } catch (Exception e) {
                 StartTaskEntity startTaskEntity=StartTaskEntity
