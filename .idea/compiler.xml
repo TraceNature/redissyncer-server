@@ -8,9 +8,9 @@
         <outputRelativeToContentRoot value="true" />
         <module name="syncer-replicator" />
         <module name="syncer-transmission" />
-        <module name="syncer-jedis" />
-        <module name="syncer-webapp" />
         <module name="syncer-common" />
+        <module name="syncer-webapp" />
+        <module name="syncer-jedis" />
       </profile>
     </annotationProcessing>
   </component>
