@@ -2,6 +2,13 @@
 # Compiled class file
 *.class
 
+## Maven:
+!.mvn/wrapper/maven-wrapper.jar
+/.mvn/
+!mvnw
+!mvnw.bat
+!mvnw.cmd
+
 # Log file
 *.log
 **/log
@@ -22,13 +29,14 @@
 *.zip
 *.tar.gz
 *.rar
+/data
+
 # go ignore
 **/vendor
 
 #idea ignore
 **/.idea
 *.iml
-**/syncer.db
 
 # vscode
 **/.vscode
