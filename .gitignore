@@ -1,10 +1,13 @@
-# Eclipse
-.project
-.settings/
-
 #java ignore
 # Compiled class file
 *.class
+
+## Maven:
+!.mvn/wrapper/maven-wrapper.jar
+/.mvn/
+!mvnw
+!mvnw.bat
+!mvnw.cmd
 
 # Log file
 *.log
@@ -13,6 +16,8 @@
 # BlueJ files
 *.ctxt
 
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
 
 # Package Files #
 #*.jar
@@ -24,6 +29,7 @@
 *.zip
 *.tar.gz
 *.rar
+/data
 
 # go ignore
 **/vendor
@@ -31,7 +37,6 @@
 #idea ignore
 **/.idea
 *.iml
-**/syncer.db
 
 # vscode
 **/.vscode

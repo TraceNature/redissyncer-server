@@ -1,4 +1,4 @@
-package syncer.webapp;
+package syncer;
 
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
@@ -24,6 +24,7 @@ import syncer.transmission.task.OffsetCommitTask;
 import syncer.transmission.task.SqliteSettingPersistenceTask;
 import syncer.transmission.util.sql.SqlOPUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
+import syncer.webapp.ApplicationStartedEventListener;
 import syncer.webapp.executor.SqlFileExecutor;
 import syncer.webapp.executor.SqliteUtil;
 
