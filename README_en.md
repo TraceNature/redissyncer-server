@@ -14,7 +14,7 @@ RedisSyncer is a redis synchronization tool, used in redis single instance and c
 
 ## Quick start
 
-Please refer to [Quick Start Guide](doc/docs/quickstart.md), the document includes construction and deployment methods and basic usage methods
+Please refer to [Quick Start Guide](docs/quickstart_en.md), the document includes construction and deployment methods and basic usage methods
 
 ## RoadMap
 
