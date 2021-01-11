@@ -185,5 +185,4 @@ Only tasks with status "STOP" or "Broken" can be deleted
 * Pay attention to whether the RDB transmission is overtime;
 * For the slave item in redis client buf, set a sufficiently large buffer size and timeout period.
 * Before starting the synchronization task, please confirm whether the redis source machine has enough memory to allow at least one RDB file to be generated.
-* Two-way synchronization does not guarantee the data consistency of non-idempotent commands (INCR, HINCRBY), unless the business guarantees not to perform non-idempotent operations on the same key at the same time
   
