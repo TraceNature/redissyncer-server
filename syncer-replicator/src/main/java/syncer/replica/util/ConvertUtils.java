@@ -7,11 +7,6 @@ import com.alibaba.fastjson.JSONObject;
 import java.io.*;
 
 
-/**
- * @author zhanenqiang
- * @Description 描述
- * @Date 2020/4/1
- */
 public final class ConvertUtils {
 
     private static final int    BUFFER_SIZE = 8192;
