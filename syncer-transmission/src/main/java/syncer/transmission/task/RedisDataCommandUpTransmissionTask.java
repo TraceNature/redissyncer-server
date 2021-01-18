@@ -24,6 +24,7 @@ import syncer.replica.event.Event;
 import syncer.replica.event.PreCommandSyncEvent;
 import syncer.replica.listener.EventListener;
 import syncer.replica.listener.RawByteListener;
+import syncer.replica.register.DefaultCommandRegister;
 import syncer.replica.replication.RedisReplication;
 import syncer.replica.replication.Replication;
 import syncer.replica.util.objectutil.Strings;
@@ -95,8 +96,8 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
             Thread.currentThread().setName(taskId+": "+Thread.currentThread().getName());
             final RawByteListener rawByteListener=rawByteListener();
             RedisURI suri = new RedisURI(sourceUri);
-            replication =new RedisReplication(suri);
-
+            Replication loadRepli =new RedisReplication(suri);
+            replication = DefaultCommandRegister.addCommandParser(loadRepli);
             String[] data = check.selectSyncerBuffer(sourceUri, "endbuf");
             long offsetNum = 0L;
             try {

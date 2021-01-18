@@ -2,7 +2,9 @@ package syncer.webapp.util;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.springframework.util.StringUtils;
+import syncer.common.exception.TaskMsgException;
 import syncer.common.util.MD5Utils;
 import syncer.common.util.TemplateUtils;
 import syncer.common.util.file.FileUtils;
@@ -12,7 +14,10 @@ import syncer.replica.entity.SyncType;
 import syncer.replica.entity.TaskStatusType;
 import syncer.replica.entity.TaskType;
 import syncer.replica.util.SyncTypeUtils;
+import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.model.TaskModel;
+import syncer.transmission.util.code.CodeUtils;
+import syncer.webapp.request.CreateDumpUpParam;
 import syncer.webapp.request.CreateFileTaskParam;
 import syncer.webapp.request.CreateTaskParam;
 
@@ -234,6 +239,74 @@ public class DtoToTaskModelUtils {
             }
 
             taskModel.setSyncType(getFileType(param.getFileType()));
+            taskModel.setMd5(getTaskMd5(taskModel));
+            taskModelList.add(taskModel);
+        }
+
+        return taskModelList;
+    }
+
+
+    /**
+     * 根据createDumpup param生成List<TaskModel>
+     * @param param
+     * @param change
+     * @return
+     */
+    public synchronized static List<TaskModel> getTaskModelList(CreateDumpUpParam param, boolean change) throws TaskMsgException {
+        List<TaskModel>taskModelList=Lists.newArrayList();
+        String[]addressList=param.getSourceRedisAddress().split(";");
+        if(!param.getFileType().equals(SyncType.COMMANDDUMPUP.getFileType())){
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_SYNCTYPE_ERROR_CODE, TaskMsgConstant.TASK_MSG_SYNCTYPE_ERROR));
+        }
+        String taskId=null;
+        for (String address:addressList) {
+            if(StringUtils.isEmpty(address)){
+                continue;
+            }
+            if(change){
+                taskId=param.getTaskId();
+            }else {
+                taskId=TemplateUtils.uuid();
+            }
+            TaskModel taskModel=TaskModel.builder()
+                    .afresh(true)
+                    //自动启动
+                    .autostart(param.isAutostart())
+                    //批次大小
+                    .batchSize(100)
+                    //offset
+                    .offset(-1L)
+                    //id
+                    .id(taskId)
+                    //taskName
+                    .taskName(param.getTaskName())
+                    //源地址
+                    .sourceRedisAddress(address)
+                    .sourcePassword(param.getSourcePassword())
+                    //目标地址
+                    .targetRedisAddress("")
+                    //目标密码
+                    .targetPassword("")
+                    .syncType(SyncType.COMMANDDUMPUP.getCode())
+                    //任务状态
+                    .status(TaskStatusType.CREATING.getCode())
+                    //原目标类型 1 单机
+                    .sourceRedisType(1)
+                    //文件地址
+                    .fileAddress(param.getFileAddress())
+                    //Redis 6.0 ACL相关
+                    .sourceAcl(param.isSourceAcl())
+                    .sourceUserName(param.getSourceUserName())
+                    .targetAcl(param.isTargetAcl())
+                    .targetUserName(param.getTargetUserName())
+                    .errorCount(param.getErrorCount())
+                    .build();
+            if(param.getDbMapper()!=null){
+                taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
+            }else {
+                taskModel.setDbMapper(JSON.toJSONString(Maps.newHashMap()));
+            }
             taskModel.setMd5(getTaskMd5(taskModel));
             taskModelList.add(taskModel);
         }

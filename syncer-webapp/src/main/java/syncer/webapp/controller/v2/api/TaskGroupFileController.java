@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import syncer.common.entity.ResponseResult;
 import syncer.common.montitor.Montitor;
+import syncer.replica.entity.FileType;
 import syncer.transmission.entity.StartTaskEntity;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.service.ITaskGroupService;
@@ -27,6 +28,7 @@ import syncer.transmission.strategy.taskcheck.RedisTaskStrategyGroupType;
 import syncer.transmission.strategy.taskcheck.TaskCheckStrategyGroupSelecter;
 import syncer.webapp.config.submit.Resubmit;
 import syncer.webapp.constants.ApiConstants;
+import syncer.webapp.request.CreateDumpUpParam;
 import syncer.webapp.request.CreateFileTaskParam;
 import syncer.webapp.util.DtoToTaskModelUtils;
 
@@ -78,6 +80,35 @@ public class TaskGroupFileController {
                 .build();
     }
 
+
+
+
+    /**
+     * 备份实时命令
+     * @param param
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/createCommandDumpUpTask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
+    @Resubmit(delaySeconds = 10)
+    public ResponseResult<List<StartTaskEntity>> createCommandDumpUptask(@RequestBody @Validated CreateDumpUpParam param) throws Exception {
+        param.setFileType(FileType.COMMANDDUMPUP);
+        List<TaskModel> taskModelList= DtoToTaskModelUtils.getTaskModelList(param,false);
+
+        /**
+         * 检查策略
+         */
+        for (TaskModel taskModel : taskModelList) {
+            TaskCheckStrategyGroupSelecter.select(RedisTaskStrategyGroupType.COMMANDUPGROUP, null, taskModel).run(null, taskModel);
+        }
+        List<StartTaskEntity>startTaskEntityList=taskGroupService.createCommandDumpUpTask(taskModelList);
+
+        return ResponseResult.<List<StartTaskEntity>>builder()
+                .code(ApiConstants.SUCCESS_CODE)
+                .msg(ApiConstants.REQUEST_SUCCESS_MSG)
+                .data(startTaskEntityList)
+                .build();
+    }
 
 
 }

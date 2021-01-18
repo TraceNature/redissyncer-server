@@ -31,7 +31,7 @@ public interface ITaskGroupService {
      * @return
      * @throws TaskMsgException
      */
-//    ResponseResult createCommandDumpUpTask(List<TaskModel> taskModelList) throws TaskMsgException;
+    List<StartTaskEntity> createCommandDumpUpTask(List<TaskModel> taskModelList) throws TaskMsgException;
 
 
     /**
