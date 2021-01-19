@@ -1,7 +1,9 @@
 package syncer.replica.rdb.datatype;
 
 import syncer.replica.rdb.iterable.datatype.*;
+import syncer.replica.rdb.sync.datatype.DataType;
 
+import javax.xml.crypto.Data;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,7 @@ public class KeyValuePairs {
         KeyStringValueModule kv = new KeyStringValueModule();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.MODULE);
         return kv;
     }
 
@@ -35,6 +38,7 @@ public class KeyValuePairs {
         KeyStringValueHash kv = new KeyStringValueHash();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.HASH);
         return kv;
     }
 
@@ -42,6 +46,7 @@ public class KeyValuePairs {
         KeyStringValueList kv = new KeyStringValueList();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.LIST);
         return kv;
     }
 
@@ -49,6 +54,7 @@ public class KeyValuePairs {
         KeyStringValueSet kv = new KeyStringValueSet();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.SET);
         return kv;
     }
 
@@ -56,6 +62,7 @@ public class KeyValuePairs {
         KeyStringValueZSet kv = new KeyStringValueZSet();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.ZSET);
         return kv;
     }
 
@@ -63,6 +70,7 @@ public class KeyValuePairs {
         KeyStringValueStream kv = new KeyStringValueStream();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.STREAM);
         return kv;
     }
 
@@ -73,6 +81,7 @@ public class KeyValuePairs {
         KeyStringValueMapEntryIterator kv = new KeyStringValueMapEntryIterator();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.HASH);
         return kv;
     }
 
@@ -80,6 +89,7 @@ public class KeyValuePairs {
         KeyStringValueByteArrayIterator kv = new KeyStringValueByteArrayIterator();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.LIST);
         return kv;
     }
 
@@ -87,6 +97,7 @@ public class KeyValuePairs {
         KeyStringValueByteArrayIterator kv = new KeyStringValueByteArrayIterator();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.SET);
         return kv;
     }
 
@@ -94,6 +105,7 @@ public class KeyValuePairs {
         KeyStringValueZSetEntryIterator kv = new KeyStringValueZSetEntryIterator();
         copy(raw, kv);
         kv.setValue(value);
+        kv.setDataType(DataType.ZSET);
         return kv;
     }
 
@@ -104,6 +116,7 @@ public class KeyValuePairs {
         BatchedKeyStringValueString kv = new BatchedKeyStringValueString();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.STRING);
         return kv;
     }
 
@@ -111,6 +124,7 @@ public class KeyValuePairs {
         BatchedKeyStringValueModule kv = new BatchedKeyStringValueModule();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.MODULE);
         return kv;
     }
 
@@ -118,6 +132,7 @@ public class KeyValuePairs {
         BatchedKeyStringValueHash kv = new BatchedKeyStringValueHash();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.HASH);
         return kv;
     }
 
@@ -125,6 +140,7 @@ public class KeyValuePairs {
         BatchedKeyStringValueList kv = new BatchedKeyStringValueList();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.LIST);
         return kv;
     }
 
@@ -132,6 +148,7 @@ public class KeyValuePairs {
         BatchedKeyStringValueSet kv = new BatchedKeyStringValueSet();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.SET);
         return kv;
     }
 
@@ -139,6 +156,7 @@ public class KeyValuePairs {
         BatchedKeyStringValueZSet kv = new BatchedKeyStringValueZSet();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.ZSET);
         return kv;
     }
 
@@ -146,6 +164,7 @@ public class KeyValuePairs {
         BatchedKeyStringValueStream kv = new BatchedKeyStringValueStream();
         copy(raw, kv, batch, last);
         kv.setValue(value);
+        kv.setDataType(DataType.STREAM);
         return kv;
     }
 
