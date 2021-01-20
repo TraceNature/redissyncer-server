@@ -75,6 +75,12 @@ public class CreateFileTaskParam {
     private String targetUserName="";
 
     /**
+     * 时间偏差
+     */
+    @Builder.Default
+    private Long timeDeviation=0L;
+
+    /**
      * 抛弃Key阈值
      */
     @Builder.Default

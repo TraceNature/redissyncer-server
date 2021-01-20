@@ -51,7 +51,7 @@ import java.util.Objects;
  * @Date 2020/12/3
  */
 
-@Api("/api/v2")
+@Api(tags = "任务管理接口")
 @RestController
 @RequestMapping(value = "/api/v2")
 @Validated
@@ -108,10 +108,10 @@ public class TaskGroupController {
     @ApiOperation(value ="停止任务")
     @RequestMapping(value = "/stoptask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     @Resubmit(delaySeconds = 10)
-    public ResponseResult stopTask( @RequestBody @Validated StopTaskParam params) throws Exception {
+    public ResponseResult<List<StartTaskEntity>> stopTask( @RequestBody @Validated StopTaskParam params) throws Exception {
         List<StartTaskEntity> msg=null;
         if(Objects.isNull(params.getTaskids())&&Objects.isNull(params.getGroupIds())){
-            return  ResponseResult.builder()
+            return  ResponseResult.<List<StartTaskEntity>>builder()
                     .code(ApiConstants.TASK_TASK_GROUP_ID_NOT_NULL_CODE)
                     .msg(ApiConstants.TASK_TASK_GROUP_ID_NOT_NULL_MSG)
                     .build();
@@ -123,7 +123,7 @@ public class TaskGroupController {
             log.info("手动触发停止任务[taskId]...{}",params.getTaskids());
             msg= taskGroupService.batchStopTaskListByTaskIdList(params.getTaskids());
         }
-        return  ResponseResult.builder()
+        return  ResponseResult.<List<StartTaskEntity>>builder()
                 .code(ApiConstants.SUCCESS_CODE)
                 .msg(ApiConstants.REQUEST_SUCCESS_MSG)
                 .data(msg)
@@ -138,10 +138,10 @@ public class TaskGroupController {
     @RequestMapping(value = "/starttask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     @ApiOperation(value ="启动任务")
     @Resubmit(delaySeconds = 10)
-    public ResponseResult startTask( @RequestBody @Validated  StartTaskParam param) throws Exception {
+    public ResponseResult<List<StartTaskEntity>> startTask( @RequestBody @Validated  StartTaskParam param) throws Exception {
         if(StringUtils.isEmpty(param.getTaskid())&&StringUtils.isEmpty(param.getGroupId())){
             return  ResponseResult
-                    .builder()
+                    .<List<StartTaskEntity>>builder()
                     .code(ApiConstants.TASK_TASK_GROUP_ID_NOT_NULL_CODE)
                     .msg(ApiConstants.TASK_TASK_GROUP_ID_NOT_NULL_MSG)
                     .build();
@@ -152,7 +152,6 @@ public class TaskGroupController {
             return ResponseResult.<List<StartTaskEntity>>builder()
                     .code(ApiConstants.TASK_ABOVE_THRESHOLD_CODE)
                     .msg(ApiConstants.TASK_ABOVE_THRESHOLD_MSG)
-                    .data(null)
                     .build();
         }
 
@@ -160,21 +159,19 @@ public class TaskGroupController {
         if(!StringUtils.isEmpty(param.getTaskid())){
             List<StartTaskEntity>startTaskEntityList= Lists.newArrayList();
             startTaskEntityList.add(taskGroupService.startTaskByTaskId(param.getTaskid(),param.isAfresh()));
-            ResponseResult result=ResponseResult.builder()
+            return ResponseResult.<List<StartTaskEntity>>builder()
                     .code(ApiConstants.SUCCESS_CODE)
                     .msg(ApiConstants.REQUEST_SUCCESS_MSG)
                     .data(startTaskEntityList)
                     .build();
-            return  result;
         }else if(!StringUtils.isEmpty(param.getGroupId())){
-            ResponseResult result=ResponseResult.builder()
+            return ResponseResult.<List<StartTaskEntity>>builder()
                     .code(ApiConstants.SUCCESS_CODE)
                     .msg(ApiConstants.REQUEST_SUCCESS_MSG)
                     .data(taskGroupService.batchStartTaskListByGroupId(param.getGroupId(),param.isAfresh()))
                     .build();
-            return  result;
         }
-        return  ResponseResult.builder()
+        return  ResponseResult.<List<StartTaskEntity>>builder()
                 .code(ApiConstants.TASK_TASK_GROUP_ID_NOT_NULL_CODE)
                 .msg(ApiConstants.TASK_PARAM_ERROR)
                 .build();
@@ -188,12 +185,12 @@ public class TaskGroupController {
      * @throws Exception
      */
     @RequestMapping(value = "/listtasksByPage",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
-    public ResponseResult listTaskByPage(@RequestBody @Validated ListTaskParam param) throws Exception {
+    public ResponseResult<PageBean<TaskModelResult>> listTaskByPage(@RequestBody @Validated ListTaskParam param) throws Exception {
         checkListTaskParam(param);
         ListTaskParamDto listTaskParamDto= ListTaskParamDto.builder().build();
         BeanUtils.copyProperties(param,listTaskParamDto);
         PageBean<TaskModelResult> listTask=taskGroupService.listTaskListByPages(listTaskParamDto);
-        return  ResponseResult.builder()
+        return  ResponseResult.<PageBean<TaskModelResult>>builder()
                 .code(ApiConstants.SUCCESS_CODE)
                 .msg(ApiConstants.REQUEST_SUCCESS_MSG)
                 .data(listTask)
@@ -209,12 +206,12 @@ public class TaskGroupController {
 
     @RequestMapping(value = "/listtasks",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     @ApiOperation(value="任务查询")
-    public ResponseResult listTask(@RequestBody @Validated ListTaskParam param) throws Exception {
+    public ResponseResult<List<TaskModelResult>> listTask(@RequestBody @Validated ListTaskParam param) throws Exception {
         checkListTaskParam(param);
         ListTaskParamDto listTaskParamDto= ListTaskParamDto.builder().build();
         BeanUtils.copyProperties(param,listTaskParamDto);
         List<TaskModelResult>  listTask=taskGroupService.listTaskList(listTaskParamDto);
-        return  ResponseResult.builder()
+        return  ResponseResult.<List<TaskModelResult>>builder()
                 .code(ApiConstants.SUCCESS_CODE)
                 .msg(ApiConstants.REQUEST_SUCCESS_MSG)
                 .data(listTask)
@@ -242,17 +239,17 @@ public class TaskGroupController {
     @RequestMapping(value = "/removetask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     @ApiOperation("删除任务")
     @Resubmit(delaySeconds = 10)
-    public ResponseResult deleteTask(@RequestBody @Validated RemoveTaskParam params) throws Exception {
+    public ResponseResult<List<StartTaskEntity>> deleteTask(@RequestBody @Validated RemoveTaskParam params) throws Exception {
         List<StartTaskEntity> msg=null;
         if(Objects.isNull(params.getTaskids())&&Objects.isNull(params.getGroupIds())){
-            return  ResponseResult.builder().code("4000").msg("taskids或GroupId不能为空").build();
+            return  ResponseResult.<List<StartTaskEntity>>builder().code("4000").msg("taskids或GroupId不能为空").data(null).build();
         }
         if(Objects.nonNull(params.getGroupIds())&&params.getGroupIds().size()>0){
             msg= taskGroupService.removeTaskByGroupIdList(params.getGroupIds());
         }else {
             msg= taskGroupService.removeTaskByTaskIdList(params.getTaskids());
         }
-        return ResponseResult.builder()
+        return ResponseResult.<List<StartTaskEntity>>builder()
                 .code(ApiConstants.SUCCESS_CODE)
                 .msg(ApiConstants.REQUEST_SUCCESS_MSG)
                 .data(msg)

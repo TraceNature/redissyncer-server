@@ -33,6 +33,7 @@ import syncer.transmission.entity.SqliteCommitEntity;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.exception.StartegyNodeException;
 import syncer.transmission.model.BigKeyModel;
+import syncer.transmission.model.TaskModel;
 import syncer.transmission.po.entity.KeyValueEventEntity;
 import syncer.transmission.queue.DbDataCommitQueue;
 import syncer.transmission.strategy.commandprocessing.CommonProcessingStrategy;
@@ -58,16 +59,17 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
     private String taskId;
     @Builder.Default
     private Map<String, Long> analysisMap = new ConcurrentHashMap<>();
-
-    public CommandProcessingDataAnalysisStrategy(CommonProcessingStrategy next, RedisClient client, String taskId) {
+    private TaskModel taskModel;
+    public CommandProcessingDataAnalysisStrategy(CommonProcessingStrategy next, RedisClient client, String taskId,TaskModel taskModel) {
         this.next = next;
         this.client = client;
         this.taskId = taskId;
+        this.taskModel=taskModel;
         this.analysisMap = new ConcurrentHashMap<>();
     }
 
     @Override
-    public void run(Replication replication, KeyValueEventEntity eventEntity) throws StartegyNodeException {
+    public void run(Replication replication, KeyValueEventEntity eventEntity, TaskModel taskModel) throws StartegyNodeException {
         try {
             Event event = eventEntity.getEvent();
             TaskDataEntity dataEntity = SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId);
@@ -165,7 +167,7 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
                 dataEntity.getAllKeyCount().incrementAndGet();
             }
 
-            toNext(replication, eventEntity);
+            toNext(replication, eventEntity,taskModel);
         } catch (Exception e) {
             if (analysisMap.containsKey(RedisDataTypeAnalysisConstant.EROR_KEY)) {
                 analysisMap.put(RedisDataTypeAnalysisConstant.EROR_KEY, analysisMap.get(RedisDataTypeAnalysisConstant.EROR_KEY) + 1);
@@ -177,9 +179,9 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
     }
 
     @Override
-    public void toNext(Replication replication, KeyValueEventEntity eventEntity) throws StartegyNodeException {
+    public void toNext(Replication replication, KeyValueEventEntity eventEntity, TaskModel taskModel) throws StartegyNodeException {
         if (null != next) {
-            next.run(replication, eventEntity);
+            next.run(replication, eventEntity,taskModel);
         }
     }
 

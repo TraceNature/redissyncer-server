@@ -23,6 +23,7 @@ import syncer.transmission.client.RedisClientFactory;
 import syncer.transmission.compensator.ISyncerCompensator;
 import syncer.transmission.compensator.ISyncerCompensatorFactory;
 import syncer.transmission.exception.StartegyNodeException;
+import syncer.transmission.model.TaskModel;
 import syncer.transmission.po.entity.KeyValueEventEntity;
 import syncer.transmission.queue.SyncerQueue;
 import syncer.transmission.queue.impl.LocalMemoryQueue;
@@ -85,7 +86,7 @@ public class MultiQueueFilter implements CommonProcessingStrategy {
     }
 
     @Override
-    public void run(Replication replicator, KeyValueEventEntity eventEntity) throws StartegyNodeException {
+    public void run(Replication replicator, KeyValueEventEntity eventEntity, TaskModel taskModel) throws StartegyNodeException {
         try {
         Event event=eventEntity.getEvent();
         KeyValueEventEntity node=eventEntity;
@@ -121,9 +122,9 @@ public class MultiQueueFilter implements CommonProcessingStrategy {
     }
 
     @Override
-    public void toNext(Replication replicator, KeyValueEventEntity eventEntity) throws StartegyNodeException {
+    public void toNext(Replication replicator, KeyValueEventEntity eventEntity,TaskModel taskModel) throws StartegyNodeException {
         if(null!=next){
-            next.run(replicator,eventEntity);
+            next.run(replicator,eventEntity,taskModel);
         }
     }
 

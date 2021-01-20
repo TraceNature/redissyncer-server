@@ -31,9 +31,9 @@ public class IncrementOnlyProcessingStrategyListFactory implements CommonProcess
     @Override
     public List<CommonProcessingStrategy> getStrategyList(TaskModel taskModel, RedisClient client) {
         List<CommonProcessingStrategy> strategyList = Lists.newArrayList();
-        strategyList.add(CommandProcessingDataAnalysisStrategy.builder().taskId(taskModel.getId()).client(client).build());
-        strategyList.add(CommandProcessingDbMappingStrategy.builder().taskId(taskModel.getId()).client(client).build());
-        strategyList.add(CommandProcessingAofCommandSendStrategy.builder().taskId(taskModel.getId()).client(client).build());
+        strategyList.add(CommandProcessingDataAnalysisStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+        strategyList.add(CommandProcessingDbMappingStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+        strategyList.add(CommandProcessingAofCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         return strategyList;
     }
 }

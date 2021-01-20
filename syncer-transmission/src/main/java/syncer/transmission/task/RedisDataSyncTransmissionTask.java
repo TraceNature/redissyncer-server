@@ -144,6 +144,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                     .filterChain(ProcessingRunStrategyChain.builder().commonFilterList(commonFilterList).build())
                     .replication(replicationHandler)
                     .taskId(taskModel.getTaskId())
+                    .taskModel(taskModel)
                     .syncerCompensator(syncerCompensator)
                     .build();
 

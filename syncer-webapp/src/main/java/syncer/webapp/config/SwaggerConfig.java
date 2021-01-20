@@ -49,11 +49,11 @@ public class SwaggerConfig {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("swagger-bootstrap-ui RESTful APIs")
-                .description("swagger-bootstrap-ui")
-                .termsOfServiceUrl("http://localhost:8999/")
+                .title("RedisSyncer RESTful APIs")
+                .description("RedisSyncer RESTful APIs")
+                .termsOfServiceUrl("https://github.com/TraceNature/redissyncer-server")
 //                .contact("developer@mail.com")
-                .version("1.0")
+                .version("3.1")
                 .build();
     }
 }

@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import syncer.common.util.ThreadPoolUtils;
 import syncer.replica.replication.Replication;
 import syncer.transmission.compensator.ISyncerCompensator;
+import syncer.transmission.model.TaskModel;
 import syncer.transmission.po.entity.KeyValueEventEntity;
 import syncer.transmission.queue.SyncerQueue;
 import syncer.transmission.strategy.commandprocessing.ProcessingRunStrategyChain;
@@ -34,14 +35,15 @@ public class SendCommandTask implements Runnable{
     private String taskId;
     private boolean status = true;
     private ISyncerCompensator syncerCompensator;
-
-    public SendCommandTask(Replication replication, ProcessingRunStrategyChain filterChain, SyncerQueue<KeyValueEventEntity> queue, String taskId, boolean status, ISyncerCompensator syncerCompensator) {
+    private TaskModel taskModel;
+    public SendCommandTask(Replication replication, ProcessingRunStrategyChain filterChain, SyncerQueue<KeyValueEventEntity> queue, String taskId, boolean status, ISyncerCompensator syncerCompensator,TaskModel taskModel) {
         this.replication = replication;
         this.filterChain = filterChain;
         this.queue = queue;
         this.taskId = taskId;
         this.status = status;
         this.syncerCompensator = syncerCompensator;
+        this.taskModel=taskModel;
         ThreadPoolUtils.exec(new SendCommandTask.AliveMonitorThread());
     }
 
@@ -59,7 +61,7 @@ public class SendCommandTask implements Runnable{
 
 
                     if(null!=keyValueEventEntity){
-                        filterChain.run(replication,keyValueEventEntity);
+                        filterChain.run(replication,keyValueEventEntity,taskModel);
                     }
 
                 }catch (Exception e){

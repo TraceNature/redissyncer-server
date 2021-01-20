@@ -11,6 +11,7 @@
 
 package syncer.transmission.entity;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 /**
@@ -24,6 +25,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class StartTaskEntity {
     private String code;
     private String taskId;

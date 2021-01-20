@@ -13,6 +13,7 @@ package syncer.transmission.strategy.commandprocessing;
 
 import syncer.replica.replication.Replication;
 import syncer.transmission.exception.StartegyNodeException;
+import syncer.transmission.model.TaskModel;
 import syncer.transmission.po.entity.KeyValueEventEntity;
 
 /**
@@ -21,9 +22,9 @@ import syncer.transmission.po.entity.KeyValueEventEntity;
  * @Date 2020/12/22
  */
 public interface CommonProcessingStrategy {
-    void run(Replication replication, KeyValueEventEntity eventEntity) throws StartegyNodeException;
+    void run(Replication replication, KeyValueEventEntity eventEntity, TaskModel taskModel) throws StartegyNodeException;
 
-    void toNext(Replication replication, KeyValueEventEntity eventEntity) throws StartegyNodeException;
+    void toNext(Replication replication, KeyValueEventEntity eventEntity, TaskModel taskModel) throws StartegyNodeException;
 
     void setNext(CommonProcessingStrategy nextStrategy);
 }

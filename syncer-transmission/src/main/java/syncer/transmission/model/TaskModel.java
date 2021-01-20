@@ -288,6 +288,12 @@ public class TaskModel {
     @Builder.Default
     private String expandJson="";
 
+    /**
+     * 时间偏差
+     */
+    @Builder.Default
+    private Long timeDeviation=0L;
+
     public String getExpandJson() {
         if (StringUtils.isEmpty(this.expandJson)){
             this.expandJson= JSON.toJSONString(new ExpandTaskModel());
@@ -433,7 +439,7 @@ public class TaskModel {
             , Integer targetPort, String dbMapper, String md5, String createTime, String updateTime
             , String dataAnalysis, String replId, Long rdbKeyCount, Long allKeyCount,
                      Long realKeyCount, Long lastKeyUpdateTime, Long lastKeyCommitTime,
-                     boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName,Long errorCount,String expandJson) {
+                     boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName,Long errorCount,String expandJson,Long timeDeviation) {
         this.id = id;
         this.taskId=taskId;
         this.groupId = groupId;
@@ -478,6 +484,7 @@ public class TaskModel {
         this.targetUserName=targetUserName;
         this.errorCount=errorCount;
         this.expandJson=expandJson;
+        this.timeDeviation=timeDeviation;
         setTargetRedisAddress(this.getTargetRedisAddress());
         setSourceRedisAddress(this.getSourceRedisAddress());
 

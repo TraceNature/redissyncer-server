@@ -11,6 +11,8 @@
 
 package syncer.webapp.controller.v2.api;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -40,6 +42,7 @@ import java.util.Objects;
  * @Description 描述
  * @Date 2020/12/3
  */
+@Api(tags = "文件任务创建接口")
 @RestController
 @RequestMapping(value = "/api/v2/file")
 @Validated
@@ -50,6 +53,7 @@ public class TaskGroupFileController {
     @Autowired
     ITaskGroupService taskGroupService;
 
+    @ApiOperation(value = "创建数据文件导入任务", notes = "支持AOF、RDB、混合文件 等本地/在线文件")
     @RequestMapping(value = "/createtask", method = {RequestMethod.POST}, produces = "application/json;charset=utf-8;")
     @Resubmit(delaySeconds = 10)
     public ResponseResult<List<StartTaskEntity>> createtask(@RequestBody @Validated CreateFileTaskParam param) throws Exception {
@@ -89,6 +93,7 @@ public class TaskGroupFileController {
      * @return
      * @throws Exception
      */
+    @ApiOperation(value = "创建命令实时备份AOF任务", notes = "增量阶段生成AOF文件")
     @RequestMapping(value = "/createCommandDumpUpTask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     @Resubmit(delaySeconds = 10)
     public ResponseResult<List<StartTaskEntity>> createCommandDumpUptask(@RequestBody @Validated CreateDumpUpParam param) throws Exception {

@@ -22,6 +22,7 @@ import syncer.replica.replication.Replication;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.exception.KeyWeed0utException;
 import syncer.transmission.exception.StartegyNodeException;
+import syncer.transmission.model.TaskModel;
 import syncer.transmission.po.entity.KeyValueEventEntity;
 import syncer.transmission.strategy.commandprocessing.CommonProcessingStrategy;
 
@@ -40,16 +41,17 @@ public class CommandProcessingTimeCalculationStrategy implements CommonProcessin
     private CommonProcessingStrategy next;
     private RedisClient client;
     private String taskId;
+    private TaskModel taskModel;
 
-
-    public CommandProcessingTimeCalculationStrategy(CommonProcessingStrategy next, RedisClient client, String taskId) {
+    public CommandProcessingTimeCalculationStrategy(CommonProcessingStrategy next, RedisClient client, String taskId,TaskModel taskModel) {
         this.next = next;
         this.client = client;
         this.taskId = taskId;
+        this.taskModel=taskModel;
     }
 
     @Override
-    public void run(Replication replication, KeyValueEventEntity eventEntity) throws StartegyNodeException {
+    public void run(Replication replication, KeyValueEventEntity eventEntity, TaskModel taskModel) throws StartegyNodeException {
         try{
             Event event=eventEntity.getEvent();
             if (event instanceof DumpKeyValuePair) {
@@ -78,16 +80,16 @@ public class CommandProcessingTimeCalculationStrategy implements CommonProcessin
                 }
             }
             //继续执行下一Filter节点
-            toNext(replication,eventEntity);
+            toNext(replication,eventEntity,taskModel);
         }catch (Exception e){
             throw new StartegyNodeException(e.getMessage()+"->CommandProcessingTimeCalculationStrategy",e.getCause());
         }
     }
 
     @Override
-    public void toNext(Replication replication, KeyValueEventEntity eventEntity) throws StartegyNodeException {
+    public void toNext(Replication replication, KeyValueEventEntity eventEntity, TaskModel taskModel) throws StartegyNodeException {
         if(null!=next){
-            next.run(replication,eventEntity);
+            next.run(replication,eventEntity,taskModel);
         }
     }
 
@@ -102,6 +104,19 @@ public class CommandProcessingTimeCalculationStrategy implements CommonProcessin
             ms = 0L;
         } else {
             ms = time - System.currentTimeMillis();
+
+            //ttl校准
+            if(Objects.nonNull(taskModel)&&Objects.nonNull(taskModel.getTimeDeviation())&&taskModel.getTimeDeviation()!=0L){
+                if(ms<=0L){
+                    if(taskModel.getTimeDeviation()>0L){
+                        ms=ms+taskModel.getTimeDeviation();
+                    }
+                }
+                if(ms>0L){
+                    ms=ms+taskModel.getTimeDeviation();
+                }
+            }
+
             if(ms<0L){
                 //key已经过期 忽略本key
                 throw new KeyWeed0utException("key过期被抛弃");

@@ -82,6 +82,13 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
     @ApiModelProperty(value = "redis db映射关系", allowableValues = "当由此描述时任务按对应关系同步，未列出db不同步 ;无该字段的情况源与目标db一一对应,无该字段迁移源redis所有db库")
     private Map<Integer,Integer> dbMapper;
 
+    /**
+     * 时间偏差
+     */
+    @Builder.Default
+    private Long timeDeviation=0L;
+
+
     public Map<Integer, Integer> getDbMapper() {
         if(dbMapper!=null){
             return dbMapper;

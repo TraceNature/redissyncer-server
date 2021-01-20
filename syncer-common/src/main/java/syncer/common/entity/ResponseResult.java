@@ -11,6 +11,8 @@
 package syncer.common.entity;
 
 import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +27,8 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 @NoArgsConstructor
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ResponseResult<T> {
     /**
      * 状态码

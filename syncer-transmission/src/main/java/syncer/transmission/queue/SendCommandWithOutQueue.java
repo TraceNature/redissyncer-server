@@ -24,6 +24,7 @@ import syncer.transmission.client.RedisClient;
 import syncer.transmission.compensator.ISyncerCompensator;
 import syncer.transmission.constants.RedisCommandTypeEnum;
 import syncer.transmission.model.AbandonCommandModel;
+import syncer.transmission.model.TaskModel;
 import syncer.transmission.po.entity.KeyValueEventEntity;
 import syncer.transmission.strategy.commandprocessing.ProcessingRunStrategyChain;
 import syncer.transmission.util.DataCleanUtils;
@@ -48,30 +49,32 @@ public class SendCommandWithOutQueue {
     private String taskId;
     private boolean status = true;
     private ISyncerCompensator syncerCompensator;
+    private TaskModel taskModel;
 
-
-    public SendCommandWithOutQueue(Replication replication, RedisClient client, ProcessingRunStrategyChain filterChain, String taskId, boolean status, ISyncerCompensator syncerCompensator) {
+    public SendCommandWithOutQueue(Replication replication, RedisClient client, ProcessingRunStrategyChain filterChain, String taskId, boolean status, ISyncerCompensator syncerCompensator,TaskModel taskModel) {
         this.replication = replication;
         this.client = client;
         this.filterChain = filterChain;
         this.taskId = taskId;
         this.status = status;
         this.syncerCompensator = syncerCompensator;
+        this.taskModel=taskModel;
     }
 
-    public SendCommandWithOutQueue(Replication replication, ProcessingRunStrategyChain filterChain, String taskId, boolean status, ISyncerCompensator syncerCompensator) {
+    public SendCommandWithOutQueue(Replication replication, ProcessingRunStrategyChain filterChain, String taskId, boolean status, ISyncerCompensator syncerCompensator,TaskModel taskModel) {
         this.replication = replication;
         this.filterChain = filterChain;
         this.taskId = taskId;
         this.status  = true;
         this.syncerCompensator = syncerCompensator;
+        this.taskModel=taskModel;
     }
 
     public void run(KeyValueEventEntity keyValueEventEntity){
             try {
                 keyValueEventEntity.setISyncerCompensator(syncerCompensator);
                 if(null!=keyValueEventEntity){
-                    filterChain.run(replication,keyValueEventEntity);
+                    filterChain.run(replication,keyValueEventEntity,taskModel);
                 }
                 DataCleanUtils.cleanData(keyValueEventEntity);
             }catch (Exception e){

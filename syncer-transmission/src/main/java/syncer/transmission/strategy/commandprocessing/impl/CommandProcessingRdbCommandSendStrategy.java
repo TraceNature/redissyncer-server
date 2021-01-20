@@ -30,6 +30,7 @@ import syncer.transmission.client.RedisClient;
 import syncer.transmission.compensator.ISyncerCompensator;
 import syncer.transmission.constants.RedisCommandTypeEnum;
 import syncer.transmission.exception.StartegyNodeException;
+import syncer.transmission.model.TaskModel;
 import syncer.transmission.po.entity.KeyValueEventEntity;
 import syncer.transmission.strategy.commandprocessing.CommonProcessingStrategy;
 import syncer.transmission.util.RedisCommandTypeUtils;
@@ -52,18 +53,20 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
     private String taskId;
     private double redisVersion;
     private Date date;
+    private TaskModel taskModel;
 
-    public CommandProcessingRdbCommandSendStrategy(CommonProcessingStrategy next, RedisClient client, String taskId, double redisVersion, Date date) {
+    public CommandProcessingRdbCommandSendStrategy(CommonProcessingStrategy next, RedisClient client, String taskId, double redisVersion, Date date,TaskModel taskModel) {
         this.next = next;
         this.client = client;
         this.taskId = taskId;
         this.redisVersion = redisVersion;
         this.date = new Date();
+        this.taskModel=taskModel;
     }
 
 
     @Override
-    public void run(Replication replication, KeyValueEventEntity eventEntity) throws StartegyNodeException {
+    public void run(Replication replication, KeyValueEventEntity eventEntity, TaskModel taskModel) throws StartegyNodeException {
         try {
             Event event=eventEntity.getEvent();
             //全量同步开始
@@ -219,16 +222,16 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
             }
 
             //继续执行下一Filter节点
-            toNext(replication,eventEntity);
+            toNext(replication,eventEntity,taskModel);
         }catch (Exception e){
             throw new StartegyNodeException(e.getMessage()+"->RdbCommandSendStrategy",e.getCause());
         }
     }
 
     @Override
-    public void toNext(Replication replication, KeyValueEventEntity eventEntity) throws StartegyNodeException {
+    public void toNext(Replication replication, KeyValueEventEntity eventEntity, TaskModel taskModel) throws StartegyNodeException {
         if (null != next) {
-            next.run(replication, eventEntity);
+            next.run(replication, eventEntity,taskModel);
         }
     }
 

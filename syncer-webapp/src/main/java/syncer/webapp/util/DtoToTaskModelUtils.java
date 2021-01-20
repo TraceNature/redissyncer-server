@@ -99,6 +99,7 @@ public class DtoToTaskModelUtils {
 //                    .targetUserName(param.getTargetUserName())
                     .syncType(SyncTypeUtils.getSyncType(syncerType).getCode())
                     .errorCount(param.getErrorCount())
+                    .timeDeviation(param.getTimeDeviation())
                     .build();
             if(param.getDbMapper()!=null){
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
@@ -212,7 +213,6 @@ public class DtoToTaskModelUtils {
                     .taskName(param.getTaskName())
                     //源地址
                     .sourceRedisAddress("")
-
                     //目标地址
                     .targetRedisAddress(param.getTargetRedisAddress())
                     //目标密码
@@ -230,6 +230,7 @@ public class DtoToTaskModelUtils {
                     .targetUserName(param.getTargetUserName())
                     .syncType(SyncTypeUtils.getSyncType(param.getFileType()).getCode())
                     .errorCount(param.getErrorCount())
+                    .timeDeviation(param.getTimeDeviation())
                     .build();
 
             if(param.getDbMapper()!=null){

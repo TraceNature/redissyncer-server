@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.Setter;
 import syncer.replica.replication.Replication;
 import syncer.transmission.exception.StartegyNodeException;
+import syncer.transmission.model.TaskModel;
 import syncer.transmission.po.entity.KeyValueEventEntity;
 
 import java.util.List;
@@ -51,9 +52,9 @@ public class ProcessingRunStrategyChain {
     }
 
 
-    public void  run(Replication replication, KeyValueEventEntity eventEntity) throws StartegyNodeException {
+    public void  run(Replication replication, KeyValueEventEntity eventEntity, TaskModel taskModel) throws StartegyNodeException {
         if(null!=commonFilter){
-            commonFilter.run(replication,eventEntity);
+            commonFilter.run(replication,eventEntity,taskModel);
         }
 
     }
