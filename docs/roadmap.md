@@ -61,3 +61,4 @@
 - [ ] 实现Redis=>tikv全量+增量
 - [ ] 实现Tikv数据全量rollback to redis
 - [ ] tikv 作为redis持久化的完整方案 
+- [ ] 时间戳间隔自定义配置/自动获取
