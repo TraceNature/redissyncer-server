@@ -31,12 +31,12 @@ RedisSyncer是一个redis同步工具，应用于redis单实例及集群同步
 |       :----:       |    :----:       | 
 |  \[JDK\]          |    \[1.8+ \]    |  
 
-##支持Redis版本
+## 支持Redis版本
 |     **环境条件**     |**版本号**  |  
 | :----:| :----: |
 |  \[Redis\]    |         \[2.8-6.0\]  |  
 
-##支持数据类型
+## 支持数据类型
 |     **源数据类型**          |       **说明**             |
 | :----:| :----: |
 |  \[Redis\]                |         \[存量数据同步\]    |  
@@ -90,9 +90,7 @@ RedisSyncer是一个redis同步工具，应用于redis单实例及集群同步
 [comment]: <> (| DECRBY     | 单元格      | 单元格 |)
 
 ## 致谢
-
-
-###Jedis
+### Jedis
 本项目Redis客户端采用[Jedis](https://github.com/redis/jedis)
 ### Replicatior
 本项目数据拉取协议层基于[replicatior](https://github.com/leonchen83/redis-replicator) 二次开发
