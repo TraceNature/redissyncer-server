@@ -22,11 +22,13 @@ import syncer.replica.cmd.CommandParser;
 import syncer.replica.cmd.CommandParsers;
 import syncer.replica.cmd.impl.ExistType;
 import syncer.replica.cmd.impl.ZAddCommand;
+import syncer.replica.cmd.impl.zadd.CompareType;
 import syncer.replica.rdb.datatype.ZSetEntry;
-import syncer.replica.util.objectutil.Strings;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static syncer.replica.util.objectutil.Strings.isEquals;
 
 /**
  * @author Leon Chen
@@ -39,27 +41,24 @@ public class ZAddParser implements CommandParser<ZAddCommand> {
         int idx = 1;
         boolean isCh = false, isIncr = false;
         ExistType existType = ExistType.NONE;
+        CompareType compareType = CompareType.NONE;
         List<ZSetEntry> list = new ArrayList<>();
         byte[] key = CommandParsers.toBytes(command[idx]);
         idx++;
-        boolean et = false;
         while (idx < command.length) {
             String param = CommandParsers.toRune(command[idx]);
-            if (!et && Strings.isEquals(param, "NX")) {
+            if (isEquals(param, "NX")) {
                 existType = ExistType.NX;
-                et = true;
-                idx++;
-                continue;
-            } else if (!et && Strings.isEquals(param, "XX")) {
+            } else if (isEquals(param, "XX")) {
                 existType = ExistType.XX;
-                et = true;
-                idx++;
-                continue;
-            }
-            if (!isCh && Strings.isEquals(param, "CH")) {
+            } else if (isEquals(param, "CH")) {
                 isCh = true;
-            } else if (!isIncr && Strings.isEquals(param, "INCR")) {
+            } else if (isEquals(param, "INCR")) {
                 isIncr = true;
+            } else if (isEquals(param, "GT")) {
+                compareType = CompareType.GT;
+            } else if (isEquals(param, "LT")) {
+                compareType = CompareType.LT;
             } else {
                 double score = Double.parseDouble(param);
                 idx++;
@@ -70,7 +69,6 @@ public class ZAddParser implements CommandParser<ZAddCommand> {
         }
         ZSetEntry[] zSetEntries = new ZSetEntry[list.size()];
         list.toArray(zSetEntries);
-        return new ZAddCommand(key, existType, isCh, isIncr, zSetEntries);
+        return new ZAddCommand(key, existType, compareType, isCh, isIncr, zSetEntries);
     }
-
 }

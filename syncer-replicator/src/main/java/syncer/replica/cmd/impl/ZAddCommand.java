@@ -17,6 +17,7 @@
 package syncer.replica.cmd.impl;
 
 
+import syncer.replica.cmd.impl.zadd.CompareType;
 import syncer.replica.rdb.datatype.ZSetEntry;
 
 /**
@@ -28,16 +29,25 @@ public class ZAddCommand extends GenericKeyCommand {
     private static final long serialVersionUID = 1L;
 
     private ExistType existType;
+    /**
+     * redis 6.2
+     */
+    private CompareType compareType;
     private boolean ch;
     private boolean incr;
     private ZSetEntry[] zSetEntries;
 
     public ZAddCommand() {
     }
-    
+
     public ZAddCommand(byte[] key, ExistType existType, boolean ch, boolean incr, ZSetEntry[] zSetEntries) {
+        this(key, existType, CompareType.NONE, ch, incr, zSetEntries);
+    }
+
+    public ZAddCommand(byte[] key, ExistType existType, CompareType compareType, boolean ch, boolean incr, ZSetEntry[] zSetEntries) {
         super(key);
         this.existType = existType;
+        this.compareType = compareType;
         this.ch = ch;
         this.incr = incr;
         this.zSetEntries = zSetEntries;
@@ -77,5 +87,13 @@ public class ZAddCommand extends GenericKeyCommand {
 
     public void setzSetEntries(ZSetEntry[] zSetEntries) {
         this.zSetEntries = zSetEntries;
+    }
+
+    public CompareType getCompareType() {
+        return compareType;
+    }
+
+    public void setCompareType(CompareType compareType) {
+        this.compareType = compareType;
     }
 }

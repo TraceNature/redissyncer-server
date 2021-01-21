@@ -19,6 +19,7 @@ import syncer.replica.io.RedisInputStream;
 import syncer.replica.io.RedisOutputStream;
 import syncer.replica.rdb.RedisRdbParser;
 import syncer.replica.replication.AbstractReplication;
+import syncer.replica.util.XScheduledExecutorService;
 import syncer.replica.util.objectutil.Strings;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -51,7 +52,7 @@ public class SocketSyncCommand {
     private RedisOutputStream outputStream;
     private Socket socket;
     private ScheduledFuture<?> heartbeat;
-    private ScheduledExecutorService executor;
+    private XScheduledExecutorService executor;
     private AbstractReplication replication;
 
     /**
@@ -87,10 +88,12 @@ public class SocketSyncCommand {
         if (password != null) {
             // sha256 mask password
             String mask = "#" + Strings.mask(password);
-            log.info("[TASKID {}] AUTH {} {}",configuration.getTaskId(), user, mask);
+
             if (user != null) {
+                log.info("[TASKID {}] AUTH {} {}",configuration.getTaskId(), user, mask);
                 send(CMD.AUTH.getBytes(), user.getBytes(), password.getBytes());
             } else {
+                log.info("[TASKID {}] AUTH {}",configuration.getTaskId(), mask);
                 send(CMD.AUTH.getBytes(), password.getBytes());
             }
             final String reply = Strings.toString(reply());

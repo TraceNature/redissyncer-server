@@ -81,7 +81,7 @@ Assume that the ip address of the server where redissyncer is located is 10.0.0.
 
 ```shell script
 curl -X POST \
-  http://10.0.0.100:8080/api/v1/createtask \
+  http://10.0.0.100:8080/api/v2/createtask \
   -H 'Content-Type: application/json' \
   -d '{
     "sourcePassword": "xxxxxx",
@@ -113,7 +113,7 @@ The return value shows the "taskids" that created the task. The id is the unique
 
 ```shell script
 curl -X POST \
-  http://10.0.0.100:8080/api/v1/listtasks \
+  http://10.0.0.100:8080/api/v2/listtasks \
   -H 'Content-Type: application/json' \
   -d '{
     "regulation": "bynames",
@@ -127,7 +127,7 @@ curl -X POST \
 
 ```shell script
 curl -X POST \
-  http://10.0.0.100:8080/api/v1/starttask \
+  http://10.0.0.100:8080/api/v2/starttask \
   -H 'Content-Type: application/json' \
   -d '{
     "taskid": "10F7B3A0E5344598BAA9F847ADBFF9D6"
@@ -141,7 +141,7 @@ When the task is started, "taskid" is a required parameter and only supports sin
 
 ```shell script
 curl -X POST \
-  http://10.0.0.100:8080/api/v1/stoptask \
+  http://10.0.0.100:8080/api/v2/stoptask \
   -H 'Content-Type: application/json' \
   -d '{
     "taskids": [
@@ -160,7 +160,7 @@ Stop task support multi-task stop
 
 ```shell script
 curl -X POST \
-  http://10.0.0.100:8080/api/v1/removetask \
+  http://10.0.0.100:8080/api/v2/removetask \
   -H 'Content-Type: application/json' \
   -d '{
     "taskids": [

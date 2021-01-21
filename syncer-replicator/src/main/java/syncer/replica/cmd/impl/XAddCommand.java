@@ -27,6 +27,7 @@ public class XAddCommand extends GenericKeyCommand {
     private static final long serialVersionUID = 1L;
 
     private MaxLen maxLen;
+    private boolean nomkstream = false;
     private byte[] id;
     private Map<byte[], byte[]> fields;
 
@@ -35,10 +36,34 @@ public class XAddCommand extends GenericKeyCommand {
     }
 
     public XAddCommand(byte[] key, MaxLen maxLen, byte[] id, Map<byte[], byte[]> fields) {
+        this(key, maxLen, false, id, fields);
+    }
+
+    /**
+     *
+     * @param key key
+     * @param maxLen maxlen
+     * @param nomkstream  6.2 nomkstream
+     * @param id id or *
+     * @param fields
+     */
+    public XAddCommand(byte[] key, MaxLen maxLen, boolean nomkstream, byte[] id, Map<byte[], byte[]> fields) {
         super(key);
         this.maxLen = maxLen;
+        this.nomkstream = nomkstream;
         this.id = id;
         this.fields = fields;
+    }
+
+    public boolean isNomkstream() {
+        return nomkstream;
+    }
+
+    /**
+     * @param nomkstream redis 6.2
+     */
+    public void setNomkstream(boolean nomkstream) {
+        this.nomkstream = nomkstream;
     }
 
     public MaxLen getMaxLen() {

@@ -14,10 +14,12 @@ import syncer.replica.io.AsyncBufferedInputStream;
 import syncer.replica.io.RateLimitInputStream;
 import syncer.replica.io.RedisInputStream;
 import syncer.replica.io.RedisOutputStream;
+import syncer.replica.listener.DefaultExceptionListener;
 import syncer.replica.net.RedisSocketFactory;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import syncer.replica.util.XScheduledExecutorService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +52,7 @@ public class SocketReplication extends AbstractReplication{
     protected ScheduledFuture<?> heartbeat;
     protected RedisOutputStream outputStream;
     //心跳检测线程
-    protected ScheduledExecutorService executor;
+    protected XScheduledExecutorService executor;
     protected RedisSocketFactory socketFactory;
 
     protected SocketSyncCommand socketSyncCommand;
@@ -78,6 +80,9 @@ public class SocketReplication extends AbstractReplication{
         this.configuration = configuration;
         this.socketFactory = new RedisSocketFactory(configuration);
 
+        if (configuration.isUseDefaultExceptionListener())
+            addExceptionListener(new DefaultExceptionListener());
+
         socketSyncCommand=SocketSyncCommand.builder().socket(socket)
                 .configuration(configuration)
                 .executor(executor)
@@ -90,12 +95,12 @@ public class SocketReplication extends AbstractReplication{
     @Override
     public void open() throws IOException {
         super.open();
-        this.executor = Executors.newSingleThreadScheduledExecutor();
-        loadExecutor(executor);
+
+        this.executor = new XScheduledExecutorService(configuration);
+        socketSyncCommand.setExecutor(executor);
         try {
             socketReplicationRetrier=new SocketReplicationRetrier(socketSyncCommand,this,configuration,replyParser);
             socketReplicationRetrier.retry(this);
-
         } finally {
             socketSyncCommand.getReplication().doTaskStatusListener(this, SyncerTaskEvent
                     .builder()
@@ -107,8 +112,28 @@ public class SocketReplication extends AbstractReplication{
                     .build());
             doClose();
             doCloseListener(this);
-            terminateQuietly(executor, configuration.getConnectionTimeout(), MILLISECONDS);
+            this.executor.terminateQuietly(configuration.getConnectionTimeout(), MILLISECONDS);
         }
+
+//        this.executor = Executors.newSingleThreadScheduledExecutor();
+//        loadExecutor(executor);
+//        try {
+//            socketReplicationRetrier=new SocketReplicationRetrier(socketSyncCommand,this,configuration,replyParser);
+//            socketReplicationRetrier.retry(this);
+//
+//        } finally {
+//            socketSyncCommand.getReplication().doTaskStatusListener(this, SyncerTaskEvent
+//                    .builder()
+//                    .taskStatusType(TaskStatusType.BROKEN)
+//                    .offset(configuration.getReplOffset())
+//                    .replid(configuration.getReplId())
+//                    .event(SyncerEvent.builder().taskId(configuration.getTaskId()).build())
+//                    .msg("重试多次后失败")
+//                    .build());
+//            doClose();
+//            doCloseListener(this);
+//            terminateQuietly(executor, configuration.getConnectionTimeout(), MILLISECONDS);
+//        }
 
     }
 
@@ -126,7 +151,7 @@ public class SocketReplication extends AbstractReplication{
         socketReplicationRetrier.setReplyParser(replyParser);
     }
 
-    void loadExecutor(ScheduledExecutorService executor){
+    void loadExecutor(XScheduledExecutorService executor){
         socketSyncCommand.setExecutor(executor);
     }
 
