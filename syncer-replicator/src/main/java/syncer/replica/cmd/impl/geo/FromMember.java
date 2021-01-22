@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Leon Chen
+ * Copyright 2016-2017 Leon Chen
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,32 +14,31 @@
  * limitations under the License.
  */
 
-package syncer.replica.cmd.impl;
+package syncer.replica.cmd.impl.geo;
+
+import java.io.Serializable;
 
 /**
  * @author Leon Chen
- * @since 2.6.0
+ * @since 3.5.0
  */
-public class ZPopMinCommand extends GenericKeyCommand {
-
+public class FromMember implements Serializable {
     private static final long serialVersionUID = 1L;
-
-    private int count = 1;
-
-    public ZPopMinCommand() {
+    
+    private byte[] member;
+    
+    public FromMember() {
     }
-
-    public ZPopMinCommand(byte[] key, int count) {
-        super(key);
-        this.count = count;
+    
+    public FromMember(byte[] member) {
+        this.member = member;
     }
-
-    public int getCount() {
-        return count;
+    
+    public byte[] getMember() {
+        return member;
     }
-
-    public void setCount(int count) {
-        this.count = count;
+    
+    public void setMember(byte[] member) {
+        this.member = member;
     }
 }
-

@@ -16,7 +16,6 @@
 
 package syncer.replica.cmd.parser;
 
-
 import syncer.replica.cmd.CommandParser;
 import syncer.replica.cmd.CommandParsers;
 import syncer.replica.cmd.impl.*;
@@ -63,6 +62,14 @@ public class XGroupParser implements CommandParser<XGroupCommand> {
             byte[] group = CommandParsers.toBytes(command[idx]);
             idx++;
             return new XGroupDestroyCommand(key, group);
+        } else if (isEquals(next, "CREATECONSUMER")) {
+            byte[] key = CommandParsers.toBytes(command[idx]);
+            idx++;
+            byte[] group = CommandParsers.toBytes(command[idx]);
+            idx++;
+            byte[] consumer = CommandParsers.toBytes(command[idx]);
+            idx++;
+            return new XGroupCreateConsumerCommand(key, group, consumer);
         } else if (isEquals(next, "DELCONSUMER")) {
             byte[] key = CommandParsers.toBytes(command[idx]);
             idx++;

@@ -241,6 +241,12 @@ public abstract class AbstractReplication extends AbstractReplicationListener im
         addCommandParser(CommandName.name("XTRIM"), new XTrimParser());
         addCommandParser(CommandName.name("XSETID"), new XSetIdParser());
 
+        // since redis 6.2
+        addCommandParser(CommandName.name("COPY"), new CopyParser());
+        addCommandParser(CommandName.name("LMOVE"), new LMoveParser());
+        addCommandParser(CommandName.name("BLMOVE"), new BLMoveParser());
+        addCommandParser(CommandName.name("ZDIFFSTORE"), new ZDiffStoreParser());
+        addCommandParser(CommandName.name("GEOSEARCHSTORE"), new GeoSearchStoreParser());
 
     }
 

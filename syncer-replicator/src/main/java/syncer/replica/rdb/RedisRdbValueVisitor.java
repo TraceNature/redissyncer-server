@@ -5,9 +5,8 @@ import syncer.replica.io.RedisInputStream;
 import java.io.IOException;
 
 /**
- * @author zhanenqiang
- * @Description 描述
- * @Date 2020/8/7
+ * @author Leon Chen
+ * @since 2.1.0
  */
 public abstract class RedisRdbValueVisitor {
 

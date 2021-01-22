@@ -18,28 +18,37 @@ package syncer.replica.cmd.impl;
 
 /**
  * @author Leon Chen
- * @since 2.6.0
+ * @since 3.5.0
  */
-public class ZPopMinCommand extends GenericKeyCommand {
-
+public class XGroupCreateConsumerCommand extends XGroupCommand {
+    
     private static final long serialVersionUID = 1L;
-
-    private int count = 1;
-
-    public ZPopMinCommand() {
+    
+    private byte[] group;
+    private byte[] consumer;
+    
+    public XGroupCreateConsumerCommand() {
     }
-
-    public ZPopMinCommand(byte[] key, int count) {
+    
+    public XGroupCreateConsumerCommand(byte[] key, byte[] group, byte[] consumer) {
         super(key);
-        this.count = count;
+        this.group = group;
+        this.consumer = consumer;
     }
-
-    public int getCount() {
-        return count;
+    
+    public byte[] getGroup() {
+        return group;
     }
-
-    public void setCount(int count) {
-        this.count = count;
+    
+    public void setGroup(byte[] group) {
+        this.group = group;
+    }
+    
+    public byte[] getConsumer() {
+        return consumer;
+    }
+    
+    public void setConsumer(byte[] consumer) {
+        this.consumer = consumer;
     }
 }
-

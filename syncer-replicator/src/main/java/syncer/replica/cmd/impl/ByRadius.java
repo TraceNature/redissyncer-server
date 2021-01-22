@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Leon Chen
+ * Copyright 2016-2017 Leon Chen
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,41 @@
 
 package syncer.replica.cmd.impl;
 
+import syncer.replica.cmd.impl.geo.UnitType;
+
+import java.io.Serializable;
+
 /**
  * @author Leon Chen
- * @since 2.6.0
+ * @since 3.5.0
  */
-public class ZPopMinCommand extends GenericKeyCommand {
-
+public class ByRadius implements Serializable {
     private static final long serialVersionUID = 1L;
-
-    private int count = 1;
-
-    public ZPopMinCommand() {
+    
+    private double radius;
+    private UnitType unitType;
+    
+    public ByRadius() {
     }
-
-    public ZPopMinCommand(byte[] key, int count) {
-        super(key);
-        this.count = count;
+    
+    public ByRadius(double radius, UnitType unitType) {
+        this.radius = radius;
+        this.unitType = unitType;
     }
-
-    public int getCount() {
-        return count;
+    
+    public double getRadius() {
+        return radius;
     }
-
-    public void setCount(int count) {
-        this.count = count;
+    
+    public void setRadius(double radius) {
+        this.radius = radius;
+    }
+    
+    public UnitType getUnitType() {
+        return unitType;
+    }
+    
+    public void setUnitType(UnitType unitType) {
+        this.unitType = unitType;
     }
 }
-

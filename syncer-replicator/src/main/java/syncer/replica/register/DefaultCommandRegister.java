@@ -108,6 +108,13 @@ public class DefaultCommandRegister {
         //jimdb解析
         r.addCommandParser(CommandName.name("TRANSMIT"),new JimDbDefaultCommandParser());
         r.addCommandParser(CommandName.name("TRANSMITFIRSTPARSER"),new JimDbFirstCommandParser());
+
+        // since redis 6.2
+        r.addCommandParser(CommandName.name("COPY"), new CopyParser());
+        r.addCommandParser(CommandName.name("LMOVE"), new LMoveParser());
+        r.addCommandParser(CommandName.name("BLMOVE"), new BLMoveParser());
+        r.addCommandParser(CommandName.name("ZDIFFSTORE"), new ZDiffStoreParser());
+        r.addCommandParser(CommandName.name("GEOSEARCHSTORE"), new GeoSearchStoreParser());
         return r;
     }
 }

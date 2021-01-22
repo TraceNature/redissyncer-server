@@ -26,23 +26,47 @@ import syncer.replica.rdb.datatype.ExpiredType;
 public class SetCommand extends GenericKeyValueCommand {
 
     private static final long serialVersionUID = 1L;
-
+    private boolean keepTtl;
     private ExpiredType expiredType;
     private Long expiredValue;
     private ExistType existType;
+    private boolean get = false;
 
     public SetCommand() {
     }
 
 
-    public SetCommand(byte[] key, byte[] value, ExpiredType expiredType, Long expiredValue, ExistType existType) {
+
+    public SetCommand(byte[] key, byte[] value, boolean keepTtl, ExpiredType expiredType, Long expiredValue, ExistType existType) {
+        this(key, value, keepTtl, expiredType, expiredValue, existType, false);
+    }
+
+    /**
+     * @param key key
+     * @param value value
+     * @param keepTtl keepttl since redis 6.0
+     * @param expiredType expiredType
+     * @param expiredValue expiredValue
+     * @param existType existType
+     * @param get get since redis 6.2
+     * @since 3.5.0
+     */
+    public SetCommand(byte[] key, byte[] value, boolean keepTtl, ExpiredType expiredType, Long expiredValue, ExistType existType, boolean get) {
         super(key, value);
+        this.keepTtl = keepTtl;
         this.expiredType = expiredType;
         this.expiredValue = expiredValue;
         this.existType = existType;
+        this.get = get;
     }
 
+    public boolean getKeepTtl() {
+        return keepTtl;
+    }
 
+    public void setKeepTtl(boolean keepTtl) {
+        this.keepTtl = keepTtl;
+    }
 
     public ExpiredType getExpiredType() {
         return expiredType;
@@ -66,5 +90,22 @@ public class SetCommand extends GenericKeyValueCommand {
 
     public void setExistType(ExistType existType) {
         this.existType = existType;
+    }
+
+
+    /**
+     * get is set
+     * @return
+     */
+    public boolean isGet() {
+        return get;
+    }
+
+    /**
+     * set get parameter
+     * @param get
+     */
+    public void setGet(boolean get) {
+        this.get = get;
     }
 }

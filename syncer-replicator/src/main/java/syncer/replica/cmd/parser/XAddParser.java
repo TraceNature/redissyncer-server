@@ -40,29 +40,37 @@ public class XAddParser implements CommandParser<XAddCommand> {
         byte[] key = CommandParsers.toBytes(command[idx]);
         idx++;
         MaxLen maxLen = null;
-        if (isEquals(CommandParsers.toRune(command[idx]), "MAXLEN")) {
-            idx++;
-            boolean approximation = false;
-            if (Objects.equals(CommandParsers.toRune(command[idx]), "~")) {
-                approximation = true;
-                idx++;
-            } else if (Objects.equals(CommandParsers.toRune(command[idx]), "=")) {
-                idx++;
-            }
-            long count = CommandParsers.toLong(command[idx]);
-            idx++;
-            maxLen = new MaxLen(approximation, count);
-        }
-        byte[] id = CommandParsers.toBytes(command[idx]);
-        idx++;
+        boolean nomkstream = false;
+        byte[] id = null;
         ByteArrayMap fields = new ByteArrayMap();
-        while (idx < command.length) {
-            byte[] field = CommandParsers.toBytes(command[idx]);
-            idx++;
-            byte[] value = idx == command.length ? null : CommandParsers.toBytes(command[idx]);
-            idx++;
-            fields.put(field, value);
+        for (; idx < command.length; idx++) {
+            String token = CommandParsers.toRune(command[idx]);
+            if (isEquals(token, "MAXLEN")) {
+                idx++;
+                boolean approximation = false;
+                if (Objects.equals(CommandParsers.toRune(command[idx]), "~")) {
+                    approximation = true;
+                    idx++;
+                } else if (Objects.equals(CommandParsers.toRune(command[idx]), "=")) {
+                    idx++;
+                }
+                long count = CommandParsers.toLong(command[idx]);
+                maxLen = new MaxLen(approximation, count);
+            } else if (isEquals(token, "NOMKSTREAM")) {
+                nomkstream = true;
+            } else {
+                id = CommandParsers.toBytes(command[idx]);
+                idx++;
+                while (idx < command.length) {
+                    byte[] field = CommandParsers.toBytes(command[idx]);
+                    idx++;
+                    byte[] value = idx == command.length ? null : CommandParsers.toBytes(command[idx]);
+                    idx++;
+                    fields.put(field, value);
+                }
+            }
         }
-        return new XAddCommand(key, maxLen, id, fields);
+
+        return new XAddCommand(key, maxLen, nomkstream, id, fields);
     }
 }

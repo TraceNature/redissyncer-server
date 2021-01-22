@@ -24,6 +24,7 @@ import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -162,12 +163,15 @@ public class Configuration implements Serializable {
      */
     private int replStreamDB = -1;
 
-
-
     /**
      * psync offset
      */
     private final AtomicLong replOffset = new AtomicLong(-1);
+
+    /**
+     * heartbeat executor
+     */
+    private ScheduledExecutorService scheduledExecutor;
 
     /**
      * 任务Id
@@ -395,6 +399,16 @@ public class Configuration implements Serializable {
         return this;
     }
 
+
+    public ScheduledExecutorService getScheduledExecutor() {
+        return scheduledExecutor;
+    }
+
+    public Configuration setScheduledExecutor(ScheduledExecutorService scheduledExecutor) {
+        this.scheduledExecutor = scheduledExecutor;
+        return this;
+    }
+
     public Configuration merge(SslConfiguration sslConfiguration) {
         if (sslConfiguration == null) {
             return this;
@@ -531,6 +545,7 @@ public class Configuration implements Serializable {
                 ", rateLimit=" + rateLimit +
                 ", verbose=" + verbose +
                 ", heartbeatPeriod=" + heartbeatPeriod +
+                ", scheduledExecutor=" + scheduledExecutor +
                 ", useDefaultExceptionListener=" + useDefaultExceptionListener +
                 ", ssl=" + ssl +
                 ", sslSocketFactory=" + sslSocketFactory +
