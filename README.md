@@ -39,23 +39,26 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 请参阅　[RoadMap](docs/roadmap.md)
 
 ## 编译环境
+
 |     **环境条件** |   **版本号**  |  
-|      :----:     |     :----:   | 
+|      :----:     |     :----:   |
 |  \[Maven\]     |  \[3.0+ \]   |  
 |  \[JDK\]       |  \[1.8 \]   |
 
 ## 运行环境
 
 |     **环境条件**    |    **版本号**    |  
-|       :----:       |    :----:       | 
+|       :----:       |    :----:       |
 |  \[JDK\]          |    \[1.8+ \]    |  
 
 ## 支持Redis版本
+
 |     **环境条件**     |**版本号**  |  
 | :----:| :----: |
 |  \[Redis\]    |         \[2.8-6.0\]  |  
 
 ## 支持数据类型
+
 |     **源数据类型**          |       **说明**             |
 | :----:| :----: |
 |  \[Redis\]                |         \[存量数据同步\]    |  
@@ -63,16 +66,13 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 |  \[Redis\]                |     \[存量+增量实时同步\]    |  
 |  \[Redis\]                |     \[生成实时增量AOF文件\]  |
 |  \[本地RDB\]                |     \[本地RDB文件导入\]    |  
-|  \[在线RDB\]                |     \[文件url导入\]       | 
+|  \[在线RDB\]                |     \[文件url导入\]       |
 |  \[本地AOF\]                |     \[本地AOF文件导入\]    | 
-|  \[在线AOF\]                |     \[文件url导入\]       | 
+|  \[在线AOF\]                |     \[文件url导入\]       |
 |  \[本地混合文件\]            |     \[本地混合文件导入\]    | 
 |  \[在线混合文件\]            |     \[文件url导入\]        | 
 
 [comment]: <> (##支持命令)
-
-
-
 
 [comment]: <> (|  命令  |  命令  | 命令    | 命令    |)
 
@@ -84,21 +84,21 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 
 [comment]: <> (| SETEX      | BRPOPLPUSH | SDIFFSTORE  |)
 
-[comment]: <> (| SETNX      | 	LINSERT   | SINTERSTORE |)
+[comment]: <> (| SETNX      |  LINSERT   | SINTERSTORE |)
 
-[comment]: <> (| GETSET     | 	LPOP      |   SMOVE     |)
+[comment]: <> (| GETSET     |  LPOP      |   SMOVE     |)
 
 [comment]: <> (| SETBIT     | LPUSH      |    SPOP     |)
 
 [comment]: <> (| SETRANGE   | LPUSHX     |    SREM     |)
 
-[comment]: <> (| 	MSET     | LREM       | SUNIONSTORE |)
+[comment]: <> (|  MSET     | LREM       | SUNIONSTORE |)
 
 [comment]: <> (| MSETNX     | LSET       | 单元格 |)
 
 [comment]: <> (| PSETEX     | LTRIM      | 单元格 |)
 
-[comment]: <> (| 	INCR     | RPOP       | 单元格 |)
+[comment]: <> (|  INCR     | RPOP       | 单元格 |)
 
 [comment]: <> (| INCRBY     | RPOPLPUSH  | 单元格 |)
 
@@ -109,7 +109,11 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 [comment]: <> (| DECRBY     | 单元格      | 单元格 |)
 
 ## 致谢
+
 ### Jedis
+
 本项目Redis客户端采用[Jedis](https://github.com/redis/jedis)
+
 ### Replicatior
+
 本项目数据拉取协议层基于[replicatior](https://github.com/leonchen83/redis-replicator) 二次开发
