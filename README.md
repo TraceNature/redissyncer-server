@@ -1,15 +1,34 @@
 # RedisSyncer
+
 [English](README_en.md)
 
-RedisSyncer是一个redis同步工具，应用于redis单实例及集群同步
+RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及集群同步。
+该工具集包括：
 
-## 项目目标
+* redis 同步服务引擎
+  [redissyncer-server](https://github.com/TraceNature/redissyncer-server)
+  
+* redissycner 客户端
+  [redissyncer-cli](https://github.com/TraceNature/redissyncer-cli)
 
-* 基于java编写服务化的redis同步服务；
-* 基于redis迁移服务开发Cui及Gui可视化界面方便使用；
-* 覆盖单实例多版本、多实例多版本、全量+增量、增量等多个场景；
-* 满足客户迁移同步、缓存预热、redis灾备、集群扩缩容、redis版本升级等实际应用场景；
-* 易于与现有云环境集成；
+* redis 数据校验工具
+  [redissycner-compare](https://github.com/TraceNature/rediscompare)
+
+* 基于docker-compse的一体化部署方案
+  [redissyncer](https://github.com/TraceNature/redissyncer)
+
+## 功能列表
+
+* 单节点、多节点在线同步
+* 指定db库数据映射
+* 批量RDB文件并行导入
+* 批量AOF文件并行导入
+* 批量MIX混合文件导入
+* 增量实时AOF文件生成
+* 断点续传
+* 大key自动拆分
+* rdb跨版本支持，支持高版本至低版本
+* ttl校准
 
 ## Quick start
 
@@ -23,7 +42,7 @@ RedisSyncer是一个redis同步工具，应用于redis单实例及集群同步
 |     **环境条件** |   **版本号**  |  
 |      :----:     |     :----:   | 
 |  \[Maven\]     |  \[3.0+ \]   |  
-|  \[JDK\]       |  \[1.8+ \]   |
+|  \[JDK\]       |  \[1.8 \]   |
 
 ## 运行环境
 
