@@ -35,4 +35,6 @@ public class StartTaskParam {
     @ApiModelProperty(value = "是否从头开始同步任务")
     @Builder.Default
     private boolean afresh = true;
+
+
 }

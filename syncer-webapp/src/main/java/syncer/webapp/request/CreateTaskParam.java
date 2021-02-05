@@ -15,6 +15,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import syncer.replica.entity.FileType;
+import syncer.transmission.constants.CommandKeyFilterType;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -88,6 +89,20 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
     @Builder.Default
     private Long timeDeviation=0L;
 
+    /**
+     * 命令过滤器
+     */
+    @Builder.Default
+    private String commandFilter="";
+
+    /**
+     * Key过滤器
+     */
+    @Builder.Default
+    private String keyFilter="";
+
+    @Builder.Default
+    private CommandKeyFilterType filterType=CommandKeyFilterType.NONE;
 
     public Map<Integer, Integer> getDbMapper() {
         if(dbMapper!=null){
