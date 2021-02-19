@@ -17,6 +17,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import syncer.replica.entity.FileType;
+import syncer.transmission.constants.CommandKeyFilterType;
 
 import javax.validation.constraints.NotBlank;
 import java.util.Map;
@@ -85,6 +86,22 @@ public class CreateFileTaskParam {
      */
     @Builder.Default
     private long errorCount=1;
+
+
+    /**
+     * 命令过滤器
+     */
+    @Builder.Default
+    private String commandFilter="";
+
+    /**
+     * Key过滤器
+     */
+    @Builder.Default
+    private String keyFilter="";
+
+    @Builder.Default
+    private CommandKeyFilterType filterType=CommandKeyFilterType.NONE;
 
     public void setSynctype(FileType synctype) {
         if(Objects.nonNull(fileType)){

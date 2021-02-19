@@ -205,7 +205,8 @@ public class DtoToTaskModelUtils {
             }else{
                 taskId=TemplateUtils.uuid();
             }
-
+            String keyFilter=param.getKeyFilter();
+            CommandKeyFilterType commandKeyFilterType= param.getFilterType()==null?CommandKeyFilterType.NONE:param.getFilterType();
             TaskModel taskModel=TaskModel.builder()
                     .afresh(true)
                     //自动启动
@@ -238,6 +239,8 @@ public class DtoToTaskModelUtils {
                     .syncType(SyncTypeUtils.getSyncType(param.getFileType()).getCode())
                     .errorCount(param.getErrorCount())
                     .timeDeviation(param.getTimeDeviation())
+                    .keyFilter(keyFilter)
+                    .filterType(commandKeyFilterType)
                     .build();
 
             if(param.getDbMapper()!=null){
