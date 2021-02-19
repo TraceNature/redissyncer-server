@@ -30,6 +30,7 @@ import syncer.common.montitor.Montitor;
 import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.entity.StartTaskEntity;
 import syncer.transmission.model.TaskModel;
+import syncer.transmission.po.KeyFilterDto;
 import syncer.transmission.po.ListTaskParamDto;
 import syncer.transmission.po.TaskModelResult;
 import syncer.transmission.service.ITaskGroupService;
@@ -41,7 +42,6 @@ import syncer.webapp.constants.ApiConstants;
 import syncer.webapp.request.*;
 import syncer.webapp.util.DtoToTaskModelUtils;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -155,6 +155,15 @@ public class TaskGroupController {
                     .build();
         }
 
+        /**
+         *  启动任务时配置 过滤策略
+
+        KeyFilterDto filterDto=KeyFilterDto.builder()
+                .filterType(param.getFilterType())
+                .commandFilter(param.getCommandFilter())
+                .keyFilter(param.getKeyFilter())
+                .build();
+        */
 
         if(!StringUtils.isEmpty(param.getTaskid())){
             List<StartTaskEntity>startTaskEntityList= Lists.newArrayList();

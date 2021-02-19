@@ -3,6 +3,7 @@ package syncer.webapp.util;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.springframework.util.StringUtils;
 import syncer.common.exception.TaskMsgException;
 import syncer.common.util.MD5Utils;
@@ -14,6 +15,7 @@ import syncer.replica.entity.SyncType;
 import syncer.replica.entity.TaskStatusType;
 import syncer.replica.entity.TaskType;
 import syncer.replica.util.SyncTypeUtils;
+import syncer.transmission.constants.CommandKeyFilterType;
 import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.util.code.CodeUtils;
@@ -64,6 +66,8 @@ public class DtoToTaskModelUtils {
                 syncerType=FileType.SYNC;
             }
 
+            String keyFilter=param.getKeyFilter();
+            CommandKeyFilterType commandKeyFilterType= param.getFilterType()==null?CommandKeyFilterType.NONE:param.getFilterType();
             TaskModel taskModel=TaskModel.builder()
                     .afresh(param.isAfresh())
                     //自动启动
@@ -100,6 +104,9 @@ public class DtoToTaskModelUtils {
                     .syncType(SyncTypeUtils.getSyncType(syncerType).getCode())
                     .errorCount(param.getErrorCount())
                     .timeDeviation(param.getTimeDeviation())
+                    .commandFilter(param.getCommandFilter())
+                    .keyFilter(keyFilter)
+                    .filterType(commandKeyFilterType)
                     .build();
             if(param.getDbMapper()!=null){
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
@@ -198,7 +205,8 @@ public class DtoToTaskModelUtils {
             }else{
                 taskId=TemplateUtils.uuid();
             }
-
+            String keyFilter=param.getKeyFilter();
+            CommandKeyFilterType commandKeyFilterType= param.getFilterType()==null?CommandKeyFilterType.NONE:param.getFilterType();
             TaskModel taskModel=TaskModel.builder()
                     .afresh(true)
                     //自动启动
@@ -231,6 +239,8 @@ public class DtoToTaskModelUtils {
                     .syncType(SyncTypeUtils.getSyncType(param.getFileType()).getCode())
                     .errorCount(param.getErrorCount())
                     .timeDeviation(param.getTimeDeviation())
+                    .keyFilter(keyFilter)
+                    .filterType(commandKeyFilterType)
                     .build();
 
             if(param.getDbMapper()!=null){

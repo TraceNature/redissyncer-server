@@ -17,10 +17,7 @@ import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.strategy.commandprocessing.CommonProcessingStrategy;
 import syncer.transmission.strategy.commandprocessing.factory.CommonProcessingStrategyListFactory;
-import syncer.transmission.strategy.commandprocessing.impl.CommandProcessingDataAnalysisStrategy;
-import syncer.transmission.strategy.commandprocessing.impl.CommandProcessingDbMappingStrategy;
-import syncer.transmission.strategy.commandprocessing.impl.CommandProcessingRdbCommandSendStrategy;
-import syncer.transmission.strategy.commandprocessing.impl.CommandProcessingTimeCalculationStrategy;
+import syncer.transmission.strategy.commandprocessing.impl.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +33,8 @@ public class StockonlyProcessingStrategyListFactory implements CommonProcessingS
     public List<CommonProcessingStrategy> getStrategyList(TaskModel taskModel, RedisClient client) {
         List<CommonProcessingStrategy> strategyList = Lists.newArrayList();
         strategyList.add(CommandProcessingTimeCalculationStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+        //过滤策略
+        strategyList.add(CommandProcessingCommandFilterStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         strategyList.add(CommandProcessingDataAnalysisStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         strategyList.add(CommandProcessingDbMappingStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         strategyList.add(CommandProcessingRdbCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).redisVersion(taskModel.getRedisVersion()).build());
