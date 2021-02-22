@@ -42,7 +42,7 @@
 
 ## 节点注册过程
 
-* portal和redissyncer节点在配置文件中配置nodeid，portal解点检查/node/portal/下无节点信息则写入节点信息，若有则注册失败；redissyncer节点 检查 /node/redissyncer/下若无节点信息则写入节点信息，若有则注册失败
+* portal和redissyncer节点在配置文件中配置nodeid，portal解点检查/node/portal/下无节点信息则写入节点信息，修改节点状态为online；若有则检查节点状态是否为offline，若为online则注册失败，上报当前节点状态；redissyncer节点 检查 /node/redissyncer/下若无节点信息则写入节点信息，若有则注册失败
   
 ## 节点健康检查规则
 
