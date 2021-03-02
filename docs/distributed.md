@@ -25,6 +25,8 @@
 | /tasks/node/| nodeId/taskid | taskidset|node下的task|
 | /tasks/groupid/| groupid | taskidset|groupid 以及groupid下的taskid|
 | /tasks/status/| currentstatus/taskid | taskidset|巡检执行的分布式锁|
+| /tasks/name/| nodeId/taskname | taskidset|根据taskName查询|
+| /tasks/md5/| md5 | taskidset|根据md5查询|
 
 ## id规范
 
