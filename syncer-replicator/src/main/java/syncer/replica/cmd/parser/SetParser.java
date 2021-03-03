@@ -21,9 +21,11 @@ import syncer.replica.cmd.CommandParser;
 import syncer.replica.cmd.CommandParsers;
 import syncer.replica.cmd.impl.ExistType;
 import syncer.replica.cmd.impl.SetCommand;
+import syncer.replica.cmd.impl.XATType;
 import syncer.replica.rdb.datatype.ExpiredType;
 
 import static syncer.replica.util.objectutil.Strings.isEquals;
+
 
 /**
  * @author Leon Chen
@@ -38,6 +40,8 @@ public class SetParser implements CommandParser<SetCommand> {
         int idx = 3;
         ExistType existType = ExistType.NONE;
         Long expiredValue = null;
+        XATType xatType = XATType.NONE;
+        Long xatValue = null;
         boolean et = false, st = false;
         boolean keepTtl = false;
         boolean get = false;
@@ -64,9 +68,17 @@ public class SetParser implements CommandParser<SetCommand> {
                 expiredType = ExpiredType.MS;
                 expiredValue = Long.valueOf(CommandParsers.toRune(command[idx++]));
                 st = true;
+            } else if (!st && isEquals(param, "EXAT")) {
+                xatType = XATType.EXAT;
+                xatValue = Long.valueOf(CommandParsers.toRune(command[idx++]));
+                st = true;
+            } else if (!st && isEquals(param, "PXAT")) {
+                xatType = XATType.PXAT;
+                xatValue = Long.valueOf(CommandParsers.toRune(command[idx++]));
+                st = true;
             }
         }
-        return new SetCommand(key, value, keepTtl, expiredType, expiredValue, existType, get);
+        return new SetCommand(key, value, keepTtl, expiredType, expiredValue, xatType, xatValue, existType, get);
     }
 
 }

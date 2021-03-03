@@ -20,7 +20,9 @@ package syncer.replica.cmd.parser;
 
 import syncer.replica.cmd.CommandParser;
 import syncer.replica.cmd.CommandParsers;
+import syncer.replica.cmd.impl.Limit;
 import syncer.replica.cmd.impl.MaxLen;
+import syncer.replica.cmd.impl.MinId;
 import syncer.replica.cmd.impl.XAddCommand;
 import syncer.replica.util.objectutil.ByteArrayMap;
 
@@ -40,6 +42,8 @@ public class XAddParser implements CommandParser<XAddCommand> {
         byte[] key = CommandParsers.toBytes(command[idx]);
         idx++;
         MaxLen maxLen = null;
+        MinId minId = null;
+        Limit limit = null;
         boolean nomkstream = false;
         byte[] id = null;
         ByteArrayMap fields = new ByteArrayMap();
@@ -56,6 +60,21 @@ public class XAddParser implements CommandParser<XAddCommand> {
                 }
                 long count = CommandParsers.toLong(command[idx]);
                 maxLen = new MaxLen(approximation, count);
+            } else if (isEquals(token, "MINID")) {
+                idx++;
+                boolean approximation = false;
+                if (Objects.equals(CommandParsers.toRune(command[idx]), "~")) {
+                    approximation = true;
+                    idx++;
+                } else if (Objects.equals(CommandParsers.toRune(command[idx]), "=")) {
+                    idx++;
+                }
+                byte[] mid = CommandParsers.toBytes(command[idx]);
+                minId = new MinId(approximation, mid);
+            } else if (isEquals(token, "LIMIT")) {
+                idx++;
+                long count = CommandParsers.toLong(command[idx]);
+                limit = new Limit(0, count);
             } else if (isEquals(token, "NOMKSTREAM")) {
                 nomkstream = true;
             } else {
@@ -71,6 +90,6 @@ public class XAddParser implements CommandParser<XAddCommand> {
             }
         }
 
-        return new XAddCommand(key, maxLen, nomkstream, id, fields);
+        return new XAddCommand(key, maxLen, minId, limit, nomkstream, id, fields);
     }
 }
