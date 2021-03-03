@@ -16,6 +16,8 @@
 
 package syncer.replica.cmd.impl;
 
+import syncer.replica.cmd.impl.geo.Count;
+
 /**
  * @author Leon Chen
  * @since 2.1.0
@@ -24,10 +26,35 @@ public class RPopCommand extends  GenericKeyCommand {
 
     private static final long serialVersionUID = 1L;
 
-    public RPopCommand() {
-    }
+    private Count count;
 
     public RPopCommand(byte[] key) {
+        this(key, null);
+    }
+
+    /**
+     * @since 3.5.2
+     * @param key key
+     * @param count count
+     */
+    public RPopCommand(byte[] key, Count count) {
         super(key);
+        this.count = count;
+    }
+
+    /**
+     * @since 3.5.2
+     * @return count
+     */
+    public Count getCount() {
+        return count;
+    }
+
+    /**
+     * @since 3.5.2
+     * @param count count
+     */
+    public void setCount(Count count) {
+        this.count = count;
     }
 }

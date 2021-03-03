@@ -20,11 +20,15 @@ package syncer.replica.cmd.parser;
 
 import syncer.replica.cmd.CommandParser;
 import syncer.replica.cmd.CommandParsers;
+import syncer.replica.cmd.impl.ExistType;
 import syncer.replica.cmd.impl.Geo;
 import syncer.replica.cmd.impl.GeoAddCommand;
+import syncer.replica.util.objectutil.Strings;
 
 import java.util.ArrayList;
 import java.util.List;
+
+
 
 /**
  * @author Leon Chen
@@ -37,16 +41,26 @@ public class GeoAddParser implements CommandParser<GeoAddCommand> {
         byte[] key = CommandParsers.toBytes(command[idx]);
         idx++;
         List<Geo> list = new ArrayList<>();
-        while (idx < command.length) {
-            double longitude = CommandParsers.toDouble(command[idx++]);
-            double latitude = CommandParsers.toDouble(command[idx++]);
-            byte[] member = CommandParsers.toBytes(command[idx]);
-            idx++;
-            list.add(new Geo(member, longitude, latitude));
+        ExistType existType = ExistType.NONE;
+        boolean ch = false;
+        for (; idx < command.length; idx++) {
+            String token = CommandParsers.toRune(command[idx]);
+            if (Strings.isEquals(token, "NX")) {
+                existType = ExistType.NX;
+            } else if (Strings.isEquals(token, "XX")) {
+                existType = ExistType.XX;
+            } else if (Strings.isEquals(token, "CH")) {
+                ch = true;
+            } else {
+                double longitude = CommandParsers.toDouble(command[idx++]);
+                double latitude = CommandParsers.toDouble(command[idx++]);
+                byte[] member = CommandParsers.toBytes(command[idx]);
+                list.add(new Geo(member, longitude, latitude));
+            }
         }
         Geo[] geos = new Geo[list.size()];
         list.toArray(geos);
-        return new GeoAddCommand(key, geos);
+        return new GeoAddCommand(key, geos, existType, ch);
     }
 
 }
