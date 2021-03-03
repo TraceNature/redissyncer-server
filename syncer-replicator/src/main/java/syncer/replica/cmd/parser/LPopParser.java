@@ -20,6 +20,7 @@ package syncer.replica.cmd.parser;
 import syncer.replica.cmd.CommandParser;
 import syncer.replica.cmd.CommandParsers;
 import syncer.replica.cmd.impl.LPopCommand;
+import syncer.replica.cmd.impl.geo.Count;
 
 /**
  * @author Leon Chen
@@ -29,7 +30,11 @@ public class LPopParser implements CommandParser<LPopCommand> {
     @Override
     public LPopCommand parse(Object[] command) {
         byte[] key = CommandParsers.toBytes(command[1]);
-        return new LPopCommand(key);
+        Count count = null;
+        if (command.length == 3) {
+            count = new Count(CommandParsers.toInt(command[2]));
+        }
+        return new LPopCommand(key, count);
     }
 
 }
