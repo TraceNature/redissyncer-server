@@ -32,6 +32,8 @@ public class TotalProcessingStrategyListFactory implements CommonProcessingStrat
     public List<CommonProcessingStrategy> getStrategyList(TaskModel taskModel, RedisClient client) {
         List<CommonProcessingStrategy> strategyList = Lists.newArrayList();
         strategyList.add(CommandProcessingTimeCalculationStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+        //过滤策略
+        strategyList.add(CommandProcessingCommandFilterStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         strategyList.add(CommandProcessingDataAnalysisStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         strategyList.add(CommandProcessingDbMappingStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         strategyList.add(CommandProcessingAofCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());

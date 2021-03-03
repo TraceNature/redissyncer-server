@@ -13,6 +13,7 @@ package syncer.transmission.model;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Sets;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,8 @@ import lombok.Setter;
 import org.springframework.util.StringUtils;
 import syncer.common.util.TimeUtils;
 import syncer.replica.entity.SyncType;
+import syncer.transmission.constants.CommandKeyFilterType;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -278,8 +281,6 @@ public class TaskModel {
     private String targetUserName="";
 
 
-
-
     /**
      * 错误数据总数  30L
      */
@@ -293,6 +294,30 @@ public class TaskModel {
      */
     @Builder.Default
     private Long timeDeviation=0L;
+
+
+    /**
+     * 过滤器类型
+     * 任意不生效
+     */
+    private CommandKeyFilterType filterType=CommandKeyFilterType.NONE;
+
+    /**
+     * 命令过滤器
+     */
+//    @Builder.Default
+//    private Set<String>commandFilter= Sets.newHashSet();
+
+    @Builder.Default
+    private String commandFilter=null;
+
+    /**
+     * Key过滤器
+     */
+    @Builder.Default
+    private String keyFilter=null;
+
+
 
     public String getExpandJson() {
         if (StringUtils.isEmpty(this.expandJson)){
@@ -439,7 +464,8 @@ public class TaskModel {
             , Integer targetPort, String dbMapper, String md5, String createTime, String updateTime
             , String dataAnalysis, String replId, Long rdbKeyCount, Long allKeyCount,
                      Long realKeyCount, Long lastKeyUpdateTime, Long lastKeyCommitTime,
-                     boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName,Long errorCount,String expandJson,Long timeDeviation) {
+                     boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName,Long errorCount
+            ,String expandJson,Long timeDeviation,CommandKeyFilterType filterType,String commandFilter,String keyFilter) {
         this.id = id;
         this.taskId=taskId;
         this.groupId = groupId;
@@ -485,6 +511,9 @@ public class TaskModel {
         this.errorCount=errorCount;
         this.expandJson=expandJson;
         this.timeDeviation=timeDeviation;
+        this.filterType=filterType;
+        this.commandFilter=commandFilter;
+        this.keyFilter=keyFilter;
         setTargetRedisAddress(this.getTargetRedisAddress());
         setSourceRedisAddress(this.getSourceRedisAddress());
 

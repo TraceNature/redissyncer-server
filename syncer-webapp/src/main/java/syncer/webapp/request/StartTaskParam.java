@@ -16,6 +16,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import syncer.transmission.constants.CommandKeyFilterType;
 
 /**
  * @author zhanenqiang
@@ -35,4 +36,21 @@ public class StartTaskParam {
     @ApiModelProperty(value = "是否从头开始同步任务")
     @Builder.Default
     private boolean afresh = true;
+
+
+    /**
+     * 命令过滤器
+     */
+
+    private String commandFilter;
+
+    /**
+     * Key过滤器
+     */
+    private String keyFilter;
+
+    private CommandKeyFilterType filterType;
+
+
+
 }
