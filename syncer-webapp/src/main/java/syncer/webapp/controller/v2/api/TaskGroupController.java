@@ -164,7 +164,6 @@ public class TaskGroupController {
                 .keyFilter(param.getKeyFilter())
                 .build();
         */
-
         if(!StringUtils.isEmpty(param.getTaskid())){
             List<StartTaskEntity>startTaskEntityList= Lists.newArrayList();
             startTaskEntityList.add(taskGroupService.startTaskByTaskId(param.getTaskid(),param.isAfresh()));
