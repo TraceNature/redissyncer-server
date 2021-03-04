@@ -147,7 +147,7 @@ class JedisFactory implements PooledObjectFactory<Jedis> {
 
       return hostAndPort.getHost().equals(connectionHost)
           && hostAndPort.getPort() == connectionPort && jedis.isConnected()
-          && jedis.ping().equals("PONG");
+          && "PONG".equals(jedis.ping());
     } catch (final Exception e) {
       return false;
     }

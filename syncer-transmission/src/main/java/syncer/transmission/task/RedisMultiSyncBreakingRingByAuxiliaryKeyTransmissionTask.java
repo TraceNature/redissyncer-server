@@ -192,7 +192,7 @@ public class RedisMultiSyncBreakingRingByAuxiliaryKeyTransmissionTask implements
             replicationHandler.open();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("sync break ring by auxiliary key start error , {}",e.getMessage());
         }
     }
 

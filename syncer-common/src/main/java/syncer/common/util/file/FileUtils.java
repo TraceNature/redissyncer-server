@@ -11,15 +11,19 @@
 package syncer.common.util.file;
 
 
+import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 文件操作类
  */
+@Slf4j
 public class FileUtils {
 
     /**
@@ -35,15 +39,13 @@ public class FileUtils {
             if (targetFile.exists()) {
                 return pathname;
             }
-
             if (!targetFile.getParentFile().exists()) {
                 targetFile.getParentFile().mkdirs();
             }
             file.transferTo(targetFile);
-
             return pathname;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("save file error {}", e.getMessage());
         }
 
         return null;
@@ -55,8 +57,7 @@ public class FileUtils {
     }
 
 
-
-    public static synchronized boolean isDirectory(String path){
+    public static synchronized boolean isDirectory(String path) {
         File targetFile = new File(path);
         return targetFile.isDirectory();
     }
@@ -71,11 +72,10 @@ public class FileUtils {
         File file = new File(pathname);
         if (file.exists()) {
             boolean flag = file.delete();
-
             if (flag) {
                 File[] files = file.getParentFile().listFiles();
                 if (files == null || files.length == 0) {
-                    file.getParentFile().delete();
+                    boolean delStatus=file.getParentFile().delete();
                 }
             }
 
@@ -104,7 +104,7 @@ public class FileUtils {
             writer.write(value);
             writer.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("save text file error {}", e.getMessage());
         } finally {
             try {
                 if (writer != null) {
@@ -132,7 +132,7 @@ public class FileUtils {
         try {
             return getText(new FileInputStream(file));
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            log.error("file not found ,path[{}] {}", path, e.getMessage());
         }
 
         return null;
@@ -154,20 +154,20 @@ public class FileUtils {
 
             return builder.toString();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("get text fail {}", e.getMessage());
         } finally {
             if (bufferedReader != null) {
                 try {
                     bufferedReader.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error("bufferedReader close fail  {}", e.getMessage());
                 }
             }
             if (isr != null) {
                 try {
                     isr.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error("InputStreamReader close fail  {}", e.getMessage());
                 }
             }
         }
@@ -175,10 +175,10 @@ public class FileUtils {
         return null;
     }
 
-    public static boolean mkdirs(String path){
+    public static boolean mkdirs(String path) {
         File f = new File(path);
-        if(!f.exists()){
-           return f.mkdirs(); //创建目录
+        if (!f.exists()) {
+            return f.mkdirs(); //创建目录
         }
         return false;
     }
@@ -216,40 +216,36 @@ public class FileUtils {
 
     /**
      * 创建配置文件
+     *
      * @param value
      */
-    public static synchronized void createSyncerSetting(String value){
+    public static synchronized void createSyncerSetting(String value) {
         String lockPath = System.getProperty("user.dir") + FileUtils.getLockFileName();
         String settingPath = System.getProperty("user.dir") + FileUtils.getSettingName();
-        if(!existsFile(lockPath)){
+        if (!existsFile(lockPath)) {
             createSyncerLock();
         }
 
-        saveTextFile(value,settingPath);
+        saveTextFile(value, settingPath);
     }
 
 
     /**
      * 清理配置文件
      */
-    public static void cleanSettings(){
+    public static void cleanSettings() {
         String lockPath = System.getProperty("user.dir") + FileUtils.getLockFileName();
         String settingPath = System.getProperty("user.dir") + FileUtils.getSettingName();
-        if(existsFile(lockPath)){
+        if (existsFile(lockPath)) {
             deleteFile(lockPath);
         }
-        if(existsFile(settingPath)){
+        if (existsFile(settingPath)) {
             deleteFile(settingPath);
         }
     }
 
 
-
-
-    public synchronized static void ObjectOutToFile(String path,Object object) throws IOException {
-
-
-
+    public synchronized static void ObjectOutToFile(String path, Object object) throws IOException {
         //创建序列化流并关联文件
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(path));
         //实现序列化
@@ -263,11 +259,8 @@ public class FileUtils {
     public synchronized static Object FileInputToObject(String path) throws IOException, ClassNotFoundException {
 
         //创建逆序列化流并关联文件
-//        Object!Input!Stream objectInputStream = new Object!Input!Stream(new FileInputStream(path));
-
+        //Object!Input!Stream objectInputStream = new Object!Input!Stream(new FileInputStream(path));
         SafeObjectInputStream objectInputStream = new SafeObjectInputStream(new FileInputStream(path));
-
-
         //实现逆序列化--读
         Object object = objectInputStream.readObject();
 
@@ -275,7 +268,7 @@ public class FileUtils {
     }
 
 
-    public synchronized static void WriteToFile(String path,String object) throws IOException {
+    public synchronized static void WriteToFile(String path, String object) throws IOException {
         //创建序列化流并关联文件
         OutputStream outputStream = new FileOutputStream(path);
         //实现序列化
@@ -312,16 +305,6 @@ public class FileUtils {
         return sbf.toString();
     }
 
-    //    public  synchronized static Map<String,String>getFileTypeData(String fileurl) throws TaskMsgException {
-//        if(StringUtils.isEmpty(fileurl))
-//            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_URI_ERROR_CODE,TaskMsgConstant.TASK_MSG_URI_ERROR));
-//
-//        Map<String,String>data=new ConcurrentHashMap<>();
-//        if(fileurl.trim().toLowerCase().startsWith("file://")){
-//
-//        }
-//
-//    }
 
 
     /**
@@ -333,7 +316,9 @@ public class FileUtils {
         List<String> files = new ArrayList<String>();
         File file = new File(path);
         File[] tempList = file.listFiles();
-
+        if(Objects.isNull(tempList)){
+            return Lists.newArrayList();
+        }
         for (int i = 0; i < tempList.length; i++) {
             if (tempList[i].isFile()) {
                 files.add(tempList[i].toString());
@@ -341,13 +326,10 @@ public class FileUtils {
                 //String fileName = tempList[i].getName();
             }
             if (tempList[i].isDirectory()) {
-                //这里就不递归了，
+                files.addAll(getFiles(tempList[i].getPath()));
             }
         }
         return files;
     }
 
-    public static void main(String[] args) {
-        createSyncerSetting("hello");
-    }
 }

@@ -59,6 +59,7 @@ public class RedisVersionUtil {
     //rdb版本和redis版本映射关系
     static Map<String,Integer> rdbVersion=null;
 
+    static final Object lock=new Object();
     /**
      * 获取redis版本号
      * info信息中若无版本号信息则返回0L
@@ -155,7 +156,7 @@ public class RedisVersionUtil {
      * @return
      */
     public static synchronized  Integer getRdbVersion(String redisVersion){
-        Object lock=new Object();
+
         //单例模式
         if(rdbVersion==null){
             //加锁维持多任务的线程安全

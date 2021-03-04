@@ -10,12 +10,14 @@
 // limitations under the License.
 package syncer.common.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Objects;
 
 /**
  * @author zhanenqiang
@@ -23,6 +25,7 @@ import java.net.UnknownHostException;
  * @Date 2020/12/15
  */
 @Component
+@Slf4j
 public class ServerConfig  implements ApplicationListener<WebServerInitializedEvent> {
     private int serverPort;
 
@@ -31,9 +34,16 @@ public class ServerConfig  implements ApplicationListener<WebServerInitializedEv
         try {
             address = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
-            e.printStackTrace();
+            log.error("get InetAddress  fail. {}",e.getMessage());
         }
-        return "http://"+address.getHostAddress() +":"+this.serverPort;
+        String hostAddress=null;
+        if(Objects.isNull(address)){
+            hostAddress="unknown";
+        }else {
+            hostAddress=address.getHostAddress();
+        }
+
+        return "http://"+hostAddress +":"+this.serverPort;
     }
 
     @Override

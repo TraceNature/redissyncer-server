@@ -22,6 +22,8 @@ import javax.sql.DataSource;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.util.Objects;
+
 import org.apache.commons.dbcp.BasicDataSource;
 /**
  * @author zhanenqiang
@@ -65,14 +67,21 @@ public class SqliteUtil {
     }
 
     private static void execute(final Connection conn) throws Exception {
-        ScriptRunner runner = new ScriptRunner(conn);
-        // doesn't print logger
-        runner.setLogWriter(null);
-        Resources.setCharset(StandardCharsets.UTF_8);
-        Reader read = Resources.getResourceAsReader("init.sql");
+        try {
+            ScriptRunner runner = new ScriptRunner(conn);
+            // doesn't print logger
+            runner.setLogWriter(null);
+            Resources.setCharset(StandardCharsets.UTF_8);
+            Reader read = Resources.getResourceAsReader("init.sql");
 //        log.info("execute soul schema sql: {}", SCHEMA_SQL_FILE);
-        runner.runScript(read);
-        runner.closeConnection();
-        conn.close();
+            runner.runScript(read);
+            runner.closeConnection();
+        }finally {
+            if(Objects.nonNull(conn)){
+                conn.close();
+            }
+        }
+
+
     }
 }

@@ -24,6 +24,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author zhanenqiang
@@ -58,7 +59,7 @@ public class SqlFileExecutor {
             String[] sqlArr = sqlSb.toString().split("(;//s*//r//n)|(;//s*//n)");
             for (int i = 0; i < sqlArr.length; i++) {
                 String sql = sqlArr[i].replaceAll("--.*", "").trim();
-                if (!sql.equals("")) {
+                if (!"".equals(sql)) {
                     sqlList.add(sql);
                 }
             }
@@ -113,8 +114,10 @@ public class SqlFileExecutor {
             conn.commit();
             log.info("sql脚本执行完毕");
         } catch (Exception ex) {
-            conn.rollback();
-            log.info("sql脚本执行发生异常");
+            if(Objects.nonNull(conn)){
+                conn.rollback();
+                log.info("sql脚本执行发生异常");
+            }
             throw ex;
         } finally {
             try {

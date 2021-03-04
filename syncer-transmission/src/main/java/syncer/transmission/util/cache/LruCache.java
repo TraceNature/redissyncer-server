@@ -30,8 +30,7 @@ public class LruCache <k, v> extends LinkedHashMap<k, v> {
     @Override
     public boolean removeEldestEntry(Map.Entry<k, v> eldest) {
         if (size() > MAX_SIZE) {
-            eldest.getValue();
-//            System.out.println("移除的元素为：" + eldest.getValue());
+            v res=eldest.getValue();
         }
         return size() > MAX_SIZE;
     }

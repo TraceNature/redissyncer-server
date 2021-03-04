@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
 /**
  * @author zhanenqiang
@@ -89,10 +90,12 @@ public class MD5Utils {
      */
     public static String getMD5(File file) {
         if (file != null && file.exists()){
-            return new String(convertToHexString(md5sum(file)));
-        }else{
-            return null;
+            byte[]res=md5sum(file);
+            if(Objects.nonNull(res)){
+                return new String(convertToHexString(res));
+            }
         }
+        return null;
 
     }
 }
