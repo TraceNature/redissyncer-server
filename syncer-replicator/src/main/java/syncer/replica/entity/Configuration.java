@@ -497,10 +497,10 @@ public class Configuration implements Serializable {
         if (value == null) {
             return defaultValue;
         }
-        if (value.equals("false") || value.equals("no")) {
+        if ("false".equals(value) || "no".equals(value)) {
             return false;
         }
-        if (value.equals("true") || value.equals("yes")) {
+        if ("true".equals(value) || "yes".equals(value)) {
             return true;
         }
         return defaultValue;

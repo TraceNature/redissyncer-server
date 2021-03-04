@@ -149,13 +149,22 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils{
      */
     public static String getRemoteAddr(HttpServletRequest request){
         String remoteAddr = request.getHeader("X-Real-IP");
-        if (isNotBlank(remoteAddr)) {
+
+        boolean status=isNotBlank(remoteAddr);
+        if (status) {
             remoteAddr = request.getHeader("X-Forwarded-For");
-        }else if (isNotBlank(remoteAddr)) {
+        }
+
+        status=isNotBlank(remoteAddr);
+        if (status) {
             remoteAddr = request.getHeader("Proxy-Client-IP");
-        }else if (isNotBlank(remoteAddr)) {
+        }
+
+        status=isNotBlank(remoteAddr);
+        if (status) {
             remoteAddr = request.getHeader("WL-Proxy-Client-IP");
         }
+
         return remoteAddr != null ? remoteAddr : request.getRemoteAddr();
     }
 

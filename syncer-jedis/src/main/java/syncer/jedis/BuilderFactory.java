@@ -10,12 +10,18 @@ public final class BuilderFactory {
     @Override
     public Double build(Object data) {
       String string = STRING.build(data);
-      if (string == null) return null;
+      if (string == null) {
+        return null;
+      }
       try {
         return Double.valueOf(string);
       } catch (NumberFormatException e) {
-        if (string.equals("inf") || string.equals("+inf")) return Double.POSITIVE_INFINITY;
-        if (string.equals("-inf")) return Double.NEGATIVE_INFINITY;
+        if ("inf".equals(string) || "+inf".equals(string) ) {
+          return Double.POSITIVE_INFINITY;
+        }
+        if ("-inf".equals(string)) {
+          return Double.NEGATIVE_INFINITY;
+        }
         throw e;
       }
     }
@@ -309,7 +315,9 @@ public final class BuilderFactory {
     }
 
     private Object evalResult(Object result) {
-      if (result instanceof byte[]) return SafeEncoder.encode((byte[]) result);
+      if (result instanceof byte[]) {
+        return SafeEncoder.encode((byte[]) result);
+      }
 
       if (result instanceof List<?>) {
         List<?> list = (List<?>) result;

@@ -16,10 +16,7 @@ import org.apache.commons.beanutils.converters.DateConverter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
-import java.util.Date;
-import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author 平行时空
@@ -130,8 +127,14 @@ public class TemplateUtils {
             in = TemplateUtils.class.getClassLoader().getResourceAsStream(
                     filePath);
             prop.load(new InputStreamReader(in, "utf-8"));
-           prop.setProperty(key,value);
-            String path=Thread.currentThread().getContextClassLoader().getResource("").getPath()+filePath;
+            prop.setProperty(key,value);
+            String path=null;
+            String pat=Thread.currentThread().getContextClassLoader().getResource("").getPath();
+            if(Objects.nonNull(pat)){
+                path=pat+filePath;
+            }else {
+                path=filePath;
+            }
             System.out.println(path);
             FileOutputStream file = new FileOutputStream(path);
             //将Properties中的属性列表（键和元素对）写入输出流

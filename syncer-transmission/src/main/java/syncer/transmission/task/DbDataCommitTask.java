@@ -40,12 +40,12 @@ public class DbDataCommitTask  implements Runnable{
                     }catch (Exception e){
                         log.error("[{}]offset更新失败--->[{}]",data.getTaskId(),e.getMessage());
                     }
-
                     continue;
                 }else  if(object instanceof SqliteCommitEntity){
                     sqliteCommitEntity= (SqliteCommitEntity) object;
                 }else {
                     log.error("传入信息错误--->[{}]",object.getClass());
+                    continue;
                 }
                 Integer type=sqliteCommitEntity.getType();
                 if(type.equals(10)){

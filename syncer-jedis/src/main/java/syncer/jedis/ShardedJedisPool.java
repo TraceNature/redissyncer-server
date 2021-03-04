@@ -96,7 +96,7 @@ public class ShardedJedisPool extends Pool<ShardedJedis> {
       try {
         ShardedJedis jedis = pooledShardedJedis.getObject();
         for (Jedis shard : jedis.getAllShards()) {
-          if (!shard.ping().equals("PONG")) {
+          if (!"PONG".equals(shard.ping())) {
             return false;
           }
         }

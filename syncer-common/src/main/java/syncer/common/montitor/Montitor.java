@@ -10,6 +10,7 @@
 // limitations under the License.
 package syncer.common.montitor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import syncer.common.config.ServerConfig;
@@ -24,6 +25,7 @@ import java.math.BigDecimal;
  * @Date 2020/12/15
  */
 @Component
+@Slf4j
 public class Montitor {
     public final static double DEFAULT_THRESHOLD=8.0;
     @Autowired
@@ -35,7 +37,7 @@ public class Montitor {
             MemoryUsage heapMemoryUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
             return heapMemoryUsage.getMax();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("get heapMemoryUsage fail {}",e.getMessage());
             return -1L;
         }
     }
@@ -46,7 +48,7 @@ public class Montitor {
             MemoryUsage heapMemoryUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
             return heapMemoryUsage.getUsed();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("get jvmMemoryMax fail {}",e.getMessage());
             return -1L;
         }
     }
@@ -59,7 +61,7 @@ public class Montitor {
      * @return
      */
     public boolean isAboveThreshold(double threshold) {
-        double montitors = new BigDecimal((float) jvmMemoryUsed() / jvmMemoryMax()).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+        double montitors = new BigDecimal((double) jvmMemoryUsed() / jvmMemoryMax()).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
         if (montitors >= threshold) {
             return true;
         }
