@@ -27,7 +27,23 @@
 | taskName           | string             | "taskname":"product2test"                | 自定义任务名称                                                                                                                                                                                                                  | false   |
 | autostart          | bool               | "autostart":true                         | 是否创建后自动启动，默认值false                                                                                                                                                                                                 | false   |
 | afresh             | bool               | "afresh":true                            | 如果之前进行过全量同步并且offset值还在积压缓冲区时，为false时则从offset+1值开始进行增量同步，为true时则进行全量同步，缺省默认值为true (注：创建接口时 afresh字段仅和autostart为true时同时使用，afresh字段当startTask为必填字段) | false   |
+| filterType         | string             | "filterType":"NONE"                      | 命令/key过滤类型   | false   |
+| commandFilter      | string             | "commandFilter":"SET,DEL,FLUSHALL"       | 命令过滤器，不同命令间用,分割| false   |
+| keyFilter          | string             | "keyFilter":"Redis(.*?)"                 | key名过滤器，需使用正则表达式| false   |
 
+* filterType类型
+
+| filterType类型         | type               |
+|-----------------------|--------------------|
+| NONE                  |  默认为NONE，过滤器不生效 |
+| COMMAND_FILTER_ACCEPT | 只接受commandFilter中指定的命令，commandFilter中不同命令用,分割如[SET,DEL,FLUSHALL]，command大小写不敏感 |
+| KEY_FILTER_ACCEPT     | 只接受keyFilter参数中key的数据（key大小写敏感），keyFilter需填写正则表达式如[Redis(.*?)] |
+| COMMAND_AND_KEY_FILTER_ACCEPT  |  commandFilter和keyFilter同时生效 && 两者都满足放行 |
+| COMMAND_OR_KEY_FILTER_ACCEPT   |  commandFilter和keyFilter指定的command 和key都接受 两者满足任意一者即生效放行 |
+| COMMAND_FILTER_REFUSE          |  拒绝指定的commandFilter参数中指定的命令|
+| KEY_FILTER_REFUSE              |  拒绝指定的keyFilter参数中指定的key|
+| COMMAND_OR_KEY_FILTER_REFUSE   |  commandFilter和keyFilter指定的command 和key都接受 两者满足任意一者即拒绝|
+| COMMAND_AND_KEY_FILTER_REFUSE  |  commandFilter和keyFilter同时生效 && 两者都满足拒绝|
 
 ### 错误码
 
