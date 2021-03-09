@@ -32,6 +32,21 @@
 | /tasks/bigkey/|{taskId}/{bigKey}| {"id":1,"taskId":"xxx","command":"xxx","command_type":"xxx"}|任务大key记录信息|
 | /tasks/md5/|{md5}|{"taskid":"xxx","groupId":"xxx","nodeId":"xx"}|任务md5信息|
 |||||
+
+###任务状态
+
+| TYPE | code | description| status |
+| ---| ---|---|---|
+|STOP     |0|任务停止| 已使用 |
+|CREATING |1|创建中 |  已使用 |
+|CREATED  |2|创建完成| 已使用 |
+|RUN      |3|运行状态| 已使用 |
+|BROKEN   |5|任务异常| 已使用 |
+|RDBRUNING|6|全量RDB同步过程中| 已使用 |
+|COMMANDRUNING|7|增量同步中| 已使用 |
+|FINISH    |8|完成状态| 未使用(备用) |
+
+
 ## id规范
 
 * clusterId
