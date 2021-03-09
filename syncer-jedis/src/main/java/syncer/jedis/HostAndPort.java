@@ -32,9 +32,15 @@ public class HostAndPort implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj == null) return false;
-    if (obj == this) return true;
-    if (!(obj instanceof HostAndPort)) return false;
+    if (obj == null) {
+      return false;
+    }
+    if (obj == this){
+      return true;
+    }
+    if (!(obj instanceof HostAndPort)){
+      return false;
+    }
 
     HostAndPort hp = (HostAndPort) obj;
 
@@ -106,10 +112,11 @@ public class HostAndPort implements Serializable {
       InetAddress inetAddress = InetAddress.getByName(host);
 
       // isLoopbackAddress() handles both IPV4 and IPV6
-      if (inetAddress.isLoopbackAddress() || host.equals("0.0.0.0") || host.startsWith("169.254"))
+      if (inetAddress.isLoopbackAddress() || "0.0.0.0".equals(host) || host.startsWith("169.254")){
         return getLocalhost();
-      else
+      } else{
         return host;
+      }
     } catch (Exception e) {
       // Not a valid IP address
       log.warn("{}.convertHost '" + host + "' is not a valid IP address. ", HostAndPort.class.getName(), e);

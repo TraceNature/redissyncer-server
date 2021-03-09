@@ -43,7 +43,7 @@ public class DefaultRedisRdbVisitor extends RedisRdbVisitor {
     @Override
     public String applyMagic(RedisInputStream in) throws IOException {
         String magic = BaseRdbParser.StringHelper.str(in, 5);//REDIS
-        if (!magic.equals("REDIS")) {
+        if (!"REDIS".equals(magic)) {
             throw new UnsupportedOperationException("can't read MAGIC STRING [REDIS] ,value:" + magic);
         }
         return magic;
@@ -99,13 +99,13 @@ public class DefaultRedisRdbVisitor extends RedisRdbVisitor {
             if (log.isInfoEnabled()) {
                 log.info("RDB {}: {}", auxKey, auxValue);
             }
-            if (auxKey.equals("repl-id")) {
+            if ("repl-id".equals(auxKey)) {
                 replication.getConfiguration().setReplId(auxValue);
             }
-            if (auxKey.equals("repl-offset")){
+            if ("repl-offset".equals(auxKey)){
                 replication.getConfiguration().setReplOffset(parseLong(auxValue));
             }
-            if (auxKey.equals("repl-stream-db")){
+            if ("repl-stream-db".equals(auxKey)){
                 replication.getConfiguration().setReplStreamDB(parseInt(auxValue));
             }
             return new AuxField(auxKey, auxValue);

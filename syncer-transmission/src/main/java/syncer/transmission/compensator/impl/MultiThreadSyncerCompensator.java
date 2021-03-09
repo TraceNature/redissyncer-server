@@ -26,6 +26,7 @@ import syncer.transmission.util.strings.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -490,7 +491,11 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator {
             }
         }else {
             if(!incrMap.containsKey(key)){
-                incrMap.put(key, Double.valueOf(client.get(dbNum,cmd)));
+                String vres=client.get(dbNum,cmd);
+                if(Objects.nonNull(vres)){
+                    incrMap.put(key, Double.valueOf(vres));
+                }
+
             }
         }
         if(cmdEnum.equals(CmdEnum.INCR)){
