@@ -17,6 +17,7 @@
 
 | prefix |key 或 key的编码规则| value | description|
 | ---| ---| ---|---|
+|/uniqid|	idseed	|uint64	|全局唯一id种子，初始化为1，每次加锁递增1|
 | /inspect| lastinspectiontime | unix时间戳|最后巡检的时间|
 | /inspect| execlock | |巡检执行的分布式锁|
 | /nodes/| {nodetype}/{nodeID} | 节点状态，由节点上报|已注册的node|
