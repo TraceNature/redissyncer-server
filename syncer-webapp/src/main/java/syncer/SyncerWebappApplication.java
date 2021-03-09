@@ -71,7 +71,7 @@ public class SyncerWebappApplication {
                 } catch (InterruptedException e) {
 
                 }
-
+                SqlOPUtils.close();
                 ThreadPoolUtils.shutdown();
             }
         });
@@ -122,7 +122,7 @@ public class SyncerWebappApplication {
                     }
                 }
                 try {
-                    SpringUtil.getBean(TaskMapper.class).updateTask(model);
+                    SqlOPUtils.updateTask(model);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

@@ -198,6 +198,24 @@
       <groupId>javax.validation</groupId>
       <artifactId>validation-api</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>io.etcd</groupId>
+      <artifactId>jetcd-core</artifactId>
+      <version>0.5.0</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>com.ibm.etcd</groupId>
+      <artifactId>etcd-java</artifactId>
+      <version>0.0.18</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>4.1.15.Final</version>
+    </dependency>
   </dependencies>
 
   <build>
