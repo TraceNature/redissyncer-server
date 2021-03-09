@@ -11,8 +11,11 @@
 
 package syncer.transmission.util.sql;
 
+import syncer.common.config.EtcdServerConfig;
 import syncer.common.util.spring.SpringUtil;
+import syncer.transmission.etcd.client.JEtcdClient;
 import syncer.transmission.mapper.*;
+import syncer.transmission.mapper.etcd.EtcdTaskMapper;
 import syncer.transmission.model.*;
 
 import java.util.List;
@@ -24,27 +27,41 @@ import java.util.List;
  */
 
 public class SqlOPUtils {
-     static AbandonCommandMapper abandonCommandMapper=null;
+    static AbandonCommandMapper abandonCommandMapper=null;
     static BigKeyMapper bigKeyMapper=null;
     static DataCompensationMapper dataCompensationMapper=null;
     static RdbVersionMapper rdbVersionMapper=null;
     static TaskMapper taskMapper=null;
     static TaskOffsetMapper taskOffsetMapper=null;
     static UserMapper userMapper=null;
+    static RubbishDataMapper rubbishDataMapper=null;
+    static EtcdServerConfig config=new EtcdServerConfig();
 //    private static Lock lock=new ReentrantLock();
+static {
+
+    abandonCommandMapper= SpringUtil.getBean(AbandonCommandMapper.class);
+    bigKeyMapper= SpringUtil.getBean(BigKeyMapper.class);
+    dataCompensationMapper= SpringUtil.getBean(DataCompensationMapper.class);
+    rdbVersionMapper= SpringUtil.getBean(RdbVersionMapper.class);
+    taskMapper=  EtcdTaskMapper.builder().client(JEtcdClient.build()).nodeId(config.getNodeId()).build();
+    taskOffsetMapper= SpringUtil.getBean(TaskOffsetMapper.class);
+    rubbishDataMapper=SpringUtil.getBean(RubbishDataMapper.class);
+    userMapper= SpringUtil.getBean(UserMapper.class);
+}
 
 
+//    static {
+//
+//        abandonCommandMapper= SpringUtil.getBean(AbandonCommandMapper.class);
+//        bigKeyMapper= SpringUtil.getBean(BigKeyMapper.class);
+//        dataCompensationMapper= SpringUtil.getBean(DataCompensationMapper.class);
+//        rdbVersionMapper= SpringUtil.getBean(RdbVersionMapper.class);
+//        taskMapper= SpringUtil.getBean(TaskMapper.class);
+//        taskOffsetMapper= SpringUtil.getBean(TaskOffsetMapper.class);
+//        userMapper= SpringUtil.getBean(UserMapper.class);
+//        rubbishDataMapper=SpringUtil.getBean(RubbishDataMapper.class);
 
-    static {
-
-        abandonCommandMapper= SpringUtil.getBean(AbandonCommandMapper.class);
-        bigKeyMapper= SpringUtil.getBean(BigKeyMapper.class);
-        dataCompensationMapper= SpringUtil.getBean(DataCompensationMapper.class);
-        rdbVersionMapper= SpringUtil.getBean(RdbVersionMapper.class);
-        taskMapper= SpringUtil.getBean(TaskMapper.class);
-        taskOffsetMapper= SpringUtil.getBean(TaskOffsetMapper.class);
-        userMapper= SpringUtil.getBean(UserMapper.class);
-    }
+//    }
 
 
     public static  boolean insertTask(TaskModel taskModel)throws Exception{
@@ -216,5 +233,38 @@ public class SqlOPUtils {
     public static RdbVersionModel findRdbVersionModelByRedisVersion(String redisVersion)throws Exception{
         return rdbVersionMapper.findRdbVersionModelByRedisVersion( redisVersion);
 
+    }
+
+    public static void close(){
+        taskMapper.close();
+    }
+
+
+    /**
+     * 清理垃圾数据
+     */
+
+    public static void deleteRubbishDataFromTaskOffSet() {
+        rubbishDataMapper.deleteRubbishDataFromTaskOffSet();
+    }
+
+
+    public static void deleteRubbishDataFromTaskBigKey() {
+        rubbishDataMapper.deleteRubbishDataFromTaskBigKey();
+    }
+
+
+    public static void deleteRubbishDataFromTaskDataMonitor() {
+        rubbishDataMapper.deleteRubbishDataFromTaskDataMonitor();
+    }
+
+
+    public static void deleteRubbishDataFromTaskDataCompensation() {
+        rubbishDataMapper.deleteRubbishDataFromTaskDataCompensation();
+    }
+
+
+    public static void deleteRubbishDataFromTaskDataAbandonCommand() {
+        rubbishDataMapper.deleteRubbishDataFromTaskDataAbandonCommand();
     }
 }

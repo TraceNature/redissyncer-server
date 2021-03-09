@@ -1,3 +1,24 @@
+server:
+  port: 8081
+  nodeId: 1
+  nodetype: redisSyncerNodeServer
+  #为空会自动获取内网地址
+  nodeAddr:
+
+
+#logging:
+#server:
+#  port: 8081
+#  config: log/logback.xml
+#logging:
+#  config: config/logback.xml
+
+
+etcd:
+  url: http://116.196.106.51:2379
+  username: etcdtest
+  password: 123456
+
 
 syncerplus:
   redispool:
@@ -22,12 +43,7 @@ syncerplus:
     #线程池维护线程所允许的空闲时间
     keepAliveSeconds: 300
 
-#logging:
-server:
-  port: 8081
-#  config: log/logback.xml
-#logging:
-#  config: config/logback.xml
+
 
 logging:
 

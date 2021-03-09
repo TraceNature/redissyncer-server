@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Leon Chen
+ * Copyright 2016-2017 Leon Chen
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,48 +16,42 @@
 
 package syncer.replica.cmd.impl;
 
-import syncer.replica.cmd.impl.geo.Count;
+import java.io.Serializable;
 
 /**
  * @author Leon Chen
- * @since 2.1.0
+ * @since 3.5.2
  */
-public class LPopCommand extends GenericKeyCommand {
-
+public class MinId implements Serializable {
+    
     private static final long serialVersionUID = 1L;
-
-    private Count count;
-
-    public LPopCommand() {
+    
+    private boolean approximation;
+    
+    private byte[] id;
+    
+    public MinId() {
+        
     }
-
-    public LPopCommand(byte[] key) {
-        this(key, null);
+    
+    public MinId(boolean approximation, byte[] id) {
+        this.approximation = approximation;
+        this.id = id;
     }
-
-    /**
-     * @since 3.5.2
-     * @param key key
-     * @param count count
-     */
-    public LPopCommand(byte[] key, Count count) {
-        super(key);
-        this.count = count;
+    
+    public boolean isApproximation() {
+        return approximation;
     }
-
-    /**
-     * @since 3.5.2
-     * @return count
-     */
-    public Count getCount() {
-        return count;
+    
+    public void setApproximation(boolean approximation) {
+        this.approximation = approximation;
     }
-
-    /**
-     * @since 3.5.2
-     * @param count count
-     */
-    public void setCount(Count count) {
-        this.count = count;
+    
+    public byte[] getId() {
+        return id;
+    }
+    
+    public void setId(byte[] id) {
+        this.id = id;
     }
 }

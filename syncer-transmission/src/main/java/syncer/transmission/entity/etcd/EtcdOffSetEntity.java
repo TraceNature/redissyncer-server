@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package syncer.transmission.entity;
+package syncer.transmission.entity.etcd;
 
 import lombok.*;
 
@@ -27,9 +27,8 @@ import java.util.concurrent.atomic.AtomicLong;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-
-public class OffSetEntity implements Serializable {
+public class EtcdOffSetEntity implements Serializable {
     private static final long serialVersionUID = -5809782578272943997L;
     private String  replId;
-    private final AtomicLong replOffset = new AtomicLong(-1);
+    private AtomicLong replOffset = new AtomicLong(-1);
 }

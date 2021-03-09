@@ -27,6 +27,8 @@ public class XAddCommand extends GenericKeyCommand {
     private static final long serialVersionUID = 1L;
 
     private MaxLen maxLen;
+    private MinId minId;
+    private Limit limit;
     private boolean nomkstream = false;
     private byte[] id;
     private Map<byte[], byte[]> fields;
@@ -40,30 +42,35 @@ public class XAddCommand extends GenericKeyCommand {
     }
 
     /**
-     *
      * @param key key
      * @param maxLen maxlen
-     * @param nomkstream  6.2 nomkstream
+     * @param nomkstream nomkstream since redis 6.2-rc1
      * @param id id or *
-     * @param fields
+     * @param fields fields
+     * @since 3.5.0
      */
     public XAddCommand(byte[] key, MaxLen maxLen, boolean nomkstream, byte[] id, Map<byte[], byte[]> fields) {
-        super(key);
-        this.maxLen = maxLen;
-        this.nomkstream = nomkstream;
-        this.id = id;
-        this.fields = fields;
-    }
-
-    public boolean isNomkstream() {
-        return nomkstream;
+        this(key, maxLen, null, null, nomkstream, id, fields);
     }
 
     /**
-     * @param nomkstream redis 6.2
+     * @param key key
+     * @param maxLen maxlen
+     * @param minId minId
+     * @param limit limit
+     * @param nomkstream nomkstream since redis 6.2-rc2
+     * @param id id or *
+     * @param fields fields
+     * @since 3.5.2
      */
-    public void setNomkstream(boolean nomkstream) {
+    public XAddCommand(byte[] key, MaxLen maxLen, MinId minId, Limit limit, boolean nomkstream, byte[] id, Map<byte[], byte[]> fields) {
+        super(key);
+        this.maxLen = maxLen;
+        this.minId = minId;
+        this.limit = limit;
         this.nomkstream = nomkstream;
+        this.id = id;
+        this.fields = fields;
     }
 
     public MaxLen getMaxLen() {
@@ -72,6 +79,54 @@ public class XAddCommand extends GenericKeyCommand {
 
     public void setMaxLen(MaxLen maxLen) {
         this.maxLen = maxLen;
+    }
+
+    /**
+     * @return
+     * @since 3.5.2
+     */
+    public MinId getMinId() {
+        return minId;
+    }
+
+    /**
+     * @param minId minId
+     * @since 3.5.2
+     */
+    public void setMinId(MinId minId) {
+        this.minId = minId;
+    }
+
+    /**
+     * @return
+     * @since 3.5.2
+     */
+    public Limit getLimit() {
+        return limit;
+    }
+
+    /**
+     * @param limit limit
+     * @since 3.5.2
+     */
+    public void setLimit(Limit limit) {
+        this.limit = limit;
+    }
+
+    /**
+     * @return nomkstream
+     * @since 3.5.0
+     */
+    public boolean isNomkstream() {
+        return nomkstream;
+    }
+
+    /**
+     * @param nomkstream nomkstream since redis 6.2
+     * @since 3.5.0
+     */
+    public void setNomkstream(boolean nomkstream) {
+        this.nomkstream = nomkstream;
     }
 
     public byte[] getId() {
