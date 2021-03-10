@@ -32,8 +32,10 @@
 | /tasks/user/|{username}|{"id":1,"username":"xxx","name":"xxx","password":"xxx","salt":"xxx"}|用户账号信息|
 | /tasks/bigkey/|{taskId}/{bigKey}| {"id":1,"taskId":"xxx","command":"xxx","command_type":"xxx"}|任务大key记录信息|
 | /tasks/md5/|{md5}|{"taskid":"xxx","groupId":"xxx","nodeId":"xx"}|任务md5信息|
-|||||
-
+| /tasks/compensation/ |{taskId}/{compensationId}|{"id":1,"taskId":"xxx","groupId":"xxx","command":"xxx","value":"xxx","key":"xxx","times":3,"createTime","xxx"} |命令进入数据补偿的次数以及信息 |
+| /tasks/compensation/ |{groupId}/{compensationId}|{"compensationId": 1,"taskId":"xxx"}|根据groupId 查询进入数据补偿的key|
+| /tasks/abandon/|{taskId}/{abandonId}|{"id":1,"taskId":"xxx","groupId":"xxx","command":"xxx","key":"xxx","value":"xxx","type":1,"ttl":1000,"exception":"xxx","result":"xxx","desc":"xxx","createTime":"xxx"}|被抛弃command记录|
+| /tasks/abandon/|{groupId}/{abandonId} |根据groupId查询被抛弃key|
 ###任务状态
 
 | TYPE | code | description| status |
