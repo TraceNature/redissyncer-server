@@ -20,7 +20,7 @@
 |/uniqid|	idseed	|uint64	|全局唯一id种子，初始化为1，每次加锁递增1|
 | /inspect| lastinspectiontime | unix时间戳|最后巡检的时间|
 | /inspect| execlock | |巡检执行的分布式锁|
-| /nodes/| {nodetype}/{nodeID} | {"heartbeaturl":"/heartbeat","lastreporttime":1615431908432,"nodeaddr":"127.0.0.1","nodeid":"1","nodeport":8082,"nodetype":"redissyncernodeserver","online":true}|已注册的node|
+| /nodes/| {nodetype}/{nodeID} | {"heartbeaturl":"/health","lastreporttime":1615431908432,"nodeaddr":"127.0.0.1","nodeid":"1","nodeport":8082,"nodetype":"redissyncernodeserver","online":true}|已注册的node|
 | /tasks/taskid/| {taskid} | taskstatusjson|任务信息|
 | /tasks/node/|{nodeId}/{taskId}|{"nodeId":"xxx","taskId":"xxx"}|nodeId下的任务信息|
 | /tasks/groupid/|{groupid}/{taskId}|{"groupId":"xxx","taskId":"xxx"}|groupId下的任务列表|
@@ -50,6 +50,18 @@
 |COMMANDRUNING|7|增量同步中| 已使用 |
 |FINISH    |8|完成状态| 未使用(备用) |
 
+### 任务类型
+
+| TYPE | code | description| status |
+| ---| ---|---|---|
+|SYNC |1|replication| 已使用 |
+|RDB  |2|RDB文件解析 |  已使用 |
+|AOF  |3|AOF文件解析| 已使用 |
+|MIXED|4|混合文件解析| 已使用 |
+|ONLINERDB |5|在线RDB解析| 已使用 |
+|ONLINEAOF |6|在线AOF| 已使用 |
+|ONLINEMIXED|7|在线混合文件解析| 已使用 |
+|COMMANDDUMPUP|8|增量命令实时备份| 已使用 |
 
 ## id规范
 
