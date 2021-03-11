@@ -20,7 +20,7 @@
 |/uniqid|	idseed	|uint64	|全局唯一id种子，初始化为1，每次加锁递增1|
 | /inspect| lastinspectiontime | unix时间戳|最后巡检的时间|
 | /inspect| execlock | |巡检执行的分布式锁|
-| /nodes/| {nodetype}/{nodeID} | 节点状态，由节点上报|已注册的node|
+| /nodes/| {nodetype}/{nodeID} | {"heartbeaturl":"/heartbeat","lastreporttime":1615431908432,"nodeaddr":"127.0.0.1","nodeid":"1","nodeport":8082,"nodetype":"redissyncernodeserver","online":true}|已注册的node|
 | /tasks/taskid/| {taskid} | taskstatusjson|任务信息|
 | /tasks/node/|{nodeId}/{taskId}|{"nodeId":"xxx","taskId":"xxx"}|nodeId下的任务信息|
 | /tasks/groupid/|{groupid}/{taskId}|{"groupId":"xxx","taskId":"xxx"}|groupId下的任务列表|
