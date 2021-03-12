@@ -61,6 +61,7 @@ public class CommandProcessingCommandFilterStrategy implements CommonProcessingS
 
         if(Objects.isNull(taskModel.getFilterType())){
             toNext(replication,eventEntity,taskModel);
+            return;
         }
 
         if(Objects.isNull(commandFilterSet)){
@@ -72,6 +73,7 @@ public class CommandProcessingCommandFilterStrategy implements CommonProcessingS
 
         if(CommandKeyFilterType.NONE.equals(taskModel.getFilterType())){
             toNext(replication,eventEntity,taskModel);
+            return;
         }
         String keyFilter=taskModel.getKeyFilter()==null?"":taskModel.getKeyFilter();
 
