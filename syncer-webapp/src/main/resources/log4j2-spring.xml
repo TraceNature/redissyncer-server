@@ -38,7 +38,7 @@
 
 		<!-- Root Logger -->
 
-		<Root level="${logLevel}" >
+		<Root level="${logLevel}" additivity="false">
 			<AppenderRef ref="Console" />
 			<AppenderRef ref="RollingRandomAccessFile" />
 		</Root>

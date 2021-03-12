@@ -35,4 +35,9 @@ public class NodeHeartbeat {
     private boolean Online;
 
     private long LastReportTime;
+
+    /**
+     * 心跳检测url
+     */
+    private String heartbeatUrl;
 }

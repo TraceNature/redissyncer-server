@@ -188,7 +188,7 @@ public class JEtcdClient implements IEtcdOpCenter {
             Lease lease=client.getLeaseClient();
             Lock lock=client.getLockClient();
             ByteSequence name = ByteSequence.from(commandRunner.lockName().getBytes());
-            io.etcd.jetcd.lease.LeaseGrantResponse ttl = lease.grant(10).get();
+            io.etcd.jetcd.lease.LeaseGrantResponse ttl = lease.grant(30).get();
 //            log.info("创建租约...ID: {}, ttl: {}", ttl.getID(), ttl.getTTL());
             //自动续约-防止ttl超时线程未执行完
             lease.keepAlive(ttl.getID(), new StreamObserver() {
@@ -223,7 +223,6 @@ public class JEtcdClient implements IEtcdOpCenter {
 //            log.info("释放锁...");
         } catch (Exception e) {
             log.warn("etcd lock error {}",e.getMessage());
-            e.printStackTrace();
         }
     }
 

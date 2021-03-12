@@ -33,7 +33,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <fastjson.version>1.2.75</fastjson.version>
-    <syncer.version>3.1.0</syncer.version>
+    <syncer.version>3.3.0</syncer.version>
     <jackson-version>2.9.9</jackson-version>
   </properties>
 
@@ -52,7 +52,16 @@
       </exclusions>
     </dependency>
 
-
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjrt -->
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjrt</artifactId>
+      <version>1.9.6</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>

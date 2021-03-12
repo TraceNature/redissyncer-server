@@ -1,6 +1,7 @@
 package syncer.common.config;
 
 import sun.net.util.IPAddressUtil;
+import syncer.common.constant.StoreType;
 import syncer.common.util.spring.SpringUtil;
 
 import java.net.InetAddress;
@@ -56,6 +57,16 @@ public class EtcdServerConfig {
     }
 
 
+    /**
+     * 获取存储类型
+     * @return
+     */
+    public StoreType getStoreType(){
+        if("sqlite".equalsIgnoreCase(config.getStorageType())){
+            return StoreType.SQLITE;
+        }
+        return StoreType.ETCD;
+    }
 
 
     public String getNodeType(){

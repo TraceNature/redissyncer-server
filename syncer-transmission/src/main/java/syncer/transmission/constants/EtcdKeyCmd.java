@@ -195,4 +195,70 @@ public class EtcdKeyCmd {
         return new StringBuilder("/tasks/bigkey/").append(taskId).toString();
     }
 
+
+    /**
+     * Compensation 数据补偿记录
+     *
+     * /tasks/compensation/{taskId}/{compensationId}    {}
+     * /tasks/compensation/{groupId}/{compensationId}   {"compensationId": 1,"taskId":"xxx"}
+     */
+    public static String getCompensationByTaskIdPrefix(String taskId){
+        return new StringBuilder("/tasks/compensation/").append(taskId).toString();
+    }
+
+
+    public static String getCompensationByTaskId(String taskId,Integer compenId){
+        return new StringBuilder("/tasks/compensation/").append(taskId).append("/").append(compenId).toString();
+    }
+
+    public static String getCompensationPrefix(){
+        return new StringBuilder("/tasks/compensation/").toString();
+    }
+
+    public static String getCompensationByGroupIdPrefix(String groupId){
+        return new StringBuilder("/tasks/compensation/").append(groupId).toString();
+    }
+
+    public static String getCompensationByGroupId(String groupId,Integer compenId){
+        return new StringBuilder("/tasks/compensation/").append(groupId).append("/").append(compenId).toString();
+    }
+
+    /**
+     * abandon
+     * 抛弃key
+     *
+     *  * /tasks/abandon/{taskId}/{abandonId}     {"id":1,"taskId":"xxx","groupId":"xxx","command":"xxx","key":"xxx","value":"xxx","type":1,"ttl":1000,"exception":"xxx","result":"xxx","desc":"xxx","createTime":"xxx"}
+     *  * /tasks/abandon/{groupId}/{abandonId}   {"abandonId": 1,"taskId":"xxx"}
+     */
+
+    public static String getAbandonCommandPrefix(){
+        return "/tasks/abandon/";
+    }
+
+    public static String getAbandonCommandByTaskId(String taskId,Integer abandonId){
+        return new StringBuilder("/tasks/abandon/").append(taskId).append("/").append(abandonId).toString();
+    }
+
+    public static String getAbandonCommandByTaskIdPrefix(String taskId){
+        return new StringBuilder("/tasks/abandon/").append(taskId).append("/").toString();
+    }
+
+
+    public static String getAbandonCommandByGroupIdPrefix(String groupId){
+        return new StringBuilder("/tasks/abandon/").append(groupId).append("/").toString();
+    }
+
+
+    public static String getAbandonCommandByGroupId(String groupId,Integer abandonId){
+        return new StringBuilder("/tasks/abandon/").append(groupId).append("/").append(abandonId).toString();
+    }
+
+    /**
+     * 全局id key
+     * @param key
+     * @return
+     */
+    public static String getIdKey(String key){
+        return new StringBuilder("/tasks/id/").append(key).toString();
+    }
 }

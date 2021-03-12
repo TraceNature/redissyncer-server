@@ -290,7 +290,7 @@ public class TaskModel {
     private String expandJson="";
 
     /**
-     * 时间偏差
+     * ttl 调整时间偏差
      */
     @Builder.Default
     private Long timeDeviation=0L;

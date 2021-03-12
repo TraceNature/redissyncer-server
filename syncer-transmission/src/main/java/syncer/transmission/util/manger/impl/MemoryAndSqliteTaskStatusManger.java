@@ -21,10 +21,6 @@ import syncer.replica.constant.ThreadStatusEnum;
 import syncer.replica.entity.TaskStatusType;
 import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.entity.TaskDataEntity;
-import syncer.transmission.mapper.AbandonCommandMapper;
-import syncer.transmission.mapper.BigKeyMapper;
-import syncer.transmission.mapper.DataCompensationMapper;
-import syncer.transmission.mapper.TaskOffsetMapper;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.util.code.CodeUtils;
 import syncer.transmission.util.manger.ITaskStatusManger;
@@ -295,11 +291,11 @@ public class MemoryAndSqliteTaskStatusManger implements ITaskStatusManger {
 
     void deleteTaskDataByTaskId(String taskId){
         try {
-            SpringUtil.getBean(AbandonCommandMapper.class).deleteAbandonCommandModelByTaskId(taskId);
-            SpringUtil.getBean(BigKeyMapper.class).deleteBigKeyCommandModelByTaskId(taskId);
-            SpringUtil.getBean(BigKeyMapper.class).deleteBigKeyCommandModelByTaskId(taskId);
-            SpringUtil.getBean(TaskOffsetMapper.class).delOffsetEntityByTaskId(taskId);
-            SpringUtil.getBean(DataCompensationMapper.class).deleteDataCompensationModelByTaskId(taskId);
+            SqlOPUtils.deleteAbandonCommandModelByTaskId(taskId);
+            SqlOPUtils.deleteBigKeyCommandModelByTaskId(taskId);
+            SqlOPUtils.deleteBigKeyCommandModelByTaskId(taskId);
+            SqlOPUtils.delOffsetEntityByTaskId(taskId);
+            SqlOPUtils.deleteDataCompensationModelByTaskId(taskId);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -37,6 +37,7 @@ public class DefaultHeartbeatCommandRunner implements HeartbeatCommandRunner {
                             .Online(true)
                             .NodeAddr(config.getHost())
                             .NodePort(config.getLocalPort())
+                            .heartbeatUrl("/health")
                             .build();
                     configCenter.put(new StringBuilder("/nodes/").append(config.getNodeType()).append("/").append(config.getNodeId()).toString(), JSON.toJSONString(nodeHeartbeat).toLowerCase());
                     log.info("node heartbeat success.");

@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 public class EtcdRdbVersionMapper implements RdbVersionMapper {
     private JEtcdClient client;
     private String nodeId;
+    private EtcdID etcdID;
     private static final String lockName = "changeRdbVersion";
 
     /**
@@ -125,8 +126,9 @@ public class EtcdRdbVersionMapper implements RdbVersionMapper {
             @Override
             public void run() {
                 try {
-                    List<RdbVersionModel>rdbVersionModelList=findAllRdbVersion().stream().sorted((r1,r2)->r1.getId().compareTo(r2.getId())).collect(Collectors.toList());
-
+                    //List<RdbVersionModel>rdbVersionModelList=findAllRdbVersion().stream().sorted((r1,r2)->r1.getId().compareTo(r2.getId())).collect(Collectors.toList());
+                    int sortNum=etcdID.getID(lockName);
+                    rdbVersionModel.setId(sortNum);
                     client.put(EtcdKeyCmd.getRdbVersionByRedisVersionAndRdbVerison(rdbVersionModel.getRedis_version(), rdbVersionModel.getRdb_version()), JSON.toJSONString(rdbVersionModel));
                 } catch (Exception e) {
                     log.error("insert rdbVersion error , reason [{}]", e.getMessage());
@@ -196,12 +198,9 @@ public class EtcdRdbVersionMapper implements RdbVersionMapper {
             public void run() {
                 try {
                     int sortNum=0;
-                    List<RdbVersionModel>oldRdbVersionModelList=findAllRdbVersion().stream().sorted((r1,r2)->r1.getId().compareTo(r2.getId())).collect(Collectors.toList());
-                    if(Objects.nonNull(oldRdbVersionModelList)&&oldRdbVersionModelList.size()>0){
-                        sortNum=oldRdbVersionModelList.get(oldRdbVersionModelList.size()-1).getId();
-                    }
+
                     for (int i = 0; i < rdbVersionModelList.size(); i++) {
-                        sortNum++;
+                        sortNum=etcdID.getID(lockName);
                         RdbVersionModel rdbVersionModel=rdbVersionModelList.get(i);
                         client.put(EtcdKeyCmd.getRdbVersionByRedisVersionAndRdbVerison(rdbVersionModel.getRedis_version(),rdbVersionModel.getRdb_version()),JSON.toJSONString(RdbVersionModel.builder().id(sortNum).redis_version(rdbVersionModel.getRedis_version()).rdb_version(rdbVersionModel.getRdb_version()).build()));
                         num.incrementAndGet();

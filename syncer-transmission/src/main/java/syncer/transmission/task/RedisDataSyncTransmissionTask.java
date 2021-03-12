@@ -11,24 +11,25 @@
 
 package syncer.transmission.task;
 
+import com.alibaba.fastjson.JSON;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.replica.cmd.impl.DefaultCommand;
 import syncer.replica.constant.RedisBranchTypeEnum;
 import syncer.replica.entity.*;
-import syncer.replica.event.Event;
-import syncer.replica.event.PostRdbSyncEvent;
-import syncer.replica.event.PreCommandSyncEvent;
-import syncer.replica.event.SyncerTaskEvent;
+import syncer.replica.event.*;
 import syncer.replica.listener.EventListener;
 import syncer.replica.listener.TaskStatusListener;
 import syncer.replica.listener.ValueDumpIterableEventListener;
+import syncer.replica.rdb.iterable.datatype.BatchedKeyValuePair;
+import syncer.replica.rdb.sync.datatype.DumpKeyValuePair;
 import syncer.replica.rdb.sync.visitor.ValueDumpIterableRdbVisitor;
 import syncer.replica.register.DefaultCommandRegister;
 import syncer.replica.replication.RedisReplication;
 import syncer.replica.replication.Replication;
 import syncer.replica.util.SyncTypeUtils;
+import syncer.replica.util.objectutil.Strings;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.client.RedisClientFactory;
 import syncer.transmission.compensator.ISyncerCompensator;
@@ -182,6 +183,8 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                             .taskRunTypeEnum(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType())
                             .fileType(SyncTypeUtils.getSyncType(taskModel.getSyncType()).getFileType())
                             .build();
+
+
                     //更新offset
                     updateOffset(taskModel.getId(),replicationHandler,node);
 

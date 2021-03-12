@@ -48,6 +48,15 @@ public class UserFilter implements HandlerInterceptor {
                 return true;
             }
         }
+
+        /**
+         * 心跳检测放行
+         */
+        String url=request.getRequestURI();
+        if("/health".equalsIgnoreCase(url)){
+            return true;
+        }
+
         if("false".equalsIgnoreCase(tokenFilterStatus)){
             return true;
         }

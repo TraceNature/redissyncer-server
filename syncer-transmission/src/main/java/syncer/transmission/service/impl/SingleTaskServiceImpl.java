@@ -314,11 +314,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                 return result;
             }
             TaskModel taskModel = SqlOPUtils.findTaskById(taskId);
-            taskModel.setTaskMsg("");
-            /**
-             * todo offset更新
-             */
-            taskModel.setAfresh(afresh);
 
             if (Objects.isNull(taskModel)) {
                 return StartTaskEntity
@@ -328,6 +323,13 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                         .msg("The task has not been created yet")
                         .build();
             }
+
+            taskModel.setTaskMsg("");
+            /**
+             * todo offset更新
+             */
+            taskModel.setAfresh(afresh);
+
 
             SqlOPUtils.updateAfreshsetById(taskId, afresh);
             String id = null;

@@ -23,6 +23,11 @@ public class Config {
     private String nodeId;
     private String nodetype;
     private String nodeAddr;
+    /**
+     * 存储类型
+     */
+    private String storageType;
+
     public int getPort() {
         if(port==0){
             return 8080;
@@ -32,7 +37,7 @@ public class Config {
 
     public String getNodetype() {
         if(Objects.isNull(nodetype)||"".equals(nodetype)){
-            return "redisSyncerNodeServer";
+            return "redissyncernodeserver";
         }
         return nodetype;
     }
