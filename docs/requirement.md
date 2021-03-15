@@ -18,9 +18,9 @@
         2.导入时目标端无需重启
         3.目标端支持单机、cluster、proxy分片集群等异构类型
 
-### IOEXCEPTION
+### EOFException
 
-    1.出现ioexception可能原因
+    1.出现EOFException可能原因
         repl-ping-slave-period要小于readTimeout（redissyncer默认60000ms）
         源节点内存不够无法进行bgsave
         offset刷过
