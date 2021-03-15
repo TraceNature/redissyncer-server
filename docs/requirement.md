@@ -4,7 +4,7 @@
 * ##### 源端
         1.需要redissyncer能够直接连接真实的源节点，或者proxy能够支持sync命令
         2.需要源节点支持sync/psync命令
-        3.支持社区版2.8-6.0版本命ßß令
+        3.支持社区版2.8-6.0版本命令
         4.只需将主从节点的其中一者作为源节点即可，否则会出现非幂等类型数据写入两次
         5.repl-ping-slave-period要小于readTimeout（redissyncer默认60000ms）
         6.如果云redis proxy不支持sync命令或无法连接proxy后面的真实节点时，则无法使用在线同步,只能通过数据文件导入
