@@ -21,6 +21,6 @@
 ### IOEXCEPTION
 
     1.出现ioexception可能原因
-        repl-ping-slave-period必须小于readTimeout（redissyncer默认60000ms）
+        repl-ping-slave-period要小于readTimeout（redissyncer默认60000ms）
         源节点内存不够无法进行bgsave
         offset刷过
