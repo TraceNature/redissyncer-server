@@ -6,6 +6,11 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
+ * https://github.com/antirez/redis/blob/5.0.0/src/stream.h
+ *
+ *  radix tree的实现
+ *       https://github.com/redis/redis/blob/5.0.0/src/rax.c
+ *       https://github.com/antirez/redis/blob/5.0.0/src/rax.h
  * @author zhanenqiang
  * @Description 描述
  * @Date 2020/8/7

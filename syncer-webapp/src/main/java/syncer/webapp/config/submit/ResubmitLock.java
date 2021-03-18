@@ -93,4 +93,12 @@ public final class ResubmitLock {
             }, delaySeconds, TimeUnit.SECONDS);
         }
     }
+
+    /**
+     * 防止重复提交
+     * @param object
+     */
+    public static synchronized void lockClick(Object object){
+
+    }
 }
