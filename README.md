@@ -27,6 +27,7 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 * 增量实时AOF文件生成
 * 断点续传
 * 大key自动拆分
+* 指定key/command过滤或放行  
 * rdb跨版本支持，支持高版本至低版本
 * ttl校准
 

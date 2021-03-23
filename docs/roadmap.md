@@ -33,6 +33,10 @@
 - [x] key过滤 
 - [x] 命令过滤
 - [x] 限制任务数，根据内存容量限制创建任务
+- [ ] 实现增量续传2.0,通过redis事务命令，尽最大可能保证数据一致性
+- [ ] 支持源Redis主从故障转移以及支持sentinel模式
+- [ ] 实现 rewrite
+- [ ] source.type target.type
 - [ ] 内存级别双向同步
 - [x] 集成log4j2,日志可通过application.yml或启动参数配置，默认输出位置 ./log
 - [ ] 数据校验，由goclient集成
@@ -41,6 +45,7 @@
 - [ ] goclient 适应v2 api
 - [ ] goclient 实现交互模式类似redis-cli
 - [ ] 目标为rediscluster 实现pipeline写入
+
 * testcase完善，形成完整回归测试案例
    - [x] single2single
    - [ ] single2single with dbmap
@@ -50,6 +55,7 @@
    - [ ]  group2cluster 断点续传
    - [ ] rdb导入
    - [ ] aof导入
+  
 
 
 * 4.X
