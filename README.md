@@ -2,6 +2,7 @@
 
 [English](README_en.md)
 
+
 RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及集群同步。
 该工具集包括：
 
@@ -34,6 +35,9 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 ## Quick start
 
 请参阅[Quick Start Guide](docs/quickstart.md),文档包括构建及部署方法及基本使用方法
+
+## 使用说明文档
+[使用说明](docs/using_documents.md)
 
 ## RoadMap
 
