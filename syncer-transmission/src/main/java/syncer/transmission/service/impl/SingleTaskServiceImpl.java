@@ -12,6 +12,7 @@
 package syncer.transmission.service.impl;
 
 import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import syncer.common.exception.TaskMsgException;
@@ -22,6 +23,7 @@ import syncer.replica.util.SyncTypeUtils;
 import syncer.transmission.entity.OffSetEntity;
 import syncer.transmission.entity.StartTaskEntity;
 import syncer.transmission.entity.TaskDataEntity;
+import syncer.transmission.lock.EtcdLockCommandRunner;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.service.ISingleTaskService;
 import syncer.transmission.strategy.taskcheck.RedisTaskStrategyGroupType;
@@ -46,6 +48,7 @@ import java.util.concurrent.locks.Lock;
  * @Date 2020/12/15
  */
 @Service
+@Slf4j
 public class SingleTaskServiceImpl implements ISingleTaskService {
     RedisReplIdCheck redisReplIdCheck = new RedisReplIdCheck();
 
@@ -177,57 +180,67 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         try {
             List<TaskModel> taskModelList = SqlOPUtils.findTaskByGroupId(groupId);
             taskModelList.forEach(taskModel -> {
-                Lock lock = TaskRunUtils.getTaskLock(taskModel.getId());
-                lock.lock();
-                try {
-                    if (SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(taskModel.getId())) {
-                        TaskDataEntity data = SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId());
-                        try {
+                TaskRunUtils.getTaskLock(taskModel.getTaskId(), new EtcdLockCommandRunner() {
+                    @Override
+                    public void run() {
+                        if (SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(taskModel.getId())) {
+                            TaskDataEntity data = SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId());
                             try {
-                                data.getReplication().close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), data.getOffSetEntity().getReplOffset().get(), TaskStatusType.STOP);
+                                try {
+                                    data.getReplication().close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), data.getOffSetEntity().getReplOffset().get(), TaskStatusType.STOP);
 
-                            StartTaskEntity startTaskEntity = StartTaskEntity
-                                    .builder()
-                                    .code("2000")
-                                    .taskId(taskModel.getId())
-                                    .msg("Task stopped successfully")
-                                    .build();
-                            result.add(startTaskEntity);
-                        } catch (Exception e) {
-                            StartTaskEntity startTaskEntity = StartTaskEntity
-                                    .builder()
-                                    .code("1000")
-                                    .taskId(taskModel.getId())
-                                    .msg("Task stopped fail")
-                                    .build();
-                            result.add(startTaskEntity);
-                        }
-                    } else {
-                        if (Objects.isNull(taskModel)) {
-                            StartTaskEntity startTaskEntity = StartTaskEntity
-                                    .builder()
-                                    .code("1001")
-                                    .taskId(taskModel.getId())
-                                    .msg("The current task is not running")
-                                    .build();
-                            result.add(startTaskEntity);
+                                StartTaskEntity startTaskEntity = StartTaskEntity
+                                        .builder()
+                                        .code("2000")
+                                        .taskId(taskModel.getId())
+                                        .msg("Task stopped successfully")
+                                        .build();
+                                result.add(startTaskEntity);
+                            } catch (Exception e) {
+                                StartTaskEntity startTaskEntity = StartTaskEntity
+                                        .builder()
+                                        .code("1000")
+                                        .taskId(taskModel.getId())
+                                        .msg("Task stopped fail")
+                                        .build();
+                                result.add(startTaskEntity);
+                            }
                         } else {
-                            StartTaskEntity startTaskEntity = StartTaskEntity
-                                    .builder()
-                                    .code("1002")
-                                    .taskId(taskModel.getId())
-                                    .msg("The task does not exist. Please create the task first")
-                                    .build();
-                            result.add(startTaskEntity);
+                            if (Objects.isNull(taskModel)) {
+                                StartTaskEntity startTaskEntity = StartTaskEntity
+                                        .builder()
+                                        .code("1001")
+                                        .taskId(taskModel.getId())
+                                        .msg("The current task is not running")
+                                        .build();
+                                result.add(startTaskEntity);
+                            } else {
+                                StartTaskEntity startTaskEntity = StartTaskEntity
+                                        .builder()
+                                        .code("1002")
+                                        .taskId(taskModel.getId())
+                                        .msg("The task does not exist. Please create the task first")
+                                        .build();
+                                result.add(startTaskEntity);
+                            }
                         }
                     }
-                } finally {
-                    lock.unlock();
-                }
+
+                    @Override
+                    public String lockName() {
+                        return "startRunLock" + taskModel.getTaskId();
+                    }
+
+                    @Override
+                    public int grant() {
+                        return 30;
+                    }
+                });
+
             });
         } catch (Exception e) {
             e.printStackTrace();
@@ -245,182 +258,194 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
      */
     @Override
     public StartTaskEntity stopTaskListByTaskId(String taskId) {
-        StartTaskEntity result = null;
-        Lock lock = TaskRunUtils.getTaskLock(taskId);
-        lock.lock();
-        try {
-            if (SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(taskId)) {
-                TaskDataEntity data = SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId);
+        final StartTaskEntity result = StartTaskEntity.builder().build();
+
+        TaskRunUtils.getTaskLock(taskId, new EtcdLockCommandRunner() {
+            @Override
+            public void run() {
                 try {
-                    data.getReplication().close();
+                    if (SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(taskId)) {
+                        TaskDataEntity data = SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId);
+                        try {
+                            data.getReplication().close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        SingleTaskDataManagerUtils.changeThreadStatus(taskId, data.getOffSetEntity().getReplOffset().get(), TaskStatusType.STOP);
+                        result.setCode("2000");
+                        result.setTaskId(taskId);
+                        result.setMsg("Task stopped successfully");
+                    } else {
+                        TaskModel taskModel = SqlOPUtils.findTaskById(taskId);
+                        if (taskModel != null) {
+                            result.setCode("1001");
+                            result.setTaskId(taskId);
+                            result.setMsg("The current task is not running");
+
+                        } else {
+                            result.setCode("1002");
+                            result.setTaskId(taskId);
+                            result.setMsg("The task does not exist. Please create the task first");
+                        }
+                    }
+
                 } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                SingleTaskDataManagerUtils.changeThreadStatus(taskId, data.getOffSetEntity().getReplOffset().get(), TaskStatusType.STOP);
-                result = StartTaskEntity
-                        .builder()
-                        .code("2000")
-                        .taskId(taskId)
-                        .msg("Task stopped successfully")
-                        .build();
-
-
-            } else {
-                TaskModel taskModel = SqlOPUtils.findTaskById(taskId);
-                if (taskModel != null) {
-                    result = StartTaskEntity
-                            .builder()
-                            .code("1001")
-                            .taskId(taskId)
-                            .msg("The current task is not running")
-                            .build();
-                } else {
-                    result = StartTaskEntity
-                            .builder()
-                            .code("1002")
-                            .taskId(taskId)
-                            .msg("The task does not exist. Please create the task first")
-                            .build();
+                    result.setCode("1000");
+                    result.setTaskId(taskId);
+                    result.setMsg("Task stopped fail");
+                    log.error("task {} stop fail",taskId);
                 }
             }
 
-        } catch (Exception e) {
-            result = StartTaskEntity
-                    .builder()
-                    .code("1000")
-                    .taskId(taskId)
-                    .msg("Task stopped fail")
-                    .build();
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
+            @Override
+            public String lockName() {
+                return "startRunLock"+taskId;
+            }
+
+            @Override
+            public int grant() {
+                return 30;
+            }
+        });
+
         return result;
     }
 
     @Override
     public StartTaskEntity startTaskByTaskId(String taskId, boolean afresh) {
-        StartTaskEntity result = null;
-        Lock lock = TaskRunUtils.getTaskLock(taskId);
-        lock.lock();
-        try {
-            if (!SingleTaskDataManagerUtils.isTaskClose(taskId)) {
-                result = StartTaskEntity
-                        .builder()
-                        .code("1001")
-                        .taskId(taskId)
-                        .msg("The task is running")
-                        .build();
-                return result;
+        final StartTaskEntity result = StartTaskEntity.builder().build();
+
+        TaskRunUtils.getTaskLock(taskId, new EtcdLockCommandRunner() {
+            @Override
+            public void run() {
+                try {
+                    if (!SingleTaskDataManagerUtils.isTaskClose(taskId)) {
+                        result.setCode("1001");
+                        result.setTaskId(taskId);
+                        result.setMsg("The task is running");
+                        return ;
+                    }
+                    TaskModel taskModel = SqlOPUtils.findTaskById(taskId);
+
+                    if (Objects.isNull(taskModel)) {
+                        result.setCode("1002");
+                        result.setTaskId(taskId);
+                        result.setMsg("The task has not been created yet");
+                        return;
+                    }
+
+                    taskModel.setTaskMsg("");
+                    /**
+                     * todo offset更新
+                     */
+                    taskModel.setAfresh(afresh);
+
+
+                    SqlOPUtils.updateAfreshsetById(taskId, afresh);
+                    String id = null;
+                    if (!SingleTaskDataManagerUtils.isTaskClose(taskId)) {
+                        result.setCode("1001");
+                        result.setTaskId(taskId);
+                        result.setMsg("The task is running");
+                        return;
+
+                    }
+                    if (taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())) {
+                        id = runSyncerCommandDumpUpTask(taskModel);
+                    } else {
+                        id = runSyncerTask(taskModel);
+                    }
+
+                    result.setCode("2000");
+                    result.setTaskId(id);
+                    result.setMsg("OK");
+                    return;
+
+
+                } catch (Exception e) {
+                    result.setCode("1000");
+                    result.setTaskId(taskId);
+                    result.setMsg("Error_" + e.getMessage());
+                    log.error("startTaskByTaskId {} fail ",taskId);
+                    return;
+                }
             }
-            TaskModel taskModel = SqlOPUtils.findTaskById(taskId);
-            taskModel.setTaskMsg("");
-            /**
-             * todo offset更新
-             */
-            taskModel.setAfresh(afresh);
 
-            if (Objects.isNull(taskModel)) {
-                return StartTaskEntity
-                        .builder()
-                        .code("1002")
-                        .taskId(taskId)
-                        .msg("The task has not been created yet")
-                        .build();
+            @Override
+            public String lockName() {
+                return "startRunLock"+taskId;
             }
 
-            SqlOPUtils.updateAfreshsetById(taskId, afresh);
-            String id = null;
-            if (!SingleTaskDataManagerUtils.isTaskClose(taskId)) {
-                return StartTaskEntity
-                        .builder()
-                        .code("1001")
-                        .taskId(taskId)
-                        .msg("The task is running")
-                        .build();
+            @Override
+            public int grant() {
+                return 30;
             }
-            if (taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())) {
-                id = runSyncerCommandDumpUpTask(taskModel);
-            } else {
-                id = runSyncerTask(taskModel);
-            }
-
-
-            result = StartTaskEntity
-                    .builder()
-                    .code("2000")
-                    .taskId(id)
-                    .msg("OK")
-                    .build();
-
-
-        } catch (Exception e) {
-            result = StartTaskEntity
-                    .builder()
-                    .code("1000")
-                    .taskId(taskId)
-                    .msg("Error_" + e.getMessage())
-                    .build();
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
+        });
         return result;
     }
 
     @Override
     public List<StartTaskEntity> removeTaskByGroupId(String groupId) throws Exception {
-        List<StartTaskEntity>result=Lists.newArrayList();
-        List<TaskModel>taskModelList=SqlOPUtils.findTaskByGroupId(groupId);
-        for (TaskModel taskModel:taskModelList){
-            Lock lock=  TaskRunUtils.getTaskLock(taskModel.getId());
-            lock.lock();
-            try {
-                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(taskModel.getId())){
-                    StartTaskEntity startTaskEntity=StartTaskEntity
-                            .builder()
-                            .code("1001")
-                            .taskId(taskModel.getId())
-                            .groupId(taskModel.getGroupId())
-                            .msg("task is running,please stop the task first")
-                            .build();
-                    result.add(startTaskEntity);
-
-                }else {
-                    try {
-                        SqlOPUtils.deleteTaskById(taskModel.getId());
-                        StartTaskEntity startTaskEntity=StartTaskEntity
+        List<StartTaskEntity> result = Lists.newArrayList();
+        List<TaskModel> taskModelList = SqlOPUtils.findTaskByGroupId(groupId);
+        for (TaskModel taskModel : taskModelList) {
+            TaskRunUtils.getTaskLock(taskModel.getTaskId(), new EtcdLockCommandRunner() {
+                @Override
+                public void run() {
+                    if (SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(taskModel.getId())) {
+                        StartTaskEntity startTaskEntity = StartTaskEntity
                                 .builder()
-                                .code("2000")
+                                .code("1001")
                                 .taskId(taskModel.getId())
                                 .groupId(taskModel.getGroupId())
-                                .msg("Delete successful")
+                                .msg("task is running,please stop the task first")
                                 .build();
                         result.add(startTaskEntity);
 
-                    } catch (Exception e) {
-                        StartTaskEntity startTaskEntity=StartTaskEntity
-                                .builder()
-                                .code("1000")
-                                .taskId(taskModel.getId())
-                                .groupId(taskModel.getGroupId())
-                                .msg("Delete failed")
-                                .build();
-                        result.add(startTaskEntity);
+                    } else {
+                        try {
+                            SqlOPUtils.deleteTaskById(taskModel.getId());
+                            StartTaskEntity startTaskEntity = StartTaskEntity
+                                    .builder()
+                                    .code("2000")
+                                    .taskId(taskModel.getId())
+                                    .groupId(taskModel.getGroupId())
+                                    .msg("Delete successful")
+                                    .build();
+                            result.add(startTaskEntity);
+
+                        } catch (Exception e) {
+                            StartTaskEntity startTaskEntity = StartTaskEntity
+                                    .builder()
+                                    .code("1000")
+                                    .taskId(taskModel.getId())
+                                    .groupId(taskModel.getGroupId())
+                                    .msg("Delete failed")
+                                    .build();
+                            result.add(startTaskEntity);
+                        }
                     }
                 }
-            }finally {
-                lock.unlock();
-            }
+
+                @Override
+                public String lockName() {
+                    return "startRunLock"+taskModel.getTaskId();
+                }
+
+                @Override
+                public int grant() {
+                    return 30;
+                }
+            });
         }
         return result;
     }
 
     @Override
     public StartTaskEntity removeTaskByTaskId(String taskId) throws Exception {
-        StartTaskEntity result=null;
-        if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(taskId)){
-            result=StartTaskEntity
+        StartTaskEntity result = null;
+        if (SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(taskId)) {
+            result = StartTaskEntity
                     .builder()
                     .code("1001")
                     .taskId(taskId)
@@ -430,16 +455,16 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         }
 
         try {
-            if(SqlOPUtils.findTaskById(taskId)!=null){
+            if (SqlOPUtils.findTaskById(taskId) != null) {
                 SqlOPUtils.deleteTaskById(taskId);
-                result=StartTaskEntity
+                result = StartTaskEntity
                         .builder()
                         .code("2000")
                         .taskId(taskId)
                         .msg("Delete successful")
                         .build();
-            }else {
-                result=StartTaskEntity
+            } else {
+                result = StartTaskEntity
                         .builder()
                         .code("1002")
                         .taskId(taskId)
@@ -448,7 +473,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
             }
 
         } catch (Exception e) {
-            result=StartTaskEntity
+            result = StartTaskEntity
                     .builder()
                     .code("1000")
                     .taskId(taskId)

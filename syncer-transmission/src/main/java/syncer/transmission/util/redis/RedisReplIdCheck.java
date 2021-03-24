@@ -11,6 +11,7 @@
 
 package syncer.transmission.util.redis;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.common.util.RegexUtil;
 import syncer.jedis.Jedis;
@@ -24,6 +25,7 @@ import java.net.URISyntaxException;
  * @Description 描述
  * @Date 2020/12/15
  */
+@Slf4j
 public class RedisReplIdCheck {
     public final static String FIRST_RGEX = "repl_backlog_first_byte_offset:(.*?)\r\n";
     public final static String END_RGEX = "master_repl_offset:(.*?)\r\n";
@@ -57,20 +59,15 @@ public class RedisReplIdCheck {
             Configuration targetConfig = Configuration.valueOf(targetUriplus);
 
             if(!StringUtils.isEmpty(targetConfig.getAuthUser())&&!StringUtils.isEmpty(targetConfig.getAuthPassword())){
-
-            }else{
-
-            }
-
-            //获取password
-            if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
+                Object targetAuth = target.auth(targetConfig.getAuthUser()+" "+targetConfig.getAuthPassword());
+            }else if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
                 Object targetAuth = target.auth(targetConfig.getAuthPassword());
             }
             String info=target.info();
 
             version = getRedisBuffer(info,type);
         }catch (Exception e){
-            e.printStackTrace();
+            log.error("check redis replid error  {} : {} ",targetUriplus.getHost(), targetUriplus.getPort());
         } finally {
             if (target != null) {
                 target.close();

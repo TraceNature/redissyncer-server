@@ -55,6 +55,7 @@ public class ResubmitDataAspect {
         //获取第一个参数
         Object firstParam = pointArgs[0];
         StringBuilder stringBuilder = new StringBuilder();
+
         if (firstParam instanceof CreateTaskParam) {
             //解析参数
             CreateTaskParam redisClusterDto = (CreateTaskParam) firstParam;

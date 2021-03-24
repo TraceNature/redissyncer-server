@@ -5,7 +5,7 @@
 * redisyncer-portal
   * 任务调度
   * 健康检查
-  * RBAC
+  * RBAC 
   * 对外提供restful接口
 * redisyncer-server
   * 运行具体同步任务
@@ -17,16 +17,51 @@
 
 | prefix |key 或 key的编码规则| value | description|
 | ---| ---| ---|---|
-| /uniqid| idseed | uint64|全局唯一id种子，初始化为1，每次加锁递增1|
+|/uniqid|	idseed	|uint64	|全局唯一id种子，初始化为1，每次加锁递增1|
 | /inspect| lastinspectiontime | unix时间戳|最后巡检的时间|
 | /inspect| execlock | |巡检执行的分布式锁|
-| /node| nodetype/nodeID | 节点状态，由节点上报|已注册的node|
-| /tasks/taskid| taskid | taskstatusjson|task状态详情|
-| /tasks/node/| nodeId/taskid | taskidset|node下的task|
-| /tasks/groupid/| groupid | taskidset|groupid 以及groupid下的taskid|
-| /tasks/status/| currentstatus/taskid | taskidset|巡检执行的分布式锁|
-| /tasks/name/| nodeId/taskname | taskidset|根据taskName查询|
-| /tasks/md5/| md5 | taskidset|根据md5查询|
+| /nodes/| {nodetype}/{nodeID} | {"heartbeaturl":"/health","lastreporttime":1615431908432,"nodeaddr":"127.0.0.1","nodeid":"1","nodeport":8082,"nodetype":"redissyncernodeserver","online":true}|已注册的node|
+| /tasks/taskid/| {taskid} | taskstatusjson|任务信息|
+| /tasks/node/|{nodeId}/{taskId}|{"nodeId":"xxx","taskId":"xxx"}|nodeId下的任务信息|
+| /tasks/groupid/|{groupid}/{taskId}|{"groupId":"xxx","taskId":"xxx"}|groupId下的任务列表|
+| /tasks/status/| {currentstatus}/{taskid} | {"taskId":"testId"}|任务当前状态信息|
+| /tasks/rdbversion/|{redisVersion}/{rdbVersion}| {"id":1,"redis_version": "2.6","rdb_version": 6}|rdb-redis version映射关系|
+| /tasks/offset/|{taskId}|{"replId":"xxx","replOffset":"-1"}|任务offset信息|
+| /tasks/name/|{taskname}|{"taskId":"testId"}|用于根据taskName查询任务信息|
+| /tasks/type/|{type}/{taskId}|{"taskid":"xxx","groupId":"xxx","nodeId":"xxx"}|根据任务类型获取任务信息|
+| /tasks/user/|{username}|{"id":1,"username":"xxx","name":"xxx","password":"xxx","salt":"xxx"}|用户账号信息|
+| /tasks/bigkey/|{taskId}/{bigKey}| {"id":1,"taskId":"xxx","command":"xxx","command_type":"xxx"}|任务大key记录信息|
+| /tasks/md5/|{md5}|{"taskid":"xxx","groupId":"xxx","nodeId":"xx"}|任务md5信息|
+| /tasks/compensation/ |{taskId}/{compensationId}|{"id":1,"taskId":"xxx","groupId":"xxx","command":"xxx","value":"xxx","key":"xxx","times":3,"createTime","xxx"} |命令进入数据补偿的次数以及信息 |
+| /tasks/compensation/ |{groupId}/{compensationId}|{"compensationId": 1,"taskId":"xxx"}|根据groupId 查询进入数据补偿的key|
+| /tasks/abandon/|{taskId}/{abandonId}|{"id":1,"taskId":"xxx","groupId":"xxx","command":"xxx","key":"xxx","value":"xxx","type":1,"ttl":1000,"exception":"xxx","result":"xxx","desc":"xxx","createTime":"xxx"}|被抛弃command记录|
+| /tasks/abandon/|{groupId}/{abandonId} |{"abandonId": 1,"taskId":"xxx"}|根据groupId查询被抛弃key|
+
+### 任务状态
+
+| TYPE | code | description| status |
+| ---| ---|---|---|
+|STOP     |0|任务停止| 已使用 |
+|CREATING |1|创建中 |  已使用 |
+|CREATED  |2|创建完成| 已使用 |
+|RUN      |3|运行状态| 已使用 |
+|BROKEN   |5|任务异常| 已使用 |
+|RDBRUNING|6|全量RDB同步过程中| 已使用 |
+|COMMANDRUNING|7|增量同步中| 已使用 |
+|FINISH    |8|完成状态| 未使用(备用) |
+
+### 任务类型
+
+| TYPE | code | description| status |
+| ---| ---|---|---|
+|SYNC |1|replication| 已使用 |
+|RDB  |2|RDB文件解析 |  已使用 |
+|AOF  |3|AOF文件解析| 已使用 |
+|MIXED|4|混合文件解析| 已使用 |
+|ONLINERDB |5|在线RDB解析| 已使用 |
+|ONLINEAOF |6|在线AOF| 已使用 |
+|ONLINEMIXED|7|在线混合文件解析| 已使用 |
+|COMMANDDUMPUP|8|增量命令实时备份| 已使用 |
 
 ## id规范
 

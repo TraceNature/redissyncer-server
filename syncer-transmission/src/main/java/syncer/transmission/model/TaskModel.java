@@ -19,12 +19,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.util.StringUtils;
+import syncer.common.config.EtcdServerConfig;
+import syncer.common.config.ServerConfig;
 import syncer.common.util.TimeUtils;
 import syncer.replica.entity.SyncType;
 import syncer.transmission.constants.CommandKeyFilterType;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -38,6 +41,11 @@ import java.util.Set;
 @NoArgsConstructor //无参构造
 
 public class TaskModel {
+
+    /**
+     * 节点id
+     */
+    private String nodeId;
 
     /**
      * 任务Id
@@ -290,7 +298,7 @@ public class TaskModel {
     private String expandJson="";
 
     /**
-     * 时间偏差
+     * ttl 调整时间偏差
      */
     @Builder.Default
     private Long timeDeviation=0L;
@@ -455,7 +463,7 @@ public class TaskModel {
         return sourceRedisType;
     }
 
-    public TaskModel(String id,String taskId, String groupId, String taskName, String sourceRedisAddress, String sourcePassword,
+    public TaskModel(String nodeId,String id,String taskId, String groupId, String taskName, String sourceRedisAddress, String sourcePassword,
                      String targetRedisAddress, String targetPassword, String fileAddress, boolean autostart,
                      boolean afresh, Integer batchSize, Integer tasktype, Integer offsetPlace, String taskMsg,
                      Long offset, Integer status, double redisVersion, Integer rdbVersion, Integer syncType,
@@ -516,7 +524,16 @@ public class TaskModel {
         this.keyFilter=keyFilter;
         setTargetRedisAddress(this.getTargetRedisAddress());
         setSourceRedisAddress(this.getSourceRedisAddress());
+        EtcdServerConfig config=new EtcdServerConfig();
+        this.setNodeId(config.getNodeId());
+    }
 
+    public String getNodeId() {
+        if(Objects.isNull(nodeId)){
+            EtcdServerConfig config=new EtcdServerConfig();
+            return config.getNodeId();
+        }
+        return nodeId;
     }
 
     public String getId() {

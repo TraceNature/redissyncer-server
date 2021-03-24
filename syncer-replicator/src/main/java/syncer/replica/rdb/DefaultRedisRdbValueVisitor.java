@@ -46,6 +46,18 @@ public class DefaultRedisRdbValueVisitor extends RedisRdbValueVisitor {
         return (T) val;
     }
 
+    /**
+     * A redis list is represented as a sequence of strings.
+     *
+     * First, the size of the list size is read from the stream using "Length Encoding"
+     * Next, size strings are read from the stream using "String Encoding"
+     * The list is then re-constructed using these Strings
+     * @param in
+     * @param version
+     * @param <T>
+     * @return
+     * @throws IOException
+     */
     @Override
     public <T> T applyList(RedisInputStream in, int version) throws IOException {
         /*
@@ -121,6 +133,17 @@ public class DefaultRedisRdbValueVisitor extends RedisRdbValueVisitor {
         return (T) zset;
     }
 
+    /**
+     * First, the size of the hash size is read from the stream using "Length Encoding"
+     * Next, 2 * size strings are read from the stream using "String Encoding"
+     * Alternate strings are key and values
+     * For example, 2 us washington india delhi represents the map {"us" => "washington", "india" => "delhi"}
+     * @param in
+     * @param version
+     * @param <T>
+     * @return
+     * @throws IOException
+     */
     @Override
     public <T> T applyHash(RedisInputStream in, int version) throws IOException {
         /*

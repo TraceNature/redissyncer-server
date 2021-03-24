@@ -25,14 +25,14 @@ public interface TaskOffsetMapper {
     boolean insetTaskOffset(TaskOffsetModel taskOffsetModel)throws Exception;
 
     @Update("UPDATE t_task_offset SET offset=#{offset} WHERE taskId=#{taskId}")
-    boolean updateOffsetByTaskId(@Param("taskId") boolean taskId, @Param("offset") long offset)throws Exception;
+    boolean updateOffsetByTaskId(@Param("taskId") String taskId, @Param("offset") long offset)throws Exception;
 
     @Update("UPDATE t_task_offset SET replId=#{replId} WHERE taskId=#{taskId}")
-    boolean updateReplIdByTaskId(@Param("taskId") boolean taskId, @Param("replId") String replId)throws Exception;
+    boolean updateReplIdByTaskId(@Param("taskId") String taskId, @Param("replId") String replId)throws Exception;
 
 
     @Update("UPDATE t_task_offset SET replId=#{replId},offset=#{offset} WHERE taskId=#{taskId}")
-    boolean updateOffsetAndReplIdByTaskId(@Param("taskId") boolean taskId, @Param("replId") String replId, @Param("offset") long offset)throws Exception;
+    boolean updateOffsetAndReplIdByTaskId(@Param("taskId") String taskId, @Param("replId") String replId, @Param("offset") long offset)throws Exception;
 
     @Delete("DELETE FROM t_task_offset WHERE taskId=#{taskId}")
     int delOffsetEntityByTaskId(@Param("taskId") String taskId)throws Exception;

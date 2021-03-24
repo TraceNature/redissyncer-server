@@ -21,11 +21,15 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.StringUtils;
+import syncer.common.config.EtcdServerConfig;
+import syncer.common.constant.StoreType;
 import syncer.common.util.ThreadPoolUtils;
 import syncer.common.util.file.FileUtils;
 import syncer.common.util.spring.SpringUtil;
 import syncer.replica.entity.TaskStatusType;
 import syncer.transmission.entity.TaskDataEntity;
+import syncer.transmission.heartbeat.DefaultHeartbeatCommandRunner;
+import syncer.transmission.heartbeat.Heartbeat;
 import syncer.transmission.mapper.RubbishDataMapper;
 import syncer.transmission.mapper.TaskMapper;
 import syncer.transmission.model.TaskModel;
@@ -38,6 +42,7 @@ import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 import syncer.webapp.ApplicationStartedEventListener;
 import syncer.webapp.executor.SqlFileExecutor;
 import syncer.webapp.executor.SqliteUtil;
+import syncer.webapp.start.NodeStartCheckResource;
 
 import java.util.List;
 import java.util.Map;
@@ -49,7 +54,7 @@ import java.util.Map;
 @EnableCaching  //开启缓存
 @Slf4j
 public class SyncerWebappApplication {
-
+    final static String version="v3.3.0";
     public static void main(String[] args) throws Exception {
         System.setProperty("DLog4jContextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
         System.setProperty("log4j2.contextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
@@ -58,7 +63,7 @@ public class SyncerWebappApplication {
         SpringApplication application = new SpringApplication(SyncerWebappApplication.class);
         application.addListeners(new ApplicationStartedEventListener());
         application.run(args);
-
+        log.warn("syncer version:{}",version);
         Runtime.getRuntime().addShutdownHook(new Thread(){
 
             @Override
@@ -71,33 +76,74 @@ public class SyncerWebappApplication {
                 } catch (InterruptedException e) {
 
                 }
-
+                SqlOPUtils.close();
                 ThreadPoolUtils.shutdown();
             }
         });
 
+        EtcdServerConfig config=new EtcdServerConfig();
+        //sqlite
+        if(StoreType.SQLITE.equals(config.getStoreType())){
+            if(!FileUtils.existsFile(SqliteUtil.getFilePath())){
+                FileUtils.mkdirs(SqliteUtil.getFilePath());
+            }
+            if(!FileUtils.existsFile(SqliteUtil.getPath())){
+                log.info("initialize data store file...");
+                SqlFileExecutor.execute();
+            }else {
+                log.info("The data store file already exists and does not need to be initialized...");
+            }
 
-        if(!FileUtils.existsFile(SqliteUtil.getFilePath())){
-            FileUtils.mkdirs(SqliteUtil.getFilePath());
+
+            /**
+             * 节点启动时将本节点非STOP 和 BROKEN状态的节点置为BROKEN 适用于sqlite
+             */
+            loadingData();
+            /**
+             * 清理垃圾数据 适用于sqlite
+             */
+            cleanRubbishData();
+
+
+            /**
+             * 持久化任务
+             */
+
+
+            ThreadPoolUtils.exec(new SqliteSettingPersistenceTask());
+            ThreadPoolUtils.exec(new DbDataCommitTask());
+            ThreadPoolUtils.exec(new OffsetCommitTask());
+
+        }else{
+            //etcd  node heartbeat
+            NodeStartCheckResource checkResource=new NodeStartCheckResource();
+            try {
+                boolean status=checkResource.initCheckResource();
+                if(!status){
+                    Heartbeat heartbeat=new Heartbeat(10000,new DefaultHeartbeatCommandRunner());
+                    heartbeat.heartbeat();
+
+
+                    /**
+                     * 持久化任务
+                     */
+
+
+                    ThreadPoolUtils.exec(new SqliteSettingPersistenceTask());
+                    ThreadPoolUtils.exec(new DbDataCommitTask());
+                    ThreadPoolUtils.exec(new OffsetCommitTask());
+                }
+            }catch (Exception e){
+                log.error("start NodeStartCheckResource error {}",e.getMessage());
+            }
+
+
+
         }
-        if(!FileUtils.existsFile(SqliteUtil.getPath())){
-            log.info("initialize data store file...");
-            SqlFileExecutor.execute();
-        }else {
-            log.info("The data store file already exists and does not need to be initialized...");
-        }
 
 
-        /**
-         * 持久化任务
-         */
 
-        loadingData();
-        cleanRubbishData();
 
-        ThreadPoolUtils.exec(new SqliteSettingPersistenceTask());
-        ThreadPoolUtils.exec(new DbDataCommitTask());
-        ThreadPoolUtils.exec(new OffsetCommitTask());
 
     }
 
@@ -122,7 +168,7 @@ public class SyncerWebappApplication {
                     }
                 }
                 try {
-                    SpringUtil.getBean(TaskMapper.class).updateTask(model);
+                    SqlOPUtils.updateTask(model);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -144,12 +190,11 @@ public class SyncerWebappApplication {
     }
 
     private static void cleanRubbishData(){
-        RubbishDataMapper rubbishDataMapper=SpringUtil.getBean(RubbishDataMapper.class);
-        rubbishDataMapper.deleteRubbishDataFromTaskBigKey();
-        rubbishDataMapper.deleteRubbishDataFromTaskDataAbandonCommand();
-        rubbishDataMapper.deleteRubbishDataFromTaskDataCompensation();
-        rubbishDataMapper.deleteRubbishDataFromTaskDataMonitor();
-        rubbishDataMapper.deleteRubbishDataFromTaskOffSet();
+        SqlOPUtils.deleteRubbishDataFromTaskBigKey();
+        SqlOPUtils.deleteRubbishDataFromTaskDataAbandonCommand();
+        SqlOPUtils.deleteRubbishDataFromTaskDataCompensation();
+        SqlOPUtils.deleteRubbishDataFromTaskDataMonitor();
+        SqlOPUtils.deleteRubbishDataFromTaskOffSet();
         log.info("End of rubbish data cleaning");
     }
 

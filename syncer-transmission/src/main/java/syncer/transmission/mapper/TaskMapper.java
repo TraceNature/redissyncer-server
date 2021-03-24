@@ -68,7 +68,7 @@ public interface TaskMapper {
 
 
     @Delete("DELETE FROM t_task")
-    int deleteAllTask();
+    long deleteAllTask();
 
     @Update("UPDATE t_task SET groupId=#{groupId} ,taskName=#{taskName},sourceRedisAddress=#{sourceRedisAddress},sourcePassword=#{sourcePassword},targetRedisAddress=#{targetRedisAddress},targetPassword=#{targetPassword},autostart=#{autostart},afresh=#{afresh},batchSize=#{batchSize},tasktype=#{tasktype},offsetPlace=#{offsetPlace},taskMsg=#{taskMsg},offset=#{offset},status=#{status},redisVersion=#{redisVersion},rdbVersion=#{rdbVersion} ,targetRedisType=#{targetRedisType},sourceRedisType=#{sourceRedisType},syncType=#{syncType},dbMapper=#{dbMapper},updateTime=(datetime('now', 'localtime')) ,md5=#{md5},sourceAcl=#{sourceAcl},targetAcl=#{targetAcl},sourceUserName=#{sourceUserName},targetUserName=#{targetUserName},errorCount=#{errorCount} WHERE id=#{id}")
     boolean updateTask(TaskModel taskModel)throws Exception;
@@ -143,4 +143,5 @@ public interface TaskMapper {
 //        })
 //        Integer  updateTaskList(@Param(value="taskModelList")List<TaskModel>taskModelList)throws Exception;
 
+    public void close();
 }

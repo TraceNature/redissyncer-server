@@ -147,7 +147,6 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
                         } catch (Exception e) {
                             log.error("大key统计入库失败：[{}]", Strings.toString(batchedKeyValuePair.getKey()));
                         }
-
                         log.warn("大key统计：[{}],db: [{}]", Strings.toString(batchedKeyValuePair.getKey()), batchedKeyValuePair.getDb().getDbNumber());
                     }
 

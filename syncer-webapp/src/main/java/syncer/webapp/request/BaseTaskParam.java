@@ -12,10 +12,7 @@
 package syncer.webapp.request;
 
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
@@ -51,4 +48,17 @@ public class BaseTaskParam implements Serializable {
             "为true时则进行全量同步，缺省默认值为true (注：创建接口时 afresh字段仅和autostart为true时同时使用，afresh字段当startTask为必填字段)")
     @Builder.Default
     private boolean afresh=true;
+
+    public BaseTaskParam() {
+    }
+
+    public BaseTaskParam(@NotBlank(message = "源RedisCluster地址不能为空") String sourceRedisAddress, @NotBlank(message = "目标RedisCluster地址不能为空") String targetRedisAddress, String sourcePassword, String targetPassword, @NotBlank(message = "任务名称不能为空") String taskName, boolean autostart, boolean afresh) {
+        this.sourceRedisAddress = sourceRedisAddress;
+        this.targetRedisAddress = targetRedisAddress;
+        this.sourcePassword = sourcePassword;
+        this.targetPassword = targetPassword;
+        this.taskName = taskName;
+        this.autostart = autostart;
+        this.afresh = afresh;
+    }
 }

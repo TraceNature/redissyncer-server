@@ -28,8 +28,7 @@ import java.math.BigDecimal;
 @Slf4j
 public class Montitor {
     public final static double DEFAULT_THRESHOLD=8.0;
-    @Autowired
-    ServerConfig serverConfig;
+
 
     public long jvmMemoryMax() {
         try {

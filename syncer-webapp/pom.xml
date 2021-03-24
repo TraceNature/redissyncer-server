@@ -9,7 +9,7 @@
     </parent>
     <groupId>syncer</groupId>
     <artifactId>syncer-webapp</artifactId>
-    <version>3.1</version>
+    <version>3.3.0</version>
     <name>redissyncer-server</name>
     <description>Demo project for Spring Boot</description>
 
@@ -41,11 +41,7 @@
             <artifactId>commons-dbcp</artifactId>
             <version>1.4</version>
         </dependency>
-        <dependency>
-            <groupId>org.aspectj</groupId>
-            <artifactId>aspectjrt</artifactId>
-            <version>1.9.4</version>
-        </dependency>
+
         <!--添加热部署-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

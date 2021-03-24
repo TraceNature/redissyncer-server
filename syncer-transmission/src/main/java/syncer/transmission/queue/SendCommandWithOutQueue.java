@@ -76,7 +76,7 @@ public class SendCommandWithOutQueue {
                 if(null!=keyValueEventEntity){
                     filterChain.run(replication,keyValueEventEntity,taskModel);
                 }
-                DataCleanUtils.cleanData(keyValueEventEntity);
+//                DataCleanUtils.cleanData(keyValueEventEntity);
             }catch (Exception e){
                 Event event=keyValueEventEntity.getEvent();
                 String keyName=null;
@@ -161,6 +161,10 @@ public class SendCommandWithOutQueue {
                 log.error("[{}]抛弃key:{} ,class:[{}]:原因[{}]",taskId, keyName,event.getClass().toString(),e.getMessage());
                 DataCleanUtils.cleanData(keyValueEventEntity,event);
                 e.printStackTrace();
+            }finally {
+                if (null != keyValueEventEntity) {
+                    DataCleanUtils.cleanData(keyValueEventEntity);
+                }
             }
     }
 }

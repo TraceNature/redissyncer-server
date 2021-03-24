@@ -19,6 +19,7 @@ import syncer.transmission.exception.TaskErrorException;
 import syncer.transmission.mapper.RdbVersionMapper;
 import syncer.transmission.model.RdbVersionModel;
 import syncer.transmission.service.IRdbVersionService;
+import syncer.transmission.util.sql.SqlOPUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,13 +31,12 @@ import java.util.Objects;
  */
 @Service
 public class RdbVersionServiceImpl implements IRdbVersionService {
-    @Autowired
-    private RdbVersionMapper rdbVersionMapper;
+
     @Override
     public PageBean<RdbVersionModel> findRdbVersionModelByPage(int currentPage, int pageSize) throws Exception {
         PageHelper.startPage(currentPage, pageSize);
-        List<RdbVersionModel> allItems = rdbVersionMapper.findAllRdbVersion();
-        int countNums = rdbVersionMapper.countItem();
+        List<RdbVersionModel> allItems = SqlOPUtils.findAllRdbVersion();
+        int countNums = SqlOPUtils.rdbCountItem();
         PageBean<RdbVersionModel> pageData = new PageBean<>(currentPage, pageSize, countNums);
         pageData.setItems(allItems);
         return pageData;
@@ -44,22 +44,22 @@ public class RdbVersionServiceImpl implements IRdbVersionService {
 
     @Override
     public List<RdbVersionModel> findAllRdbVersion() throws Exception {
-        return rdbVersionMapper.findAllRdbVersion();
+        return SqlOPUtils.findAllRdbVersion();
     }
 
     @Override
     public RdbVersionModel findRdbVersionModelById(Integer id) throws Exception {
-        return rdbVersionMapper.findRdbVersionModelById(id);
+        return SqlOPUtils.findRdbVersionModelById(id);
     }
 
     @Override
     public boolean deleteRdbVersionModelById(Integer id) throws Exception {
-        return rdbVersionMapper.deleteRdbVersionModelById(id);
+        return SqlOPUtils.deleteRdbVersionModelById(id);
     }
 
     @Override
     public RdbVersionModel findRdbVersionModelByRedisVersionAndRdbVersion(String redisVersion, Integer rdbVersion) throws Exception {
-        return rdbVersionMapper.findRdbVersionModelByRedisVersionAndRdbVersion(redisVersion, rdbVersion);
+        return SqlOPUtils.findRdbVersionModelByRedisVersionAndRdbVersion(redisVersion, rdbVersion);
     }
 
     @Override
@@ -69,7 +69,7 @@ public class RdbVersionServiceImpl implements IRdbVersionService {
         if(Objects.nonNull(result)){
             throw new TaskErrorException("当前映射关系已存在");
         }
-        return rdbVersionMapper.insertRdbVersionModel(rdbVersionModel);
+        return SqlOPUtils.insertRdbVersionModel(rdbVersionModel);
     }
 
     @Override
@@ -78,6 +78,6 @@ public class RdbVersionServiceImpl implements IRdbVersionService {
         if(dbRdbVersionModel==null){
             throw new TaskErrorException("当前映射关系不存在");
         }
-        return rdbVersionMapper.updateRdbVersionModelById(dbRdbVersionModel.getId(),redisVersion,rdbVersion);
+        return SqlOPUtils.updateRdbVersionModelById(dbRdbVersionModel.getId(),redisVersion,rdbVersion);
     }
 }
