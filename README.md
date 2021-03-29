@@ -77,6 +77,30 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 |  \[本地混合文件\]            |     \[本地混合文件导入\]    | 
 |  \[在线混合文件\]            |     \[文件url导入\]        | 
 
+## 支持的命令
+|   system   | String      | List         | Hash       |  Set        | ZSet     | Transactions |   GEO            |   Stream         | HyperLogLog      |
+|------------|-------------|--------------|------------|-------------|----------|--------------|------------------|------------------|------------------|    
+| SElECT     | BITFIELD    | BLMOVE       | HDEL       | SADD        | BZPOPMAX |  EXEC        | GEOADD           | XSETID           | PFMERGE          |
+| FLUSHALL   | APPEND      | BLPOP        | HINCRBY    | SDIFFSTORE  | BZPOPMIN |  MULTI       | GEOSEARCHSTORE   | XACK             | PFADD            |
+| FLUSHDB    | BITOP       | BRPOP        | HMSET      | SINTERSTORE | ZADD     |  DISCARD     |                  | XADD             | PFCOUNT          |
+| COPY       | DECRBY      | BRPOPLPUSH   | HSET       | SMOVE       |ZDIFFSTORE|              |                  | XAUTOCLAIM       |                  |
+| PING       | DECR        | LINSERT      | HSETNX     | SPOP        | ZINCRBY  |              |                  | XCLAIM           |                  |
+| DEL        | GETDEL      | LPOP         |HINCRBYFLOAT| SREM        | ZINTER   |              |                  | XDEL             |                  |
+| EXPIREAT   | SETRANGE    | LPUSH        |            | SUNIONSTORE |ZINTERSTORE|             |                  | XGROUP           |                  |
+| EXPIRE     | GETEX       | LPUSHX       |            |             | ZPOPMAX  |              |                  | XTRIM            |                  |
+| SWAPDB     | GETSET      | LREM         |            |             | ZPOPMIN  |              |                  |                  |                  |
+|            | INCR        | LSET         |            |             |ZRANGESTORE|             |                  |                  |                  |
+|            | INCRBY      | LTRIM        |            |             |  ZREM    |              |                  |                  |                  |
+|            | INCRBYFLOAT | RPOP         |            |             |ZREMRANGEBYLEX|          |                  |                  |                  |
+|            | MSET        | RPOPLPUSH    |            |             |ZREMRANGEBYRANK|         |                  |                  |                  |
+|            | MSETNX      | RPUSH        |            |             |ZREMRANGEBYSCORE|        |                  |                  |                  |
+|            | PSETEX      | RPUSHX       |            |             |ZUNIONSTORE|             |                  |                  |                  |
+|            | SETBIT      | SORT         |            |             |          |              |                  |                  |                  |
+|            | SETEX       |              |            |             |          |              |                  |                  |                  |
+|            | SETNX       |              |            |             |          |              |                  |                  |                  |
+
+
+
 [comment]: <> (##支持命令)
 
 [comment]: <> (|  命令  |  命令  | 命令    | 命令    |)

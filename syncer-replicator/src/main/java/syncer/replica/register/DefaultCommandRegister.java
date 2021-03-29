@@ -47,7 +47,9 @@ public class DefaultCommandRegister {
         r.addCommandParser(CommandName.name("DECR"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("INCRBY"), new DefaultCommandParser());
 
-        r.addCommandParser(CommandName.name("INCRBYFLOAT"), new IncrByFloatParser());
+
+        r.addCommandParser(CommandName.name("INCRBYFLOAT"), new DefaultCommandParser());
+//        r.addCommandParser(CommandName.name("INCRBYFLOAT"), new IncrByFloatParser());
 
         r.addCommandParser(CommandName.name("DECRBY"), new DefaultCommandParser());
         r.addCommandParser(CommandName.name("PERSIST"), new DefaultCommandParser());
