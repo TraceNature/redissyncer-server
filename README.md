@@ -63,7 +63,7 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 |  \[Redis\]    |         \[2.8-6.0\]  |  
 
 
-## 支持的命令
+## 支持的命令(写命令)
 |   system   | String      | List         | Hash       |  Set        | ZSet     | Transactions |   GEO            |   Stream         | HyperLogLog      |
 |------------|-------------|--------------|------------|-------------|----------|--------------|------------------|------------------|------------------|    
 | SElECT     | BITFIELD    | BLMOVE       | HDEL       | SADD        | BZPOPMAX |  EXEC        | GEOADD           | XSETID           | PFMERGE          |
