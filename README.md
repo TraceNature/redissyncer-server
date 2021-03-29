@@ -84,7 +84,7 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 |            | SETBIT      | SORT         |            |             |          |              |                  |                  |                  |
 |            | SETEX       |              |            |             |          |              |                  |                  |                  |
 |            | SETNX       |              |            |             |          |              |                  |                  |                  |
-
+|            | SET         |              |            |             |          |              |                  |                  |                  |
 
 ## 支持数据类型
 
