@@ -21,6 +21,12 @@ RedisSyncer一款通过replication协议模拟slave来获取源Redis节点数据
 * 迁移前确保目标库为空没有垃圾数据，防止造成数据不一致  
 * 在迁移过程中尽量避免目标端有其他客户端写入
 
+### 存储类型
+ * sqlite(默认)
+ * etcd 
+   
+若切换为etcd请修改 application.yml 中server.storageType 为etcd 并配置 etcd参数
+
 ### 创建任务参数说明(*重要)
 #### 请求地址
     http://{ip}:{port}/api/v1/creattask
@@ -59,7 +65,7 @@ RedisSyncer一款通过replication协议模拟slave来获取源Redis节点数据
 | COMMAND_OR_KEY_FILTER_REFUSE   |  commandFilter和keyFilter指定的command 和key都接受 两者满足任意一者即拒绝|
 | COMMAND_AND_KEY_FILTER_REFUSE  |  commandFilter和keyFilter同时生效 && 两者都满足拒绝|
 
-#### 常见问题
+### 常见问题
 
 1.当源为主从时，源节点应该填主节点还是从节点
   * 当进行全量数据同步时，redis节点会进行bgsave操作和rdb的网络传输，开销会比较大，因此推荐将从节点作为源，以降低master的压力 
