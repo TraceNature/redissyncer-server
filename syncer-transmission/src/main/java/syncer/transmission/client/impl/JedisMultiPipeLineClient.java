@@ -14,7 +14,9 @@ package syncer.transmission.client.impl;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.util.ThreadPoolUtils;
-import syncer.jedis.*;
+import syncer.jedis.Jedis;
+import syncer.jedis.Pipeline;
+import syncer.jedis.Response;
 import syncer.jedis.exceptions.JedisConnectionException;
 import syncer.jedis.params.SetParams;
 import syncer.replica.constant.CMD;
@@ -34,7 +36,10 @@ import syncer.transmission.util.object.ObjectUtils;
 import syncer.transmission.util.strings.StringUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,22 +47,28 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author zhanenqiang
  * @Description 单机redis pipeleine版本  已修复补偿机制问题  基于Jedis
+ * 断点续传基于事务机制，尽最大可能保证续传offset最新
+ * 在目标中每一个库写入一个hash结构  syncer-hash-offset-checkpoint
+ *
+ * {ip}:{port}-runid
+ * {ip}:{port}-offset
+ * pointcheckVersion
  * @Date 2020/12/14
  */
 @Slf4j
-public class JedisPipeLineClient implements RedisClient {
-    protected String host;
-    protected Integer port;
-    protected String password;
-    protected Jedis targetClient;
-    protected Pipeline pipelined;
+public class JedisMultiPipeLineClient implements RedisClient {
+    private String host;
+    private Integer port;
+    private String password;
+    private Jedis targetClient;
+    private Pipeline pipelined;
     private Integer currentDbNum = 0;
     //批次数
-    protected Integer count = 1000;
+    private Integer count = 1000;
     /**
      * 上一次pipeline提交时间记录
      */
-    protected Date date = new Date();
+    private Date date = new Date();
 
     //任务id
     private String taskId;
@@ -69,7 +80,7 @@ public class JedisPipeLineClient implements RedisClient {
      * 数据补偿锁
      */
     private Lock compensatorLock = new ReentrantLock();
-    protected AtomicInteger commandNums = new AtomicInteger();
+    private AtomicInteger commandNums = new AtomicInteger();
 
     //错误次数
     private long errorCount = 1;
@@ -77,7 +88,7 @@ public class JedisPipeLineClient implements RedisClient {
     private boolean connectError = false;
 
     //补偿存储
-    protected KVPersistenceDataEntity kvPersistence = new KVPersistenceDataEntity();
+    private KVPersistenceDataEntity kvPersistence = new KVPersistenceDataEntity();
     private CompensatorUtils compensatorUtils = new CompensatorUtils();
     //内存非幂等命令转幂等命令
     private Map<String, Integer> incrMap = new LruCache<>(1000);
@@ -85,9 +96,7 @@ public class JedisPipeLineClient implements RedisClient {
     private Map<String, Float> incrDoubleMap = new LruCache<>(1000);
     private CommandCompensatorUtils commandCompensatorUtils = new CommandCompensatorUtils();
 
-    //断线重试机制
-    private ConnectErrorRetry retry=new ConnectErrorRetry(taskId);
-    public JedisPipeLineClient(String host, Integer port, String password, int count, long errorCount, String taskId) {
+    public JedisMultiPipeLineClient(String host, Integer port, String password, int count, long errorCount, String taskId) {
 
         this.host = host;
         this.port = port;
@@ -104,10 +113,10 @@ public class JedisPipeLineClient implements RedisClient {
         targetClient=createJedis(this.host,this.port,password);
 
         pipelined = targetClient.pipelined();
-        retry=new ConnectErrorRetry(taskId);
+
         //定时回收线程
 
-        ThreadPoolUtils.exec(new JedisPipeLineClient.PipelineSubmitThread(taskId));
+        ThreadPoolUtils.exec(new JedisMultiPipeLineClient.PipelineSubmitThread(taskId));
     }
 
     @Override
@@ -265,7 +274,7 @@ public class JedisPipeLineClient implements RedisClient {
                     .key(key)
                     .lpush_value(value)
                     .stringKey(Strings.byteToString(key))
-                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH_WITH_TIME_LIST)
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH_LIST)
                     .dbNum(dbNum)
                     .cmd("LPUSH".getBytes())
                     .ms(ms)
@@ -289,7 +298,7 @@ public class JedisPipeLineClient implements RedisClient {
                     .key(key)
                     .valueList(value)
                     .stringKey(Strings.byteToString(key))
-                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.RPUSH)
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH)
                     .dbNum(dbNum)
                     .cmd("RPUSH".getBytes())
                     .build());
@@ -311,7 +320,7 @@ public class JedisPipeLineClient implements RedisClient {
                     .key(key)
                     .valueList(value)
                     .stringKey(Strings.byteToString(key))
-                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.RPUSH_WITH_TIME)
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH_WITH_TIME)
                     .dbNum(dbNum)
                     .cmd("RPUSH".getBytes())
                     .ms(ms)
@@ -336,7 +345,7 @@ public class JedisPipeLineClient implements RedisClient {
                     .key(key)
                     .lpush_value(value)
                     .stringKey(Strings.byteToString(key))
-                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.RPUSH_LIST)
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH_LIST)
                     .dbNum(dbNum)
                     .cmd("RPUSH".getBytes())
                     .build());
@@ -358,7 +367,7 @@ public class JedisPipeLineClient implements RedisClient {
                     .key(key)
                     .lpush_value(value)
                     .stringKey(Strings.byteToString(key))
-                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.RPUSH_WITH_TIME_LIST)
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.LPUSH_LIST)
                     .dbNum(dbNum)
                     .cmd("RPUSH".getBytes())
                     .ms(ms)
@@ -497,7 +506,7 @@ public class JedisPipeLineClient implements RedisClient {
                     .key(key)
                     .zaddValue(value)
                     .stringKey(Strings.byteToString(key))
-                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.ZADD_WITH_TIME)
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.ZADD)
                     .dbNum(dbNum)
                     .cmd("ZADD".getBytes())
                     .ms(ms)
@@ -543,7 +552,7 @@ public class JedisPipeLineClient implements RedisClient {
                     .key(key)
                     .hash_value(hash)
                     .stringKey(Strings.byteToString(key))
-                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.HMSET_WITH_TIME)
+                    .pipeLineCompensatorEnum(PipeLineCompensatorEnum.HMSET)
                     .dbNum(dbNum)
                     .cmd("HMSET".getBytes())
                     .ms(ms)
@@ -825,7 +834,7 @@ public class JedisPipeLineClient implements RedisClient {
      * @param password
      * @return
      */
-    protected Jedis createJedis(String host,int port,String password){
+    Jedis createJedis(String host,int port,String password){
         Jedis jedis=new Jedis(host,port);
         if (!StringUtils.isEmpty(password)) {
             jedis.auth(password);
@@ -838,9 +847,6 @@ public class JedisPipeLineClient implements RedisClient {
 
     ///死锁
     void submitCommandNum() {
-        if (SingleTaskDataManagerUtils.isTaskClose(taskId) && taskId != null) {
-            return;
-        }
         commitLock.lock();
         try {
             int num = commandNums.get();
@@ -854,7 +860,6 @@ public class JedisPipeLineClient implements RedisClient {
                 Response<String> r = pipelined.ping();
                 kvPersistence.addKey(EventEntity.builder().cmd("PING".getBytes()).pipeLineCompensatorEnum(PipeLineCompensatorEnum.COMMAND).build());
                 //pipelined.
-
                 List<Object> resultList = pipelined.syncAndReturnAll();
                 //补偿入口
                 commitCompensator(resultList);
@@ -865,13 +870,7 @@ public class JedisPipeLineClient implements RedisClient {
 
             }
         } catch (JedisConnectionException e) {
-            try {
-                retry.retry(new JedisPipelineSubmitCommandRetryRunner(this));
-            }catch (JedisConnectionException ex){
-                log.error("[TASKDI {}] pipelined retry fail",taskId);
-                brokenTaskByConnectError(ex);
-            }
-
+            brokenTaskByConnectError(e);
         } finally {
             commitLock.unlock();
         }
@@ -880,25 +879,15 @@ public class JedisPipeLineClient implements RedisClient {
 
     void addCommandNum() {
         commitLock.lock();
-        boolean staus=false;
-
         try {
-
             int num = commandNums.incrementAndGet();
             if (num >= count) {
                 List<Object> resultList = pipelined.syncAndReturnAll();
-
                 //补偿入口
                 commitCompensator(resultList);
             }
         } catch (JedisConnectionException e) {
-            try {
-                retry.retry(new JedisPipeLineRetryRunner(this));
-            }catch (JedisConnectionException ex){
-                log.error("[TASKDI {}] pipelined retry fail",taskId);
-                brokenTaskByConnectError(ex);
-            }
-
+            brokenTaskByConnectError(e);
         } finally {
             commitLock.unlock();
         }
@@ -1003,6 +992,7 @@ public class JedisPipeLineClient implements RedisClient {
                     command = "SET";
                 } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.SET_WITH_TIME)) {
                     result = client.set(eventEntity.getKey(), eventEntity.getValue(), SetParams.setParams().px(eventEntity.getMs()));
+
                     command = "SET";
                 } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.LPUSH)) {
                     result = client.lpush(eventEntity.getKey(), eventEntity.getValue());
@@ -1017,20 +1007,6 @@ public class JedisPipeLineClient implements RedisClient {
                 } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.LPUSH_WITH_TIME_LIST)) {
                     result = client.lpush(eventEntity.getKey(), ObjectUtils.listBytes(eventEntity.getLpush_value()));
                     command = "lpush";
-                    client.pexpire(eventEntity.getKey(), eventEntity.getMs());
-                } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.RPUSH)) {
-                    result = client.rpush(eventEntity.getKey(), eventEntity.getValue());
-                    command = "rpush";
-                } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.RPUSH_LIST)) {
-                    result = client.rpush(eventEntity.getKey(), ObjectUtils.listBytes(eventEntity.getLpush_value()));
-                    command = "rpush";
-                } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.RPUSH_WITH_TIME)) {
-                    result = client.rpush(eventEntity.getKey(), eventEntity.getValue());
-                    command = "rpush";
-                    client.pexpire(eventEntity.getKey(), eventEntity.getMs());
-                } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.RPUSH_WITH_TIME_LIST)) {
-                    result = client.rpush(eventEntity.getKey(), ObjectUtils.listBytes(eventEntity.getLpush_value()));
-                    command = "rpush";
                     client.pexpire(eventEntity.getKey(), eventEntity.getMs());
                 } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.HMSET)) {
                     result = client.hmset(eventEntity.getKey(), eventEntity.getHash_value());
@@ -1308,8 +1284,6 @@ public class JedisPipeLineClient implements RedisClient {
     }
 
 
-
-
     /**
      * 清理非幂等命令内存结构缓存
      *
@@ -1374,7 +1348,7 @@ public class JedisPipeLineClient implements RedisClient {
                         }
                     }
 
-                }finally {
+                } finally {
                     compensatorLock.unlock();
                 }
                 try {
