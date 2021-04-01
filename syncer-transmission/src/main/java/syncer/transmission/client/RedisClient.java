@@ -11,7 +11,8 @@
 
 package syncer.transmission.client;
 
-import syncer.replica.rdb.datatype.ZSetEntry;
+
+import syncer.replica.datatype.rdb.zset.ZSetEntry;
 
 import java.util.List;
 import java.util.Map;

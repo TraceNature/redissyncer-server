@@ -3,8 +3,8 @@ package syncer.transmission.mapper.etcd;
 import com.ibm.etcd.api.KeyValue;
 import lombok.Builder;
 import lombok.Data;
-import syncer.replica.entity.SyncType;
-import syncer.replica.entity.TaskStatusType;
+import syncer.replica.status.TaskStatus;
+import syncer.replica.type.SyncType;
 import syncer.transmission.constants.EtcdKeyCmd;
 import syncer.transmission.etcd.client.JEtcdClient;
 import syncer.transmission.mapper.DashBoardMapper;
@@ -33,7 +33,7 @@ public class EtcdDashBoardMapper  implements DashBoardMapper {
 
     @Override
     public int brokenCount() {
-        List<KeyValue>keyValueList=client.getPrefix(EtcdKeyCmd.getTaskListByStatusPrex(TaskStatusType.BROKEN.getCode()));
+        List<KeyValue>keyValueList=client.getPrefix(EtcdKeyCmd.getTaskListByStatusPrex(TaskStatus.BROKEN.getCode()));
         if (Objects.isNull(keyValueList)){
             return 0;
         }
@@ -42,7 +42,7 @@ public class EtcdDashBoardMapper  implements DashBoardMapper {
 
     @Override
     public int stopCount() {
-        List<KeyValue>keyValueList=client.getPrefix(EtcdKeyCmd.getTaskListByStatusPrex(TaskStatusType.STOP.getCode()));
+        List<KeyValue>keyValueList=client.getPrefix(EtcdKeyCmd.getTaskListByStatusPrex(TaskStatus.STOP.getCode()));
         if (Objects.isNull(keyValueList)){
             return 0;
         }
@@ -51,8 +51,8 @@ public class EtcdDashBoardMapper  implements DashBoardMapper {
 
     @Override
     public int runCount() {
-        List<KeyValue>keyValueList=client.getPrefix(EtcdKeyCmd.getTaskListByStatusPrex(TaskStatusType.RDBRUNING.getCode()));
-        List<KeyValue>commandKeyValueList=client.getPrefix(EtcdKeyCmd.getTaskListByStatusPrex(TaskStatusType.COMMANDRUNING.getCode()));
+        List<KeyValue>keyValueList=client.getPrefix(EtcdKeyCmd.getTaskListByStatusPrex(TaskStatus.RDBRUNNING.getCode()));
+        List<KeyValue>commandKeyValueList=client.getPrefix(EtcdKeyCmd.getTaskListByStatusPrex(TaskStatus.COMMANDRUNNING.getCode()));
         int num=0;
         if (Objects.nonNull(keyValueList)){
             num+=keyValueList.size();

@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import syncer.replica.entity.SyncType;
+import syncer.replica.type.SyncType;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.strategy.taskcheck.ITaskCheckStrategy;

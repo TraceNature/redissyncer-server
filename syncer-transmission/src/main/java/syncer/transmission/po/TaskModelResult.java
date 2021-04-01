@@ -12,11 +12,12 @@
 package syncer.transmission.po;
 
 import lombok.*;
-import syncer.replica.constant.OffsetPlace;
-import syncer.replica.entity.RedisBranchType;
-import syncer.replica.entity.SyncType;
-import syncer.replica.entity.TaskStatusType;
-import syncer.replica.entity.TaskType;
+import syncer.replica.status.TaskStatus;
+import syncer.replica.type.SyncType;
+import syncer.replica.util.OffsetPlace;
+import syncer.replica.util.RedisBranchType;
+import syncer.replica.util.TaskType;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -125,7 +126,7 @@ public class TaskModelResult implements Serializable {
      *  COMMANDRUNING 7    增量任务进行中
      */
 
-    private TaskStatusType status;
+    private TaskStatus status;
 
     /**
      * redis版本

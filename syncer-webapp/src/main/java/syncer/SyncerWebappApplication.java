@@ -25,13 +25,10 @@ import syncer.common.config.EtcdServerConfig;
 import syncer.common.constant.StoreType;
 import syncer.common.util.ThreadPoolUtils;
 import syncer.common.util.file.FileUtils;
-import syncer.common.util.spring.SpringUtil;
-import syncer.replica.entity.TaskStatusType;
+import syncer.replica.status.TaskStatus;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.heartbeat.DefaultHeartbeatCommandRunner;
 import syncer.transmission.heartbeat.Heartbeat;
-import syncer.transmission.mapper.RubbishDataMapper;
-import syncer.transmission.mapper.TaskMapper;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.task.ContextTaskStatus;
 import syncer.transmission.task.DbDataCommitTask;
@@ -43,6 +40,7 @@ import syncer.webapp.ApplicationStartedEventListener;
 import syncer.webapp.executor.SqlFileExecutor;
 import syncer.webapp.executor.SqliteUtil;
 import syncer.webapp.start.NodeStartCheckResource;
+import syncer.webapp.start.NodeStartInitService;
 
 import java.util.List;
 import java.util.Map;
@@ -71,6 +69,7 @@ public class SyncerWebappApplication {
                 log.info("Shutdown hook data saving....");
                 ContextTaskStatus.STATUS.set(true);
                 saveAllData();
+
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException e) {
@@ -115,6 +114,7 @@ public class SyncerWebappApplication {
             ThreadPoolUtils.exec(new OffsetCommitTask());
 
         }else{
+
             //etcd  node heartbeat
             NodeStartCheckResource checkResource=new NodeStartCheckResource();
             try {
@@ -122,7 +122,8 @@ public class SyncerWebappApplication {
                 if(!status){
                     Heartbeat heartbeat=new Heartbeat(10000,new DefaultHeartbeatCommandRunner());
                     heartbeat.heartbeat();
-
+                    NodeStartInitService nodeStartInitService=new NodeStartInitService();
+                    nodeStartInitService.initResource();
 
                     /**
                      * 持久化任务
@@ -136,15 +137,7 @@ public class SyncerWebappApplication {
             }catch (Exception e){
                 log.error("start NodeStartCheckResource error {}",e.getMessage());
             }
-
-
-
         }
-
-
-
-
-
     }
 
     @Bean
@@ -182,8 +175,8 @@ public class SyncerWebappApplication {
     private  static void loadingData() throws Exception {
         List<TaskModel> taskModelList= SqlOPUtils.selectAll();
         for (TaskModel taskModel:taskModelList){
-            if(!taskModel.getStatus().equals(TaskStatusType.BROKEN.getCode())&&!taskModel.getStatus().equals(TaskStatusType.STOP.getCode())){
-                SqlOPUtils.updateTaskStatusById(taskModel.getTaskId(),TaskStatusType.BROKEN.getCode());
+            if(!taskModel.getStatus().equals(TaskStatus.BROKEN.getCode())&&!taskModel.getStatus().equals(TaskStatus.STOP.getCode())&&!taskModel.getStatus().equals(TaskStatus.FINISH.getCode())){
+                SqlOPUtils.updateTaskStatusById(taskModel.getTaskId(),TaskStatus.BROKEN.getCode());
             }
         }
         log.info("同步服务初始化状态成功...");

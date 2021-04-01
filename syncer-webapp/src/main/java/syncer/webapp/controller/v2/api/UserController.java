@@ -48,7 +48,7 @@ public class UserController {
         if(Objects.isNull(userLoginDto)){
             return ResponseResult.<UserLoginDto>builder()
                     .code(ApiConstants.ERROR_CODE)
-                    .msg(ApiConstants.FAIL_MSG)
+                    .msg(ApiConstants.LOGIN_FAIL_MSG)
                     .build();
         }
         return ResponseResult.<UserLoginDto>builder()

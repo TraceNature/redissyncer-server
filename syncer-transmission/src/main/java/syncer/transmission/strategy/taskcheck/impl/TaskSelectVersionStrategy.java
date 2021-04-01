@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.constant.ResultCodeAndMessage;
 import syncer.common.exception.TaskMsgException;
-import syncer.replica.entity.SyncType;
+import syncer.replica.type.SyncType;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.RdbVersionModel;
 import syncer.transmission.model.TaskModel;

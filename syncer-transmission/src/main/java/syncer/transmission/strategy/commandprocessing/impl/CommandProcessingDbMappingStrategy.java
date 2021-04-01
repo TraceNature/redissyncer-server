@@ -17,11 +17,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import syncer.replica.cmd.impl.DefaultCommand;
+import syncer.replica.datatype.command.DefaultCommand;
+import syncer.replica.entity.RedisDB;
 import syncer.replica.event.Event;
-import syncer.replica.rdb.datatype.DB;
-import syncer.replica.rdb.iterable.datatype.BatchedKeyValuePair;
-import syncer.replica.rdb.sync.datatype.DumpKeyValuePair;
+import syncer.replica.event.iter.datatype.BatchedKeyValuePairEvent;
+import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.exception.KeyWeed0utException;
@@ -57,14 +57,14 @@ public class CommandProcessingDbMappingStrategy implements CommonProcessingStrat
 
             //DUMP格式数据
             Event event = eventEntity.getEvent();
-            if (event instanceof DumpKeyValuePair) {
-                DumpKeyValuePair dumpKeyValuePair = (DumpKeyValuePair) event;
+            if (event instanceof DumpKeyValuePairEvent) {
+                DumpKeyValuePairEvent dumpKeyValuePair = (DumpKeyValuePairEvent) event;
 
                 if (null == dumpKeyValuePair.getValue() || null == dumpKeyValuePair.getKey()) {
                     return;
                 }
-                DB db = dumpKeyValuePair.getDb();
-                DB newDb = new DB();
+                RedisDB db = dumpKeyValuePair.getDb();
+                RedisDB newDb = new RedisDB();
                 BeanUtils.copyProperties(db, newDb);
                 try {
                     dbMapping(eventEntity, newDb);
@@ -78,16 +78,16 @@ public class CommandProcessingDbMappingStrategy implements CommonProcessingStrat
             }
 
             //分批格式数据
-            if (event instanceof BatchedKeyValuePair<?, ?>) {
-                BatchedKeyValuePair batchedKeyValuePair = (BatchedKeyValuePair) event;
+            if (event instanceof BatchedKeyValuePairEvent<?, ?>) {
+                BatchedKeyValuePairEvent batchedKeyValuePair = (BatchedKeyValuePairEvent) event;
                 if ((batchedKeyValuePair.getBatch() == 0 && null == batchedKeyValuePair.getValue()) || null == batchedKeyValuePair.getValue()) {
                     return;
                 }
 
                 SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId).getRealKeyCount().incrementAndGet();
 
-                DB db = batchedKeyValuePair.getDb();
-                DB newDb = new DB();
+                RedisDB db = batchedKeyValuePair.getDb();
+                RedisDB newDb = new RedisDB();
                 BeanUtils.copyProperties(db, newDb);
                 try {
                     dbMapping(eventEntity, newDb);
@@ -150,10 +150,10 @@ public class CommandProcessingDbMappingStrategy implements CommonProcessingStrat
      * @param db
      * @throws KeyWeed0utException
      */
-    void dbMapping(KeyValueEventEntity eventEntity, DB db) throws KeyWeed0utException {
+    void dbMapping(KeyValueEventEntity eventEntity, RedisDB db) throws KeyWeed0utException {
         Event event = eventEntity.getEvent();
-        long dbbnum = db.getDbNumber();
-        int dbNumInt = Math.toIntExact(db.getDbNumber());
+        long dbbnum = db.getCurrentDbNumber();
+        int dbNumInt = Math.toIntExact(db.getCurrentDbNumber());
 
         if (null != eventEntity.getDbMapper() && eventEntity.getDbMapper().size() > 0) {
             if (eventEntity.getDbMapper().containsKey(dbNumInt)) {
@@ -164,23 +164,23 @@ public class CommandProcessingDbMappingStrategy implements CommonProcessingStrat
             }
         }
 
-        if (event instanceof DumpKeyValuePair) {
-            DumpKeyValuePair dumpKeyValuePair = (DumpKeyValuePair) event;
+        if (event instanceof DumpKeyValuePairEvent) {
+            DumpKeyValuePairEvent dumpKeyValuePair = (DumpKeyValuePairEvent) event;
 
 //            DB dbn=dumpKeyValuePair.getDb();
 //            dbn.setDbNumber(dbbnum);
 //            dumpKeyValuePair.setDb(dbn);
 
-            db.setDbNumber(dbbnum);
+            db.setCurrentDbNumber(dbbnum);
             dumpKeyValuePair.setDb(db);
 
             eventEntity.setEvent(dumpKeyValuePair);
-        } else if (event instanceof BatchedKeyValuePair<?, ?>) {
-            BatchedKeyValuePair batchedKeyValuePair = (BatchedKeyValuePair) event;
+        } else if (event instanceof BatchedKeyValuePairEvent<?, ?>) {
+            BatchedKeyValuePairEvent batchedKeyValuePair = (BatchedKeyValuePairEvent) event;
 //            DB dbn=batchedKeyValuePair.getDb();
 //            dbn.setDbNumber(dbbnum);
 
-            db.setDbNumber(dbbnum);
+            db.setCurrentDbNumber(dbbnum);
             batchedKeyValuePair.setDb(db);
             eventEntity.setEvent(batchedKeyValuePair);
         }

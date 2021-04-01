@@ -22,7 +22,7 @@ import org.springframework.util.StringUtils;
 import syncer.common.config.EtcdServerConfig;
 import syncer.common.config.ServerConfig;
 import syncer.common.util.TimeUtils;
-import syncer.replica.entity.SyncType;
+import syncer.replica.type.SyncType;
 import syncer.transmission.constants.CommandKeyFilterType;
 
 import java.util.HashSet;

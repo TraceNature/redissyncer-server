@@ -9,12 +9,12 @@ import syncer.common.exception.TaskMsgException;
 import syncer.common.util.MD5Utils;
 import syncer.common.util.TemplateUtils;
 import syncer.common.util.file.FileUtils;
-import syncer.replica.constant.OffsetPlace;
-import syncer.replica.entity.FileType;
-import syncer.replica.entity.SyncType;
-import syncer.replica.entity.TaskStatusType;
-import syncer.replica.entity.TaskType;
+import syncer.replica.status.TaskStatus;
+import syncer.replica.type.FileType;
+import syncer.replica.type.SyncType;
+import syncer.replica.util.OffsetPlace;
 import syncer.replica.util.SyncTypeUtils;
+import syncer.replica.util.TaskType;
 import syncer.transmission.constants.CommandKeyFilterType;
 import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.model.TaskModel;
@@ -91,7 +91,7 @@ public class DtoToTaskModelUtils {
                     //目标密码
                     .targetPassword(param.getTargetPassword())
                     //任务状态
-                    .status(TaskStatusType.CREATING.getCode())
+                    .status(TaskStatus.CREATING.getCode())
                     //原目标类型
                     .sourceRedisType(sourceRedisType)
                     //文件地址
@@ -226,7 +226,7 @@ public class DtoToTaskModelUtils {
                     //目标密码
                     .targetPassword(param.getTargetPassword())
                     //任务状态
-                    .status(TaskStatusType.CREATING.getCode())
+                    .status(TaskStatus.CREATING.getCode())
                     //原目标类型 3 file
                     .sourceRedisType(3)
                     //文件地址
@@ -301,7 +301,7 @@ public class DtoToTaskModelUtils {
                     .targetPassword("")
                     .syncType(SyncType.COMMANDDUMPUP.getCode())
                     //任务状态
-                    .status(TaskStatusType.CREATING.getCode())
+                    .status(TaskStatus.CREATING.getCode())
                     //原目标类型 1 单机
                     .sourceRedisType(1)
                     //文件地址

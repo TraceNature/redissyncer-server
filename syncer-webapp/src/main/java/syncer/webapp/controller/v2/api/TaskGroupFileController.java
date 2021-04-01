@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import syncer.common.entity.ResponseResult;
 import syncer.common.montitor.Montitor;
-import syncer.replica.entity.FileType;
+import syncer.replica.type.FileType;
 import syncer.transmission.entity.StartTaskEntity;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.service.ITaskGroupService;

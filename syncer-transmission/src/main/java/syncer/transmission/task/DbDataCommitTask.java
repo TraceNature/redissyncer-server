@@ -12,7 +12,7 @@
 package syncer.transmission.task;
 
 import lombok.extern.slf4j.Slf4j;
-import syncer.replica.util.objectutil.Strings;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.entity.SqliteCommitEntity;
 import syncer.transmission.model.BigKeyModel;
 import syncer.transmission.model.DataCompensationModel;

@@ -40,7 +40,7 @@ public class ListTaskParam {
     @Builder.Default
     private List<String> tasknames = new ArrayList<>();
     @ApiModelProperty(value = "任务状态",
-            allowableValues = "CREATING,CREATED,RUN,STOP,PAUSE,BROKEN,RDBRUNING,COMMANDRUNING"
+            allowableValues = "CREATING,CREATED,STARTING,STOP,PAUSE,BROKEN,RDBRUNING,COMMANDRUNING,FINISH"
             , example = "COMMANDRUNING")
     private String taskstatus;
     @ApiModelProperty(value = "任务id", allowableValues = "regulation为byids时填写")

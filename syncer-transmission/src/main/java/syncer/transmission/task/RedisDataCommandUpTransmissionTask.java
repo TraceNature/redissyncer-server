@@ -16,18 +16,18 @@ import org.springframework.util.StringUtils;
 import syncer.common.util.TemplateUtils;
 import syncer.common.util.ThreadPoolUtils;
 import syncer.common.util.file.FileUtils;
-import syncer.replica.cmd.Command;
-import syncer.replica.cmd.impl.PingCommand;
-import syncer.replica.entity.RedisURI;
-import syncer.replica.entity.TaskStatusType;
+import syncer.replica.config.RedisURI;
+import syncer.replica.datatype.command.Command;
+import syncer.replica.datatype.command.common.PingCommand;
 import syncer.replica.event.Event;
-import syncer.replica.event.PreCommandSyncEvent;
+import syncer.replica.event.start.PreCommandSyncEvent;
 import syncer.replica.listener.EventListener;
-import syncer.replica.listener.RawByteListener;
+import syncer.replica.listener.TaskRawByteListener;
 import syncer.replica.register.DefaultCommandRegister;
 import syncer.replica.replication.RedisReplication;
 import syncer.replica.replication.Replication;
-import syncer.replica.util.objectutil.Strings;
+import syncer.replica.status.TaskStatus;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.util.manger.DefaultSyncerStatusManger;
 import syncer.transmission.util.redis.RedisReplIdCheck;
@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static syncer.replica.constant.CMD.PING;
+import static syncer.replica.cmd.CMD.PING;
 
 /**
  * @author zhanenqiang
@@ -94,7 +94,7 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
     public void run() {
         try{
             Thread.currentThread().setName(taskId+": "+Thread.currentThread().getName());
-            final RawByteListener rawByteListener=rawByteListener();
+            final TaskRawByteListener rawByteListener=rawByteListener();
             RedisURI suri = new RedisURI(sourceUri);
             Replication loadRepli =new RedisReplication(suri);
             replication = DefaultCommandRegister.addCommandParser(loadRepli);
@@ -107,11 +107,11 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
             } catch (Exception e) {
 
             }
-            replication.getConfiguration().setTaskId(taskId);
+            replication.getConfig().setTaskId(taskId);
 
             if (offsetNum != 0L && !StringUtils.isEmpty(data[1])) {
-                replication.getConfiguration().setReplOffset(offsetNum);
-                replication.getConfiguration().setReplId(data[1]);
+                replication.getConfig().setReplOffset(offsetNum);
+                replication.getConfig().setReplId(data[1]);
             }
 
             replication.addEventListener(new EventListener() {
@@ -120,7 +120,7 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
                     if(taskStatus){
                         try {
                             taskStatus=false;
-                            DefaultSyncerStatusManger.changeThreadStatus(taskModel.getId(),-1L, TaskStatusType.COMMANDRUNING);
+                            DefaultSyncerStatusManger.changeThreadStatus(taskModel.getId(),-1L, TaskStatus.COMMANDRUNNING);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -163,8 +163,13 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
 
                     }
                 }
+
+                @Override
+                public String eventListenerName() {
+                    return null;
+                }
             });
-            DefaultSyncerStatusManger.changeThreadStatus(taskModel.getId(),-1L, TaskStatusType.RUN);
+            DefaultSyncerStatusManger.changeThreadStatus(taskModel.getId(),-1L, TaskStatus.STARTING);
             replication.open();
         }catch (Exception e){
 
@@ -191,12 +196,12 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
         }
     }
 
-    RawByteListener rawByteListener(){
-        return new RawByteListener(){
+    TaskRawByteListener rawByteListener(){
+        return new TaskRawByteListener(){
             List<byte[]> command=new ArrayList<>();
             boolean status=false;
             @Override
-            public void handle(byte... rawBytes) {
+            public void handler(byte... rawBytes) {
                 try {
                     String stringdata= Strings.byteToString(rawBytes);
 

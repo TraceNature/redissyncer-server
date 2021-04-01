@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import syncer.common.exception.TaskMsgException;
 import syncer.common.util.ThreadPoolUtils;
-import syncer.replica.entity.SyncType;
-import syncer.replica.entity.TaskStatusType;
+import syncer.replica.status.TaskStatus;
+import syncer.replica.type.SyncType;
 import syncer.replica.util.SyncTypeUtils;
 import syncer.transmission.entity.OffSetEntity;
 import syncer.transmission.entity.StartTaskEntity;
@@ -97,7 +97,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         ExpandTaskUtils.loadingExpandTaskData(taskModel, dataEntity);
         SingleTaskDataManagerUtils.addMemThread(taskModel.getId(), dataEntity, true);
         //创建中
-        SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), taskModel.getOffset(), TaskStatusType.CREATING);
+        SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), taskModel.getOffset(), TaskStatus.CREATING);
         try {
             //校验
             TaskCheckStrategyGroupSelecter.select(RedisTaskStrategyGroupType.NODISTINCT, null, taskModel).run(null, taskModel);
@@ -139,7 +139,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                     .build();
         }
 
-        dataEntity.getTaskModel().setStatus(TaskStatusType.CREATING.getCode());
+        dataEntity.getTaskModel().setStatus(TaskStatus.CREATING.getCode());
 
         //初始化ExpandTaskModel
         ExpandTaskUtils.loadingExpandTaskData(taskModel, dataEntity);
@@ -147,7 +147,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         SingleTaskDataManagerUtils.addMemThread(taskModel.getId(), dataEntity, true);
 
         //创建中
-        SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), -1L, TaskStatusType.CREATING);
+        SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), -1L, TaskStatus.CREATING);
 
         try {
 
@@ -161,7 +161,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
 
 
         //创建完成
-        SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), -1L, TaskStatusType.CREATED);
+        SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), -1L, TaskStatus.CREATED);
 
         try {
             ThreadPoolUtils.exec(new RedisDataCommandUpTransmissionTask(taskModel));
@@ -191,7 +191,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
-                                SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), data.getOffSetEntity().getReplOffset().get(), TaskStatusType.STOP);
+                                SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), data.getOffSetEntity().getReplOffset().get(), TaskStatus.STOP);
 
                                 StartTaskEntity startTaskEntity = StartTaskEntity
                                         .builder()
@@ -259,7 +259,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
     @Override
     public StartTaskEntity stopTaskListByTaskId(String taskId) {
         final StartTaskEntity result = StartTaskEntity.builder().build();
-
         TaskRunUtils.getTaskLock(taskId, new EtcdLockCommandRunner() {
             @Override
             public void run() {
@@ -271,7 +270,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        SingleTaskDataManagerUtils.changeThreadStatus(taskId, data.getOffSetEntity().getReplOffset().get(), TaskStatusType.STOP);
+                        SingleTaskDataManagerUtils.changeThreadStatus(taskId, data.getOffSetEntity().getReplOffset().get(), TaskStatus.STOP);
                         result.setCode("2000");
                         result.setTaskId(taskId);
                         result.setMsg("Task stopped successfully");

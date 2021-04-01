@@ -11,7 +11,7 @@
 
 package syncer.transmission.util;
 
-import syncer.replica.util.objectutil.Strings;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.compensator.PipeLineCompensatorEnum;
 
 /**

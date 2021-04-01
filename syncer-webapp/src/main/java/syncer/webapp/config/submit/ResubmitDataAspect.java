@@ -20,10 +20,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import syncer.common.entity.ResponseResult;
-import syncer.webapp.request.CreateFileTaskParam;
-import syncer.webapp.request.CreateTaskParam;
-import syncer.webapp.request.StartTaskParam;
-import syncer.webapp.request.StopTaskParam;
+import syncer.webapp.request.*;
 
 
 import java.lang.reflect.Method;
@@ -179,6 +176,22 @@ public class ResubmitDataAspect {
                 stringBuilder.append("-");
             }
 
+        }else if(firstParam instanceof RemoveTaskParam){
+            RemoveTaskParam params= (RemoveTaskParam) firstParam;
+            if (params.getGroupIds()!=null) {
+                stringBuilder.append(JSON.toJSONString(params.getGroupIds()));
+                stringBuilder.append("-");
+            } else {
+                stringBuilder.append("null");
+                stringBuilder.append("-");
+            }
+            if (null!=params.getTaskids()) {
+                stringBuilder.append(JSON.toJSONString(params.getTaskids()));
+                stringBuilder.append("-");
+            } else {
+                stringBuilder.append("null");
+                stringBuilder.append("-");
+            }
         }
 
         //生成加密参数 使用了content_MD5的加密方式

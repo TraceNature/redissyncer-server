@@ -15,11 +15,10 @@ import com.google.common.collect.Lists;
 import lombok.Builder;
 import lombok.Data;
 import syncer.common.util.MD5Utils;
-import syncer.replica.cmd.impl.DefaultCommand;
-import syncer.replica.rdb.sync.datatype.DumpKeyValuePair;
-import syncer.replica.util.objectutil.Strings;
+import syncer.replica.datatype.command.DefaultCommand;
+import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.util.strings.StringUtils;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -184,7 +183,7 @@ public class MultiSyncCircle {
      * @param dumpKeyValuePair
      * @return
      */
-    String getStringRdbDump(DumpKeyValuePair dumpKeyValuePair) {
+    String getStringRdbDump(DumpKeyValuePairEvent dumpKeyValuePair) {
         return getBaseStringRdbDump(dumpKeyValuePair.getKey(),dumpKeyValuePair.getValue(),dumpKeyValuePair.getExpiredMs());
     }
 
@@ -224,7 +223,7 @@ public class MultiSyncCircle {
         return stringBuilder.toString().trim();
     }
 
-    public String getRdbDumpMd5(DumpKeyValuePair dumpKeyValuePair, String serverId, double redisVersion) {
+    public String getRdbDumpMd5(DumpKeyValuePairEvent dumpKeyValuePair, String serverId, double redisVersion) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("circle-");
         stringBuilder.append(serverId);

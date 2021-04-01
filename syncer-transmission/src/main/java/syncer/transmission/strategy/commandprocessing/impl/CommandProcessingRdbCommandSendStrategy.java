@@ -15,17 +15,18 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.sqlite.core.DB;
 import syncer.common.util.TimeUtils;
-import syncer.replica.entity.FileType;
-import syncer.replica.entity.TaskRunTypeEnum;
-import syncer.replica.entity.TaskStatusType;
+import syncer.replica.entity.RedisDB;
 import syncer.replica.event.Event;
-import syncer.replica.event.PostRdbSyncEvent;
-import syncer.replica.event.PreRdbSyncEvent;
-import syncer.replica.rdb.datatype.DB;
-import syncer.replica.rdb.iterable.datatype.*;
-import syncer.replica.rdb.sync.datatype.DumpKeyValuePair;
+import syncer.replica.event.end.PostRdbSyncEvent;
+import syncer.replica.event.iter.datatype.*;
+import syncer.replica.event.start.PreRdbSyncEvent;
+import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
+import syncer.replica.status.TaskStatus;
+import syncer.replica.type.FileType;
+import syncer.replica.util.TaskRunTypeEnum;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.compensator.ISyncerCompensator;
 import syncer.transmission.constants.RedisCommandTypeEnum;
@@ -108,17 +109,17 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
 //                        SingleTaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "全量同步结束进入增量同步 时间(ms)："+time+" 进入增量状态",TaskStatusType.COMMANDRUNING);
                     }else if(eventEntity.getTaskRunTypeEnum().equals(TaskRunTypeEnum.STOCKONLY)){
                         log.warn("taskId为[{}]的任务全量同步结束[任务完成]..",taskId);
-                        SingleTaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "全量同步结束[任务完成] 时间(ms)："+time,TaskStatusType.STOP);
+                        SingleTaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "全量同步结束[任务完成] 时间(ms)："+time, TaskStatus.STOP);
 //                        SingleTaskDataManagerUtils.updateThreadMsg(taskId,"全量同步结束[任务完成] 时间(ms)："+time);
                     }
                 }
                 return;
             }
 
-            if (event instanceof BatchedKeyValuePair<?, ?>) {
-                BatchedKeyValuePair batchedKeyValuePair = (BatchedKeyValuePair) event;
-                DB db=batchedKeyValuePair.getDb();
-                Long duNum=db.getDbNumber();
+            if (event instanceof BatchedKeyValuePairEvent<?, ?>) {
+                BatchedKeyValuePairEvent batchedKeyValuePair = (BatchedKeyValuePairEvent) event;
+                RedisDB db=batchedKeyValuePair.getDb();
+                Long duNum=db.getCurrentDbNumber();
                 Long ms=eventEntity.getMs();
                 RedisCommandTypeEnum typeEnum= RedisCommandTypeUtils.getRedisCommandTypeEnum(batchedKeyValuePair.getValueRdbType());
                 if(batchedKeyValuePair.getBatch()==0&&null==batchedKeyValuePair.getValue()){
@@ -127,7 +128,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
 
                 //String类型
                 if(typeEnum.equals(RedisCommandTypeEnum.STRING)){
-                    BatchedKeyStringValueString valueString = (BatchedKeyStringValueString) event;
+                    BatchedKeyStringValueStringEvent valueString = (BatchedKeyStringValueStringEvent) event;
                     if (ms == null || ms <= 0L) {
                         Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
                         iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
@@ -137,7 +138,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
                     }
                 }else if(typeEnum.equals(RedisCommandTypeEnum.LIST)){
                     //list类型
-                    BatchedKeyStringValueList valueList = (BatchedKeyStringValueList) event;
+                    BatchedKeyStringValueListEvent valueList = (BatchedKeyStringValueListEvent) event;
                     if (ms == null || ms <= 0L) {
                         Long res=client.rpush(duNum,valueList.getKey(), valueList.getValue());
                         iSyncerCompensator.rpush(duNum,valueList.getKey(), valueList.getValue(),res);
@@ -148,7 +149,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
                 }else if(typeEnum.equals(RedisCommandTypeEnum.SET)){
 
                     //set类型
-                    BatchedKeyStringValueSet valueSet = (BatchedKeyStringValueSet) event;
+                    BatchedKeyStringValueSetEvent valueSet = (BatchedKeyStringValueSetEvent) event;
                     if (ms == null || ms<=  0L) {
                         Long res= client.sadd(duNum,valueSet.getKey(), valueSet.getValue());
                         iSyncerCompensator.sadd(duNum,valueSet.getKey(), valueSet.getValue(),res);
@@ -158,7 +159,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
                     }
                 }else if (typeEnum.equals(RedisCommandTypeEnum.ZSET)) {
                     //zset类型
-                    BatchedKeyStringValueZSet valueZSet = (BatchedKeyStringValueZSet) event;
+                    BatchedKeyStringValueZSetEvent valueZSet = (BatchedKeyStringValueZSetEvent) event;
                     if (ms == null || ms <=  0L) {
                         Long res=client.zadd(duNum,valueZSet.getKey(), valueZSet.getValue());
                         iSyncerCompensator.zadd(duNum,valueZSet.getKey(), valueZSet.getValue(),res);
@@ -168,7 +169,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
                     }
                 }else if(typeEnum.equals(RedisCommandTypeEnum.HASH)){
                     //hash类型
-                    BatchedKeyStringValueHash valueHash = (BatchedKeyStringValueHash) event;
+                    BatchedKeyStringValueHashEvent valueHash = (BatchedKeyStringValueHashEvent) event;
                     if (ms == null || ms <= 0L) {
                         String res=client.hmset(duNum,valueHash.getKey(), valueHash.getValue());
                         iSyncerCompensator.hmset(duNum,valueHash.getKey(), valueHash.getValue(),res);
@@ -182,11 +183,11 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
 
 
 
-            if (event instanceof DumpKeyValuePair) {
-                DumpKeyValuePair valueDump = (DumpKeyValuePair) event;
+            if (event instanceof DumpKeyValuePairEvent) {
+                DumpKeyValuePairEvent valueDump = (DumpKeyValuePairEvent) event;
                 Long ms=eventEntity.getMs();
-                DB db=valueDump.getDb();
-                Long duNum=db.getDbNumber();
+                RedisDB db=valueDump.getDb();
+                Long duNum=db.getCurrentDbNumber();
                 long ttl=ms;
                 if (valueDump.getValue() != null) {
                     if(null==ms||ms<=0L){

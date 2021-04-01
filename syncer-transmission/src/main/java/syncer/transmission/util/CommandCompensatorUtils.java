@@ -13,7 +13,7 @@ package syncer.transmission.util;
 
 import lombok.extern.slf4j.Slf4j;
 import syncer.jedis.exceptions.JedisDataException;
-import syncer.replica.util.objectutil.Strings;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.constants.ComanndResponseType;
 
 import java.util.List;

@@ -2,7 +2,7 @@ package syncer.transmission.strategy.taskcheck.impl;
 
 import syncer.common.constant.ResultCodeAndMessage;
 import syncer.common.exception.TaskMsgException;
-import syncer.replica.entity.SyncType;
+import syncer.replica.type.SyncType;
 import syncer.replica.util.SyncTypeUtils;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.TaskModel;

@@ -20,6 +20,7 @@ import syncer.transmission.mapper.etcd.*;
 import syncer.transmission.model.*;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author zhanenqiang
@@ -38,7 +39,6 @@ public class SqlOPUtils {
     static UserMapper userMapper = null;
     static RubbishDataMapper rubbishDataMapper = null;
     static EtcdServerConfig config = new EtcdServerConfig();
-
     //    private static Lock lock=new ReentrantLock();
     static {
         EtcdServerConfig serverConfig = new EtcdServerConfig();
@@ -365,7 +365,9 @@ public class SqlOPUtils {
 
     public static void close() {
         try {
-            taskMapper.close();
+            if(Objects.nonNull(taskMapper)){
+                taskMapper.close();
+            }
         }catch (Exception e){
             log.error("etcd taskMapper close error {}",e.getMessage());
         }
@@ -399,5 +401,62 @@ public class SqlOPUtils {
 
     public static void deleteRubbishDataFromTaskDataAbandonCommand() {
         rubbishDataMapper.deleteRubbishDataFromTaskDataAbandonCommand();
+    }
+
+
+    /**
+     * DASH
+     * @return
+     */
+
+    public static int taskCount() {
+        return dashBoardMapper.taskCount();
+    }
+
+    public static int brokenCount() {
+        return dashBoardMapper.brokenCount();
+    }
+
+
+    public static int stopCount() {
+        return dashBoardMapper.stopCount();
+    }
+
+
+    public static int runCount() {
+        return dashBoardMapper.runCount();
+    }
+
+
+    public static int syncCount() {
+        return dashBoardMapper.syncCount();
+    }
+
+    public static int rdbCount() {
+        return dashBoardMapper.rdbCount();
+    }
+
+    public static int aofCount() {
+        return dashBoardMapper.aofCount();
+    }
+
+    public static int mixedCount() {
+        return dashBoardMapper.mixedCount();
+    }
+
+    public static int onlineRdbCount() {
+        return dashBoardMapper.onlineRdbCount();
+    }
+
+    public static int onlineAofCount() {
+        return dashBoardMapper.onlineAofCount();
+    }
+
+    public static int onlineMixedCount() {
+        return dashBoardMapper.onlineMixedCount();
+    }
+
+    public int commandDumpUpCount() {
+        return dashBoardMapper.commandDumpUpCount();
     }
 }

@@ -23,8 +23,8 @@ import syncer.common.bean.PageBean;
 import syncer.common.constant.ResultCodeAndMessage;
 import syncer.common.exception.TaskMsgException;
 import syncer.common.util.TemplateUtils;
-import syncer.replica.entity.SyncType;
-import syncer.replica.entity.TaskStatusType;
+import syncer.replica.status.TaskStatus;
+import syncer.replica.type.SyncType;
 import syncer.replica.util.SyncTypeUtils;
 import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.entity.OffSetEntity;
@@ -84,12 +84,12 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                     public void run() {
                         try {
                             taskModel.setGroupId(finalGroupId);
-                            taskModel.setStatus(TaskStatusType.STOP.getCode());
+                            taskModel.setStatus(TaskStatus.STOP.getCode());
                             SingleTaskDataManagerUtils.addDbThread(taskModel.getId(),taskModel);
                             if(taskModel.isAutostart()){
                                 TaskModel testTaskModel=new TaskModel();
                                 BeanUtils.copyProperties(taskModel,testTaskModel);
-                                testTaskModel.setStatus(TaskStatusType.CREATING.getCode());
+                                testTaskModel.setStatus(TaskStatus.CREATING.getCode());
                                 TaskDataEntity  dataEntity=TaskDataEntity.builder()
                                         .taskModel(testTaskModel)
                                         .offSetEntity(OffSetEntity.builder().replId("").build())
@@ -117,7 +117,7 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                                         .msg("Task created successfully")
                                         .build();
                                 resultList.add(startTaskEntity);
-                                SingleTaskDataManagerUtils.updateThreadStatus(taskModel.getId(), TaskStatusType.STOP);
+                                SingleTaskDataManagerUtils.updateThreadStatus(taskModel.getId(), TaskStatus.STOP);
                             }
                         } catch (Exception e) {
                             try {
@@ -171,13 +171,13 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                     public void run() {
                         try{
                             taskModel.setGroupId(groupId);
-                            taskModel.setStatus(TaskStatusType.STOP.getCode());
+                            taskModel.setStatus(TaskStatus.STOP.getCode());
                             SingleTaskDataManagerUtils.addDbThread(taskModel.getId(),taskModel);
                             if(taskModel.isAutostart()){
 
                                 TaskModel testTaskModel=new TaskModel();
                                 BeanUtils.copyProperties(taskModel,testTaskModel);
-                                testTaskModel.setStatus(TaskStatusType.CREATING.getCode());
+                                testTaskModel.setStatus(TaskStatus.CREATING.getCode());
                                 TaskDataEntity dataEntity=TaskDataEntity.builder()
                                         .taskModel(testTaskModel)
                                         .offSetEntity(OffSetEntity.builder().replId("").build())
@@ -206,7 +206,7 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                                         .msg("Task created successfully")
                                         .build();
                                 resultList.add(startTaskEntity);
-                                SingleTaskDataManagerUtils.updateThreadStatus(taskModel.getId(), TaskStatusType.STOP);
+                                SingleTaskDataManagerUtils.updateThreadStatus(taskModel.getId(), TaskStatus.STOP);
                             }
 
 
@@ -399,9 +399,11 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                 try {
                     return toTaskModelResult(SqlOPUtils.findTaskById(id));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.warn("findTaskById id [{}] not exist",id);
                 }
                 return null;
+            }).filter(taskModelResult -> {
+                return Objects.nonNull(taskModelResult);
             }).collect(Collectors.toList());
             PageBean<TaskModelResult>pageBean=new PageBean<>(1,resultList.size(),resultList.size(),true);
             pageBean.setItems(resultList);
@@ -411,7 +413,7 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                 throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_STATUS_NOT_EMPTY.getCode(),ResultCodeAndMessage.TASK_STATUS_NOT_EMPTY.getMsg()));
             }
             //状态是否正确
-            TaskStatusType type=TaskStatusType.getTaskStatusTypeByName(param.getTaskstatus());
+            TaskStatus type=TaskStatus.getTaskStatusTypeByName(param.getTaskstatus());
             if(type==null){
                 throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_STATUS_NOT_FIND.getCode(), ResultCodeAndMessage.TASK_STATUS_NOT_FIND.getMsg()));
             }
@@ -477,7 +479,7 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                 throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_STATUS_NOT_EMPTY.getCode(),ResultCodeAndMessage.TASK_STATUS_NOT_EMPTY.getMsg()));
             }
             //状态是否正确
-            TaskStatusType type=TaskStatusType.getTaskStatusTypeByName(param.getTaskstatus());
+            TaskStatus type=TaskStatus.getTaskStatusTypeByName(param.getTaskstatus());
             if(type==null){
                 throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_STATUS_NOT_FIND.getCode(),ResultCodeAndMessage.TASK_STATUS_NOT_FIND.getMsg()));
             }
@@ -552,6 +554,9 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
      * @throws Exception
      */
     public synchronized static List<TaskModelResult> toTaskModelResult(List<TaskModel>taskModelList) throws Exception {
+        if(Objects.isNull(taskModelList)){
+            return Lists.newArrayList();
+        }
         List<TaskModelResult>taskModelResultList=taskModelList.stream()
                 .filter(taskModel -> taskModel!=null)
                 .map(taskModel -> toTaskModelResult(taskModel))
@@ -565,7 +570,9 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
      * @return
      */
     public synchronized static TaskModelResult toTaskModelResult(TaskModel taskModel){
-
+//        if(Objects.isNull(taskModel)){
+//            return null;
+//        }
         Long allKeyCount=taskModel.getAllKeyCount();
         Long realKeyCount=taskModel.getAllKeyCount();
         Long lastTime=taskModel.getLastKeyUpdateTime();
@@ -604,7 +611,7 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                 rate=0.0;
             }
 
-            if(allKeyCount>=taskModel.getRdbKeyCount()||taskModel.getStatus().equals(TaskStatusType.COMMANDRUNING.getCode())){
+            if(allKeyCount>=taskModel.getRdbKeyCount()||taskModel.getStatus().equals(TaskStatus.COMMANDRUNNING.getCode())){
                 if(!taskModel.getSyncType().equals(SyncType.SYNC.getCode())){
                     rate=0.0;
                 }else{

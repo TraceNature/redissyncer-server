@@ -17,8 +17,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.exception.TaskMsgException;
 import syncer.common.util.spring.SpringUtil;
-import syncer.replica.constant.ThreadStatusEnum;
-import syncer.replica.entity.TaskStatusType;
+import syncer.replica.status.Status;
+import syncer.replica.status.TaskStatus;
 import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.model.TaskModel;
@@ -106,32 +106,32 @@ public class MemoryAndSqliteTaskStatusManger implements ITaskStatusManger {
      * @throws Exception
      */
     @Override
-    public void changeThreadStatus(String taskId, Long offset, TaskStatusType taskType) throws Exception {
-        if(aliveThreadHashMap.containsKey(taskId)){
-            TaskDataEntity taskDataEntity=aliveThreadHashMap.get(taskId);
-            SqlOPUtils.updateTaskStatusById(taskId, taskType.getCode());
-            if(offset!=null&&offset>=-1L){
-                SqlOPUtils.updateTaskOffsetById(taskId,offset);
-            }
-            if(taskType.getStatus().equals(ThreadStatusEnum.BROKEN)||taskType.getStatus().equals(ThreadStatusEnum.STOP)){
-                aliveThreadHashMap.remove(taskId);
-                deleteTaskDataByTaskId(taskId);
-                taskDataEntity=null;
-            }else {
-                taskDataEntity.getTaskModel().setStatus(taskType.getCode());
-            }
+    public void changeThreadStatus(String taskId, Long offset, TaskStatus taskType) throws Exception {
+            if(aliveThreadHashMap.containsKey(taskId)){
+                TaskDataEntity taskDataEntity=aliveThreadHashMap.get(taskId);
+                SqlOPUtils.updateTaskStatusById(taskId, taskType.getCode());
+                if(offset!=null&&offset>=-1L){
+                    SqlOPUtils.updateTaskOffsetById(taskId,offset);
+                }
+                if(taskType.getStatus().equals(Status.BROKEN)||taskType.getStatus().equals(Status.STOP)||taskType.getStatus().equals(Status.FINISH)){
+                    aliveThreadHashMap.remove(taskId);
+                    deleteTaskDataByTaskId(taskId);
+                    taskDataEntity=null;
+                }else {
+                    taskDataEntity.getTaskModel().setStatus(taskType.getCode());
+                }
 
-        }
+            }
     }
 
     @Override
-    public void updateThreadStatus(String taskId, TaskStatusType taskStatusType) throws Exception {
+    public void updateThreadStatus(String taskId, TaskStatus taskStatusType) throws Exception {
         if(aliveThreadHashMap.containsKey(taskId)){
             TaskDataEntity data=aliveThreadHashMap.get(taskId);
             SqlOPUtils.updateTaskStatusById(taskId, taskStatusType.getCode());
             data.getTaskModel().setStatus(taskStatusType.getCode());
-            if(taskStatusType.getStatus().equals(ThreadStatusEnum.BROKEN)
-                    ||taskStatusType.getStatus().equals(ThreadStatusEnum.STOP)){
+            if(taskStatusType.getStatus().equals(Status.BROKEN)
+                    ||taskStatusType.getStatus().equals(Status.STOP)||taskStatusType.getStatus().equals(Status.FINISH)){
                 updateTaskOffset(taskId);
                 aliveThreadHashMap.remove(taskId);
             }
@@ -148,7 +148,7 @@ public class MemoryAndSqliteTaskStatusManger implements ITaskStatusManger {
     public void brokenTask(String taskId) throws Exception {
         if(aliveThreadHashMap.containsKey(taskId)){
             TaskDataEntity data=aliveThreadHashMap.get(taskId);
-            SqlOPUtils.updateTaskStatusById(taskId, TaskStatusType.BROKEN.getCode());
+            SqlOPUtils.updateTaskStatusById(taskId, TaskStatus.BROKEN.getCode());
             if(data.getOffSetEntity().getReplOffset()!=null&&data.getOffSetEntity().getReplOffset().get()>-1){
                 SqlOPUtils.updateTaskOffsetById(taskId,data.getOffSetEntity().getReplOffset().get());
             }
@@ -210,15 +210,15 @@ public class MemoryAndSqliteTaskStatusManger implements ITaskStatusManger {
     }
 
     @Override
-    public void updateThreadStatusAndMsg(String taskId, String msg, TaskStatusType taskStatusType) throws Exception {
+    public void updateThreadStatusAndMsg(String taskId, String msg, TaskStatus taskStatusType) throws Exception {
         if(aliveThreadHashMap.containsKey(taskId)){
             TaskDataEntity data=aliveThreadHashMap.get(taskId);
             data.getTaskModel().setStatus(taskStatusType.getCode());
             data.getTaskModel().setTaskMsg(msg);
             SqlOPUtils.updateTaskMsgAndStatusById( taskStatusType.getCode(),msg,taskId);
-            if(taskStatusType.equals(TaskStatusType.BROKEN)||taskStatusType.equals(TaskStatusType.STOP)){
+            if(taskStatusType.equals(TaskStatus.BROKEN)||taskStatusType.equals(TaskStatus.STOP)||taskStatusType.equals(TaskStatus.FINISH)){
                 updateTaskOffset(taskId);
-                if(taskStatusType.equals(TaskStatusType.BROKEN)){
+                if(taskStatusType.equals(TaskStatus.BROKEN)){
                     updateBrokenResult(taskId,msg);
                 }else {
                     data.getTaskModel().setTaskMsg("任务主动关闭或停止");
@@ -250,7 +250,7 @@ public class MemoryAndSqliteTaskStatusManger implements ITaskStatusManger {
     public boolean isTaskClose(String taskId) {
         if(aliveThreadHashMap.containsKey(taskId)){
             TaskModel taskModel=aliveThreadHashMap.get(taskId).getTaskModel();
-            if(taskModel.getStatus().equals(TaskStatusType.BROKEN.getCode())||taskModel.getStatus().equals(TaskStatusType.STOP.getCode())){
+            if(taskModel.getStatus().equals(TaskStatus.BROKEN.getCode())||taskModel.getStatus().equals(TaskStatus.STOP.getCode())||taskModel.getStatus().equals(TaskStatus.FINISH.getCode())){
                 return true;
             }
             return false;

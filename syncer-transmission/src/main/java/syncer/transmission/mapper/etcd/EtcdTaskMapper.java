@@ -43,14 +43,19 @@ public class EtcdTaskMapper implements TaskMapper {
             return taskModelList;
         }
         keyValueList.forEach(keyValue -> {
-            TaskModel taskModel = JSON.parseObject(keyValue.getValue().toStringUtf8(), TaskModel.class);
-            String result = client.get(EtcdKeyCmd.getOffset(taskModel.getTaskId()));
-            if(Objects.nonNull(result)){
-                EtcdOffSetEntity offSetEntity = JSON.parseObject(result, EtcdOffSetEntity.class);
-                taskModel.setOffset(offSetEntity.getReplOffset().get());
-                taskModel.setReplId(offSetEntity.getReplId());
+            EtcdTaskIdEntity etcdTaskIdEntity=JSON.parseObject(keyValue.getValue().toStringUtf8(),EtcdTaskIdEntity.class);
+            if(Objects.nonNull(etcdTaskIdEntity)){
+                String taskResult=client.get(EtcdKeyCmd.getTasksTaskId(etcdTaskIdEntity.getTaskId()));
+                TaskModel taskModel = JSON.parseObject(taskResult, TaskModel.class);
+                String result = client.get(EtcdKeyCmd.getOffset(taskModel.getTaskId()));
+                if(Objects.nonNull(result)){
+                    EtcdOffSetEntity offSetEntity = JSON.parseObject(result, EtcdOffSetEntity.class);
+                    taskModel.setOffset(offSetEntity.getReplOffset().get());
+                    taskModel.setReplId(offSetEntity.getReplId());
+                }
+                taskModelList.add(taskModel);
             }
-            taskModelList.add(taskModel);
+
         });
         return taskModelList;
     }
@@ -84,7 +89,9 @@ public class EtcdTaskMapper implements TaskMapper {
         List<TaskModel> taskModelList = Lists.newArrayList();
         if(Objects.nonNull(keyValueList)&&keyValueList.size()>0){
             keyValueList.forEach(keyValue -> {
-                    TaskModel taskModel = JSON.parseObject(keyValue.getValue().toStringUtf8(), TaskModel.class);
+                    EtcdTaskIdEntity etcdTaskIdEntity=JSON.parseObject(keyValue.getValue().toStringUtf8(), EtcdTaskIdEntity.class);
+                    String taskResult=client.get(EtcdKeyCmd.getTasksTaskId(etcdTaskIdEntity.getTaskId()));
+                    TaskModel taskModel = JSON.parseObject(taskResult, TaskModel.class);
                     String result = client.get(EtcdKeyCmd.getOffset(taskModel.getTaskId()));
                     EtcdOffSetEntity offSetEntity = JSON.parseObject(result, EtcdOffSetEntity.class);
                     if(Objects.nonNull(offSetEntity)){
@@ -102,11 +109,15 @@ public class EtcdTaskMapper implements TaskMapper {
         String jresult = client.get(EtcdKeyCmd.getMd5(md5));
         List<TaskModel> taskModelList = Lists.newArrayList();
         if(Objects.nonNull(jresult)){
-            TaskModel taskModel = JSON.parseObject(jresult, TaskModel.class);
+            EtcdTaskIdEntity etcdTaskIdEntity=JSON.parseObject(jresult, EtcdTaskIdEntity.class);
+            String taskResult=client.get(EtcdKeyCmd.getTasksTaskId(etcdTaskIdEntity.getTaskId()));
+            TaskModel taskModel = JSON.parseObject(taskResult, TaskModel.class);
             String result = client.get(EtcdKeyCmd.getOffset(taskModel.getTaskId()));
             EtcdOffSetEntity offSetEntity = JSON.parseObject(result, EtcdOffSetEntity.class);
-            taskModel.setOffset(offSetEntity.getReplOffset().get());
-            taskModel.setReplId(offSetEntity.getReplId());
+            if(Objects.nonNull(offSetEntity)){
+                taskModel.setOffset(offSetEntity.getReplOffset().get());
+                taskModel.setReplId(offSetEntity.getReplId());
+            }
             taskModelList.add(taskModel);
         }
         return taskModelList;
@@ -117,11 +128,16 @@ public class EtcdTaskMapper implements TaskMapper {
         List<KeyValue> keyValueList = client.getPrefix(EtcdKeyCmd.getTaskListByStatusPrex(status));
         List<TaskModel> taskModelList = Lists.newArrayList();
         keyValueList.forEach(keyValue -> {
-            TaskModel taskModel = JSON.parseObject(keyValue.getValue().toStringUtf8(), TaskModel.class);
+            EtcdTaskIdEntity etcdTaskIdEntity=JSON.parseObject(keyValue.getValue().toStringUtf8(), EtcdTaskIdEntity.class);
+            String taskResult=client.get(EtcdKeyCmd.getTasksTaskId(etcdTaskIdEntity.getTaskId()));
+            TaskModel taskModel = JSON.parseObject(taskResult, TaskModel.class);
             String result = client.get(EtcdKeyCmd.getOffset(taskModel.getTaskId()));
             EtcdOffSetEntity offSetEntity = JSON.parseObject(result, EtcdOffSetEntity.class);
-            taskModel.setOffset(offSetEntity.getReplOffset().get());
-            taskModel.setReplId(offSetEntity.getReplId());
+            if(Objects.nonNull(offSetEntity)){
+                taskModel.setOffset(offSetEntity.getReplOffset().get());
+                taskModel.setReplId(offSetEntity.getReplId());
+            }
+
             taskModelList.add(taskModel);
         });
         return taskModelList;
@@ -132,11 +148,15 @@ public class EtcdTaskMapper implements TaskMapper {
         List<KeyValue> keyValueList = client.getPrefix(EtcdKeyCmd.getGroupIdPrefix(groupId));
         List<TaskModel> taskModelList = Lists.newArrayList();
         keyValueList.forEach(keyValue -> {
-            TaskModel taskModel = JSON.parseObject(keyValue.getValue().toStringUtf8(), TaskModel.class);
+            EtcdTaskIdEntity etcdTaskIdEntity=JSON.parseObject(keyValue.getValue().toStringUtf8(), EtcdTaskIdEntity.class);
+            String taskResult=client.get(EtcdKeyCmd.getTasksTaskId(etcdTaskIdEntity.getTaskId()));
+            TaskModel taskModel = JSON.parseObject(taskResult, TaskModel.class);
             String result = client.get(EtcdKeyCmd.getOffset(taskModel.getTaskId()));
             EtcdOffSetEntity offSetEntity = JSON.parseObject(result, EtcdOffSetEntity.class);
-            taskModel.setOffset(offSetEntity.getReplOffset().get());
-            taskModel.setReplId(offSetEntity.getReplId());
+            if(Objects.nonNull(offSetEntity)){
+                taskModel.setOffset(offSetEntity.getReplOffset().get());
+                taskModel.setReplId(offSetEntity.getReplId());
+            }
             taskModelList.add(taskModel);
         });
         return taskModelList;
@@ -158,6 +178,7 @@ public class EtcdTaskMapper implements TaskMapper {
 
     @Override
     public boolean insertTask(TaskModel taskModel) throws Exception {
+        taskModel.setCreateTime(TimeUtils.getNowTimeString());
         KvClient kvClient = client.getKvClient();
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
@@ -173,7 +194,8 @@ public class EtcdTaskMapper implements TaskMapper {
                                     //groupId
                                     .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getGroupIdTaskId(taskModel.getGroupId(), taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdTaskGroup.builder().taskId(taskModel.getTaskId()).groupId(taskModel.getGroupId()).build()))).build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getStatusTaskId(taskModel.getStatus(), taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdTaskIdEntity.builder().taskId(taskModel.getTaskId()).build()))).build()).build())
-                                    .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getNodeIdTaskName(taskModel.getTaskName()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdTaskIdEntity.builder().taskId(taskModel.getTaskId()).build()))).build()).build())
+                                    //   taskName 可能会多个
+                                    .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getNodeIdTaskName(taskModel.getTaskName(),taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdTaskIdEntity.builder().taskId(taskModel.getTaskId()).build()))).build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getOffset(taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(offSetEntity))).build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getMd5(taskModel.getMd5()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdMd5Entity.builder().taskId(taskModel.getTaskId()).groupId(taskModel.getGroupId()).nodeId(nodeId).build()))).build()).build())
                                     //taskType
@@ -229,7 +251,7 @@ public class EtcdTaskMapper implements TaskMapper {
                                     //groupId
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getGroupIdTaskId(taskModel.getGroupId(), taskModel.getTaskId()))).build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getStatusTaskId(taskModel.getStatus(), taskModel.getTaskId()))).build()).build())
-                                    .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getNodeIdTaskName(taskModel.getTaskName()))).build()).build())
+                                    .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getNodeIdTaskName(taskModel.getTaskName(),taskModel.getTaskId()))).build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getOffset(taskModel.getTaskId()))).build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getMd5(taskModel.getMd5()))).build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getTaskType(taskModel.getTasktype(),taskModel.getTaskId()))).build()).build())
@@ -304,11 +326,19 @@ public class EtcdTaskMapper implements TaskMapper {
                     String value = client.get(EtcdKeyCmd.getTasksTaskId(id));
                     TaskModel taskModel = JSON.parseObject(value, TaskModel.class);
                     Integer oldStatus = taskModel.getStatus();
+                    if(oldStatus.equals(status)){
+                        return;
+                    }
                     taskModel.setStatus(status);
+                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
                     client.getKvClient()
                             .txn(TxnRequest.newBuilder()
                                     .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getTasksTaskId(id))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(taskModel))).build()).build())
+
+
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getStatusTaskId(oldStatus, taskModel.getTaskId()))).build()).build())
+
+
                                     .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getStatusTaskId(status, taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdTaskIdEntity.builder().taskId(taskModel.getTaskId()).build()))).build()).build())
                                     .build()).get();
                 } catch (Exception e) {
@@ -357,6 +387,7 @@ public class EtcdTaskMapper implements TaskMapper {
                 }else {
                     String taskData=client.get(EtcdKeyCmd.getTasksTaskId(id));
                     TaskModel taskModel=JSON.parseObject(taskData,TaskModel.class);
+                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
                     offSetEntity= EtcdOffSetEntity.builder().replId(taskModel.getReplId()).replOffset(new AtomicLong(offset)).build();
                 }
 
@@ -385,6 +416,7 @@ public class EtcdTaskMapper implements TaskMapper {
                 String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
                 TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
                 taskModel.setAfresh(afresh);
+                taskModel.setUpdateTime(TimeUtils.getNowTimeString());
                 client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
             }
 
@@ -414,13 +446,22 @@ public class EtcdTaskMapper implements TaskMapper {
                     TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
                     taskModel.setTaskMsg(taskMsg);
                     Integer oldStatus = taskModel.getStatus();
-                    taskModel.setStatus(status);
-                    client.getKvClient()
-                            .txn(TxnRequest.newBuilder()
-                                    .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getTasksTaskId(id))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(taskModel))).build()).build())
-                                    .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getStatusTaskId(oldStatus, taskModel.getTaskId()))).build()).build())
-                                    .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getStatusTaskId(oldStatus, taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdTaskIdEntity.builder().taskId(taskModel.getTaskId()).build()))).build()).build())
-                                    .build()).get();
+                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
+                    if(oldStatus.equals(status)){
+                        client.getKvClient()
+                                .txn(TxnRequest.newBuilder()
+                                        .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getTasksTaskId(id))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(taskModel))).build()).build())
+                                        .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getStatusTaskId(oldStatus, taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdTaskIdEntity.builder().taskId(taskModel.getTaskId()).build()))).build()).build())
+                                        .build()).get();
+                    }else {
+                        taskModel.setStatus(status);
+                        client.getKvClient()
+                                .txn(TxnRequest.newBuilder()
+                                        .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getTasksTaskId(id))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(taskModel))).build()).build())
+                                        .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getStatusTaskId(oldStatus, taskModel.getTaskId()))).build()).build())
+                                        .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getStatusTaskId(oldStatus, taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdTaskIdEntity.builder().taskId(taskModel.getTaskId()).build()))).build()).build())
+                                        .build()).get();
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

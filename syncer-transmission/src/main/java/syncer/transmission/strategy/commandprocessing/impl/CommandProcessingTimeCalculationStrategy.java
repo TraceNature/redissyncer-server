@@ -16,8 +16,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import syncer.replica.event.Event;
-import syncer.replica.rdb.iterable.datatype.BatchedKeyValuePair;
-import syncer.replica.rdb.sync.datatype.DumpKeyValuePair;
+import syncer.replica.event.iter.datatype.BatchedKeyValuePairEvent;
+import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.exception.KeyWeed0utException;
@@ -54,8 +54,8 @@ public class CommandProcessingTimeCalculationStrategy implements CommonProcessin
     public void run(Replication replication, KeyValueEventEntity eventEntity, TaskModel taskModel) throws StartegyNodeException {
         try{
             Event event=eventEntity.getEvent();
-            if (event instanceof DumpKeyValuePair) {
-                DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
+            if (event instanceof DumpKeyValuePairEvent) {
+                DumpKeyValuePairEvent dumpKeyValuePair= (DumpKeyValuePairEvent) event;
                 Long time=dumpKeyValuePair.getExpiredMs();
                 try {
                     timeCalculation(eventEntity,time);
@@ -66,8 +66,8 @@ public class CommandProcessingTimeCalculationStrategy implements CommonProcessin
             }
 
 
-            if (event instanceof BatchedKeyValuePair<?, ?>) {
-                BatchedKeyValuePair batchedKeyValuePair = (BatchedKeyValuePair) event;
+            if (event instanceof BatchedKeyValuePairEvent<?, ?>) {
+                BatchedKeyValuePairEvent batchedKeyValuePair = (BatchedKeyValuePairEvent) event;
                 if(batchedKeyValuePair.getBatch()==0&&null==batchedKeyValuePair.getValue()){
                     return;
                 }

@@ -15,9 +15,9 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import syncer.replica.entity.FileType;
-import syncer.replica.entity.TaskRunTypeEnum;
 import syncer.replica.event.Event;
+import syncer.replica.type.FileType;
+import syncer.replica.util.TaskRunTypeEnum;
 import syncer.transmission.compensator.ISyncerCompensator;
 import syncer.transmission.entity.OffSetEntity;
 
