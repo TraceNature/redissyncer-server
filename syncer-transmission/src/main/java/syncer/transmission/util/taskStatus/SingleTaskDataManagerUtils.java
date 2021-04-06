@@ -12,7 +12,7 @@
 package syncer.transmission.util.taskStatus;
 
 import lombok.Getter;
-import syncer.replica.entity.TaskStatusType;
+import syncer.replica.status.TaskStatus;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.util.manger.ITaskStatusManger;
@@ -49,6 +49,7 @@ public class SingleTaskDataManagerUtils {
      *   "5": "9",
      *   "6": "9",
      *   "6.0": "9",
+     *   "6.2": "9",
      *   "jimdb_3.2": "6",
      *   "jimdb_4.0": "6",
      *   "jimdb_4.1": "6",
@@ -68,7 +69,7 @@ public class SingleTaskDataManagerUtils {
         RDB_VERSION_MAP.put("5",9);
         RDB_VERSION_MAP.put("6",9);
         RDB_VERSION_MAP.put("6.0",9);
-
+        RDB_VERSION_MAP.put("6.2",9);
         RDB_VERSION_MAP.put("jimdb_3.2",6);
         RDB_VERSION_MAP.put("jimdb_4.0",6);
         RDB_VERSION_MAP.put("jimdb_4.1",6);
@@ -80,7 +81,7 @@ public class SingleTaskDataManagerUtils {
         statusManger.addMemoryDbThread(taskId,taskDataEntity,status);
     }
 
-    public synchronized static void changeThreadStatus(String taskId, Long offset, TaskStatusType taskType) throws Exception{
+    public synchronized static void changeThreadStatus(String taskId, Long offset, TaskStatus taskType) throws Exception{
         statusManger.changeThreadStatus(taskId,offset,taskType);
     }
 
@@ -108,7 +109,7 @@ public class SingleTaskDataManagerUtils {
      * @param taskStatusType
      * @throws Exception
      */
-    public synchronized static void updateThreadStatus(String taskId,TaskStatusType taskStatusType) throws Exception {
+    public synchronized static void updateThreadStatus(String taskId,TaskStatus taskStatusType) throws Exception {
         statusManger.updateThreadStatus(taskId,taskStatusType);
     }
 
@@ -125,7 +126,7 @@ public class SingleTaskDataManagerUtils {
         statusManger.brokenStatusAndLog(exceptionMsg,clazz,taskId);
     }
 
-    public synchronized static void updateThreadStatusAndMsg(String taskId,String msg,TaskStatusType taskStatusType) throws Exception{
+    public synchronized static void updateThreadStatusAndMsg(String taskId,String msg,TaskStatus taskStatusType) throws Exception{
         statusManger.updateThreadStatusAndMsg(taskId,msg,taskStatusType);
     }
 

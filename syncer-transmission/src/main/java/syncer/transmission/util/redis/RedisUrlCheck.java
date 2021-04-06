@@ -17,9 +17,9 @@ import syncer.common.exception.TaskMsgException;
 import syncer.common.exception.TaskRestoreException;
 import syncer.jedis.Jedis;
 import syncer.jedis.exceptions.JedisDataException;
-import syncer.replica.constant.CMD;
-import syncer.replica.entity.Configuration;
-import syncer.replica.entity.RedisURI;
+import syncer.replica.cmd.CMD;
+import syncer.replica.config.RedisURI;
+import syncer.replica.config.ReplicConfig;
 import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.util.code.CodeUtils;
 
@@ -72,7 +72,7 @@ public class RedisUrlCheck {
         try {
             turi = new RedisURI(url);
             target = new Jedis(turi.getHost(), turi.getPort());
-            Configuration tconfig = Configuration.valueOf(turi);
+            ReplicConfig tconfig = ReplicConfig.valueOf(turi);
             //获取password
             if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
                 log.info("CheckRedisConnectStatus is success");

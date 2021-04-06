@@ -13,8 +13,8 @@ package syncer.transmission.compensator.impl;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
-import syncer.replica.rdb.datatype.ZSetEntry;
-import syncer.replica.util.objectutil.Strings;
+import syncer.replica.datatype.rdb.zset.ZSetEntry;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.compensator.ISyncerCompensator;
 import syncer.transmission.constants.CmdEnum;

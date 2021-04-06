@@ -11,7 +11,7 @@
 
 package syncer.transmission.compensator;
 
-import syncer.replica.constant.RedisBranchTypeEnum;
+import syncer.replica.util.RedisBranchTypeEnum;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.compensator.impl.MultiThreadSyncerCompensator;
 import syncer.transmission.compensator.impl.PipeLineSyncerCompensator;

@@ -12,7 +12,7 @@
 package syncer.transmission.compensator.impl;
 
 import syncer.jedis.Jedis;
-import syncer.replica.rdb.datatype.ZSetEntry;
+import syncer.replica.datatype.rdb.zset.ZSetEntry;
 import syncer.transmission.compensator.ISyncerCompensator;
 
 import java.util.List;

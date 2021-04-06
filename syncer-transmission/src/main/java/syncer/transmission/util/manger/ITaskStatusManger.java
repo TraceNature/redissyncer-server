@@ -11,7 +11,7 @@
 
 package syncer.transmission.util.manger;
 
-import syncer.replica.entity.TaskStatusType;
+import syncer.replica.status.TaskStatus;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.model.TaskModel;
 
@@ -25,8 +25,8 @@ public interface ITaskStatusManger {
     void addDbThread(String taskId, TaskDataEntity taskDataEntity) throws Exception;
     void addMemoryDbThread(String taskId, TaskDataEntity taskDataEntity,boolean status) throws Exception;
     void addMemoryDbThread(String threadId, TaskDataEntity taskDataEntity) throws Exception;
-    void changeThreadStatus(String taskId, Long offset, TaskStatusType taskType) throws Exception;
-    void updateThreadStatus(String taskId,TaskStatusType taskStatusType) throws Exception;
+    void changeThreadStatus(String taskId, Long offset, TaskStatus taskType) throws Exception;
+    void updateThreadStatus(String taskId,TaskStatus taskStatusType) throws Exception;
     void brokenTask(String taskId) throws Exception;
 
     void brokenStatusAndLog(Exception e, Class clazz, String taskId);
@@ -37,7 +37,7 @@ public interface ITaskStatusManger {
     void updateBrokenResult(String taskId,String brokenResult);
 
     void updateExpandTaskModel(String taskId);
-    void updateThreadStatusAndMsg(String taskId,String msg,TaskStatusType taskStatusType) throws Exception;
+    void updateThreadStatusAndMsg(String taskId,String msg,TaskStatus taskStatusType) throws Exception;
     void updateThreadMsg(String taskId,String msg) throws Exception;
     /**
      * 判断任务是否关闭

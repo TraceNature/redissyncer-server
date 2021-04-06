@@ -15,15 +15,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.common.util.RegexUtil;
 import syncer.jedis.Jedis;
-import syncer.replica.entity.Configuration;
-import syncer.replica.entity.RedisURI;
+import syncer.replica.config.RedisURI;
+import syncer.replica.config.ReplicConfig;
 import syncer.transmission.util.sql.SqlOPUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 import java.net.URISyntaxException;
 import java.util.List;
 
-import static syncer.replica.constant.CMD.PONG;
+import static syncer.replica.cmd.CMD.PONG;
+
 
 /**
  * @author zhanenqiang
@@ -35,7 +36,7 @@ public class KeyCountUtils {
     public synchronized static void  updateKeyCount(String taskId, RedisURI suri){
         Jedis target = null;
         try {
-            Configuration tconfig = Configuration.valueOf(suri);
+            ReplicConfig tconfig = ReplicConfig.valueOf(suri);
 
             target = new Jedis(suri.getHost(), suri.getPort());
             //获取password

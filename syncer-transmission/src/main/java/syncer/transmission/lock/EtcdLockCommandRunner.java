@@ -6,7 +6,7 @@ package syncer.transmission.lock;
  * @create: 2021-02-22
  **/
 public interface EtcdLockCommandRunner {
-    void run();
+    void run() throws Exception;
     String lockName();
     int grant();
 }

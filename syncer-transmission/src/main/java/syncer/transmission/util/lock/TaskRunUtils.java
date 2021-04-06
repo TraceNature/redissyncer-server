@@ -15,6 +15,7 @@ import syncer.common.config.EtcdServerConfig;
 import syncer.common.constant.StoreType;
 import syncer.transmission.etcd.client.JEtcdClient;
 import syncer.transmission.lock.EtcdLockCommandRunner;
+import syncer.transmission.lock.EtcdReturnLockCommandRunner;
 
 import java.util.Map;
 import java.util.Objects;
@@ -61,7 +62,29 @@ public class TaskRunUtils {
     }
 
 
-    public static synchronized   void getTaskLock(String taskId,EtcdLockCommandRunner runner){
+    public static void getTaskLock(String taskId,EtcdLockCommandRunner runner){
+        if(StoreType.SQLITE.equals(serverConfig.getStoreType())){
+            if(!LOCK_MAP.containsKey(taskId)){
+                LOCK_MAP.put(taskId,new ReentrantLock());
+            }
+            Lock lock=LOCK_MAP.get(taskId);
+            lock.lock();
+            try {
+                try {
+                    runner.run();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }finally {
+                lock.unlock();
+            }
+        }else {
+            client.lockCommandRunner(runner);
+        }
+    }
+
+
+    public static  void getTaskLockE(String taskId,EtcdLockCommandRunner runner) throws Exception {
         if(StoreType.SQLITE.equals(serverConfig.getStoreType())){
             if(!LOCK_MAP.containsKey(taskId)){
                 LOCK_MAP.put(taskId,new ReentrantLock());
@@ -80,6 +103,26 @@ public class TaskRunUtils {
 
     public static void putTaskStartData(String taskId){
         TASK_START_DATA.put(taskId,true);
+    }
+
+
+
+
+    public static <T> T getTaskLock(String taskId, EtcdReturnLockCommandRunner<T> runner) throws Exception {
+        if(StoreType.SQLITE.equals(serverConfig.getStoreType())){
+            if(!LOCK_MAP.containsKey(taskId)){
+                LOCK_MAP.put(taskId,new ReentrantLock());
+            }
+            Lock lock=LOCK_MAP.get(taskId);
+            lock.lock();
+            try {
+                return runner.run();
+            }finally {
+                lock.unlock();
+            }
+        }else {
+            return client.lockCommandRunner(runner);
+        }
     }
 
 }

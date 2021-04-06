@@ -29,7 +29,10 @@ public enum PipeLineCompensatorEnum {
     SET_WITH_TIME,
 
 
-
+    RPUSH,
+    RPUSH_WITH_TIME,
+    RPUSH_LIST,
+    RPUSH_WITH_TIME_LIST,
     LPUSH,
 
     LPUSH_WITH_TIME,

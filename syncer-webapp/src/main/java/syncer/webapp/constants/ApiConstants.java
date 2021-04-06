@@ -32,6 +32,8 @@ public class ApiConstants {
 
     public static final String FAIL_MSG="fail";
 
+    public static final String LOGIN_FAIL_MSG="用户名或密码错误";
+
     public static final String TOKEN_ERROR="请检查token";
 
     public static final String USER_NOT_EXIST="登陆用户不存在[请检查Token]";

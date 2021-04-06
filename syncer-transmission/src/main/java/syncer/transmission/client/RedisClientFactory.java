@@ -11,7 +11,7 @@
 
 package syncer.transmission.client;
 
-import syncer.replica.constant.RedisBranchTypeEnum;
+import syncer.replica.util.RedisBranchTypeEnum;
 import syncer.transmission.client.impl.JedisPipeLineClient;
 import syncer.transmission.client.impl.RedisJedisClusterClient;
 

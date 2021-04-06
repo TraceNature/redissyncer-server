@@ -11,7 +11,7 @@
 
 package syncer.transmission.util.manger;
 
-import syncer.replica.entity.TaskStatusType;
+import syncer.replica.status.TaskStatus;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.util.manger.impl.MemoryAndSqliteTaskStatusManger;
@@ -42,12 +42,12 @@ public class DefaultSyncerStatusManger   {
         taskStatusManger.addMemoryDbThread(threadId,taskDataEntity);
     }
 
-    public static void changeThreadStatus(String taskId, Long offset, TaskStatusType taskType) throws Exception {
+    public static void changeThreadStatus(String taskId, Long offset, TaskStatus taskType) throws Exception {
         taskStatusManger.changeThreadStatus(taskId,offset,taskType);
     }
 
 
-    public static void updateThreadStatus(String taskId, TaskStatusType taskStatusType) throws Exception {
+    public static void updateThreadStatus(String taskId, TaskStatus taskStatusType) throws Exception {
         taskStatusManger.updateThreadStatus(taskId,taskStatusType);
     }
 

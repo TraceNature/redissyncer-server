@@ -14,12 +14,12 @@ package syncer.transmission.queue;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
-import syncer.replica.cmd.impl.DefaultCommand;
+import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.event.Event;
-import syncer.replica.rdb.iterable.datatype.BatchedKeyValuePair;
-import syncer.replica.rdb.sync.datatype.DumpKeyValuePair;
+import syncer.replica.event.iter.datatype.BatchedKeyValuePairEvent;
+import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
-import syncer.replica.util.objectutil.Strings;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.compensator.ISyncerCompensator;
 import syncer.transmission.constants.RedisCommandTypeEnum;
@@ -92,16 +92,16 @@ public class SendCommandWithOutQueue {
                     }else{
                         keyName= Strings.byteToString(((DefaultCommand) event).getCommand());
                     }
-                }else if(event instanceof DumpKeyValuePair){
-                    DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
+                }else if(event instanceof DumpKeyValuePairEvent){
+                    DumpKeyValuePairEvent dumpKeyValuePair= (DumpKeyValuePairEvent) event;
                     keyName= Strings.byteToString(dumpKeyValuePair.getKey());
                     command="RestoreReplace";
                     if(dumpKeyValuePair.getExpiredMs()!=null){
                         ttl=dumpKeyValuePair.getExpiredMs();
                     }
                     dataType= DataTypeUtils.getType(dumpKeyValuePair.getDataType());
-                }else if(event instanceof BatchedKeyValuePair){
-                    BatchedKeyValuePair batchedKeyValuePair= (BatchedKeyValuePair) event;
+                }else if(event instanceof BatchedKeyValuePairEvent){
+                    BatchedKeyValuePairEvent batchedKeyValuePair= (BatchedKeyValuePairEvent) event;
                     keyName=Strings.toString(batchedKeyValuePair.getKey());
                     RedisCommandTypeEnum typeEnum= RedisCommandTypeUtils.getRedisCommandTypeEnum(batchedKeyValuePair.getValueRdbType());
                     command=typeEnum.name();

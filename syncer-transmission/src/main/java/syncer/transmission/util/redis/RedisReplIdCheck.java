@@ -15,8 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.common.util.RegexUtil;
 import syncer.jedis.Jedis;
-import syncer.replica.entity.Configuration;
-import syncer.replica.entity.RedisURI;
+import syncer.replica.config.RedisURI;
+import syncer.replica.config.ReplicConfig;
 
 import java.net.URISyntaxException;
 
@@ -56,7 +56,7 @@ public class RedisReplIdCheck {
         version[0]="0";
         try{
             target = new Jedis(targetUriplus.getHost(), targetUriplus.getPort());
-            Configuration targetConfig = Configuration.valueOf(targetUriplus);
+            ReplicConfig targetConfig = ReplicConfig.valueOf(targetUriplus);
 
             if(!StringUtils.isEmpty(targetConfig.getAuthUser())&&!StringUtils.isEmpty(targetConfig.getAuthPassword())){
                 Object targetAuth = target.auth(targetConfig.getAuthUser()+" "+targetConfig.getAuthPassword());

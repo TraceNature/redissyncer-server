@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import syncer.replica.entity.FileType;
+import syncer.replica.type.FileType;
 
 import javax.validation.constraints.NotBlank;
 import java.util.HashMap;

@@ -81,6 +81,14 @@ public class EtcdServerConfig {
         return config.getPort();
     }
 
+    /**
+     * 是否已单节点部署
+     * @return
+     */
+    public boolean isSingleNode(){
+        return config.isSingleNode();
+    }
+
 
     /**
      * 获取etcd配置

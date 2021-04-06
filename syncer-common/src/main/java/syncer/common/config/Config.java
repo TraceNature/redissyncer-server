@@ -23,6 +23,7 @@ public class Config {
     private String nodeId;
     private String nodetype;
     private String nodeAddr;
+    private boolean singleNode;
     /**
      * 存储类型
      */

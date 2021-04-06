@@ -17,6 +17,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import syncer.common.config.ThreadPoolConfig;
 import syncer.common.util.spring.SpringUtil;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+
 
 /**
  * @author zhanenqiang
@@ -35,6 +38,11 @@ public class ThreadPoolUtils {
     public static void exec(Runnable task){
 
         threadPoolTaskExecutor.execute(task);
+    }
+
+
+    public static <S> Future<S> callable(Callable<S> task){
+        return threadPoolTaskExecutor.submit(task);
     }
 
     public static void shutdown(){

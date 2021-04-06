@@ -113,6 +113,13 @@ public class EtcdKeyCmd {
         return new StringBuilder("/tasks/name/").append(taskName).toString();
     }
 
+
+    /**
+     * /tasks/name/{taskname}/{taskId}  taskId
+     */
+    public  static String getNodeIdTaskName(String taskName,String taskId){
+        return new StringBuilder("/tasks/name/").append(taskName).append("/").append(taskId).toString();
+    }
     /**
      *  /tasks/lock/{lockName}/{taskId}
      * @param lockName

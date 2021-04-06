@@ -14,7 +14,7 @@ package syncer.transmission.util.object;
 import com.jd.jim.cli.protocol.ZSetTuple;
 import syncer.common.util.file.SafeObjectInputStream;
 import syncer.jedis.Jedis;
-import syncer.replica.rdb.datatype.ZSetEntry;
+import syncer.replica.datatype.rdb.zset.ZSetEntry;
 import syncer.transmission.util.strings.StringUtils;
 
 import java.io.ByteArrayInputStream;

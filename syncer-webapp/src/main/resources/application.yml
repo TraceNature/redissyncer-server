@@ -6,7 +6,8 @@ server:
   nodeAddr:
   #数据存储类型  sqlite etcd
   storageType: sqlite
-
+  # 是否已单节点部署 当storageType为etcd时生效 若不使用portal时请设为true否则为false
+  singleNode: true
 
 
 

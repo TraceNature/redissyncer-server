@@ -16,7 +16,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import syncer.replica.entity.FileType;
+import syncer.replica.type.FileType;
 import syncer.transmission.constants.CommandKeyFilterType;
 
 import javax.validation.constraints.NotBlank;

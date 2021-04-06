@@ -15,21 +15,25 @@ import com.alibaba.fastjson.JSON;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
-import syncer.replica.cmd.impl.DefaultCommand;
-import syncer.replica.constant.RedisBranchTypeEnum;
-import syncer.replica.entity.*;
+import syncer.replica.config.RedisURI;
+import syncer.replica.config.ReplicConfig;
+import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.event.*;
+import syncer.replica.event.end.PostRdbSyncEvent;
+import syncer.replica.event.start.PreCommandSyncEvent;
 import syncer.replica.listener.EventListener;
 import syncer.replica.listener.TaskStatusListener;
 import syncer.replica.listener.ValueDumpIterableEventListener;
-import syncer.replica.rdb.iterable.datatype.BatchedKeyValuePair;
-import syncer.replica.rdb.sync.datatype.DumpKeyValuePair;
-import syncer.replica.rdb.sync.visitor.ValueDumpIterableRdbVisitor;
+import syncer.replica.parser.syncer.ValueDumpIterableRdbParser;
+import syncer.replica.parser.syncer.ValueIterableDumpRdbValueParser;
 import syncer.replica.register.DefaultCommandRegister;
 import syncer.replica.replication.RedisReplication;
 import syncer.replica.replication.Replication;
+import syncer.replica.status.TaskStatus;
+import syncer.replica.type.SyncType;
+import syncer.replica.util.RedisBranchTypeEnum;
 import syncer.replica.util.SyncTypeUtils;
-import syncer.replica.util.objectutil.Strings;
+import syncer.replica.util.TaskRunTypeEnum;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.client.RedisClientFactory;
 import syncer.transmission.compensator.ISyncerCompensator;
@@ -90,27 +94,34 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                 replication = new RedisReplication(suri, taskModel.isAfresh());
             } else {
                 //文件
-                replication = new RedisReplication(taskModel.getFileAddress(), SyncTypeUtils.getSyncType(taskModel.getSyncType()).getFileType(),  Configuration.defaultSetting().setTaskId(taskModel.getTaskId()));
+                replication = new RedisReplication(taskModel.getFileAddress(), SyncTypeUtils.getSyncType(taskModel.getSyncType()).getFileType(),  ReplicConfig.defaultConfig().setTaskId(taskModel.getTaskId()));
             }
 
 
             //注册增量命令解析器
             final Replication replicationHandler = DefaultCommandRegister.addCommandParser(replication);
-            replicationHandler.getConfiguration().setTaskId(taskModel.getTaskId());
+            replicationHandler.getConfig().setTaskId(taskModel.getTaskId());
             //注册RDB全量解析器
-            replicationHandler.setRdbVisitor(new ValueDumpIterableRdbVisitor(replicationHandler, taskModel.getRdbVersion()));
 
-            OffSetEntity offset = SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId()).getOffSetEntity();
+            replicationHandler.setRdbParser(new ValueDumpIterableRdbParser(replicationHandler, taskModel.getRdbVersion()));
+            OffSetEntity offset =null;
+
+            TaskDataEntity taskDataEntity=SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId());
+            if(Objects.nonNull(taskDataEntity)){
+                offset = taskDataEntity.getOffSetEntity();
+            }
+
+
             if (offset == null) {
                 offset = new OffSetEntity();
                 SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId()).setOffSetEntity(offset);
             } else {
                 if (StringUtils.isEmpty(offset.getReplId())) {
-                    offset.setReplId(replicationHandler.getConfiguration().getReplId());
+                    offset.setReplId(replicationHandler.getConfig().getReplId());
                 } else if (offset.getReplOffset().get() > -1) {
                     if (!taskModel.isAfresh()) {
-                        replicationHandler.getConfiguration().setReplOffset(offset.getReplOffset().get());
-                        replicationHandler.getConfiguration().setReplId(offset.getReplId());
+                        replicationHandler.getConfig().setReplOffset(offset.getReplOffset().get());
+                        replicationHandler.getConfig().setReplId(offset.getReplId());
                     }
                 }
             }
@@ -127,8 +138,8 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                 } catch (Exception e) {
                 }
                 if (offsetNum != 0L && !StringUtils.isEmpty(data[1])) {
-                    replicationHandler.getConfiguration().setReplOffset(offsetNum);
-                    replicationHandler.getConfiguration().setReplId(data[1]);
+                    replicationHandler.getConfig().setReplOffset(offsetNum);
+                    replicationHandler.getConfig().setReplId(data[1]);
                 }
             }
 
@@ -178,8 +189,8 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                             .dbMapper(taskModel.getDbMapping())
                             .redisVersion(taskModel.getRedisVersion())
                             .baseOffSet(baseoffset)
-                            .replId(replicationHandler.getConfiguration().getReplId())
-                            .replOffset(replicationHandler.getConfiguration().getReplOffset())
+                            .replId(replicationHandler.getConfig().getReplId())
+                            .replOffset(replicationHandler.getConfig().getReplOffset())
                             .taskRunTypeEnum(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType())
                             .fileType(SyncTypeUtils.getSyncType(taskModel.getSyncType()).getFileType())
                             .build();
@@ -192,6 +203,11 @@ public class RedisDataSyncTransmissionTask implements Runnable{
 
 
                 }
+
+                @Override
+                public String eventListenerName() {
+                    return taskModel.getTaskId()+"_eventListenerName";
+                }
             }));
 
             /**
@@ -199,11 +215,12 @@ public class RedisDataSyncTransmissionTask implements Runnable{
              */
             replicationHandler.addTaskStatusListener(new TaskStatusListener() {
                 @Override
-                public void handle(Replication replication, SyncerTaskEvent event) {
-                    String taskId=event.getEvent().getTaskId();
+                public void handler(Replication replication, SyncerTaskEvent event) {
+                    String taskId=event.getTaskId();
                     try {
-                        SingleTaskDataManagerUtils.changeThreadStatus(taskId,event.getOffset(),event.getTaskStatusType());
-                        if(Objects.nonNull(event.getMsg())&&event.getTaskStatusType().equals(TaskStatusType.BROKEN)){
+                        SingleTaskDataManagerUtils.changeThreadStatus(taskId,event.getOffset(),event.getEvent());
+
+                        if(Objects.nonNull(event.getMsg())&&event.getEvent().equals(TaskStatus.BROKEN)){
                             SingleTaskDataManagerUtils.updateThreadMsg(taskId,event.getMsg());
                         }
                     } catch (Exception e) {
@@ -211,10 +228,15 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                     }
 
                 }
+
+                @Override
+                public String eventListenerName() {
+                    return taskModel.getTaskId()+"_TaskStatusListener";
+                }
             });
 
             //任务运行
-            SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatusType.RUN);
+            SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatus.STARTING);
 
 
             replicationHandler.open();
@@ -238,21 +260,21 @@ public class RedisDataSyncTransmissionTask implements Runnable{
             TaskDataEntity data=SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId);
             if(data.getOffSetEntity()==null){
                 data.setOffSetEntity(OffSetEntity.builder()
-                        .replId(replicationHandler.getConfiguration().getReplId())
+                        .replId(replicationHandler.getConfig().getReplId())
                         .build());
             }
             Event event=node.getEvent();
             //全量同步结束
             if (event instanceof PostRdbSyncEvent ||event instanceof DefaultCommand ||event instanceof PreCommandSyncEvent) {
-                data.getOffSetEntity().setReplId(replicationHandler.getConfiguration().getReplId());
-                data.getOffSetEntity().getReplOffset().set(replicationHandler.getConfiguration().getReplOffset());
+                data.getOffSetEntity().setReplId(replicationHandler.getConfig().getReplId());
+                data.getOffSetEntity().getReplOffset().set(replicationHandler.getConfig().getReplOffset());
 
                 if(node.getTaskRunTypeEnum().equals(TaskRunTypeEnum.STOCKONLY)||event instanceof PreCommandSyncEvent){
-                    SqlOPUtils.updateOffsetAndReplId(taskId,replicationHandler.getConfiguration().getReplOffset(),replicationHandler.getConfiguration().getReplId());
+                    SqlOPUtils.updateOffsetAndReplId(taskId,replicationHandler.getConfig().getReplOffset(),replicationHandler.getConfig().getReplId());
                 }
             }
         }catch (Exception e){
-            log.info("[{}]update offset fail,replid[{}],offset[{}]",taskId,replicationHandler.getConfiguration().getReplId(),replicationHandler.getConfiguration().getReplOffset());
+            log.info("[{}]update offset fail,replid[{}],offset[{}]",taskId,replicationHandler.getConfig().getReplId(),replicationHandler.getConfig().getReplOffset());
         }
 
     }

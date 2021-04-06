@@ -40,7 +40,7 @@ public class DefaultHeartbeatCommandRunner implements HeartbeatCommandRunner {
                             .heartbeatUrl("/health")
                             .build();
                     configCenter.put(new StringBuilder("/nodes/").append(config.getNodeType()).append("/").append(config.getNodeId()).toString(), JSON.toJSONString(nodeHeartbeat).toLowerCase());
-                    log.info("node heartbeat success.");
+                    log.debug("node heartbeat success.");
                 } catch (Exception e) {
                     log.info("node heartbeat fail.");
                     e.printStackTrace();

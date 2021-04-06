@@ -18,8 +18,8 @@ import syncer.common.exception.TaskMsgException;
 import syncer.common.util.TemplateUtils;
 import syncer.common.util.file.FileUtils;
 import syncer.jedis.Jedis;
-import syncer.replica.entity.Configuration;
-import syncer.replica.entity.RedisURI;
+import syncer.replica.config.RedisURI;
+import syncer.replica.config.ReplicConfig;
 import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.util.code.CodeUtils;
 import syncer.transmission.util.regex.RegexUtils;
@@ -77,7 +77,7 @@ public class RedisVersionUtil {
         String targetVersion = null;
         try {
             target = new Jedis(targetUriplus.getHost(), targetUriplus.getPort());
-            Configuration targetConfig = Configuration.valueOf(targetUriplus);
+            ReplicConfig targetConfig = ReplicConfig.valueOf(targetUriplus);
 
             //获取password
             if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {

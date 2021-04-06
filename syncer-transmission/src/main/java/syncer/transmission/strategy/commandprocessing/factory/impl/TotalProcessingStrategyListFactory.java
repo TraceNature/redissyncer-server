@@ -36,6 +36,9 @@ public class TotalProcessingStrategyListFactory implements CommonProcessingStrat
         strategyList.add(CommandProcessingCommandFilterStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
 
         strategyList.add(CommandProcessingDataAnalysisStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+        //更新offset
+        strategyList.add(CommandProcessingOffsetUpdateStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+
         strategyList.add(CommandProcessingDbMappingStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         strategyList.add(CommandProcessingAofCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         strategyList.add(CommandProcessingRdbCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).redisVersion(taskModel.getRedisVersion()).build());

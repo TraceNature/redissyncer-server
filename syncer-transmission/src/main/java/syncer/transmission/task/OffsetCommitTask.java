@@ -11,7 +11,8 @@
 
 package syncer.transmission.task;
 
-import syncer.replica.entity.SyncType;
+
+import syncer.replica.type.SyncType;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.po.entity.OffSetCommitEntity;
 import syncer.transmission.queue.DbDataCommitQueue;

@@ -15,7 +15,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import syncer.replica.rdb.datatype.ZSetEntry;
+import syncer.replica.datatype.rdb.zset.ZSetEntry;
 import syncer.transmission.compensator.PipeLineCompensatorEnum;
 
 import java.io.Serializable;

@@ -6,12 +6,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import syncer.replica.cmd.impl.DefaultCommand;
+import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.event.Event;
-import syncer.replica.rdb.iterable.datatype.BatchedKeyValuePair;
-import syncer.replica.rdb.sync.datatype.DumpKeyValuePair;
+import syncer.replica.event.iter.datatype.BatchedKeyValuePairEvent;
+import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
-import syncer.replica.util.objectutil.Strings;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.constants.CommandKeyFilterType;
 import syncer.transmission.constants.RedisCommandTypeEnum;
@@ -80,7 +80,7 @@ public class CommandProcessingCommandFilterStrategy implements CommonProcessingS
         Event event = eventEntity.getEvent();
         try {
 
-            if (event instanceof DumpKeyValuePair) {
+            if (event instanceof DumpKeyValuePairEvent) {
 
                 if(filterType.equals(CommandKeyFilterType.COMMAND_FILTER_REFUSE)||filterType.equals(CommandKeyFilterType.COMMAND_OR_KEY_FILTER_REFUSE)){
                     if(commandFilterSet.contains("RESTORE")){
@@ -95,8 +95,8 @@ public class CommandProcessingCommandFilterStrategy implements CommonProcessingS
                     }
                 }
 
-                DumpKeyValuePair dumpKeyValuePair= (DumpKeyValuePair) event;
-                String stringKey=Strings.toString(dumpKeyValuePair.getKey());
+                DumpKeyValuePairEvent dumpKeyValuePair= (DumpKeyValuePairEvent) event;
+                String stringKey= Strings.toString(dumpKeyValuePair.getKey());
                 //key
                 if(filterType.equals(CommandKeyFilterType.KEY_FILTER_REFUSE)||filterType.equals(CommandKeyFilterType.COMMAND_OR_KEY_FILTER_REFUSE)){
 
@@ -131,8 +131,8 @@ public class CommandProcessingCommandFilterStrategy implements CommonProcessingS
 
             }
 
-            if (event instanceof BatchedKeyValuePair<?, ?>) {
-                BatchedKeyValuePair batchedKeyValuePair= (BatchedKeyValuePair) event;
+            if (event instanceof BatchedKeyValuePairEvent<?, ?>) {
+                BatchedKeyValuePairEvent batchedKeyValuePair= (BatchedKeyValuePairEvent) event;
                 RedisCommandTypeEnum typeEnum= RedisCommandTypeUtils.getRedisCommandTypeEnum(batchedKeyValuePair.getValueRdbType());
                 if(filterType.equals(CommandKeyFilterType.COMMAND_FILTER_REFUSE)||filterType.equals(CommandKeyFilterType.COMMAND_OR_KEY_FILTER_REFUSE)){
                     if(commandFilterSet.contains(getCommand(typeEnum))){

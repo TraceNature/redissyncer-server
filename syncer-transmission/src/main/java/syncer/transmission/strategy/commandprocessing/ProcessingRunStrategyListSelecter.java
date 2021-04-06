@@ -12,7 +12,7 @@
 package syncer.transmission.strategy.commandprocessing;
 
 import com.google.common.collect.Maps;
-import syncer.replica.entity.TaskRunTypeEnum;
+import syncer.replica.util.TaskRunTypeEnum;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.strategy.commandprocessing.factory.CommonProcessingStrategyListFactory;

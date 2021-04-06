@@ -19,14 +19,14 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.common.util.TimeUtils;
-import syncer.replica.cmd.impl.DefaultCommand;
+import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.event.Event;
-import syncer.replica.event.PostRdbSyncEvent;
-import syncer.replica.rdb.iterable.datatype.BatchedKeyValuePair;
-import syncer.replica.rdb.sync.datatype.DataType;
-import syncer.replica.rdb.sync.datatype.DumpKeyValuePair;
+import syncer.replica.event.end.PostRdbSyncEvent;
+import syncer.replica.event.iter.datatype.BatchedKeyValuePairEvent;
+import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
-import syncer.replica.util.objectutil.Strings;
+import syncer.replica.util.strings.Strings;
+import syncer.replica.util.type.KvDataType;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.constants.RedisDataTypeAnalysisConstant;
 import syncer.transmission.entity.SqliteCommitEntity;
@@ -76,7 +76,7 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
 
             //记录任务最后一次update时间
             try {
-                if (event instanceof DefaultCommand || event instanceof DumpKeyValuePair || event instanceof BatchedKeyValuePair<?, ?>) {
+                if (event instanceof DefaultCommand || event instanceof DumpKeyValuePairEvent || event instanceof BatchedKeyValuePairEvent<?, ?>) {
                     dataEntity.getTaskModel().setLastKeyUpdateTime(System.currentTimeMillis());
                 }
 
@@ -88,10 +88,10 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
             if (event instanceof PostRdbSyncEvent) {
                 try {
 
-                    if (analysisMap.containsKey(DataType.FRAGMENTATION_NUM.toString())) {
+                    if (analysisMap.containsKey(KvDataType.FRAGMENTATION_NUM.toString())) {
                         Long keyValueNum=analysisMap.get(RedisDataTypeAnalysisConstant.KEY_VALUE_SUM)==null?0L:analysisMap.get(RedisDataTypeAnalysisConstant.KEY_VALUE_SUM);
-                        Long fragmentationNum=analysisMap.get(DataType.FRAGMENTATION_NUM.toString())==null?0L:analysisMap.get(DataType.FRAGMENTATION_NUM.toString());
-                        Long fragmentation=analysisMap.get(DataType.FRAGMENTATION.toString())==null?0L:analysisMap.get(DataType.FRAGMENTATION.toString());
+                        Long fragmentationNum=analysisMap.get(KvDataType.FRAGMENTATION_NUM.toString())==null?0L:analysisMap.get(KvDataType.FRAGMENTATION_NUM.toString());
+                        Long fragmentation=analysisMap.get(KvDataType.FRAGMENTATION.toString())==null?0L:analysisMap.get(KvDataType.FRAGMENTATION.toString());
                         Long result=keyValueNum+fragmentationNum-fragmentation;
                         analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_FRAGMENTATION_SUM, result);
                     }else {
@@ -109,14 +109,14 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
                 log.warn("[{}]全量数据结构分析报告：\r\n{}", taskId, JSON.toJSONString(analysisMap, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue,
                         SerializerFeature.WriteDateUseDateFormat));
             }
-            if (event instanceof DumpKeyValuePair) {
+            if (event instanceof DumpKeyValuePairEvent) {
                 dataEntity.getAllKeyCount().incrementAndGet();
-                DumpKeyValuePair dumpKeyValuePair = (DumpKeyValuePair) event;
+                DumpKeyValuePairEvent dumpKeyValuePair = (DumpKeyValuePairEvent) event;
                 addAnalysisMap(dumpKeyValuePair.getDataType());
             }
 
-            if (event instanceof BatchedKeyValuePair<?, ?>) {
-                BatchedKeyValuePair batchedKeyValuePair = (BatchedKeyValuePair) event;
+            if (event instanceof BatchedKeyValuePairEvent<?, ?>) {
+                BatchedKeyValuePairEvent batchedKeyValuePair = (BatchedKeyValuePairEvent) event;
                 if (batchedKeyValuePair.isLast()) {
                     addAnalysisMap(batchedKeyValuePair.getDataType());
                 }
@@ -147,14 +147,14 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
                         } catch (Exception e) {
                             log.error("大key统计入库失败：[{}]", Strings.toString(batchedKeyValuePair.getKey()));
                         }
-                        log.warn("大key统计：[{}],db: [{}]", Strings.toString(batchedKeyValuePair.getKey()), batchedKeyValuePair.getDb().getDbNumber());
+                        log.warn("大key统计：[{}],db: [{}]", Strings.toString(batchedKeyValuePair.getKey()), batchedKeyValuePair.getDb().getCurrentDbNumber());
                     }
 
-                    addAnalysisMap(DataType.FRAGMENTATION);
-                    addAnalysisMap(DataType.FRAGMENTATION_NUM);
+                    addAnalysisMap(KvDataType.FRAGMENTATION);
+                    addAnalysisMap(KvDataType.FRAGMENTATION_NUM);
                 } else {
 
-                    addAnalysisMap(DataType.FRAGMENTATION_NUM);
+                    addAnalysisMap(KvDataType.FRAGMENTATION_NUM);
                 }
 
 
@@ -189,7 +189,7 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
         this.next = nextStrategy;
     }
 
-    void addAnalysisMap(DataType dataType) {
+    void addAnalysisMap(KvDataType dataType) {
         if (Objects.isNull(dataType)) {
             return;
         }
@@ -211,11 +211,11 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
 
 
             if (analysisMap.containsKey(RedisDataTypeAnalysisConstant.KEY_VALUE_SUM)) {
-                if (!dataType.equals(DataType.FRAGMENTATION) && !dataType.equals(DataType.FRAGMENTATION_NUM)) {
+                if (!dataType.equals(KvDataType.FRAGMENTATION) && !dataType.equals(KvDataType.FRAGMENTATION_NUM)) {
                     analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_SUM, analysisMap.get(RedisDataTypeAnalysisConstant.KEY_VALUE_SUM) + 1);
                 }
             } else {
-                if (!dataType.equals(DataType.FRAGMENTATION) && !dataType.equals(DataType.FRAGMENTATION_NUM)) {
+                if (!dataType.equals(KvDataType.FRAGMENTATION) && !dataType.equals(KvDataType.FRAGMENTATION_NUM)) {
                     analysisMap.put(RedisDataTypeAnalysisConstant.KEY_VALUE_SUM, 1L);
                 }
 
@@ -225,6 +225,7 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
         }
 
     }
+
 
 
 }

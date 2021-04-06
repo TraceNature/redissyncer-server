@@ -14,7 +14,7 @@
     <description>Demo project for Spring Boot</description>
 
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>8</java.version>
     </properties>
 
     <dependencies>
@@ -49,6 +49,21 @@
             <optional>true</optional>
             <scope>true</scope>
         </dependency>
+
+
+        <!--添加此依赖，可以通过在编译时创建候选对象的静态列表来提高大型应用程序的启动性能 -->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework</groupId>-->
+<!--            <artifactId>spring-context-indexer</artifactId>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash;Graalvm-native 依赖 &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.experimental</groupId>-->
+<!--            <artifactId>spring-graalvm-native</artifactId>-->
+<!--            <version>0.8.3</version>-->
+<!--        </dependency>-->
+
     </dependencies>
 
 <!--    <build>-->
@@ -76,6 +91,8 @@
 <!--            </plugin>-->
 <!--        </plugins>-->
 <!--    </build>-->
+
+
     <build>
         <plugins>
             <plugin>
@@ -179,8 +196,51 @@
                     </execution>
                 </executions>
             </plugin>
+
+<!--            <plugin>-->
+<!--                <groupId>org.graalvm.nativeimage</groupId>-->
+<!--                <artifactId>native-image-maven-plugin</artifactId>-->
+<!--                <version>21.0.0.2</version>-->
+<!--                <configuration>-->
+<!--                    <skip>false</skip>-->
+<!--                    <imageName>${project.parent.artifactId}-${syncer.version}</imageName>-->
+<!--                    <buildArgs>-->
+<!--                        &#45;&#45;no-fallback-->
+<!--                    </buildArgs>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <goals>-->
+<!--                            <goal>native-image</goal>-->
+<!--                        </goals>-->
+<!--                        <phase>package</phase>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
+<!--            <plugin>-->
+<!--                <artifactId>maven-assembly-plugin</artifactId>-->
+<!--                <version>3.1.0</version>-->
+<!--                <configuration>-->
+<!--                    <descriptorRefs>-->
+<!--                        <descriptorRef>jar-with-dependencies</descriptorRef>-->
+<!--                    </descriptorRefs>-->
+<!--                    <archive>-->
+<!--                        <manifest>-->
+<!--                            <mainClass>syncer.SyncerWebappApplication</mainClass>-->
+<!--                        </manifest>-->
+<!--                    </archive>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>make-assembly</id>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>single</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
+
         </plugins>
-
-
     </build>
 </project>

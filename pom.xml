@@ -14,6 +14,7 @@
     <module>syncer-replicator</module>
     <module>syncer-transmission</module>
     <module>syncer-webapp</module>
+      <module>syncer-replica</module>
   </modules>
 
   <name>redissyncer-server</name>
@@ -225,6 +226,8 @@
       <artifactId>netty-all</artifactId>
       <version>4.1.42.Final</version>
     </dependency>
+
+
   </dependencies>
 
   <build>
@@ -272,4 +275,51 @@
       </plugins>
     </pluginManagement>
   </build>
+
+
+  <repositories><!-- 代码库 -->
+    <repository>
+      <id>maven-ali</id>
+      <url>http://maven.aliyun.com/nexus/content/groups/public//</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>central</id>
+      <url>https://repo.maven.apache.org/maven2</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>spring-release</id>
+      <name>Spring release</name>
+      <url>https://repo.spring.io/release</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>spring-snapshot</id>
+      <name>Spring Snapshots</name>
+      <url>https://repo.spring.io/snapshot</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>spring-milestone</id>
+      <name>Spring Milestone</name>
+      <url>https://repo.spring.io/milestone</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 </project>

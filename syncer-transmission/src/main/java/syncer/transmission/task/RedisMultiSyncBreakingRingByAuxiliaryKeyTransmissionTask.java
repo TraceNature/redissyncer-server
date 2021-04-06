@@ -13,22 +13,20 @@ package syncer.transmission.task;
 
 import lombok.extern.slf4j.Slf4j;
 import syncer.jedis.Protocol;
-import syncer.replica.cmd.impl.DefaultCommand;
-import syncer.replica.entity.Configuration;
-import syncer.replica.entity.RedisURI;
-import syncer.replica.entity.TaskStatusType;
+import syncer.replica.config.RedisURI;
+import syncer.replica.datatype.command.DefaultCommand;
+import syncer.replica.entity.RedisDB;
 import syncer.replica.event.Event;
-import syncer.replica.event.PreCommandSyncEvent;
-import syncer.replica.event.PreRdbSyncEvent;
+import syncer.replica.event.iter.datatype.BatchedKeyValuePairEvent;
+import syncer.replica.event.start.PreCommandSyncEvent;
+import syncer.replica.event.start.PreRdbSyncEvent;
 import syncer.replica.listener.EventListener;
-import syncer.replica.rdb.datatype.DB;
-import syncer.replica.rdb.iterable.datatype.BatchedKeyValuePair;
-import syncer.replica.rdb.sync.datatype.DumpKeyValuePair;
-import syncer.replica.rdb.sync.visitor.ValueDumpIterableRdbVisitor;
+import syncer.replica.parser.syncer.ValueDumpIterableRdbParser;
+import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.register.DefaultCommandRegister;
 import syncer.replica.replication.RedisReplication;
 import syncer.replica.replication.Replication;
-import syncer.replica.util.objectutil.Strings;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.MultiTaskModel;
 import syncer.transmission.task.circle.MultiSyncCircle;
@@ -80,12 +78,12 @@ public class RedisMultiSyncBreakingRingByAuxiliaryKeyTransmissionTask implements
             Replication replication = null;
             RedisURI suri = new RedisURI(multiTaskModel.getRedisAddress());
             replication = new RedisReplication(suri, true);
-            replication.getConfiguration().setTaskId(globalTaskId);
+            replication.getConfig().setTaskId(globalTaskId);
             int rdbVersion = redisVersionUtil.getRdbVersionByRedisVersion(multiTaskModel.getRedisAddress(), String.valueOf(multiTaskModel.getRedisVersion()));
             //注册增量命令解析器
             final Replication replicationHandler = DefaultCommandRegister.addCommandParser(replication);
             //注册RDB全量解析器
-            replicationHandler.setRdbVisitor(new ValueDumpIterableRdbVisitor(replicationHandler, rdbVersion));
+            replicationHandler.setRdbParser(new ValueDumpIterableRdbParser(replicationHandler, rdbVersion));
             //事件监听
             replicationHandler.addEventListener(new EventListener() {
                 @Override
@@ -166,11 +164,11 @@ public class RedisMultiSyncBreakingRingByAuxiliaryKeyTransmissionTask implements
                     /**
                      * RESTORE 全量
                      */
-                    if (event instanceof DumpKeyValuePair) {
-                        DumpKeyValuePair valueDump = (DumpKeyValuePair) event;
+                    if (event instanceof DumpKeyValuePairEvent) {
+                        DumpKeyValuePairEvent valueDump = (DumpKeyValuePairEvent) event;
                         Long ms = valueDump.getExpiredMs();
-                        DB vdb = valueDump.getDb();
-                        Long dbNum = vdb.getDbNumber();
+                        RedisDB vdb = valueDump.getDb();
+                        Long dbNum = vdb.getCurrentDbNumber();
                         db = dbNum.intValue();
                         long ttl = (ms == null || ms < 0) ? 0 : ms;
                         String[] data = new String[]{circle.getRdbDumpMd5(valueDump, sourceNodeId, 3.0), "1", "1"};
@@ -182,11 +180,16 @@ public class RedisMultiSyncBreakingRingByAuxiliaryKeyTransmissionTask implements
                     /**
                      * 大Key拆分数据  全量
                      */
-                    if (event instanceof BatchedKeyValuePair<?, ?>) {
+                    if (event instanceof BatchedKeyValuePairEvent<?, ?>) {
 
                     }
 
 
+                }
+
+                @Override
+                public String eventListenerName() {
+                    return null;
                 }
             });
             replicationHandler.open();

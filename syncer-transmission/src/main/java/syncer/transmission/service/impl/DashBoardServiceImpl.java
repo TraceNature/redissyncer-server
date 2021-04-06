@@ -11,12 +11,11 @@
 
 package syncer.transmission.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import syncer.transmission.mapper.DashBoardMapper;
 import syncer.transmission.po.CharDashBoardInfoDto;
 import syncer.transmission.po.DashBoardDto;
 import syncer.transmission.service.IDashService;
+import syncer.transmission.util.sql.SqlOPUtils;
 
 /**
  * @author zhanenqiang
@@ -25,15 +24,15 @@ import syncer.transmission.service.IDashService;
  */
 @Service
 public class DashBoardServiceImpl implements IDashService {
-    @Autowired
-    private DashBoardMapper dashBoardMapper;
+
+
     @Override
     public DashBoardDto getDashboardInfo() {
         return DashBoardDto.builder()
-                .brokenCount(dashBoardMapper.brokenCount())
-                .runCount(dashBoardMapper.runCount())
-                .stopCount(dashBoardMapper.stopCount())
-                .taskCount(dashBoardMapper.taskCount())
+                .brokenCount(SqlOPUtils.brokenCount())
+                .runCount(SqlOPUtils.runCount())
+                .stopCount(SqlOPUtils.stopCount())
+                .taskCount(SqlOPUtils.taskCount())
                 .build();
     }
 
@@ -41,13 +40,13 @@ public class DashBoardServiceImpl implements IDashService {
     public CharDashBoardInfoDto getCharDashBoardInfo() {
 
         return CharDashBoardInfoDto.builder()
-                .syncCount(dashBoardMapper.syncCount())
-                .aofCount(dashBoardMapper.aofCount())
-                .mixedCount(dashBoardMapper.mixedCount())
-                .onlineAofCount(dashBoardMapper.onlineAofCount())
-                .onlineRdbCount(dashBoardMapper.onlineRdbCount())
-                .onlineMixedCount(dashBoardMapper.onlineMixedCount())
-                .rdbCount(dashBoardMapper.rdbCount())
+                .syncCount(SqlOPUtils.syncCount())
+                .aofCount(SqlOPUtils.aofCount())
+                .mixedCount(SqlOPUtils.mixedCount())
+                .onlineAofCount(SqlOPUtils.onlineAofCount())
+                .onlineRdbCount(SqlOPUtils.onlineRdbCount())
+                .onlineMixedCount(SqlOPUtils.onlineMixedCount())
+                .rdbCount(SqlOPUtils.rdbCount())
                 .build();
     }
 }

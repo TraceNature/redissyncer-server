@@ -13,11 +13,11 @@ package syncer.transmission.strategy.commandprocessing;
 
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.util.ThreadPoolUtils;
-import syncer.replica.cmd.impl.DefaultCommand;
-import syncer.replica.constant.RedisBranchTypeEnum;
-import syncer.replica.entity.TaskRunTypeEnum;
+import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.event.Event;
 import syncer.replica.replication.Replication;
+import syncer.replica.util.RedisBranchTypeEnum;
+import syncer.replica.util.TaskRunTypeEnum;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.client.RedisClientFactory;
 import syncer.transmission.compensator.ISyncerCompensator;
