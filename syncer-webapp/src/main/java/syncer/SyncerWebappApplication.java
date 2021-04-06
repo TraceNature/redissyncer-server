@@ -52,7 +52,7 @@ import java.util.Map;
 @EnableCaching  //开启缓存
 @Slf4j
 public class SyncerWebappApplication {
-    final static String version="v3.3.0";
+    final static String version="v3.3.3";
     public static void main(String[] args) throws Exception {
         System.setProperty("DLog4jContextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
         System.setProperty("log4j2.contextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
