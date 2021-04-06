@@ -11,7 +11,7 @@
   <modules>
     <module>syncer-common</module>
     <module>syncer-jedis</module>
-    <module>syncer-replicator</module>
+<!--    <module>syncer-replicator</module>-->
     <module>syncer-transmission</module>
     <module>syncer-webapp</module>
       <module>syncer-replica</module>
