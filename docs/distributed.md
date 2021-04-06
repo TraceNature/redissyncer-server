@@ -37,6 +37,7 @@
 | /tasks/abandon/|{taskId}/{abandonId}|{"id":1,"taskId":"xxx","groupId":"xxx","command":"xxx","key":"xxx","value":"xxx","type":1,"ttl":1000,"exception":"xxx","result":"xxx","desc":"xxx","createTime":"xxx"}|被抛弃command记录|
 | /tasks/abandon/|{groupId}/{abandonId} |{"abandonId": 1,"taskId":"xxx"}|根据groupId查询被抛弃key|
 
+
 ### 任务状态
 
 | TYPE | code | description| status |
@@ -63,6 +64,55 @@
 |ONLINEMIXED|7|在线混合文件解析| 已使用 |
 |COMMANDDUMPUP|8|增量命令实时备份| 已使用 |
 
+## 任务信息详情
+
+| NAME                | type     | description     |
+| --------------------| ---------|-----------------|
+|nodeId               | string   |  节点id          |
+|id                   | string   |  任务Id          |
+|taskId               | string   |  任务Id          |
+|groupId              | string   |  任务组Id        |
+|taskName             | string   |  任务名称         |
+|sourceRedisAddress   | string   |  源RedisUri     |
+|sourcePassword       | string   |  源Redis密码     |
+|targetRedisAddress   | string   |  目标RedisUri    |
+|targetPassword       | string   |  目标Redis密码    |
+|fileAddress          | string   |  文件地址         |
+|autostart            | bool     |创建任务时是否自动启动|
+|afresh               | bool     |重新启动时从头开始为 true 续传为false                 |
+|batchSize            | int      |批次大小 默认为 1500 |
+|tasktype             | int      | 任务类型          |
+|offsetPlace          | int      | 增量模式下从缓冲区开始同步的位置|
+|taskMsg              | string   | 任务反馈信息      |
+|offset               | long     | offset          |
+|status               | int      | 任务状态         |
+|redisVersion         | double   | redis版本        |
+|rdbVersion           | int      | rdb版本          |
+|syncType             | int      | 数据同步类型      |
+|sourceRedisType      | int      | 源Redis类型      |
+|targetRedisType      | int      | 目标Redis类型    |
+|sourceHost           | string   |                 |
+|targetHost           | string   |                 |
+|sourcePort           | int      |                 |
+|targetPort           | int      |                 |
+|updateTime           | string   |                 |
+|md5                  | string   |                 |
+|dataAnalysis         | string   | 全量数据分析结果   |
+|replId               | string   |                 |
+|rdbKeyCount          | long     |                 |
+|allKeyCount          | long     |                 |
+|realKeyCount         | long     |                 |
+|lastKeyUpdateTime    | long     |                 |
+|sourceAcl            | bool     |                 |
+|targetAcl            | bool     |                 |
+|sourceUserName       | string   |                 |
+|targetUserName       | string   |                 |
+|errorCount           | int      |                 |
+|expandJson           | string   |                 |
+|timeDeviation        | long     |                 |
+|filterType           | string   |                 |
+|commandFilter        | string   |                 |
+|keyFilter            | string   |                 |
 ## id规范
 
 * clusterId
