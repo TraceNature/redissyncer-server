@@ -202,7 +202,7 @@ public class SocketReplication  extends AbstractReplication{
 
 
     public boolean isRunning(){
-        return TaskStatus.RDBRUNNING.equals(getStatus())||TaskStatus.COMMANDRUNNING.equals(getStatus());
+        return TaskStatus.RDBRUNNING.equals(getStatus())||TaskStatus.COMMANDRUNNING.equals(getStatus())||TaskStatus.STARTING.equals(getStatus());
     }
 
     @Override

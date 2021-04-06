@@ -26,8 +26,10 @@ public class NodeStartInitService {
      *
      */
     public void initResource(){
+        JEtcdClient client= JEtcdClient.build();
+
+
         try {
-            JEtcdClient client= JEtcdClient.build();
             EtcdID etcdID= EtcdID.builder().client(client).nodeId(config.getNodeId()).build();
 
             client.lockCommandRunner(new EtcdLockCommandRunner() {
@@ -71,7 +73,13 @@ public class NodeStartInitService {
             });
         }catch (Exception e){
             log.error("initResource fail {}",e.getMessage());
+        }finally {
+            client.close();
         }
 
+    }
+
+    public void initStatusResource() {
+        JEtcdClient client = JEtcdClient.build();
     }
 }

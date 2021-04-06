@@ -104,8 +104,14 @@ public class RedisDataSyncTransmissionTask implements Runnable{
             //注册RDB全量解析器
 
             replicationHandler.setRdbParser(new ValueDumpIterableRdbParser(replicationHandler, taskModel.getRdbVersion()));
+            OffSetEntity offset =null;
 
-            OffSetEntity offset = SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId()).getOffSetEntity();
+            TaskDataEntity taskDataEntity=SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId());
+            if(Objects.nonNull(taskDataEntity)){
+                offset = taskDataEntity.getOffSetEntity();
+            }
+
+
             if (offset == null) {
                 offset = new OffSetEntity();
                 SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId()).setOffSetEntity(offset);

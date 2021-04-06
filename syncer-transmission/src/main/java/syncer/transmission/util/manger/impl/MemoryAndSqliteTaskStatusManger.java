@@ -21,8 +21,10 @@ import syncer.replica.status.Status;
 import syncer.replica.status.TaskStatus;
 import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.entity.TaskDataEntity;
+import syncer.transmission.lock.EtcdLockCommandRunner;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.util.code.CodeUtils;
+import syncer.transmission.util.lock.TaskRunUtils;
 import syncer.transmission.util.manger.ITaskStatusManger;
 import syncer.transmission.util.sql.SqlOPUtils;
 
@@ -108,18 +110,34 @@ public class MemoryAndSqliteTaskStatusManger implements ITaskStatusManger {
     @Override
     public void changeThreadStatus(String taskId, Long offset, TaskStatus taskType) throws Exception {
             if(aliveThreadHashMap.containsKey(taskId)){
-                TaskDataEntity taskDataEntity=aliveThreadHashMap.get(taskId);
-                SqlOPUtils.updateTaskStatusById(taskId, taskType.getCode());
-                if(offset!=null&&offset>=-1L){
-                    SqlOPUtils.updateTaskOffsetById(taskId,offset);
-                }
-                if(taskType.getStatus().equals(Status.BROKEN)||taskType.getStatus().equals(Status.STOP)||taskType.getStatus().equals(Status.FINISH)){
-                    aliveThreadHashMap.remove(taskId);
-                    deleteTaskDataByTaskId(taskId);
-                    taskDataEntity=null;
-                }else {
-                    taskDataEntity.getTaskModel().setStatus(taskType.getCode());
-                }
+                TaskRunUtils.getTaskLockE("changeStatus_" + taskId, new EtcdLockCommandRunner() {
+                    @Override
+                    public void run() throws Exception {
+                        TaskDataEntity taskDataEntity=aliveThreadHashMap.get(taskId);
+                        SqlOPUtils.updateTaskStatusById(taskId, taskType.getCode());
+                        if(offset!=null&&offset>=-1L){
+                            SqlOPUtils.updateTaskOffsetById(taskId,offset);
+                        }
+                        if(taskType.getStatus().equals(Status.BROKEN)||taskType.getStatus().equals(Status.STOP)||taskType.getStatus().equals(Status.FINISH)){
+                            aliveThreadHashMap.remove(taskId);
+                            deleteTaskDataByTaskId(taskId);
+                            taskDataEntity=null;
+                        }else {
+                            taskDataEntity.getTaskModel().setStatus(taskType.getCode());
+                        }
+                    }
+
+                    @Override
+                    public String lockName() {
+                        return "changeStatus_" + taskId;
+                    }
+
+                    @Override
+                    public int grant() {
+                        return 30;
+                    }
+                });
+
 
             }
     }
@@ -127,14 +145,32 @@ public class MemoryAndSqliteTaskStatusManger implements ITaskStatusManger {
     @Override
     public void updateThreadStatus(String taskId, TaskStatus taskStatusType) throws Exception {
         if(aliveThreadHashMap.containsKey(taskId)){
-            TaskDataEntity data=aliveThreadHashMap.get(taskId);
-            SqlOPUtils.updateTaskStatusById(taskId, taskStatusType.getCode());
-            data.getTaskModel().setStatus(taskStatusType.getCode());
-            if(taskStatusType.getStatus().equals(Status.BROKEN)
-                    ||taskStatusType.getStatus().equals(Status.STOP)||taskStatusType.getStatus().equals(Status.FINISH)){
-                updateTaskOffset(taskId);
-                aliveThreadHashMap.remove(taskId);
-            }
+
+            TaskRunUtils.getTaskLockE("changeStatus_" + taskId, new EtcdLockCommandRunner() {
+                @Override
+                public void run() throws Exception {
+                    TaskDataEntity data=aliveThreadHashMap.get(taskId);
+                    SqlOPUtils.updateTaskStatusById(taskId, taskStatusType.getCode());
+                    data.getTaskModel().setStatus(taskStatusType.getCode());
+                    if(taskStatusType.getStatus().equals(Status.BROKEN)
+                            ||taskStatusType.getStatus().equals(Status.STOP)||taskStatusType.getStatus().equals(Status.FINISH)){
+                        updateTaskOffset(taskId);
+                        aliveThreadHashMap.remove(taskId);
+                    }
+                }
+
+                @Override
+                public String lockName() {
+                    return "changeStatus_" + taskId;
+                }
+
+                @Override
+                public int grant() {
+                    return 30;
+                }
+            });
+
+
         }
     }
 

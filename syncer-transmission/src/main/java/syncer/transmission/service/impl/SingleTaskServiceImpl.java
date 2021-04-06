@@ -186,12 +186,13 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                         if (SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(taskModel.getId())) {
                             TaskDataEntity data = SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId());
                             try {
+                                SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), data.getOffSetEntity().getReplOffset().get(), TaskStatus.STOP);
+
                                 try {
                                     data.getReplication().close();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
-                                SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), data.getOffSetEntity().getReplOffset().get(), TaskStatus.STOP);
 
                                 StartTaskEntity startTaskEntity = StartTaskEntity
                                         .builder()

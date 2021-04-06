@@ -3,6 +3,7 @@ package syncer.transmission.etcd;
 import com.ibm.etcd.api.KeyValue;
 import com.ibm.etcd.client.kv.KvClient;
 import syncer.transmission.lock.EtcdLockCommandRunner;
+import syncer.transmission.lock.EtcdReturnLockCommandRunner;
 
 import java.util.List;
 
@@ -66,6 +67,8 @@ public interface IEtcdOpCenter {
 
     void lockCommandRunner(EtcdLockCommandRunner commandRunner);
 
+
+    <T> T lockCommandRunner(EtcdReturnLockCommandRunner<T> commandRunner);
 
     KvClient getKvClient();
 

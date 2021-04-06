@@ -34,12 +34,7 @@ public class NodeStartCheckResource {
      */
     public boolean initCheckResource() {
 //        if (true) {
-//            if(config.isSingleNode()){
-//                System.out.println("------");
-//                JEtcdClient configCenter = JEtcdClient.build();
-//                initTaskStatus(configCenter);
-//                configCenter.close();
-//            }
+
 //            return true;
 //        }
         if (Objects.isNull(config.getNodeId()) || "".equals(config.getNodeId().trim())) {
@@ -69,6 +64,7 @@ public class NodeStartCheckResource {
                             log.error("node id already exists");
                             close();
                             status.set(true);
+                            return;
                         }
 
                         if(config.isSingleNode()){
@@ -134,5 +130,6 @@ public class NodeStartCheckResource {
                 }
             });
         }
+        log.info("init status finish");
     }
 }

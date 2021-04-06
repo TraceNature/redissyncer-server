@@ -21,6 +21,7 @@ import syncer.transmission.constants.EtcdKeyCmd;
 import syncer.transmission.etcd.IEtcdOpCenter;
 import syncer.transmission.etcd.SystemClock;
 import syncer.transmission.lock.EtcdLockCommandRunner;
+import syncer.transmission.lock.EtcdReturnLockCommandRunner;
 
 import java.util.List;
 import java.util.Objects;
@@ -223,6 +224,61 @@ public class JEtcdClient implements IEtcdOpCenter {
 //            log.info("释放锁...");
         } catch (Exception e) {
             log.warn("etcd lock error {}",e.getMessage());
+        }
+    }
+
+
+    /**
+     * 锁带返回值
+     * @param commandRunner
+     * @param <T>
+     * @return
+     */
+    @Override
+    public <T> T lockCommandRunner(EtcdReturnLockCommandRunner<T> commandRunner) {
+        T result=null;
+        try {
+            //创建一个租约
+            Lease lease=client.getLeaseClient();
+            Lock lock=client.getLockClient();
+            ByteSequence name = ByteSequence.from(commandRunner.lockName().getBytes());
+            io.etcd.jetcd.lease.LeaseGrantResponse ttl = lease.grant(30).get();
+//            log.info("创建租约...ID: {}, ttl: {}", ttl.getID(), ttl.getTTL());
+            //自动续约-防止ttl超时线程未执行完
+            lease.keepAlive(ttl.getID(), new StreamObserver() {
+                @Override
+                public void onNext(Object value) {
+                    //执行续约之后的回调
+//                    log.info("执行续约...ID: {}, ttl: {}", ttl.getID(), ttl.getTTL());
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                    //异常，就会停止续约，比如调用revoke取消续约，租约不存在
+//                    log.info("停止续约...{} 原因: {}", ttl.getID(), t.getMessage());
+                }
+
+                @Override
+                public void onCompleted() {
+                    log.info("onCompleted...");
+                }
+            });
+//            log.info("尝试获取锁...");
+            //尝试获取锁
+            ByteSequence key = lock.lock(name, ttl.getID()).get().getKey();
+            long start = System.currentTimeMillis();
+//            log.info("获得锁...key: {}", new String(key.getBytes()));
+            result=commandRunner.run();
+//            log.info("执行时长... {} ms", System.currentTimeMillis() - start);
+            //取消租约
+            lease.revoke(ttl.getID());
+//            log.info("取消租约...{}", ttl.getID());
+            lock.unlock(key);
+//            log.info("释放锁...");
+        } catch (Exception e) {
+            log.warn("etcd lock error {}",e.getMessage());
+        }finally {
+            return result;
         }
     }
 
