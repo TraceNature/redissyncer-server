@@ -140,10 +140,7 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 
 ## 致谢
 
-### Jedis
+### [Jedis](https://github.com/redis/jedis)
 
-本项目Redis客户端采用[Jedis](https://github.com/redis/jedis)
+### [replicatior](https://github.com/leonchen83/redis-replicator) 
 
-### Replicatior
-
-本项目数据拉取协议层基于[replicatior](https://github.com/leonchen83/redis-replicator) 二次开发
