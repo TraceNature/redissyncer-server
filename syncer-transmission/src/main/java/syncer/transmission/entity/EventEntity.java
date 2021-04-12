@@ -41,6 +41,8 @@ public class EventEntity implements Serializable {
     private Long dbNum;
     private PipeLineCompensatorEnum pipeLineCompensatorEnum;
     private boolean highVersion;
+    private String replid;
+    private long offset;
     public String getStringKey() {
         return stringKey;
     }

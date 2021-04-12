@@ -232,7 +232,7 @@ public class DefaultRedisRdbParser implements IRdbParser {
         String auxValue = Strings.toString(parser.rdbLoadEncodedStringObject().first());
         if (!auxKey.startsWith("%")) {
             if (log.isInfoEnabled()) {
-                log.info("RDB {}: {}", auxKey, auxValue);
+                log.info("[TASKID {}] RDB {}: {}",replication.getConfig().getTaskId(), auxKey, auxValue);
             }
             if ("repl-id".equals(auxKey)) {
                 replication.getConfig().setReplId(auxValue);

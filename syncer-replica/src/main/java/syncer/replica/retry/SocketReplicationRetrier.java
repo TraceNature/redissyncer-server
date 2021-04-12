@@ -119,7 +119,7 @@ public class SocketReplicationRetrier extends AbstractReplicationRetrier{
                 //SELECT
                 if(Strings.isEquals(CMD.SELECT,Strings.toString(raws[0]))){
                     socketReplication.setDb(CommandParsers.toInt(raws[1]));
-                    socketReplication.submitEvent(parser.parse(raws), Tuples.of(startOffset, endOffset));
+                    socketReplication.submitEvent(parser.parse(raws), Tuples.of(startOffset, endOffset),config.getReplId(),endOffset);
                 }else if(Strings.isEquals(CMD.REPLCONF,Strings.toString(raws[0]))&&Strings.isEquals(CMD.GETACK,Strings.toString(raws[1]))){
                     //在每次进入IO多路复用的等待事件前，Redis会调用beforeSleep函数，
                     //该函数会给所有slave发送REPLCONF GETACK命令，收到该命令的slave会马上发送自己的复制偏移量给master
@@ -136,7 +136,7 @@ public class SocketReplicationRetrier extends AbstractReplicationRetrier{
 
                 }else {
                     // include ping command
-                    socketReplication.submitEvent(parser.parse(raws), Tuples.of(startOffset, endOffset));
+                    socketReplication.submitEvent(parser.parse(raws), Tuples.of(startOffset, endOffset),config.getReplId(),endOffset);
                 }
 
             } else {

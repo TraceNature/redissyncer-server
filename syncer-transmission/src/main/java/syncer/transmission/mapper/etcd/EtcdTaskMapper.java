@@ -775,4 +775,18 @@ public class EtcdTaskMapper implements TaskMapper {
         client.close();
     }
 
+
+//    public List<TaskModel> findAllTaskByPage(int limit,int pageNum){
+//        client.getKvClient().get(RangeRequest.newBuilder()
+//                .setLimit(limit)
+//                .set
+//                .build())
+//    }
+//
+//
+//    public void NewEtcdPaginte(String keyPrefix,int pageSize){
+//        if(pageSize<0){
+//            return;
+//        }
+//    }
 }

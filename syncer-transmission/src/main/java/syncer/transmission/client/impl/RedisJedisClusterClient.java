@@ -237,6 +237,16 @@ public class RedisJedisClusterClient implements RedisClient {
         return redisClient.sendCommand(args[0], ClusterProtocolCommand.builder().raw(cmd).build(),args);
     }
 
+    /**
+     * 更新最后一个replid和offset
+     * @param replid
+     * @param offset
+     */
+    @Override
+    public void updateLastReplidAndOffset(String replid, long offset){
+    }
+
+
     @Override
     public void select(Integer dbNum) {
 

@@ -5,7 +5,7 @@ server:
   #为空会自动获取内网地址
   nodeAddr:
   #数据存储类型  sqlite etcd
-  storageType: sqlite
+  storageType: etcd
   # 是否已单节点部署 当storageType为etcd时生效 若不使用portal时请设为true否则为false
   singleNode: true
 

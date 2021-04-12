@@ -219,7 +219,7 @@ public class MixedReplication extends AbstractReplication{
                     }
                     final long st = config.getReplOffset();
                     final long ed = st + offset[0];
-                    submitEvent(parser.parse(raw), Tuples.of(st, ed));
+                    submitEvent(parser.parse(raw), Tuples.of(st, ed),config.getReplId(),ed);
                 } else {
                     log.warn("unexpected redis reply:{}", obj);
                 }

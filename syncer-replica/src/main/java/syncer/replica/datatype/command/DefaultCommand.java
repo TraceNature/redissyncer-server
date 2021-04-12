@@ -10,6 +10,8 @@ public class DefaultCommand extends AbstractBaseCommand{
     private byte[] command;
     private byte[][] args = new byte[0][];
 
+    private String replid;
+    private long offset;
     public DefaultCommand() {
     }
 
