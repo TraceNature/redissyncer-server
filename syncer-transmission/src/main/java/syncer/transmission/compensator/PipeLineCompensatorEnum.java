@@ -55,6 +55,8 @@ public enum PipeLineCompensatorEnum {
 
     HMSET,
 
+    HSET,
+
     HMSET_WITH_TIME,
 
     RESTORE,
@@ -89,5 +91,8 @@ public enum PipeLineCompensatorEnum {
 
     DECR,
 
-    DECRBY
+    DECRBY,
+
+    MULTI,
+    EXEC
 }

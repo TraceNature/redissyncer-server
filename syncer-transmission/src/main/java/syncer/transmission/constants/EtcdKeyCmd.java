@@ -252,12 +252,12 @@ public class EtcdKeyCmd {
 
 
     public static String getAbandonCommandByGroupIdPrefix(String groupId){
-        return new StringBuilder("/tasks/abandon/").append(groupId).append("/").toString();
+        return new StringBuilder("/tasks/abandon/groupId/").append(groupId).append("/").toString();
     }
 
 
     public static String getAbandonCommandByGroupId(String groupId,Integer abandonId){
-        return new StringBuilder("/tasks/abandon/").append(groupId).append("/").append(abandonId).toString();
+        return new StringBuilder("/tasks/abandon/groupId/").append(groupId).append("/").append(abandonId).toString();
     }
 
     /**

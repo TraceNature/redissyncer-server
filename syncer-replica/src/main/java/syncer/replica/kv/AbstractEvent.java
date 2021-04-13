@@ -27,6 +27,34 @@ public abstract class AbstractEvent implements Event {
 
         private Tuple2<Long, Long> offsets;
 
+        private String replid;
+        private long currentOffset;
+
+        public static long getSerialVersionUID() {
+            return serialVersionUID;
+        }
+
+
+        public Tuple2<Long, Long> getOffsets() {
+            return offsets;
+        }
+        @Override
+        public void setReplid(String replid) {
+            this.replid = replid;
+        }
+        @Override
+        public void setCurrentOffset(long currentOffset) {
+            this.currentOffset = currentOffset;
+        }
+        @Override
+        public String getReplid() {
+            return replid;
+        }
+        @Override
+        public long getCurrentOffset() {
+            return currentOffset;
+        }
+
         /**
          * Fetch offset behavior:
          *

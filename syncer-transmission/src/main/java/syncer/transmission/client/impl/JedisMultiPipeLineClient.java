@@ -36,10 +36,7 @@ import syncer.transmission.util.object.ObjectUtils;
 import syncer.transmission.util.strings.StringUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -732,6 +729,16 @@ public class JedisMultiPipeLineClient implements RedisClient {
             commitLock.unlock();
         }
         return null;
+    }
+
+
+    /**
+     * 更新最后一个replid和offset
+     * @param replid
+     * @param offset
+     */
+    @Override
+    public void updateLastReplidAndOffset(String replid, long offset){
     }
 
     @Override

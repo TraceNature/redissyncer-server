@@ -40,8 +40,14 @@ public class TotalProcessingStrategyListFactory implements CommonProcessingStrat
         strategyList.add(CommandProcessingOffsetUpdateStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
 
         strategyList.add(CommandProcessingDbMappingStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
-        strategyList.add(CommandProcessingAofCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
-        strategyList.add(CommandProcessingRdbCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).redisVersion(taskModel.getRedisVersion()).build());
+
+//        strategyList.add(CommandProcessingAofCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+//        strategyList.add(CommandProcessingRdbCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).redisVersion(taskModel.getRedisVersion()).build());
+
+        strategyList.add(CommandProcessingAofMultiCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+        strategyList.add(CommandProcessingRdbMultiCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).redisVersion(taskModel.getRedisVersion()).build());
+
+
         return strategyList;
     }
 }

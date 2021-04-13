@@ -81,4 +81,8 @@ public class CMD {
 
     public static final String SELECT="SELECT";
 
+    public static final String MULTI="MULTI";
+
+    public static final String EXEC="EXEC";
+
 }

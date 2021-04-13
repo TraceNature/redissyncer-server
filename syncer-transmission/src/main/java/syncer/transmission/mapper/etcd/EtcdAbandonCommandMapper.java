@@ -87,7 +87,6 @@ public class EtcdAbandonCommandMapper implements AbandonCommandMapper {
     public boolean insertSimpleAbandonCommandModel(AbandonCommandModel abandonCommandModel) throws Exception {
         int id=etcdID.getID(lockName);
         abandonCommandModel.setId(id);
-
         client.getKvClient()
                 .txn(TxnRequest.newBuilder()
                         .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getAbandonCommandByTaskId(abandonCommandModel.getTaskId(),abandonCommandModel.getId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(abandonCommandModel))).build()).build())

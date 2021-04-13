@@ -16,6 +16,7 @@ import io.etcd.jetcd.Lock;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import syncer.common.config.EtcdServerConfig;
 import syncer.transmission.constants.EtcdKeyCmd;
 import syncer.transmission.etcd.IEtcdOpCenter;
@@ -23,9 +24,11 @@ import syncer.transmission.etcd.SystemClock;
 import syncer.transmission.lock.EtcdLockCommandRunner;
 import syncer.transmission.lock.EtcdReturnLockCommandRunner;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -43,11 +46,12 @@ public class JEtcdClient implements IEtcdOpCenter {
     private static SystemClock systemClock=new SystemClock(1);
     private Client client ;
     public JEtcdClient(KvStoreClient kvStoreClient, String url) {
+        String[] endpoints=toEndpoints(config.getEtcdConfig().getUrl());
         this.kvClient = kvStoreClient.getKvClient();
         this.leaseClient = kvStoreClient.getLeaseClient();
         this.lockClient = kvStoreClient.getLockClient();
         this.kvStoreClient=kvStoreClient;
-        this.client=Client.builder().endpoints(url).build();
+        this.client=Client.builder().endpoints(endpoints).build();
     }
 
 
@@ -59,46 +63,56 @@ public class JEtcdClient implements IEtcdOpCenter {
         } else {
             this.kvStoreClient = EtcdClient.forEndpoints(url).withPlainText().build();
         }
-
+        String[] endpoints=toEndpoints(config.getEtcdConfig().getUrl());
         this.kvClient = kvStoreClient.getKvClient();
         this.leaseClient = kvStoreClient.getLeaseClient();
         this.lockClient = kvStoreClient.getLockClient();
         if(Objects.nonNull(username)&&Objects.nonNull(password)){
-            this.client=Client.builder().endpoints(url).user(ByteSequence.from(ByteString.copyFromUtf8(username))).password(ByteSequence.from(ByteString.copyFromUtf8(password))).build();
+            this.client=Client.builder().endpoints(endpoints).user(ByteSequence.from(ByteString.copyFromUtf8(username))).password(ByteSequence.from(ByteString.copyFromUtf8(password))).build();
         }else {
-            this.client=Client.builder().endpoints(url).build();
+            this.client=Client.builder().endpoints(endpoints).build();
         }
     }
 
     public JEtcdClient(KvStoreClient kvStoreClient) {
+        String[] endpoints=toEndpoints(config.getEtcdConfig().getUrl());
         this.kvClient = kvStoreClient.getKvClient();
         this.leaseClient = kvStoreClient.getLeaseClient();
         this.lockClient = kvStoreClient.getLockClient();
         this.kvStoreClient=kvStoreClient;
         if(Objects.nonNull(config.getEtcdConfig().getUsername())&&Objects.nonNull(config.getEtcdConfig().getPassword())){
-            this.client=Client.builder().endpoints(config.getUrl()).user(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getUsername()))).password(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getPassword()))).build();
+            this.client=Client.builder().endpoints(endpoints).user(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getUsername()))).password(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getPassword()))).build();
         }else {
-            this.client=Client.builder().endpoints(config.getUrl()).build();
+            this.client=Client.builder().endpoints(endpoints).build();
         }
     }
 
 
     public JEtcdClient() {
+
         if (Objects.nonNull(config.getEtcdConfig().getUsername()) && Objects.nonNull(config.getEtcdConfig().getPassword())) {
 //            this.client = Client.builder().endpoints(config.getUrl()).user(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getUsername()))).password(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getPassword()))).build();
             this.kvStoreClient=EtcdClient.forEndpoints(config.getEtcdConfig().getUrl()).withCredentials(config.getEtcdConfig().getUsername(),config.getEtcdConfig().getPassword()).withPlainText().build();
         } else {
             this.kvStoreClient = EtcdClient.forEndpoints(config.getEtcdConfig().getUrl()).withPlainText().build();
         }
-
+        String[] endpoints=toEndpoints(config.getEtcdConfig().getUrl());
         this.kvClient = kvStoreClient.getKvClient();
         this.leaseClient = kvStoreClient.getLeaseClient();
         this.lockClient = kvStoreClient.getLockClient();
         if(Objects.nonNull(config.getEtcdConfig().getUsername())&&Objects.nonNull(config.getEtcdConfig().getPassword())){
-            this.client=Client.builder().endpoints(config.getEtcdConfig().getUrl()).user(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getUsername()))).password(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getPassword()))).build();
+            this.client=Client.builder().endpoints(endpoints).user(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getUsername()))).password(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getPassword()))).build();
         }else {
-            this.client=Client.builder().endpoints(config.getEtcdConfig().getUrl()).build();
+            this.client=Client.builder().endpoints(endpoints).build();
         }
+    }
+
+    public String[] toEndpoints(String url){
+        List<String>list= Arrays.asList(config.getEtcdConfig().getUrl().split(",")).stream().filter(boyUrl->{
+            return !StringUtils.isEmpty(boyUrl);
+        }).distinct().collect(Collectors.toList());
+        String[] endpoints= list.toArray(new String[list.size()]);
+        return endpoints;
     }
 
     @Override
@@ -362,4 +376,8 @@ public class JEtcdClient implements IEtcdOpCenter {
         return new JEtcdClient();
     }
 
+
+    public static void main(String[] args) {
+        JEtcdClient.build("http://116.196.106.51:2379,116.196.106.51:2379,116.196.106.51:2379","etcdtest","123456");
+    }
 }

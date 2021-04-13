@@ -14,16 +14,22 @@ package syncer.transmission.client.impl;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.util.ThreadPoolUtils;
-import syncer.jedis.*;
+import syncer.jedis.Jedis;
+import syncer.jedis.Pipeline;
+import syncer.jedis.Response;
 import syncer.jedis.exceptions.JedisConnectionException;
 import syncer.jedis.params.SetParams;
 import syncer.replica.cmd.CMD;
 import syncer.replica.datatype.rdb.zset.ZSetEntry;
+import syncer.replica.replication.Replication;
 import syncer.replica.util.strings.Strings;
+import syncer.transmission.client.MultiRedisClient;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.cmd.JedisProtocolCommand;
 import syncer.transmission.compensator.PipeLineCompensatorEnum;
 import syncer.transmission.entity.*;
+import syncer.transmission.exception.MultiCommitEndException;
+import syncer.transmission.exception.MultiCommitStartException;
 import syncer.transmission.model.DataCompensationModel;
 import syncer.transmission.queue.DbDataCommitQueue;
 import syncer.transmission.util.CommandCompensatorUtils;
@@ -35,6 +41,7 @@ import syncer.transmission.util.strings.StringUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,23 +49,31 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author zhanenqiang
  * @Description 单机redis pipeleine版本  已修复补偿机制问题  基于Jedis
+ * 断点续传基于事务机制，尽最大可能保证续传offset最新
+ * 在目标中每一个库写入一个hash结构  syncer-hash-offset-checkpoint
+ *
+ * {ip}:{port}-runid
+ * {ip}:{port}-offset
+ * pointcheckVersion
+ *
  * @Date 2020/12/14
  */
 @Slf4j
-public class JedisPipeLineClient implements RedisClient {
+public class JedisMultiExecPipeLineClient implements RedisClient {
     protected String host;
     protected Integer port;
     protected String password;
     protected Jedis targetClient;
     protected Pipeline pipelined;
     private Integer currentDbNum = 0;
+
+    private Replication replication;
     //批次数
     protected Integer count = 1000;
     /**
      * 上一次pipeline提交时间记录
      */
     protected Date date = new Date();
-
     //任务id
     private String taskId;
     /**
@@ -70,12 +85,9 @@ public class JedisPipeLineClient implements RedisClient {
      */
     private Lock compensatorLock = new ReentrantLock();
     protected AtomicInteger commandNums = new AtomicInteger();
-
     //错误次数
     private long errorCount = 1;
-
     private boolean connectError = false;
-
     //补偿存储
     protected KVPersistenceDataEntity kvPersistence = new KVPersistenceDataEntity();
     private CompensatorUtils compensatorUtils = new CompensatorUtils();
@@ -84,11 +96,40 @@ public class JedisPipeLineClient implements RedisClient {
     private Map<String, StringCompensatorEntity> appendMap = new LruCache<>(1000);
     private Map<String, Float> incrDoubleMap = new LruCache<>(1000);
     private CommandCompensatorUtils commandCompensatorUtils = new CommandCompensatorUtils();
-
     //断线重试机制
     private ConnectErrorRetry retry=new ConnectErrorRetry(taskId);
-    public JedisPipeLineClient(String host, Integer port, String password, int count, long errorCount, String taskId) {
 
+    /**
+     * offset 检查点
+     */
+    private final static String REDIS_SYNCER_CHECKPOINT="redis-syncer-checkpoint";
+    /**
+     * checkpoint 版本号
+     */
+    private final static String CHECKPOINT_VERSION="1";
+    /**
+     * 提交的最后一个replid
+     */
+    private String lastReplid;
+    /**
+     * 提交的最后一个offset
+     */
+    private long lastOffset;
+
+    /**
+     * 前面是否已经执行过muliti
+     */
+    private  AtomicBoolean multiLock=new AtomicBoolean(true);
+
+    private volatile boolean commitMultiLockStatus=true;
+
+    /**
+     * 前面有multi
+     */
+    private AtomicBoolean hasMulti=new AtomicBoolean(false);
+
+
+    public JedisMultiExecPipeLineClient(String host, Integer port, String password, int count, long errorCount, String taskId) {
         this.host = host;
         this.port = port;
         this.taskId = taskId;
@@ -107,7 +148,7 @@ public class JedisPipeLineClient implements RedisClient {
         retry=new ConnectErrorRetry(taskId);
         //定时回收线程
 
-        ThreadPoolUtils.exec(new JedisPipeLineClient.PipelineSubmitThread(taskId));
+        ThreadPoolUtils.exec(new JedisMultiExecPipeLineClient.PipelineSubmitThread(taskId));
     }
 
     @Override
@@ -120,9 +161,45 @@ public class JedisPipeLineClient implements RedisClient {
         return null;
     }
 
+
+
+    /**
+     * 更新最后一个replid和offset
+     * @param replid
+     * @param offset
+     */
+    @Override
+    public void updateLastReplidAndOffset(String replid, long offset){
+        if(Objects.nonNull(replid)){
+            this.lastReplid=replid;
+        }
+        if(offset>-1L){
+            this.lastOffset=offset;
+        }
+    }
+
+    /**
+     * 添加检查点Point
+     */
+    void addCheckPoint(){
+        //checkpoint
+        Map<String,String>chekpoint=new HashMap<>();
+        String hostName=host+":"+port;
+        chekpoint.put(hostName+"-offset", String.valueOf(lastOffset));
+        chekpoint.put(hostName+"-runid", lastReplid);
+        chekpoint.put(hostName+"-version", CHECKPOINT_VERSION);
+        pipelined.hset(REDIS_SYNCER_CHECKPOINT,chekpoint);
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.HSET)
+                .cmd("HSET".getBytes())
+                .build());
+    }
+
     @Override
     public String set(Long dbNum, byte[] key, byte[] value) {
         selectDb(dbNum);
+
         kvPersistence.addKey(EventEntity
                 .builder()
                 .key(key)
@@ -159,6 +236,7 @@ public class JedisPipeLineClient implements RedisClient {
 
     @Override
     public Long append(Long dbNum, byte[] key, byte[] value) {
+
         selectDb(dbNum);
         commitLock.lock();
         try {
@@ -173,6 +251,7 @@ public class JedisPipeLineClient implements RedisClient {
                     .cmd("APPEND".getBytes())
                     .build();
             kvPersistence.addKey(entity);
+
             compensatorMap(entity);
             addCommandNum();
         } finally {
@@ -221,7 +300,6 @@ public class JedisPipeLineClient implements RedisClient {
                     .cmd("LPUSH".getBytes())
                     .ms(ms)
                     .build());
-
             pexpire(dbNum, key, ms);
         } finally {
             commitLock.unlock();
@@ -316,7 +394,6 @@ public class JedisPipeLineClient implements RedisClient {
                     .cmd("RPUSH".getBytes())
                     .ms(ms)
                     .build());
-
             pexpire(dbNum, key, ms);
         } finally {
             commitLock.unlock();
@@ -363,7 +440,6 @@ public class JedisPipeLineClient implements RedisClient {
                     .cmd("RPUSH".getBytes())
                     .ms(ms)
                     .build());
-
             pexpire(dbNum, key, ms);
         } finally {
             commitLock.unlock();
@@ -653,11 +729,136 @@ public class JedisPipeLineClient implements RedisClient {
         return null;
     }
 
+
+    /**
+     * 开启事物
+     */
+    public void multi(){
+        pipelined.multi();
+        hasMulti.set(true);
+        multiLock.set(false);
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.MULTI)
+                .cmd("MULTI".getBytes())
+                .build());
+    }
+
+    public void multi1(){
+        pipelined.multi();
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.MULTI)
+                .cmd("MULTI".getBytes())
+                .build());
+    }
+
+
+    /**
+     * 提交事务
+     */
+    public void exec(){
+        //checkpoint
+        addCheckPoint();
+        pipelined.exec();
+        hasMulti.set(false);
+        kvPersistence.addKey(EventEntity
+                .builder()
+                .pipeLineCompensatorEnum(PipeLineCompensatorEnum.EXEC)
+                .cmd("EXEC".getBytes())
+                .build());
+    }
+
+
+    /**
+     * 命令是否是multi
+     *
+     * 先判断
+     *
+     * @param cmd
+     */
+    void ifCommandIsMultiExec(byte[]cmd) throws MultiCommitEndException {
+        String command=Strings.byteToString(cmd);
+        //非嵌套,前方无multi
+        if(multiLock.get()){
+            if (CMD.MULTI.equalsIgnoreCase(command)){
+                commitLock.lock();
+                try {
+                    addCheckPoint();
+                    exec();
+                    submitCommandNumNow();
+                    multiLock.set(false);
+                }finally {
+                    commitLock.unlock();
+                }
+            }
+        }
+
+        //嵌套
+        if(!multiLock.get()){
+            if(CMD.EXEC.equalsIgnoreCase(command)) {
+                addCheckPoint();
+                exec();
+                submitCommandNumNow();
+                multiLock.set(true);
+                throw new MultiCommitEndException();
+            }
+        }
+    }
+
+
+    //当firstMulti为false时 提交pipeline会追加exec
+    //为true会追加multi
+    void ifCommandIsMultiExec1(byte[]cmd) throws MultiCommitEndException, MultiCommitStartException {
+        String command=Strings.byteToString(cmd);
+
+        if(CMD.MULTI.equalsIgnoreCase(command)){
+            commitMultiLockStatus=false;
+            //若为非嵌套，锁住，禁止异步提交pipeline
+//           boolean sts= multiLock.compareAndSet(true,false);
+           if(multiLock.get()){
+               multiLock.set(false);
+               multi();
+               throw new MultiCommitStartException();
+           }
+            //嵌套，若为multi，先提交前面的multi，再锁住异步提交
+            if(!multiLock.get()){
+                commitLock.lock();
+                try {
+                    exec();
+                    submitCommandNumNow();
+                    multiLock.set(false);
+                    multi();
+                    throw new MultiCommitStartException();
+                }finally {
+                    commitLock.unlock();
+                }
+            }
+        }
+
+        if(CMD.EXEC.equalsIgnoreCase(command)){
+            if(!multiLock.get()){
+                exec();
+                submitCommandNumNow();
+                multiLock.set(true);
+                throw new MultiCommitEndException();
+            }
+            commitMultiLockStatus=true;
+        }
+
+
+
+    }
+
     @Override
     public Object send(byte[] cmd, byte[]... args) {
         commitLock.lock();
         try {
-            String command = Strings.byteToString(cmd).toUpperCase();
+            ifCommandIsMultiExec1(cmd);
+            if(!hasMulti.get()){
+                multi();
+                commitMultiLockStatus=true;
+            }
             if (isSetNxWithTime(cmd, args)) {
                 SetParams setParams = getSetParams(args);
                 pipelined.set(args[0], args[1], setParams);
@@ -719,21 +920,17 @@ public class JedisPipeLineClient implements RedisClient {
                 }
             }
             addCommandNum();
+        } catch (MultiCommitEndException e) {
+            if(!multiLock.get()){
+                multiLock.set(true);
+            }
+        } catch (MultiCommitStartException e) {
+
         } finally {
             commitLock.unlock();
         }
         return null;
     }
-
-    /**
-     * 更新最后一个replid和offset
-     * @param replid
-     * @param offset
-     */
-    @Override
-    public void updateLastReplidAndOffset(String replid, long offset){
-    }
-
 
     @Override
     public void select(Integer dbNum) {
@@ -808,6 +1005,7 @@ public class JedisPipeLineClient implements RedisClient {
     void selectDb(Long dbNum) {
         commitLock.lock();
         try {
+
             if (dbNum != null && !currentDbNum.equals(dbNum.intValue())) {
                 currentDbNum = dbNum.intValue();
                 pipelined.select(dbNum.intValue());
@@ -856,11 +1054,15 @@ public class JedisPipeLineClient implements RedisClient {
             int num = commandNums.get();
             long time = System.currentTimeMillis() - date.getTime();
             if (num >= count && time > 5000) {
+                if(hasMulti.get()) {
+                    exec();
+                }
                 //pipelined.sync();
                 List<Object> resultList = pipelined.syncAndReturnAll();
                 //补偿入口
                 commitCompensator(resultList);
             } else if (num <= 0 && time > 4000) {
+
                 Response<String> r = pipelined.ping();
                 kvPersistence.addKey(EventEntity.builder().cmd("PING".getBytes()).pipeLineCompensatorEnum(PipeLineCompensatorEnum.COMMAND).build());
                 //pipelined.
@@ -869,6 +1071,9 @@ public class JedisPipeLineClient implements RedisClient {
                 //补偿入口
                 commitCompensator(resultList);
             } else if (num >= 0 && time > 1000) {
+                if(hasMulti.get()) {
+                    exec();
+                }
                 List<Object> resultList = pipelined.syncAndReturnAll();
                 //补偿入口
                 commitCompensator(resultList);
@@ -876,7 +1081,7 @@ public class JedisPipeLineClient implements RedisClient {
             }
         } catch (JedisConnectionException e) {
             try {
-                retry.retry(new JedisPipelineSubmitCommandRetryRunner(this));
+                retry.retry(new JedisPipelineSubmitMultiCommandRetryRunner(this));
             }catch (JedisConnectionException ex){
                 log.error("[TASKDI {}] pipelined retry fail",taskId);
                 brokenTaskByConnectError(ex);
@@ -890,12 +1095,13 @@ public class JedisPipeLineClient implements RedisClient {
 
     void addCommandNum() {
         commitLock.lock();
-        boolean staus=false;
-
         try {
 
             int num = commandNums.incrementAndGet();
-            if (num >= count) {
+            if (num >= count&&multiLock.get()) {
+                if(hasMulti.get()) {
+                    exec();
+                }
                 List<Object> resultList = pipelined.syncAndReturnAll();
 
                 //补偿入口
@@ -903,7 +1109,7 @@ public class JedisPipeLineClient implements RedisClient {
             }
         } catch (JedisConnectionException e) {
             try {
-                retry.retry(new JedisPipeLineRetryRunner(this));
+                retry.retry(new JedisPipeLineMultiRetryRunner(this));
             }catch (JedisConnectionException ex){
                 log.error("[TASKDI {}] pipelined retry fail",taskId);
                 brokenTaskByConnectError(ex);
@@ -917,6 +1123,9 @@ public class JedisPipeLineClient implements RedisClient {
     void submitCommandNumNow() {
         commitLock.lock();
         try {
+            if(hasMulti.get()) {
+                exec();
+            }
             List<Object> resultList = pipelined.syncAndReturnAll();
             //补偿入口
             commitCompensator(resultList);
@@ -926,6 +1135,10 @@ public class JedisPipeLineClient implements RedisClient {
             commitLock.unlock();
         }
     }
+
+
+
+
     /**
      * key补偿机制入口
      *
@@ -964,6 +1177,8 @@ public class JedisPipeLineClient implements RedisClient {
             newKvPersistence.getKeys().stream().forEach(data -> {
                 compensator(data);
             });
+
+
             newKvPersistence.clear();
         } finally {
 
@@ -1153,6 +1368,83 @@ public class JedisPipeLineClient implements RedisClient {
     }
 
 
+    /**
+     * multi相关的数据补偿
+     * 未做完
+     *
+     * TODO
+     *
+     * @param eventEntityList
+     */
+    void compensator(List<Object> resultList,List<EventEntity> eventEntityList){
+
+        if (SingleTaskDataManagerUtils.isTaskClose(taskId) && taskId != null) {
+            return;
+        }
+        commitLock.lock();
+        try {
+            Jedis client = null;
+            try {
+
+                int currentNum=0;
+                int endNum=0;
+                boolean status=true;
+                for (int i=0;i<resultList.size();i++){
+                    EventEntity eventEntity=eventEntityList.get(i);
+                    if(eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.MULTI)){
+                        currentNum=i;
+                        for (int boyI=currentNum;boyI<resultList.size();boyI++){
+                            if(eventEntityList.get(boyI).getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.EXEC)){
+                                endNum=boyI;
+
+                                List<Object>resList= (List<Object>) resultList.get(boyI);
+                                //
+                                for (int cp=currentNum+1,vk=0;cp<boyI&&vk<resList.size();cp++,vk++){
+
+                                    KVPersistenceDataEntity newKvPersistence = new KVPersistenceDataEntity();
+                                    for (int is = 0; i < resultList.size(); is++) {
+                                        Object data = resultList.get(is);
+                                        EventEntity eventEntitys= kvPersistence.getKey(is);
+                                        byte[] cmd = eventEntitys.getCmd();
+                                        String key = eventEntitys.getStringKey();
+
+                                        if (!commandCompensatorUtils.isCommandSuccess(data, cmd, taskId, key)) {
+                                            log.error("Command[{}],KEY[{}]进入补偿机制：[{}] : RESPONSE[{}]->String[{}]", Strings.byteToString(cmd), eventEntitys.getStringKey(), JSON.toJSONString(data), data, compensatorUtils.getRes(data));
+                                            newKvPersistence.addKey(eventEntitys);
+                                            insertCompensationCommand(eventEntitys);
+                                        }
+                                    }
+                                }
+                                status=false;
+                                break;
+                            }
+
+                        }
+                        if(!status){
+                            status=true;
+                            i=endNum;
+                            continue;
+                        }
+                    }
+                }
+
+
+            }catch (Exception e){
+
+            }
+        }finally {
+            commitLock.unlock();
+        }
+
+
+    }
+
+
+
+
+
+
+
     void compensatorMap(EventEntity eventEntity) {
         Jedis client = null;
         try {
@@ -1286,6 +1578,8 @@ public class JedisPipeLineClient implements RedisClient {
     }
 
 
+
+
     Object sendMI(Object data, EventEntity eventEntity, Jedis client) {
         long pttl = eventEntity.getMs();
         Object result = "OK";
@@ -1356,6 +1650,24 @@ public class JedisPipeLineClient implements RedisClient {
         public void run() {
             Thread.currentThread().setName(taskId + ": " + Thread.currentThread().getName());
             while (true) {
+                if(!commitMultiLockStatus){
+                   try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    continue;
+                }
+//                if(!multiLock.get()){
+//                    System.out.println("-------"+multiLock.get());
+//                    try {
+//                        Thread.sleep(10);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                    continue;
+//                }
+
                 compensatorLock.lock();
                 try {
                     submitCommandNum();

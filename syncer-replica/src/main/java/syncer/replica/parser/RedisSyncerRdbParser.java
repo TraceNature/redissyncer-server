@@ -201,7 +201,7 @@ public class RedisSyncerRdbParser {
             if (Objects.isNull(event)) {
                 continue;
             }
-            this.replication.submitEvent(event, Tuples.of(start, offset));
+            this.replication.submitEvent(event, Tuples.of(start, offset),replication.getConfig().getReplId(),offset);
         }
         return offset;
     }

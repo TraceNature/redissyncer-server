@@ -122,7 +122,19 @@ public  class AbstractReplication extends AbstractReplicationListener implements
 
     public void submitEvent(Event event) {
         long offset = config.getReplOffset();
-        submitEvent(event, Tuples.of(offset, offset));
+        submitEvent(event, Tuples.of(offset, offset),config.getReplId(),config.getReplOffset());
+    }
+
+    public void submitEvent(Event event, Tuple2<Long, Long> offsets,String replid,long currentCommandOffset) {
+        try {
+            dress(event, offsets,replid,currentCommandOffset);
+            doEventListener(this, event);
+        } catch (UncheckedIOException e) {
+            throw e;
+            //ignore UncheckedIOException so that to propagate to caller.
+        } catch (Throwable e) {
+//            doExceptionListener(this, e, event);
+        }
     }
 
     public void submitEvent(Event event, Tuple2<Long, Long> offsets) {
@@ -137,11 +149,20 @@ public  class AbstractReplication extends AbstractReplicationListener implements
         }
     }
 
+
     /**
      * 设置offset
      * @param event
      * @param offsets
      */
+    protected void dress(Event event, Tuple2<Long, Long> offsets,String replid,long currentCommandOffset) {
+        if (event instanceof AbstractEvent) {
+            ((AbstractEvent) event).getContext().setOffset(offsets);
+            ((AbstractEvent) event).getContext().setReplid(replid);
+            ((AbstractEvent) event).getContext().setCurrentOffset(currentCommandOffset);
+        }
+    }
+
     protected void dress(Event event, Tuple2<Long, Long> offsets) {
         if (event instanceof AbstractEvent) {
             ((AbstractEvent) event).getContext().setOffset(offsets);

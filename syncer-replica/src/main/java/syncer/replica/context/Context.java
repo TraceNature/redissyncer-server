@@ -11,4 +11,12 @@ import java.io.Serializable;
 public interface Context extends Serializable {
     Tuple2<Long, Long> getOffset();
     void setOffset(Tuple2<Long, Long> offset);
+
+    String getReplid();
+
+    long getCurrentOffset();
+    
+    void setReplid(String replid);
+
+    void setCurrentOffset(long currentOffset);
 }

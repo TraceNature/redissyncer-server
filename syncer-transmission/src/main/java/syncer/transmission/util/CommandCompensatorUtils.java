@@ -162,6 +162,7 @@ public class CommandCompensatorUtils {
         comanndResponseTypeMap.put("MULTI", ComanndResponseType.builder().type(1).command("MULTI").commandResponse("OK").build());
         comanndResponseTypeMap.put("UNWATCH", ComanndResponseType.builder().type(1).command("UNWATCH").commandResponse("OK").build());
         comanndResponseTypeMap.put("WATCH", ComanndResponseType.builder().type(1).command("WATCH").commandResponse("OK").build());
+        comanndResponseTypeMap.put("EXEC", ComanndResponseType.builder().type(6).command("EXEC").commandResponse("ARRAYLIST").build());
 
         //EXEC
 
@@ -333,6 +334,9 @@ public class CommandCompensatorUtils {
             }
         }
 
+        if(isMultiRes(res)){
+            return true;
+        }
 
         if ("OK".equalsIgnoreCase(String.valueOf(res))) {
             return true;
@@ -343,6 +347,9 @@ public class CommandCompensatorUtils {
     }
 
     boolean isLongOK(Object res) {
+        if(isMultiRes(res)){
+            return true;
+        }
         long data = Long.valueOf(String.valueOf(res)).longValue();
         if (data >= 0L) {
             return true;
@@ -353,6 +360,9 @@ public class CommandCompensatorUtils {
 
 
     boolean isLongDoubleOK(Object res) {
+        if(isMultiRes(res)){
+            return true;
+        }
         long data = Long.valueOf(String.valueOf(res)).longValue();
         if (data >= 0L) {
             return true;
@@ -362,6 +372,9 @@ public class CommandCompensatorUtils {
     }
 
     boolean isBigLongOK(Object res) {
+        if(isMultiRes(res)){
+            return true;
+        }
         long data = Long.valueOf(String.valueOf(res)).longValue();
         return true;
     }
@@ -372,6 +385,9 @@ public class CommandCompensatorUtils {
     }
 
     boolean isDouble(Object res) {
+        if(isMultiRes(res)){
+            return true;
+        }
         if (res instanceof Double) {
             return true;
         }
@@ -379,6 +395,10 @@ public class CommandCompensatorUtils {
     }
 
     boolean isArrayList(Object res) {
+        if(isMultiRes(res)){
+             return true;
+        }
+
         try {
             List list = (List) res;
             return true;
@@ -395,6 +415,16 @@ public class CommandCompensatorUtils {
     boolean isPong(Object res) {
         if ("PONG".equalsIgnoreCase(String.valueOf(res))) {
             return true;
+        }
+        return false;
+    }
+
+
+    boolean isMultiRes(Object res){
+        if(res instanceof String){
+            if(String.valueOf(res).equalsIgnoreCase("QUEUED")){
+                return true;
+            }
         }
         return false;
     }

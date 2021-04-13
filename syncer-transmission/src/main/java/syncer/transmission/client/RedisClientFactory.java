@@ -12,6 +12,7 @@
 package syncer.transmission.client;
 
 import syncer.replica.util.RedisBranchTypeEnum;
+import syncer.transmission.client.impl.JedisMultiExecPipeLineClient;
 import syncer.transmission.client.impl.JedisPipeLineClient;
 import syncer.transmission.client.impl.RedisJedisClusterClient;
 
@@ -25,7 +26,8 @@ public class RedisClientFactory {
         RedisClient redisClient = null;
         switch (branchType) {
             case SINGLE:
-                redisClient = new JedisPipeLineClient(host,port,password,count,errorCount,taskId);
+//                redisClient = new JedisPipeLineClient(host,port,password,count,errorCount,taskId);
+                redisClient = new JedisMultiExecPipeLineClient(host,port,password,count,errorCount,taskId);
 //                redisClient = new JDRedisJedisPipeLineClient(host,port,password,count,taskId);
 //                redisClient = new JDRedisJedisClient(host,port,password);
                 break;
