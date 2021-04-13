@@ -25,6 +25,7 @@ import syncer.common.config.EtcdServerConfig;
 import syncer.common.constant.StoreType;
 import syncer.common.util.ThreadPoolUtils;
 import syncer.common.util.file.FileUtils;
+import syncer.common.util.spring.SpringUtil;
 import syncer.replica.status.TaskStatus;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.heartbeat.DefaultHeartbeatCommandRunner;
@@ -135,7 +136,9 @@ public class SyncerWebappApplication {
                     ThreadPoolUtils.exec(new OffsetCommitTask());
                 }
             }catch (Exception e){
+
                 log.error("start NodeStartCheckResource error {}",e.getMessage());
+                SpringUtil.getBean(ShutdownContext.class).showdown();
             }
         }
     }
