@@ -75,7 +75,6 @@ public class RedisUrlCheck {
             ReplicConfig tconfig = ReplicConfig.valueOf(turi);
             //获取password
             if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
-                log.info("CheckRedisConnectStatus is success");
                 String auth = target.auth(tconfig.getAuthPassword());
             }
 
@@ -85,7 +84,7 @@ public class RedisUrlCheck {
                 try {
                     String png = target.ping();
                     if (CMD.PONG.equalsIgnoreCase(png)) {
-                        log.info("CheckRedisConnectStatus is success");
+                        log.info("[{}:{}]CheckRedisConnectStatus is success i [{}]",turi.getHost(), turi.getPort(),i);
                         return true;
                     }
                     i--;

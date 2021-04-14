@@ -62,6 +62,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public class JedisMultiExecPipeLineClient implements RedisClient {
     protected String host;
     protected Integer port;
+    protected String sourceHost;
+    protected Integer sourcePort;
     protected String password;
     protected Jedis targetClient;
     protected Pipeline pipelined;
@@ -129,11 +131,13 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
     private AtomicBoolean hasMulti=new AtomicBoolean(false);
 
 
-    public JedisMultiExecPipeLineClient(String host, Integer port, String password, int count, long errorCount, String taskId) {
+    public JedisMultiExecPipeLineClient(String host, Integer port, String password,String sourceHost, Integer sourcePort,int count, long errorCount, String taskId) {
         this.host = host;
         this.port = port;
         this.taskId = taskId;
         this.password=password;
+        this.sourceHost=sourceHost;
+        this.sourcePort=sourcePort;
         if (count != 0) {
             this.count = count;
         }
@@ -184,7 +188,7 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
     void addCheckPoint(){
         //checkpoint
         Map<String,String>chekpoint=new HashMap<>();
-        String hostName=host+":"+port;
+        String hostName=sourceHost+":"+sourceHost;
         chekpoint.put(hostName+"-offset", String.valueOf(lastOffset));
         chekpoint.put(hostName+"-runid", lastReplid);
         chekpoint.put(hostName+"-version", CHECKPOINT_VERSION);
@@ -194,6 +198,26 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
                 .pipeLineCompensatorEnum(PipeLineCompensatorEnum.HSET)
                 .cmd("HSET".getBytes())
                 .build());
+    }
+
+    /**
+     * 本函数用于增量开始时首次提交offset
+     */
+    @Override
+    public void commitCheckPoint(){
+        commitLock.lock();
+        try {
+            log.info("commit first checkPoint");
+            if(!hasMulti.get()){
+                multi();
+            }
+            submitCommandNumNow();
+        }finally {
+            commitLock.unlock();
+        }
+
+
+
     }
 
     @Override
@@ -1149,6 +1173,7 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
         updateTaskLastCommitTime(taskId, resultList);
         try {
             if (resultList.size() != kvPersistence.size()) {
+
                 log.error("pipeline返回size[{}]:内存[{}] ", resultList.size(), kvPersistence.size());
                 kvPersistence.clear();
                 resultList.clear();

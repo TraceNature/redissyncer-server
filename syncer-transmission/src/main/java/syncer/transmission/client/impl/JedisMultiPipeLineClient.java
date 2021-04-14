@@ -742,6 +742,11 @@ public class JedisMultiPipeLineClient implements RedisClient {
     }
 
     @Override
+    public void commitCheckPoint() {
+
+    }
+
+    @Override
     public void select(Integer dbNum) {
         commitLock.lock();
         try {

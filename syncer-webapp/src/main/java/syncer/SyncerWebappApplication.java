@@ -21,6 +21,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.StringUtils;
+import syncer.common.config.BreakPointConfig;
 import syncer.common.config.EtcdServerConfig;
 import syncer.common.constant.StoreType;
 import syncer.common.util.ThreadPoolUtils;
@@ -63,6 +64,7 @@ public class SyncerWebappApplication {
         application.addListeners(new ApplicationStartedEventListener());
         application.run(args);
         log.warn("syncer version:{}",version);
+        log.info("client type {}",BreakPointConfig.getBreakpointContinuationType());
         Runtime.getRuntime().addShutdownHook(new Thread(){
 
             @Override

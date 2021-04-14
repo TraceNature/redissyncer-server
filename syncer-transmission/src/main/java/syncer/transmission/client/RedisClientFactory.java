@@ -11,6 +11,9 @@
 
 package syncer.transmission.client;
 
+import lombok.extern.slf4j.Slf4j;
+import syncer.common.config.BreakPointConfig;
+import syncer.common.constant.BreakpointContinuationType;
 import syncer.replica.util.RedisBranchTypeEnum;
 import syncer.transmission.client.impl.JedisMultiExecPipeLineClient;
 import syncer.transmission.client.impl.JedisPipeLineClient;
@@ -21,13 +24,19 @@ import syncer.transmission.client.impl.RedisJedisClusterClient;
  * @Description 描述
  * @Date 2020/12/22
  */
+@Slf4j
 public class RedisClientFactory {
-    public static RedisClient createRedisClient(RedisBranchTypeEnum branchType, String host, Integer port, String password, int count, long errorCount, String taskId, String jimUrl, String cfsUrl) {
+    public static RedisClient createRedisClient(RedisBranchTypeEnum branchType, String host, Integer port, String password,String sourceHost, Integer sourcePort, int count, long errorCount, String taskId, String jimUrl, String cfsUrl) {
         RedisClient redisClient = null;
         switch (branchType) {
             case SINGLE:
-//                redisClient = new JedisPipeLineClient(host,port,password,count,errorCount,taskId);
-                redisClient = new JedisMultiExecPipeLineClient(host,port,password,count,errorCount,taskId);
+                if(BreakPointConfig.getBreakpointContinuationType().equals(BreakpointContinuationType.v1)){
+                    redisClient = new JedisPipeLineClient(host,port,password,count,errorCount,taskId);
+                }else {
+                    redisClient = new JedisMultiExecPipeLineClient(host,port,password,sourceHost,sourcePort,count,errorCount,taskId);
+                }
+
+                log.info("host[{}],port[{}] , {} client init success",host,port,BreakPointConfig.getBreakpointContinuationType());
 //                redisClient = new JDRedisJedisPipeLineClient(host,port,password,count,taskId);
 //                redisClient = new JDRedisJedisClient(host,port,password);
                 break;

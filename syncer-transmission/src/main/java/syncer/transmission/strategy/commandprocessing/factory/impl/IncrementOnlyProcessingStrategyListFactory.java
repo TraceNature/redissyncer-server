@@ -13,6 +13,8 @@ package syncer.transmission.strategy.commandprocessing.factory.impl;
 
 import com.google.common.collect.Lists;
 import lombok.Builder;
+import syncer.common.config.BreakPointConfig;
+import syncer.common.constant.BreakpointContinuationType;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.strategy.commandprocessing.CommonProcessingStrategy;
@@ -38,7 +40,14 @@ public class IncrementOnlyProcessingStrategyListFactory implements CommonProcess
         strategyList.add(CommandProcessingOffsetUpdateStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
 
         strategyList.add(CommandProcessingDbMappingStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
-        strategyList.add(CommandProcessingAofCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+
+        if(BreakPointConfig.getBreakpointContinuationType().equals(BreakpointContinuationType.v1)){
+            strategyList.add(CommandProcessingAofCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+        }else {
+            strategyList.add(CommandProcessingAofMultiCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+        }
+
+//        strategyList.add(CommandProcessingAofCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         return strategyList;
     }
 }

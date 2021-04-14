@@ -13,6 +13,9 @@ package syncer.transmission.strategy.commandprocessing.factory.impl;
 
 import com.google.common.collect.Lists;
 import lombok.Builder;
+import syncer.common.config.BreakPointConfig;
+import syncer.common.config.EtcdServerConfig;
+import syncer.common.constant.BreakpointContinuationType;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.strategy.commandprocessing.CommonProcessingStrategy;
@@ -28,6 +31,7 @@ import java.util.List;
  */
 @Builder
 public class TotalProcessingStrategyListFactory implements CommonProcessingStrategyListFactory {
+
     @Override
     public List<CommonProcessingStrategy> getStrategyList(TaskModel taskModel, RedisClient client) {
         List<CommonProcessingStrategy> strategyList = Lists.newArrayList();
@@ -41,11 +45,13 @@ public class TotalProcessingStrategyListFactory implements CommonProcessingStrat
 
         strategyList.add(CommandProcessingDbMappingStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
 
-//        strategyList.add(CommandProcessingAofCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
-//        strategyList.add(CommandProcessingRdbCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).redisVersion(taskModel.getRedisVersion()).build());
-
-        strategyList.add(CommandProcessingAofMultiCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
-        strategyList.add(CommandProcessingRdbMultiCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).redisVersion(taskModel.getRedisVersion()).build());
+        if(BreakPointConfig.getBreakpointContinuationType().equals(BreakpointContinuationType.v1)){
+            strategyList.add(CommandProcessingAofCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+            strategyList.add(CommandProcessingRdbCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).redisVersion(taskModel.getRedisVersion()).build());
+        }else {
+            strategyList.add(CommandProcessingAofMultiCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+            strategyList.add(CommandProcessingRdbMultiCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).redisVersion(taskModel.getRedisVersion()).build());
+        }
 
 
         return strategyList;

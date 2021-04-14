@@ -207,7 +207,7 @@ public class ResubmitDataAspect {
                 return joinPoint.proceed();
             } else {
                 //响应重复提交异常
-                return ResponseResult.builder().code("101").msg("数据已提交").build();
+                return ResponseResult.builder().code("101").msg("任务锁定期,请15s后重试").build();
             }
         } finally {
             //设置解锁key和解锁时间
