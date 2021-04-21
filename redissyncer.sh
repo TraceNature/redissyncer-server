@@ -2,8 +2,8 @@
 
 SHELL_FOLDER=$(dirname $(readlink -f "$0"))
 
-jarpath=${SHELL_FOLDER}
-jarname=redisyncer-2.0.8.jar
+jarpath=${SHELL_FOLDER}/syncer-webapp
+jarname=redissyncer-server.jar
 
 jarproc=`jps | grep ${jarname} `
 
@@ -31,12 +31,11 @@ fi
 java -Xms4096m -Xmx4096m -jar ${jarpath}/${jarname}  \
 -XX:-UseGCOverheadLimit \
 --logging.level.root=info \
---server.port=8998 \
+--server.port=8080 \
  >> stdout.log &2>1 &
 
-proc=`jps | grep ${jarname} `
-
 sleep 2
+proc=`jps | grep ${jarname}|awk '{print $1}' `
 
 if  [ "" = "${proc}" ] ;then
     echo "${jarname} start failure!"

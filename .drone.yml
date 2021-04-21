@@ -22,7 +22,7 @@ steps:
       username: root
       key_path: ./id_rsa
       script:
-        - echo "stop server"
+        - /root/redissyncer-server/redissyncer.sh stop
 
   - name: publish
     image: appleboy/drone-scp
@@ -50,6 +50,5 @@ steps:
       username: root
       key_path: ./id_rsa
       script:
-        #        - /root/redissyncer-portal/redissyncer-portal start -d
-        - echo "start server"
+        - /root/redissyncer-server/redissyncer.sh start
 
