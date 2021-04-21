@@ -58,15 +58,25 @@ kind: pipeline
 type: exec
 name: build
 
+platform:
+  os: linux
+  arch: amd64
+
 workspace:
   base: /java
   path: src/redissyncer-server
 
+clone:
+  disable: true
 
 steps:
-  - name: build
+  - name: clone
     commands:
-      - mvn clean package -Ddockerfile.skip -B -V
+      - echo "clone manual"
+
+  #  - name: build
+  #    commands:
+  #      - mvn clean package -Ddockerfile.skip -B -V
 
   - name: stopserver
     commands:
