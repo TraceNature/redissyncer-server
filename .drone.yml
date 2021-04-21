@@ -36,7 +36,7 @@ steps:
       #      password: Git785230
       key_path: ./id_rsa
       source: syncer-webapp/redissyncer-server.jar
-      target: /tmp/redissyncer-server.jar
+      target: /tmp
 
 
   - name: startserver
