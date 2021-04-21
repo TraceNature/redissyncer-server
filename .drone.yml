@@ -22,7 +22,6 @@ steps:
       username: root
       key_path: ./id_rsa
       script:
-#        - /root/redissyncer-portal/redissyncer-portal stop
          - echo "stop server"
 
   - name: publish
@@ -34,9 +33,11 @@ steps:
         - 10.0.0.23
       user: root
       port: 22
-      password: Git785230
-      target: syncer-webapp/redissyncer-server.jar
-      source: /tmp
+      #      password: Git785230
+      key_path: ./id_rsa
+      source: syncer-webapp/redissyncer-server.jar
+      target: /tmp/redissyncer-server.jar
+
 
   - name: startserver
     image: appleboy/drone-ssh
