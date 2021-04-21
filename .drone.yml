@@ -1,54 +1,73 @@
+#kind: pipeline
+#type: docker
+#name: build
+#
+#workspace:
+#  base: /java
+#  path: src/redissyncer-server
+#
+#steps:
+#  - name: build
+#    image: maven:3-jdk-8
+#    commands:
+#      - mvn clean package -Ddockerfile.skip -B -V
+#
+#  - name: stopserver
+#    image: appleboy/drone-ssh
+#    settings:
+#      host:
+#        - 10.0.0.21
+#        - 10.0.0.22
+#        - 10.0.0.23
+#      username: root
+#      key_path: ./id_rsa
+#      script:
+#         - echo "stop server"
+#
+#  - name: publish
+#    image: appleboy/drone-scp
+#
+#    settings:
+#      host:
+#        - 10.0.0.21
+#        - 10.0.0.22
+#        - 10.0.0.23
+#      user: root
+#      port: 22
+#      #      password: Git785230
+#      key_path: ./id_rsa
+#      source: syncer-webapp/redissyncer-server.jar
+#      target: /tmp
+#
+#
+#  - name: startserver
+#    image: appleboy/drone-ssh
+#    settings:
+#      host:
+#        - 10.0.0.21
+#        - 10.0.0.22
+#        - 10.0.0.23
+#      username: root
+#      key_path: ./id_rsa
+#      script:
+##        - /root/redissyncer-portal/redissyncer-portal start -d
+#        - echo "start server"
+#
+
 kind: pipeline
-type: docker
+type: exec
 name: build
 
 workspace:
   base: /java
   path: src/redissyncer-server
 
+
 steps:
   - name: build
-    image: maven:3-jdk-8
     commands:
       - mvn clean package -Ddockerfile.skip -B -V
 
   - name: stopserver
-    image: appleboy/drone-ssh
-    settings:
-      host:
-        - 10.0.0.21
-        - 10.0.0.22
-        - 10.0.0.23
-      username: root
-      key_path: ./id_rsa
-      script:
-         - echo "stop server"
-
-  - name: publish
-    image: appleboy/drone-scp
-    settings:
-      host:
-        - 10.0.0.21
-        - 10.0.0.22
-        - 10.0.0.23
-      user: root
-      port: 22
-      #      password: Git785230
-      key_path: ./id_rsa
-      source: syncer-webapp/redissyncer-server.jar
-      target: /tmp
-
-
-  - name: startserver
-    image: appleboy/drone-ssh
-    settings:
-      host:
-        - 10.0.0.21
-        - 10.0.0.22
-        - 10.0.0.23
-      username: root
-      key_path: ./id_rsa
-      script:
-#        - /root/redissyncer-portal/redissyncer-portal start -d
-        - echo "start server"
-
+    commands:
+      - ssh app01 echo "stop server"
