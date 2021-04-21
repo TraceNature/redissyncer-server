@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# config java
+export JAVA_HOME=$HOME/openlogic-openjdk-8u262-b10-linux-64
+export PATH=$JAVA_HOME/bin:$PATH:.
+export CLASSPATH=$JAVA_HOME/lib/tools.jar:$JAVA_HOME/lib/dt.jar:.
+
 SHELL_FOLDER=$(dirname $(readlink -f "$0"))
 
 jarpath=${SHELL_FOLDER}/syncer-webapp
