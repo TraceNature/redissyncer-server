@@ -72,11 +72,11 @@ clone:
 steps:
   - name: clone
     commands:
-      - echo "clone manual"
+      - git clone https://github.com/jiashiwen/redissyncer-server.git
 
-  #  - name: build
-  #    commands:
-  #      - mvn clean package -Ddockerfile.skip -B -V
+  - name: build
+      commands:
+        - mvn clean package -Ddockerfile.skip -B -V
 
   - name: stopserver
     commands:
