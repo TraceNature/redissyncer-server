@@ -73,7 +73,7 @@ steps:
       username: root
 
 volumes:
-  - name: n2
+  - name: m2
     host:
       path: /root/.m2
 
