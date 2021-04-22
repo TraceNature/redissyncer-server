@@ -18,9 +18,9 @@ steps:
   - name: clone
     image: alpine/git
     commands:
-      - export https_proxy=http://10.0.0.101:1081
-      - export http_proxy=http://10.0.0.101:1081
-      - export all_proxy=socks5://10.0.0.101:1080
+      #      - export https_proxy=http://10.0.0.101:1081
+      #      - export http_proxy=http://10.0.0.101:1081
+      #      - export all_proxy=socks5://10.0.0.101:1080
       - git clone -v https://github.com/TraceNature/redissyncer-server.git .
 
   - name: build
@@ -29,9 +29,9 @@ steps:
       - name: m2
         path: /root/.m2
     commands:
-      - export https_proxy=http://10.0.0.101:1081
-      - export http_proxy=http://10.0.0.101:1081
-      - export all_proxy=socks5://10.0.0.101:1080
+      #      - export https_proxy=http://10.0.0.101:1081
+      #      - export http_proxy=http://10.0.0.101:1081
+      #      - export all_proxy=socks5://10.0.0.101:1080
       - mvn clean package -Ddockerfile.skip -B -V
 
   - name: stopserver
