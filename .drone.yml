@@ -25,9 +25,9 @@ steps:
 
   - name: build
     image: maven:3-jdk-8
-    volumes:
-      - name: m2
-        path: /root/.m2
+    #    volumes:
+    #      - name: m2
+    #        path: /root/.m2
     commands:
       #      - export https_proxy=http://10.0.0.101:1081
       #      - export http_proxy=http://10.0.0.101:1081
