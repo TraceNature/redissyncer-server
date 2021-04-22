@@ -23,6 +23,7 @@ steps:
       key_path: ./id_rsa
       script:
         - /root/redissyncer-server/redissyncer.sh stop
+        - sleep 15
 
   - name: publish
     image: appleboy/drone-scp
@@ -52,5 +53,5 @@ steps:
       script:
         - /root/redissyncer-server/redissyncer.sh start
 
-  # test webhook
+
 
