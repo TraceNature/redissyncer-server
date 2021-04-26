@@ -3,12 +3,12 @@ package syncer.webapp.util;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import org.springframework.util.StringUtils;
 import syncer.common.exception.TaskMsgException;
 import syncer.common.util.MD5Utils;
 import syncer.common.util.TemplateUtils;
 import syncer.common.util.file.FileUtils;
+import syncer.replica.constant.RedisType;
 import syncer.replica.status.TaskStatus;
 import syncer.replica.type.FileType;
 import syncer.replica.type.SyncType;
@@ -42,8 +42,37 @@ public class DtoToTaskModelUtils {
 
     public synchronized static List<TaskModel> getTaskModelList(CreateTaskParam param, boolean change){
         List<TaskModel>taskModelList= Lists.newArrayList();
-        String[] addressList=param.getSourceRedisAddress().split(";");
-        int sourceRedisType=taskType(addressList);
+
+        String[] addressList;
+
+        if(!RedisType.SENTINEL.equals(param.getSourceRedisType())){
+            addressList=param.getSourceRedisAddress().split(";");
+        }else {
+            addressList=new String[]{param.getSourceRedisAddress()};
+        }
+
+        RedisType sourceRedisType=RedisType.NONE;
+        //源Redis类型
+        if(Objects.nonNull(param.getSourceRedisType())){
+             sourceRedisType=param.getSourceRedisType();
+        }
+
+//        else {
+//            sourceRedisType=taskType(addressList);
+//        }
+        RedisType targetRedisType=RedisType.NONE;
+        //目标Redis类型
+        if(Objects.nonNull(param.getTargetRedisType())){
+            targetRedisType=param.getTargetRedisType();
+        }
+
+//
+//        else {
+//            String[] targetAddressList=param.getTargetRedisAddress().split(";");
+//            targetRedisType=taskType(targetAddressList);
+//        }
+
+
         String taskId=null;
         for (String address:addressList) {
             if(StringUtils.isEmpty(address)){
@@ -93,7 +122,9 @@ public class DtoToTaskModelUtils {
                     //任务状态
                     .status(TaskStatus.CREATING.getCode())
                     //原目标类型
-                    .sourceRedisType(sourceRedisType)
+                    .sourceRedisType(sourceRedisType.getCode())
+
+                    .targetRedisType(targetRedisType.getCode())
                     //文件地址
                     .fileAddress("")
                     //Redis 6.0 ACL相关
@@ -107,6 +138,10 @@ public class DtoToTaskModelUtils {
                     .commandFilter(param.getCommandFilter())
                     .keyFilter(keyFilter)
                     .filterType(commandKeyFilterType)
+                    .sourceRedisMasterName(param.getSourceRedisMasterName())
+                    .targetRedisMasterName(param.getTargetRedisMasterName())
+                    .sourceSentinelAuthPassword(param.getSourceSentinelAuthPassword())
+                    .targetSentinelAuthPassword(param.getTargetSentinelAuthPassword())
                     .build();
             if(param.getDbMapper()!=null){
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
@@ -194,6 +229,13 @@ public class DtoToTaskModelUtils {
                 addressList.add(param.getFileAddress());
             }
         }
+
+        RedisType targetRedisType= RedisType.NONE;
+        //目标Redis类型
+        if(Objects.nonNull(param.getTargetRedisType())){
+            targetRedisType=param.getTargetRedisType();
+        }
+
         for (String address:
                 addressList) {
             if(StringUtils.isEmpty(address)){
@@ -228,12 +270,14 @@ public class DtoToTaskModelUtils {
                     //任务状态
                     .status(TaskStatus.CREATING.getCode())
                     //原目标类型 3 file
-                    .sourceRedisType(3)
+                    .sourceRedisType(RedisType.FILE.getCode())
                     //文件地址
                     .fileAddress(address)
                     //Redis 6.0 ACL相关
                     .sourceAcl(param.isSourceAcl())
                     .sourceUserName(param.getSourceUserName())
+                    .targetSentinelAuthPassword(param.getTargetSentinelAuthPassword())
+                    .targetRedisType(targetRedisType.getCode())
                     .targetAcl(param.isTargetAcl())
                     .targetUserName(param.getTargetUserName())
                     .syncType(SyncTypeUtils.getSyncType(param.getFileType()).getCode())
@@ -303,7 +347,7 @@ public class DtoToTaskModelUtils {
                     //任务状态
                     .status(TaskStatus.CREATING.getCode())
                     //原目标类型 1 单机
-                    .sourceRedisType(1)
+                    .sourceRedisType(RedisType.SINGLE.getCode())
                     //文件地址
                     .fileAddress(param.getFileAddress())
                     //Redis 6.0 ACL相关
@@ -330,10 +374,10 @@ public class DtoToTaskModelUtils {
      * @param addressList
      * @return
      */
-    static int taskType(String[] addressList){
-        int sourceRedisType=1;
+    static RedisType taskType(String[] addressList){
+        RedisType sourceRedisType=RedisType.SENTINEL;
         if(addressList.length>1){
-            sourceRedisType=2;
+            sourceRedisType=RedisType.CLUSTER;
         }
         return sourceRedisType;
     }

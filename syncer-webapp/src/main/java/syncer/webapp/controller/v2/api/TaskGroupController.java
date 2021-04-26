@@ -107,7 +107,7 @@ public class TaskGroupController {
 
     @ApiOperation(value ="停止任务")
     @RequestMapping(value = "/stoptask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
-    @Resubmit(delaySeconds = 10)
+    @Resubmit(delaySeconds = 15)
     public ResponseResult<List<StartTaskEntity>> stopTask( @RequestBody @Validated StopTaskParam params) throws Exception {
         List<StartTaskEntity> msg=null;
         if(Objects.isNull(params.getTaskids())&&Objects.isNull(params.getGroupIds())){
@@ -137,7 +137,7 @@ public class TaskGroupController {
      */
     @RequestMapping(value = "/starttask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     @ApiOperation(value ="启动任务")
-    @Resubmit(delaySeconds = 10)
+    @Resubmit(delaySeconds = 15)
     public ResponseResult<List<StartTaskEntity>> startTask( @RequestBody @Validated  StartTaskParam param) throws Exception {
         if(StringUtils.isEmpty(param.getTaskid())&&StringUtils.isEmpty(param.getGroupId())){
             return  ResponseResult
@@ -246,7 +246,7 @@ public class TaskGroupController {
 
     @RequestMapping(value = "/removetask",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     @ApiOperation("删除任务")
-    @Resubmit(delaySeconds = 10)
+    @Resubmit(delaySeconds = 15)
     public ResponseResult<List<StartTaskEntity>> deleteTask(@RequestBody @Validated RemoveTaskParam params) throws Exception {
         List<StartTaskEntity> msg=null;
         if(Objects.isNull(params.getTaskids())&&Objects.isNull(params.getGroupIds())){

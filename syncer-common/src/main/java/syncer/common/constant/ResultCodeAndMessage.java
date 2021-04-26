@@ -50,8 +50,16 @@ public enum ResultCodeAndMessage {
 
     TASK_EDIT_MSG_TASK_NOT_STOP_ERROR("4027","无法编辑未停止的任务","无法编辑未停止的任务"),
 
+    TASK_MSG_TASK_IS_NULL_ERROR("4028","任务不存在","任务不存在"),
 
-    TASK_MSG_TASK_IS_NULL_ERROR("4028","任务不存在","任务不存在");
+    TASK_MSG_TASK_SOURCE_REDIS_TYPE_NULL("4029","源Redis集群sourceRedisType类型不能为空","源Redis集群类型不能为空"),
+    TASK_MSG_TASK_TARGET_REDIS_TYPE_NULL("4029","目标Redis集群targetRedisType类型不能为空","源Redis集群类型不能为空"),
+
+    TASK_MSG_TASK_SOURCE_MASTER_REDIS_NAME_NULL("4030","源Redis集群sourceRedisMasterName类型不能为空","源Redis集群sourceRedisMasterName类型不能为空"),
+    TASK_MSG_TASK_TARGET_MASTER_REDIS_NAME_NULL("4030","目标Redis集群targetRedisMasterName类型不能为空","目标Redis集群targetRedisMasterName类型不能为空")
+
+
+            ;
 
 
     private String code;

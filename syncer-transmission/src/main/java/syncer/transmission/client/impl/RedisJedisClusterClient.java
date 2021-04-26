@@ -246,6 +246,11 @@ public class RedisJedisClusterClient implements RedisClient {
     public void updateLastReplidAndOffset(String replid, long offset){
     }
 
+    @Override
+    public void commitCheckPoint() {
+
+    }
+
 
     @Override
     public void select(Integer dbNum) {

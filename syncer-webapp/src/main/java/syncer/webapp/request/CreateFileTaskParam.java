@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import syncer.replica.constant.RedisType;
 import syncer.replica.type.FileType;
 import syncer.transmission.constants.CommandKeyFilterType;
 
@@ -74,6 +75,18 @@ public class CreateFileTaskParam {
     //目标用户名
     @Builder.Default
     private String targetUserName="";
+
+
+    /**
+     * 目标哨兵密码
+     */
+    @Builder.Default
+    private String targetSentinelAuthPassword="";
+
+    /**
+     * 目标Redis类型
+     */
+    private RedisType targetRedisType;
 
     /**
      * 时间偏差

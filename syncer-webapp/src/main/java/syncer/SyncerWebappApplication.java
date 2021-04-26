@@ -11,6 +11,7 @@
 
 package syncer;
 
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -21,12 +22,25 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.StringUtils;
+import syncer.common.config.BreakPointConfig;
 import syncer.common.config.EtcdServerConfig;
 import syncer.common.constant.StoreType;
 import syncer.common.util.ThreadPoolUtils;
 import syncer.common.util.file.FileUtils;
 import syncer.common.util.spring.SpringUtil;
+import syncer.jedis.HostAndPort;
+import syncer.replica.config.ReplicConfig;
+import syncer.replica.datatype.command.DefaultCommand;
+import syncer.replica.datatype.command.pubsub.PublishCommand;
+import syncer.replica.event.Event;
+import syncer.replica.listener.EventListener;
+import syncer.replica.parser.command.pubsub.PublishCommandParser;
+import syncer.replica.register.DefaultCommandNames;
+import syncer.replica.register.DefaultCommandRegister;
+import syncer.replica.replication.Replication;
+import syncer.replica.replication.SentinelReplication;
 import syncer.replica.status.TaskStatus;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.heartbeat.DefaultHeartbeatCommandRunner;
 import syncer.transmission.heartbeat.Heartbeat;
@@ -43,6 +57,7 @@ import syncer.webapp.executor.SqliteUtil;
 import syncer.webapp.start.NodeStartCheckResource;
 import syncer.webapp.start.NodeStartInitService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -63,6 +78,7 @@ public class SyncerWebappApplication {
         application.addListeners(new ApplicationStartedEventListener());
         application.run(args);
         log.warn("syncer version:{}",version);
+        log.info("client type {}",BreakPointConfig.getBreakpointContinuationType());
         Runtime.getRuntime().addShutdownHook(new Thread(){
 
             @Override
@@ -141,6 +157,47 @@ public class SyncerWebappApplication {
                 SpringUtil.getBean(ShutdownContext.class).showdown();
             }
         }
+
+
+//
+//        List<HostAndPort> hosts = new ArrayList<>();
+//        // sentinel hosts
+//        hosts.add(new HostAndPort("114.67.76.82", 26379));
+//        hosts.add(new HostAndPort("114.67.76.82", 26380));
+//        hosts.add(new HostAndPort("114.67.76.82", 26381));
+//        ReplicConfig config1=ReplicConfig.defaultConfig();
+//
+//        config1.setAuthPassword("123456");
+//        config1.setSentinelAuthPassword("123456");
+//        Replication replication = new SentinelReplication(hosts, "local-master",config1,true );
+//        DefaultCommandRegister.addCommandParser(replication);
+//        replication.addEventListener(new EventListener() {
+//            @Override
+//            public void onEvent(Replication replicator, Event event) {
+//                if(event instanceof DefaultCommand){
+//                    DefaultCommand zcommand= (DefaultCommand) event;
+//                    if(DefaultCommandNames.PUBLISH.equalsIgnoreCase(Strings.byteToString(zcommand.getCommand()))){
+//                        PublishCommandParser parser=new PublishCommandParser();
+//                        PublishCommand publishCommand=parser.parse(zcommand.getArgs());
+//                        if("__sentinel__:hello".equalsIgnoreCase(Strings.byteToString(publishCommand.getChannel()))){
+//                            return;
+//                        }
+//                    }
+//                    System.out.println(Strings.byteToString(zcommand.getCommand())+":"+Strings.format(zcommand.getArgs()));
+//                }else{
+//                    System.out.println(JSON.toJSONString(event));
+//                }
+//
+//
+////                System.out.println(JSON.toJSONString(event));
+//            }
+//
+//            @Override
+//            public String eventListenerName() {
+//                return null;
+//            }
+//        });
+//        replication.open();
     }
 
     @Bean

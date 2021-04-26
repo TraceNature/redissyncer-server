@@ -64,6 +64,8 @@ public class CommandProcessingCommandFilterStrategy implements CommonProcessingS
             return;
         }
 
+
+
         if(Objects.isNull(commandFilterSet)){
             commandFilterSet=taskModel.getCommandFilter()==null? Sets.newHashSet(): Sets.newHashSet(Arrays.asList(taskModel.getCommandFilter().split(",")).stream().map(s->{
                 return s.trim().toUpperCase();

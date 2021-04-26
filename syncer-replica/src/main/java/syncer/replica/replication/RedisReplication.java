@@ -1,8 +1,10 @@
 package syncer.replica.replication;
 
+import syncer.jedis.HostAndPort;
 import syncer.replica.config.RedisURI;
 import syncer.replica.config.ReplicConfig;
 import syncer.replica.config.SslReplicConfig;
+import syncer.replica.constant.RedisType;
 import syncer.replica.datatype.command.Command;
 import syncer.replica.datatype.command.CommandName;
 import syncer.replica.datatype.command.CommandParser;
@@ -17,6 +19,7 @@ import syncer.replica.status.TaskStatus;
 import syncer.replica.type.FileType;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -24,11 +27,19 @@ import java.util.Objects;
  */
 public class RedisReplication implements Replication{
     protected Replication replication;
-    public RedisReplication(String host, int port, ReplicConfig config) {
-        this.replication = new SocketReplication(host, port, config,true);
+    public RedisReplication(String host, int port, ReplicConfig config,RedisType redisType) {
+        if(RedisType.SENTINEL.equals(redisType)){
+            this.replication=new SentinelReplication(null,config.getMasterRedisName(),config,true);
+        }else  {
+            this.replication = new SocketReplication(host, port, config,true);
+        }
+
     }
 
 
+    public RedisReplication(String host, int port, ReplicConfig config){
+        this(host,port,config,RedisType.SINGLE);
+    }
 
     /**
      * @param uri redis uri.
@@ -36,7 +47,7 @@ public class RedisReplication implements Replication{
      * @since 2.4.2
      */
     public RedisReplication(RedisURI uri) throws IOException {
-        initialize(uri, null,true);
+        initialize(uri, null,true,RedisType.SINGLE,null);
     }
 
     /**
@@ -45,8 +56,16 @@ public class RedisReplication implements Replication{
      * @param status
      * @throws IOException
      */
+    public RedisReplication(RedisURI uri, boolean status,List<HostAndPort> hosts) throws IOException {
+        initialize(uri, null,status,RedisType.SINGLE,hosts);
+    }
+
     public RedisReplication(RedisURI uri, boolean status) throws IOException {
-        initialize(uri, null,status);
+        initialize(uri, null,status,RedisType.SINGLE,null);
+    }
+
+    public RedisReplication(RedisURI uri, boolean status,RedisType redisType,List<HostAndPort> hosts) throws IOException {
+        initialize(uri, null,status,redisType,hosts);
     }
 
 
@@ -58,6 +77,7 @@ public class RedisReplication implements Replication{
      * @throws Exception
      */
     public RedisReplication(String filePath, FileType fileType, ReplicConfig config) throws Exception{
+
         switch (fileType) {
             case AOF:
                 this.replication = new AofReplication(filePath, config,false);
@@ -92,16 +112,15 @@ public class RedisReplication implements Replication{
      * @throws IOException
      */
     public RedisReplication(RedisURI uri, SslReplicConfig sslConfig, boolean status) throws IOException {
-        initialize(uri, sslConfig,status);
+        initialize(uri, sslConfig,status,RedisType.SINGLE,null);
     }
 
-    private void initialize(RedisURI uri, SslReplicConfig sslConfig, boolean status) throws IOException {
+    private void initialize(RedisURI uri, SslReplicConfig sslConfig, boolean status, RedisType redisType, List<HostAndPort> hosts) throws IOException {
         Objects.requireNonNull(uri);
         ReplicConfig configuration = ReplicConfig.valueOf(uri).merge(sslConfig);
         if (uri.getFileType() != null) {
 
             PeekableInputStream in = new PeekableInputStream(uri.toURL().openStream());
-
 
             switch (uri.getFileType()) {
                 case AOF:
@@ -128,7 +147,13 @@ public class RedisReplication implements Replication{
                     throw new UnsupportedOperationException(uri.getFileType().toString());
             }
         } else {
-            this.replication = new SocketReplication(uri.getHost(), uri.getPort(), configuration,status);
+            if(RedisType.SENTINEL.equals(redisType)){
+                System.out.println(configuration.getMasterRedisName()+":"+configuration.getSentinelAuthPassword());
+                this.replication=new SentinelReplication(hosts,configuration.getMasterRedisName(),configuration,status);
+            }else {
+                this.replication = new SocketReplication(uri.getHost(), uri.getPort(), configuration,status);
+            }
+
         }
     }
 
@@ -230,5 +255,10 @@ public class RedisReplication implements Replication{
     @Override
     public void close() throws IOException {
         replication.close();
+    }
+
+    @Override
+    public void broken(String reason) throws IOException {
+        replication.broken(reason);
     }
 }

@@ -108,4 +108,6 @@ public interface RedisClient {
     Long pexpire(Long dbNum,byte[]key,long ms);
 
     void updateLastReplidAndOffset(String replid,long offset);
+
+    void commitCheckPoint();
 }

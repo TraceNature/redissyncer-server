@@ -13,14 +13,12 @@ package syncer.transmission.model;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Sets;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.util.StringUtils;
 import syncer.common.config.EtcdServerConfig;
-import syncer.common.config.ServerConfig;
 import syncer.common.util.TimeUtils;
 import syncer.replica.type.SyncType;
 import syncer.transmission.constants.CommandKeyFilterType;
@@ -190,7 +188,7 @@ public class TaskModel {
 
 
     /**
-     * 源Redis类型  RedisBranchType
+     * 源Redis类型  RedisType
      * 1 单机
      * 2 cluster
      * 3 file
@@ -198,6 +196,13 @@ public class TaskModel {
      */
     @Builder.Default
     private Integer sourceRedisType=1;
+
+    /**
+     * 源哨兵密码
+     */
+    @Builder.Default
+    private String sourceSentinelAuthPassword="";
+
 
     /**
      * 目标Redis类型
@@ -208,6 +213,11 @@ public class TaskModel {
     @Builder.Default
     private Integer targetRedisType=1;
 
+    /**
+     * 目标哨兵密码
+     */
+    @Builder.Default
+    private String targetSentinelAuthPassword="";
 
     private String sourceHost;
 
@@ -325,7 +335,14 @@ public class TaskModel {
     @Builder.Default
     private String keyFilter=null;
 
-
+    /**
+     * 源哨兵主节点Name
+     */
+    private String sourceRedisMasterName;
+    /**
+     * 目标主节点Name
+     */
+    private String targetRedisMasterName;
 
     public String getExpandJson() {
         if (StringUtils.isEmpty(this.expandJson)){
@@ -368,15 +385,15 @@ public class TaskModel {
     }
 
     public String getSourceUri(){
-        return getUri(getSourceRedisAddress(),getSourcePassword());
+        return getUri(getSourceRedisAddress(),getSourcePassword(),sourceRedisMasterName,sourceSentinelAuthPassword);
     }
 
     public Set<String> getTargetUri(){
-        return getUrlList(getTargetRedisAddress(),getTargetPassword());
+        return getUrlList(getTargetRedisAddress(),getTargetPassword(),targetRedisMasterName,targetSentinelAuthPassword);
     }
 
 
-    private   Set<String> getUrlList(String sourceUrls, String password) {
+    private   Set<String> getUrlList(String sourceUrls, String password,String redisMasterName,String sentinelAuthPassword) {
         Set<String> urlList = new HashSet<>();
         if (StringUtils.isEmpty(sourceUrls)){
             return new HashSet<>();
@@ -384,7 +401,7 @@ public class TaskModel {
         String[] sourceUrlsList = sourceUrls.split(";");
         //循环遍历所有的url
         for (String url : sourceUrlsList) {
-            String uri=getUri(url,password);
+            String uri=getUri(url,password,redisMasterName,sentinelAuthPassword);
             if(!StringUtils.isEmpty(uri)) {
                 urlList.add(uri);
             }
@@ -392,15 +409,41 @@ public class TaskModel {
         return urlList;
     }
 
-    private  String getUri(String address,String password){
+    public  String getUri(String address,String password,String masterName,String sentinelPassword){
         StringBuilder stringHead = new StringBuilder("redis://");
+        int index=0;
         //如果截取出空字符串直接跳过
         if (address != null && address.length() > 0) {
             stringHead.append(address);
             //判断密码是否为空如果为空直接跳过
             if (password != null && password.length() > 0) {
+                index++;
                 stringHead.append("?authPassword=");
                 stringHead.append(password);
+            }
+
+            if(masterName!=null&&masterName.length()>0){
+                if(index>0){
+                    stringHead.append("&masterRedisName=");
+                    stringHead.append(masterName);
+                    index++;
+                }else{
+                    stringHead.append("?masterRedisName=");
+                    stringHead.append(masterName);
+                    index++;
+                }
+            }
+
+            if(sentinelPassword!=null&&sentinelPassword.length()>0){
+                if(index>0){
+                    stringHead.append("&sentinelAuthPassword=");
+                    stringHead.append(sentinelPassword);
+                    index++;
+                }else{
+                    stringHead.append("?sentinelAuthPassword=");
+                    stringHead.append(sentinelPassword);
+                    index++;
+                }
             }
 
             return stringHead.toString();
@@ -408,6 +451,29 @@ public class TaskModel {
         return null;
     }
 
+    /**
+     * sentinel模式下校验连通性
+     * @return
+     */
+    public String[] getSourceHostUris(){
+        String[]host=sourceHost.split(";");
+        for (int i = 0; i < host.length; i++) {
+            host[i]=getUri(host[i],sourcePassword,sourceRedisMasterName,sourceSentinelAuthPassword);
+        }
+        return host;
+    }
+
+    /**
+     * sentinel模式下校验连通性
+     * @return
+     */
+    public String[] getTargetHostUris(){
+        String[]host=targetHost.split(";");
+        for (int i = 0; i < host.length; i++) {
+            host[i]=getUri(host[i],targetPassword,targetRedisMasterName,targetSentinelAuthPassword);
+        }
+        return host;
+    }
 
     public void setSourceRedisAddress(String sourceRedisAddress) {
         if(StringUtils.isEmpty(sourceRedisAddress)||!(syncType.equals(SyncType.SYNC.getCode())||syncType.equals(SyncType.COMMANDDUMPUP.getCode()))){
@@ -464,16 +530,15 @@ public class TaskModel {
     }
 
     public TaskModel(String nodeId,String id,String taskId, String groupId, String taskName, String sourceRedisAddress, String sourcePassword,
-                     String targetRedisAddress, String targetPassword, String fileAddress, boolean autostart,
-                     boolean afresh, Integer batchSize, Integer tasktype, Integer offsetPlace, String taskMsg,
-                     Long offset, Integer status, double redisVersion, Integer rdbVersion, Integer syncType,
-                     Integer sourceRedisType, Integer targetRedisType, String sourceHost, String targetHost,
-                     Integer sourcePort
+             String targetRedisAddress,String targetPassword, String fileAddress, boolean autostart,
+             boolean afresh, Integer batchSize, Integer tasktype, Integer offsetPlace, String taskMsg,
+             Long offset, Integer status, double redisVersion, Integer rdbVersion, Integer syncType,
+             Integer sourceRedisType,String sourceSentinelAuthPassword,Integer targetRedisType,String targetSentinelAuthPassword,
+             String sourceHost, String targetHost,  Integer sourcePort
             , Integer targetPort, String dbMapper, String md5, String createTime, String updateTime
-            , String dataAnalysis, String replId, Long rdbKeyCount, Long allKeyCount,
-                     Long realKeyCount, Long lastKeyUpdateTime, Long lastKeyCommitTime,
-                     boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName,Long errorCount
-            ,String expandJson,Long timeDeviation,CommandKeyFilterType filterType,String commandFilter,String keyFilter) {
+            , String dataAnalysis, String replId, Long rdbKeyCount, Long allKeyCount, Long realKeyCount, Long lastKeyUpdateTime,
+            Long lastKeyCommitTime, boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName,Long errorCount
+            ,String expandJson,Long timeDeviation,CommandKeyFilterType filterType,String commandFilter,String keyFilter,String sourceRedisMasterName,String targetRedisMasterName) {
         this.id = id;
         this.taskId=taskId;
         this.groupId = groupId;
@@ -494,8 +559,6 @@ public class TaskModel {
         this.redisVersion = redisVersion;
         this.rdbVersion = rdbVersion;
         this.syncType = syncType;
-        this.sourceRedisType = sourceRedisType;
-        this.targetRedisType = targetRedisType;
         this.sourceHost = sourceHost;
         this.targetHost = targetHost;
         this.sourcePort = sourcePort;
@@ -522,6 +585,12 @@ public class TaskModel {
         this.filterType=filterType;
         this.commandFilter=commandFilter;
         this.keyFilter=keyFilter;
+        this.sourceSentinelAuthPassword=sourceSentinelAuthPassword;
+        this.targetSentinelAuthPassword=targetSentinelAuthPassword;
+        this.sourceRedisType = sourceRedisType;
+        this.targetRedisType = targetRedisType;
+        this.sourceRedisMasterName=sourceRedisMasterName;
+        this.targetRedisMasterName=targetRedisMasterName;
         setTargetRedisAddress(this.getTargetRedisAddress());
         setSourceRedisAddress(this.getSourceRedisAddress());
         EtcdServerConfig config=new EtcdServerConfig();
@@ -562,6 +631,5 @@ public class TaskModel {
 
 //        taskModel.setSourceRedisAddress(taskModel.getSourceRedisAddress());
 //        taskModel.setTargetRedisAddress(taskModel.getTargetRedisAddress());
-        System.out.println(taskModel.getTargetHost()+"_"+taskModel.getTargetPort());
     }
 }

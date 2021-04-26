@@ -12,10 +12,10 @@
 package syncer.transmission.po;
 
 import lombok.*;
+import syncer.replica.constant.RedisType;
 import syncer.replica.status.TaskStatus;
 import syncer.replica.type.SyncType;
 import syncer.replica.util.OffsetPlace;
-import syncer.replica.util.RedisBranchType;
 import syncer.replica.util.TaskType;
 
 import java.io.Serializable;
@@ -153,9 +153,9 @@ public class TaskModelResult implements Serializable {
      */
     private SyncType syncType;
 
-    private RedisBranchType sourceRedisType;
+    private RedisType sourceRedisType;
 
-    private RedisBranchType targetRedisType;
+    private RedisType targetRedisType;
 
     private Map<Integer,Integer> dbMapper;
 

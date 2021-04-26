@@ -22,6 +22,7 @@ import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Objects;
 
 import static syncer.replica.cmd.CMD.PONG;
 
@@ -67,9 +68,12 @@ public class KeyCountUtils {
                 return Long.parseLong(data.get(1));
             }).sum();
 
-            SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId).getRdbKeyCount().set(keyCount);
+            if(Objects.nonNull(keyCount)){
+                SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId).getRdbKeyCount().set(keyCount);
 
-            SqlOPUtils.updateKeyCountById(taskId,keyCount,0L,0L);
+                SqlOPUtils.updateKeyCountById(taskId,keyCount,0L,0L);
+            }
+
         }catch (Exception e){
             e.printStackTrace();
             log.warn("任务[{}]获取全量key数量失败",taskId);

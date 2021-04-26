@@ -13,13 +13,12 @@ package syncer.transmission.strategy.commandprocessing;
 
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.util.ThreadPoolUtils;
+import syncer.replica.constant.RedisType;
 import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.event.Event;
 import syncer.replica.replication.Replication;
-import syncer.replica.util.RedisBranchTypeEnum;
 import syncer.replica.util.TaskRunTypeEnum;
 import syncer.transmission.client.RedisClient;
-import syncer.transmission.client.RedisClientFactory;
 import syncer.transmission.compensator.ISyncerCompensator;
 import syncer.transmission.compensator.ISyncerCompensatorFactory;
 import syncer.transmission.exception.StartegyNodeException;
@@ -43,7 +42,7 @@ public class MultiQueueFilter implements CommonProcessingStrategy {
     private CommonProcessingStrategy next;
     private RedisClient client;
     private volatile boolean status=true;
-    private RedisBranchTypeEnum branchTypeEnum;
+    private RedisType redisType;
     private double redisVersion;
     private String type;
     private Replication replication;
@@ -55,8 +54,8 @@ public class MultiQueueFilter implements CommonProcessingStrategy {
     private final Integer QUEUE_SIZE=1;
 
 
-    public MultiQueueFilter(RedisBranchTypeEnum branchTypeEnum, double redisVersion, String type, Replication replication, String taskId, int batchSize) {
-        this.branchTypeEnum = branchTypeEnum;
+    public MultiQueueFilter(RedisType redisType, double redisVersion, String type, Replication replication, String taskId, int batchSize) {
+        this.redisType = redisType;
         this.redisVersion = redisVersion;
         this.type = type;
         this.replication = replication;
@@ -71,7 +70,7 @@ public class MultiQueueFilter implements CommonProcessingStrategy {
             assemble_the_list(commonFilterList, type, taskId, redisVersion, client);
             SyncerQueue<KeyValueEventEntity> queue = new LocalMemoryQueue<>(taskId, i);
             queueMap.put(i, queue);
-            ISyncerCompensator syncerCompensator= ISyncerCompensatorFactory.createRedisClient(branchTypeEnum,taskId,client);
+            ISyncerCompensator syncerCompensator= ISyncerCompensatorFactory.createRedisClient(redisType,taskId,client);
             iSyncerCompensatorMap.put(i,syncerCompensator);
             ThreadPoolUtils.exec(SendCommandTask
                     .builder()

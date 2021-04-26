@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import syncer.replica.constant.RedisType;
 import syncer.replica.type.SyncType;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.TaskModel;
@@ -37,10 +38,21 @@ public class TaskCheckRedisUrlStrategy implements ITaskCheckStrategy {
         }
         //两边都需要进行检测
         if(taskModel.getSyncType().equals(SyncType.SYNC.getCode())){
-            redisUrlCheck.checkRedisUrl(taskModel.getSourceUri(), "sourceUri:" + taskModel.getSourceHost());
-            for (String targetUri : taskModel.getTargetUri()) {
-                redisUrlCheck.checkRedisUrl(targetUri, "targetUri:" + taskModel.getTargetHost());
+            if(RedisType.SENTINEL.getCode().equals(taskModel.getSourceRedisType())){
+
+                redisUrlCheck.checkRedisUrl(taskModel.getSourceHostUris(), "sourceUri:" + JSON.toJSONString(taskModel.getSourceHostUris()));
+            }else {
+                redisUrlCheck.checkRedisUrl(taskModel.getSourceUri(), "sourceUri:" + taskModel.getSourceHost());
             }
+
+            if(RedisType.SENTINEL.getCode().equals(taskModel.getTargetRedisType())){
+                redisUrlCheck.checkRedisUrl(taskModel.getTargetHostUris(), "targetUri:" + JSON.toJSONString(taskModel.getTargetHostUris()));
+            }else{
+                for (String targetUri : taskModel.getTargetUri()) {
+                    redisUrlCheck.checkRedisUrl(targetUri, "targetUri:" + taskModel.getTargetHost());
+                }
+            }
+
             //只校验目标
         }else if(taskModel.getSyncType().equals(SyncType.RDB.getCode())
                 ||taskModel.getSyncType().equals(SyncType.AOF.getCode())
@@ -52,8 +64,14 @@ public class TaskCheckRedisUrlStrategy implements ITaskCheckStrategy {
                 redisUrlCheck.checkRedisUrl(targetUri, "sourcehost"+taskModel.getSourceHost()+"targetUri:" + taskModel.getTargetHost());
             }
         }else if(taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())){
-            //只校验源
-            redisUrlCheck.checkRedisUrl(taskModel.getSourceUri(), "sourceUri:" + taskModel.getSourceHost());
+            if(RedisType.SENTINEL.getCode().equals(taskModel.getSourceRedisType())){
+                //只校验源
+                redisUrlCheck.checkRedisUrl(taskModel.getSourceHostUris(), "sourceUri:" + JSON.toJSONString(taskModel.getSourceHostUris()));
+            }else {
+                //只校验源
+                redisUrlCheck.checkRedisUrl(taskModel.getSourceUri(), "sourceUri:" + taskModel.getSourceHost());
+            }
+
         }
 
         //下一节点

@@ -63,11 +63,13 @@ public class RedisReplIdCheck {
             }else if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
                 Object targetAuth = target.auth(targetConfig.getAuthPassword());
             }
-            String info=target.info();
+            System.out.println(targetUri);
 
+            String info=target.info();
             version = getRedisBuffer(info,type);
         }catch (Exception e){
-            log.error("check redis replid error  {} : {} ",targetUriplus.getHost(), targetUriplus.getPort());
+            e.printStackTrace();
+            log.error("check redis replid error  {} : {} {}",targetUriplus.getHost(), targetUriplus.getPort(),e.getMessage());
         } finally {
             if (target != null) {
                 target.close();

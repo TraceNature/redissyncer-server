@@ -60,6 +60,8 @@ public class CommandProcessingAofMultiCommandSendStrategy implements CommonProce
                     SingleTaskDataManagerUtils.updateThreadMsg(taskId,"AOF文件同步开始");
 //                    SingleTaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "AOF文件同步开始", TaskStatusType.COMMANDRUNING);
                 }else {
+                    client.updateLastReplidAndOffset(replication.getConfig().getReplId(),replication.getConfig().getReplOffset());
+                    client.commitCheckPoint();
                     log.warn("taskId为[{}]的任务增量同步开始..",taskId);
 //                    SingleTaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "增量同步开始", TaskStatusType.COMMANDRUNING);
                     SingleTaskDataManagerUtils.updateThreadMsg(taskId,"增量同步开始");

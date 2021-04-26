@@ -2,6 +2,7 @@ package syncer.common.config;
 
 import com.alibaba.fastjson.JSON;
 import sun.net.util.IPAddressUtil;
+import syncer.common.constant.BreakpointContinuationType;
 import syncer.common.constant.StoreType;
 import syncer.common.util.spring.SpringUtil;
 
@@ -96,7 +97,12 @@ public class EtcdServerConfig {
      * @return
      */
     public EtcdAuthConfig getEtcdConfig(){
-        System.out.println(JSON.toJSONString(etcdAuthConfig));
         return this.etcdAuthConfig;
     }
+
+
+    public BreakpointContinuationType getBreakpointContinuationType(){
+        return config.getBreakpointContinuationType();
+    }
+
 }
