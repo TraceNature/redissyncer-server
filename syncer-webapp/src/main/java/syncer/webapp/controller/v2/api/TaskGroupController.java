@@ -82,6 +82,7 @@ public class TaskGroupController {
         for (TaskModel taskModel : taskModelList) {
             TaskCheckStrategyGroupSelecter.select(RedisTaskStrategyGroupType.SYNCGROUP,null,taskModel).run(null,taskModel);
         }
+
         //负载检测
         if(montitor.isAboveThreshold(Montitor.DEFAULT_THRESHOLD)){
             return ResponseResult.builder()

@@ -37,7 +37,7 @@ public class TaskCheckStrategyFactory implements ITaskCheckStrategyFactory {
         List<ITaskCheckStrategy>startCheckBaseStrategyList= Lists.newArrayList();
 
         //判断RedisType是否为空
-        startCheckBaseStrategyList.add(TaskCheckRedisTypeStrategy.builder().client(client).taskModel(taskModel).build());
+//        startCheckBaseStrategyList.add(TaskCheckRedisTypeStrategy.builder().client(client).taskModel(taskModel).build());
         //判断是否重复
         startCheckBaseStrategyList.add(TaskDistinctStrategy.builder().client(client).taskModel(taskModel).build());
 

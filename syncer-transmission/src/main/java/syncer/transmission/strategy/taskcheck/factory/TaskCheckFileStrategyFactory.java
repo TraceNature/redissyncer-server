@@ -33,7 +33,7 @@ public class TaskCheckFileStrategyFactory implements ITaskCheckStrategyFactory {
     public List<ITaskCheckStrategy> getStrategyList(RedisClient client, TaskModel taskModel) {
         List<ITaskCheckStrategy>taskCheckStrategyList= Lists.newArrayList();
         //判断RedisType是否为空
-        taskCheckStrategyList.add(TaskCheckRedisTypeStrategy.builder().client(client).taskModel(taskModel).build());
+//        taskCheckStrategyList.add(TaskCheckRedisTypeStrategy.builder().client(client).taskModel(taskModel).build());
         //判断是否重复
         taskCheckStrategyList.add(TaskDistinctStrategy.builder().client(client).taskModel(taskModel).build());
 
