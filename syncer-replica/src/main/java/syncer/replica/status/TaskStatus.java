@@ -57,7 +57,13 @@ public enum TaskStatus implements Serializable {
     /**
      * 任务因异常而停止
      */
-    BROKEN(Status.BROKEN,5,"broken");
+    BROKEN(Status.BROKEN,5,"broken"),
+
+
+    /**
+     * 任务因异常而停止
+     */
+    FAILOVER(Status.FAILOVER,9,"failover");
 
 
 
@@ -78,6 +84,8 @@ public enum TaskStatus implements Serializable {
             return TaskStatus.BROKEN;
         }else if(name.equalsIgnoreCase(TaskStatus.FINISH.getMsg())){
             return TaskStatus.FINISH;
+        }else if(name.equalsIgnoreCase(TaskStatus.FAILOVER.getMsg())){
+            return TaskStatus.FAILOVER;
         }
 
         return null;

@@ -12,11 +12,14 @@
 package syncer.transmission.task;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
+import syncer.jedis.HostAndPort;
 import syncer.replica.config.RedisURI;
 import syncer.replica.config.ReplicConfig;
+import syncer.replica.constant.RedisType;
 import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.event.*;
 import syncer.replica.event.end.PostRdbSyncEvent;
@@ -25,13 +28,11 @@ import syncer.replica.listener.EventListener;
 import syncer.replica.listener.TaskStatusListener;
 import syncer.replica.listener.ValueDumpIterableEventListener;
 import syncer.replica.parser.syncer.ValueDumpIterableRdbParser;
-import syncer.replica.parser.syncer.ValueIterableDumpRdbValueParser;
 import syncer.replica.register.DefaultCommandRegister;
 import syncer.replica.replication.RedisReplication;
 import syncer.replica.replication.Replication;
 import syncer.replica.status.TaskStatus;
 import syncer.replica.type.SyncType;
-import syncer.replica.util.RedisBranchTypeEnum;
 import syncer.replica.util.SyncTypeUtils;
 import syncer.replica.util.TaskRunTypeEnum;
 import syncer.transmission.checkpoint.breakpoint.BreakPoint;
@@ -53,6 +54,7 @@ import syncer.transmission.util.sql.SqlOPUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 
@@ -90,16 +92,29 @@ public class RedisDataSyncTransmissionTask implements Runnable{
             Replication replication=null;
             //replication
             if (taskModel.getSyncType().equals(SyncType.SYNC.getCode())) {
-
+                RedisType redisType=null;
+                List<HostAndPort>hostAndPorts= Lists.newArrayList();
                 RedisURI suri = new RedisURI(taskModel.getSourceUri());
-                KeyCountUtils.updateKeyCount(taskModel.getId(),suri);
-                replication = new RedisReplication(suri, taskModel.isAfresh());
+                if(RedisType.SENTINEL.getCode().equals(taskModel.getSourceRedisType())){
+                    redisType=RedisType.SENTINEL;
+                    String hosts=taskModel.getSourceHost();
+                    String[]hosp=hosts.split(";");
+                    for (int i = 0; i < hosp.length; i++) {
+                        if(hosp[i].contains(":")){
+                            String[]host=hosp[i].split(":");
+                            hostAndPorts.add(new HostAndPort(host[0],Integer.valueOf(host[1])));
+                        }
+                    }
+                }else{
+
+                    KeyCountUtils.updateKeyCount(taskModel.getId(),suri);
+                }
+
+                replication = new RedisReplication(suri, taskModel.isAfresh(),redisType,hostAndPorts);
             } else {
                 //文件
                 replication = new RedisReplication(taskModel.getFileAddress(), SyncTypeUtils.getSyncType(taskModel.getSyncType()).getFileType(),  ReplicConfig.defaultConfig().setTaskId(taskModel.getTaskId()));
             }
-
-
             //注册增量命令解析器
             final Replication replicationHandler = DefaultCommandRegister.addCommandParser(replication);
             replicationHandler.getConfig().setTaskId(taskModel.getTaskId());
@@ -150,11 +165,13 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                 }
             }
 
+
+            /**
             if(taskModel.getTargetUri().size()>1){
                 taskModel.setTargetRedisType(2);
             }
-
-            RedisBranchTypeEnum branchType=SyncTypeUtils.getRedisBranchType(taskModel.getTargetRedisType()).getBranchTypeEnum();
+            **/
+            RedisType branchType=SyncTypeUtils.getRedisType(taskModel.getTargetRedisType());
             RedisClient client = RedisClientFactory.createRedisClient(branchType, taskModel.getTargetHost(), taskModel.getTargetPort(), taskModel.getTargetPassword(),taskModel.getSourceHost(), taskModel.getSourcePort(), taskModel.getBatchSize(),taskModel.getErrorCount(), taskModel.getId(),null,null);
             //根据type生成相对节点List [List顺序即为filter节点执行顺序]
             List<CommonProcessingStrategy> commonFilterList = ProcessingRunStrategyListSelecter.getStrategyList(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType(),taskModel,client);
@@ -173,6 +190,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                 @Override
                 public void onEvent(Replication replicator, Event event) {
 
+
                     if (SingleTaskDataManagerUtils.isTaskClose(taskModel.getId())) {
                         //判断任务是否关闭
                         try {
@@ -188,7 +206,6 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                         }
                         return;
                     }
-
 
 
                     KeyValueEventEntity node = KeyValueEventEntity.builder()
@@ -226,7 +243,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                     String taskId=event.getTaskId();
                     try {
                         SingleTaskDataManagerUtils.changeThreadStatus(taskId,event.getOffset(),event.getEvent());
-
+                        System.out.println(JSON.toJSONString(event));
                         if(Objects.nonNull(event.getMsg())&&event.getEvent().equals(TaskStatus.BROKEN)){
                             SingleTaskDataManagerUtils.updateThreadMsg(taskId,event.getMsg());
                         }

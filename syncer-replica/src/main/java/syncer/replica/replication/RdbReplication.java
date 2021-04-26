@@ -146,7 +146,6 @@ public class RdbReplication extends AbstractReplication{
         }
     }
 
-
     protected void doOpen() throws IOException,IncrementException {
         try {
             new RedisSyncerRdbParser(inputStream, this).parse();

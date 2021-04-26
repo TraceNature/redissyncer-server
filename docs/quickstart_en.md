@@ -86,6 +86,7 @@ curl -X POST \
   -d '{
     "sourcePassword": "xxxxxx",
     "sourceRedisAddress": "192.168.0.10:6379;",
+    "":"",
     "targetRedisAddress": "192.168.0.20:6379",
     "targetPassword": "xxxxxx",
     "targetRedisVersion": 4,

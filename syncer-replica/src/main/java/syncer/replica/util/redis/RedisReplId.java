@@ -1,32 +1,12 @@
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-package syncer.transmission.util.redis;
-
+package syncer.replica.util.redis;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.common.util.RegexUtil;
 import syncer.jedis.Jedis;
-import syncer.replica.config.RedisURI;
-import syncer.replica.config.ReplicConfig;
 
 import java.net.URISyntaxException;
-
-/**
- * @author zhanenqiang
- * @Description 描述
- * @Date 2020/12/15
- */
 @Slf4j
-public class RedisReplIdCheck {
+public class RedisReplId {
     public final static String FIRST_RGEX = "repl_backlog_first_byte_offset:(.*?)\r\n";
     public final static String END_RGEX = "master_repl_offset:(.*?)\r\n";
     public final static String REPLID="master_replid:(.*?)\r\n";
@@ -41,13 +21,12 @@ public class RedisReplIdCheck {
 
     /**
      * 获取Redis Buffer值
-     * @param targetUri
+     * @param
      * @param type
      * @return
      * @throws URISyntaxException
      */
-    public  String[] selectSyncerBuffer(String targetUri,String type) throws URISyntaxException {
-        RedisURI targetUriplus = new RedisURI(targetUri);
+    public  String[] selectSyncerBuffer(String host,Integer port,String authUser,String password,String type) throws URISyntaxException {
         /**
          * 源目标
          */
@@ -55,21 +34,17 @@ public class RedisReplIdCheck {
         String[] version = new String[2];
         version[0]="0";
         try{
-            target = new Jedis(targetUriplus.getHost(), targetUriplus.getPort());
-            ReplicConfig targetConfig = ReplicConfig.valueOf(targetUriplus);
-
-            if(!StringUtils.isEmpty(targetConfig.getAuthUser())&&!StringUtils.isEmpty(targetConfig.getAuthPassword())){
-                Object targetAuth = target.auth(targetConfig.getAuthUser()+" "+targetConfig.getAuthPassword());
-            }else if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
-                Object targetAuth = target.auth(targetConfig.getAuthPassword());
+            target = new Jedis(host,port);
+            if(!StringUtils.isEmpty(authUser)&&!StringUtils.isEmpty(password)){
+                Object targetAuth = target.auth(authUser+" "+password);
+            }else if (!StringUtils.isEmpty(password)) {
+                Object targetAuth = target.auth(password);
             }
-            System.out.println(targetUri);
-
             String info=target.info();
             version = getRedisBuffer(info,type);
         }catch (Exception e){
             e.printStackTrace();
-            log.error("check redis replid error  {} : {} {}",targetUriplus.getHost(), targetUriplus.getPort(),e.getMessage());
+            log.error("check redis replid error  {} : {} {}",host, port,e.getMessage());
         } finally {
             if (target != null) {
                 target.close();
@@ -83,7 +58,6 @@ public class RedisReplIdCheck {
         version[0]="0";
         try{
 
-
             if(END_BUF.equalsIgnoreCase(type.trim())){
                 if(RegexUtil.getSubUtilSimple(info, END_RGEX).length()>0){
                     version[0] = RegexUtil.getSubUtilSimple(info, END_RGEX);
@@ -96,10 +70,10 @@ public class RedisReplIdCheck {
                     version[0] = RegexUtil.getSubUtilSimple(info, END_RGEX);
                 }
                 /**
-                //从头部开始
-                if(RegexUtil.getSubUtilSimple(info, FIRST_RGEX).length()>0){
-                    version[0] = RegexUtil.getSubUtilSimple(info, FIRST_RGEX);
-                }
+                 //从头部开始
+                 if(RegexUtil.getSubUtilSimple(info, FIRST_RGEX).length()>0){
+                 version[0] = RegexUtil.getSubUtilSimple(info, FIRST_RGEX);
+                 }
                  **/
             }
             String runid1=RegexUtil.getSubUtilSimple(info, REPLID);

@@ -35,6 +35,7 @@ public  class AbstractReplication extends AbstractReplicationListener implements
     protected RedisInputStream inputStream;
     private final AtomicBoolean manual = new AtomicBoolean(false);
     protected AtomicBoolean handStop =new AtomicBoolean(false);
+    protected String brokenMSg="";
     /**
      * 状态
      */
@@ -51,15 +52,29 @@ public  class AbstractReplication extends AbstractReplicationListener implements
 
     @Override
     public void open() throws IOException {
+        resetBrokenReason();
         manual.compareAndSet(true, false);
     }
 
-
+    /**
+     * 重置异常信息
+     */
+    void resetBrokenReason(){
+        brokenMSg="";
+    }
     @Override
     public void close() throws IOException {
         handStop.compareAndSet(handStop.get(),true);
         compareAndSet(connected.get(), TaskStatus.STOP);
         manual.compareAndSet(false, true);
+    }
+
+    @Override
+    public void broken(String reason) throws IOException {
+        compareAndSet(connected.get(), TaskStatus.BROKEN);
+        manual.compareAndSet(false, true);
+        handStop.set(false);
+        resetBrokenReason();
     }
 
 

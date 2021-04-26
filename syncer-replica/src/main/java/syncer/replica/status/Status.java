@@ -37,6 +37,10 @@ public enum Status {
     /**
      * 任务异常
      */
-    BROKEN
+    BROKEN,
 
+    /**
+     * sentinel故障转移
+     */
+    FAILOVER
 }

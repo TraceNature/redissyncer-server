@@ -35,6 +35,10 @@ public class IncrementOnlyProcessingStrategyListFactory implements CommonProcess
         List<CommonProcessingStrategy> strategyList = Lists.newArrayList();
         //过滤策略
         strategyList.add(CommandProcessingCommandFilterStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+        //sentinel PUBLISH filter
+        strategyList.add(CommandProcessingSentinelCommandFileterStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+
+
         strategyList.add(CommandProcessingDataAnalysisStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         //更新offset
         strategyList.add(CommandProcessingOffsetUpdateStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());

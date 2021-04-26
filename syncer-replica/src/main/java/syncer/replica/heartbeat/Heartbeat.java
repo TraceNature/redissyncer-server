@@ -3,6 +3,7 @@ package syncer.replica.heartbeat;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -63,6 +64,7 @@ public class Heartbeat {
     }
 
 
+
     /**
      * 执行心跳行为
      */
@@ -81,8 +83,20 @@ public class Heartbeat {
     }
 
 
-    void close(){
-        executor.shutdown();
+    public void close(){
+        try {
+            if (!heartbeat.isCancelled()) heartbeat.cancel(true);
+            if(executor!=null){
+                if(!executor.isShutdown()){
+                    executor.shutdown();
+                }
+
+            }
+        }catch (Exception e){
+
+        }
+
+
     }
 
 }

@@ -37,6 +37,7 @@ public class StockonlyProcessingStrategyListFactory implements CommonProcessingS
         strategyList.add(CommandProcessingTimeCalculationStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         //过滤策略
         strategyList.add(CommandProcessingCommandFilterStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+
         strategyList.add(CommandProcessingDataAnalysisStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         strategyList.add(CommandProcessingDbMappingStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
 //        strategyList.add(CommandProcessingRdbCommandSendStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).redisVersion(taskModel.getRedisVersion()).build());

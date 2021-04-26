@@ -17,6 +17,7 @@ import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.strategy.taskcheck.ITaskCheckStrategy;
 import syncer.transmission.strategy.taskcheck.ITaskCheckStrategyFactory;
+import syncer.transmission.strategy.taskcheck.impl.TaskCheckRedisTypeStrategy;
 import syncer.transmission.strategy.taskcheck.impl.TaskDistinctStrategy;
 
 import java.util.List;
@@ -31,6 +32,8 @@ public class TaskCheckFileStrategyFactory implements ITaskCheckStrategyFactory {
     @Override
     public List<ITaskCheckStrategy> getStrategyList(RedisClient client, TaskModel taskModel) {
         List<ITaskCheckStrategy>taskCheckStrategyList= Lists.newArrayList();
+        //判断RedisType是否为空
+        taskCheckStrategyList.add(TaskCheckRedisTypeStrategy.builder().client(client).taskModel(taskModel).build());
         //判断是否重复
         taskCheckStrategyList.add(TaskDistinctStrategy.builder().client(client).taskModel(taskModel).build());
 

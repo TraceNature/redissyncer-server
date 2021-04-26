@@ -23,5 +23,17 @@
             <version>3.1</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>syncer</groupId>
+            <artifactId>syncer-common</artifactId>
+            <version>3.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>syncer</groupId>
+            <artifactId>syncer-common</artifactId>
+            <version>3.1</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 </project>

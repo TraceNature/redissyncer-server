@@ -1,9 +1,12 @@
 package syncer.replica.listener;
 
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
+import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.event.Event;
 import syncer.replica.event.SyncerTaskEvent;
 import syncer.replica.replication.Replication;
+import syncer.replica.util.strings.Strings;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -53,7 +56,12 @@ public abstract class AbstractReplicationListener implements ReplicationListener
             try {
                 listener.onEvent(replication, event);
             }catch (Exception e){
-                log.error("send event to listener {} fail",listener.eventListenerName());
+                e.printStackTrace();
+                String res="";
+                if(event instanceof DefaultCommand){
+                    res=Strings.byteToString(((DefaultCommand) event).getCommand())+Strings.format(((DefaultCommand) event).getArgs());
+                }
+                log.error("send event to listener {} fail，event {}",listener.eventListenerName(),res);
             }
 
         }

@@ -14,6 +14,7 @@ package syncer.transmission.task;
 import lombok.extern.slf4j.Slf4j;
 import syncer.jedis.Protocol;
 import syncer.replica.config.RedisURI;
+import syncer.replica.constant.RedisType;
 import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.entity.RedisDB;
 import syncer.replica.event.Event;

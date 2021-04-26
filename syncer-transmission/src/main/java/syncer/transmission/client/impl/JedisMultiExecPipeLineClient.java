@@ -167,6 +167,7 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
 
 
 
+
     /**
      * 更新最后一个replid和offset
      * @param replid

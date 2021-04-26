@@ -16,6 +16,7 @@ import syncer.replica.retry.SocketReplicationRetrier;
 import syncer.replica.socket.RedisSocketFactory;
 import syncer.replica.status.TaskStatus;
 import syncer.replica.util.code.RedisCodec;
+import syncer.replica.util.strings.Strings;
 import syncer.replica.util.type.CapaSyncType;
 
 import java.io.IOException;
@@ -47,6 +48,14 @@ public class SocketReplication  extends AbstractReplication{
 
 
     /**
+     * sentinel failover 结束
+     *      * 是否属于哨兵模式-》哨兵模式不会进入break 而是 failover
+     *      * 是 true
+     *      * 否 false
+     */
+    protected boolean sentinelFailover=false;
+
+    /**
      * full resync 是否继续或者结束
      * true   继续
      * false  结束
@@ -55,8 +64,6 @@ public class SocketReplication  extends AbstractReplication{
 
     public static final String REPLY_ERROR_MSG="Can't SYNC while not connected with my master";
     private AtomicInteger count = new AtomicInteger();
-
-
 
     public int getPort() {
         return port;
@@ -74,12 +81,19 @@ public class SocketReplication  extends AbstractReplication{
         this.db = db;
     }
 
+    public void setStatus(boolean status) {
+        this.status = status;
+    }
+
     @Override
     public ReplicConfig getConfig() {
         return config;
     }
+    public SocketReplication(String host, int port, ReplicConfig config, boolean status){
+        this(host,port,config,status,false);
+    }
 
-    public SocketReplication(String host, int port, ReplicConfig config, boolean status) {
+    public SocketReplication(String host, int port, ReplicConfig config, boolean status,boolean sentinelFailover) {
         Objects.requireNonNull(host);
         if (port <= 0 || port > 65535) {
             throw new IllegalArgumentException("[TASKID "+config.getTaskId()+"]illegal argument port: " + port);
@@ -89,8 +103,8 @@ public class SocketReplication  extends AbstractReplication{
         this.port = port;
         this.status = status;
         this.config = config;
+        this.sentinelFailover= sentinelFailover;
         this.socketFactory = new RedisSocketFactory(config);
-
         this.syncRedisProtocol= DefaultSyncRedisProtocol.builder().socket(socket)
                 .configuration(config)
                 .heartbeat(new Heartbeat())
@@ -120,38 +134,107 @@ public class SocketReplication  extends AbstractReplication{
                     .msg(e.getMessage())
                     .build());
         }catch (Exception e){
+//            e.printStackTrace();
             log.error("Exception {} ,msg {}",e.getClass(),e.getMessage());
         }
         finally {
             if(status.get()){
                 if(handStop.get()){
-                    connected.set(TaskStatus.STOP);
-                    syncRedisProtocol.getReplication().doTaskStatusListener(this, SyncerTaskEvent
-                            .builder()
-                            .event(TaskStatus.STOP)
-                            .offset(config.getReplOffset())
-                            .replid(config.getReplId())
-                            .taskId(config.getTaskId())
-                            .msg("任务停止")
-                            .build());
+                    if(sentinelFailover){
+                        connected.set(TaskStatus.FAILOVER);
+                        syncRedisProtocol.getReplication().doTaskStatusListener(this, SyncerTaskEvent
+                                .builder()
+                                .event(TaskStatus.FAILOVER)
+                                .offset(config.getReplOffset())
+                                .taskId(config.getTaskId())
+                                .replid(config.getReplId())
+                                .msg("哨兵故障转移状态...")
+                                .build());
+                    }else {
+                        connected.set(TaskStatus.STOP);
+                        syncRedisProtocol.getReplication().doTaskStatusListener(this, SyncerTaskEvent
+                                .builder()
+                                .event(TaskStatus.STOP)
+                                .offset(config.getReplOffset())
+                                .replid(config.getReplId())
+                                .taskId(config.getTaskId())
+                                .msg("任务停止")
+                                .build());
+                    }
+
                 }else {
                     connected.set(TaskStatus.BROKEN);
-                    syncRedisProtocol.getReplication().doTaskStatusListener(this, SyncerTaskEvent
+                    SyncerTaskEvent event= SyncerTaskEvent
                             .builder()
                             .event(TaskStatus.BROKEN)
                             .offset(config.getReplOffset())
                             .taskId(config.getTaskId())
                             .replid(config.getReplId())
                             .msg("重试多次后失败")
-                            .build());
+                            .build();
+                    if(!Strings.isEquals("",brokenMSg)&&brokenMSg!=null){
+                        event.setMsg(brokenMSg);
+                    }
+                    syncRedisProtocol.getReplication().doTaskStatusListener(this, event);
+//                    if(sentinelFailover){
+//                        connected.set(TaskStatus.FAILOVER);
+//                        syncRedisProtocol.getReplication().doTaskStatusListener(this, SyncerTaskEvent
+//                                .builder()
+//                                .event(TaskStatus.FAILOVER)
+//                                .offset(config.getReplOffset())
+//                                .taskId(config.getTaskId())
+//                                .replid(config.getReplId())
+//                                .msg("哨兵故障转移状态...")
+//                                .build());
+//                    }else {
+//                        connected.set(TaskStatus.BROKEN);
+//                        syncRedisProtocol.getReplication().doTaskStatusListener(this, SyncerTaskEvent
+//                                .builder()
+//                                .event(TaskStatus.BROKEN)
+//                                .offset(config.getReplOffset())
+//                                .taskId(config.getTaskId())
+//                                .replid(config.getReplId())
+//                                .msg("重试多次后失败")
+//                                .build());
+//                    }
+
                 }
 
 
+            }else{
+                if(!handStop.get()){
+                    SyncerTaskEvent event= SyncerTaskEvent
+                            .builder()
+                            .event(TaskStatus.BROKEN)
+                            .offset(config.getReplOffset())
+                            .taskId(config.getTaskId())
+                            .replid(config.getReplId())
+                            .msg("重试多次后失败")
+                            .build();
+                    if(!Strings.isEquals("",brokenMSg)&&brokenMSg!=null){
+                        event.setMsg(brokenMSg);
+                    }
+                    syncRedisProtocol.getReplication().doTaskStatusListener(this, event);
+                }
             }
             doClose();
 
         }
     }
+
+
+
+    @Override
+    public void doClose() throws IOException {
+        super.doClose();
+        if(heartbeat!=null){
+            heartbeat.close();
+        }
+        if(outputStream!=null){
+            outputStream.close();
+        }
+    }
+
 
 
     public CapaSyncType trySync(final String reply) throws IOException, IncrementException, RedisAuthErrorException {

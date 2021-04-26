@@ -97,7 +97,6 @@ public class EtcdServerConfig {
      * @return
      */
     public EtcdAuthConfig getEtcdConfig(){
-        System.out.println(JSON.toJSONString(etcdAuthConfig));
         return this.etcdAuthConfig;
     }
 

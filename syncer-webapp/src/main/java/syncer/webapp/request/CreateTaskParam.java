@@ -12,13 +12,11 @@
 package syncer.webapp.request;
 
 import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import syncer.replica.constant.RedisType;
 import syncer.replica.type.FileType;
 import syncer.transmission.constants.CommandKeyFilterType;
-
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -31,7 +29,14 @@ import java.util.Map;
  */
 @Data
 public class CreateTaskParam extends BaseTaskParam implements Serializable {
-    public CreateTaskParam(String taskId, int batchSize, boolean sourceAcl, boolean targetAcl, String sourceUserName, String targetUserName, long errorCount, FileType synctype, FileType fileType, String tasktype, String offsetPlace, Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter, String keyFilter, CommandKeyFilterType filterType) {
+    public CreateTaskParam(String taskId, int batchSize, boolean sourceAcl, boolean targetAcl,
+                           String sourceUserName, String targetUserName, long errorCount,
+                           RedisType sourceRedisType,RedisType targetRedisType,
+                           String sourceRedisMasterName,String targetRedisMasterName,
+                           String sourceSentinelAuthPassword,String targetSentinelAuthPassword,
+                           FileType synctype, FileType fileType, String tasktype, String offsetPlace,
+                           Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter,
+                           String keyFilter, CommandKeyFilterType filterType) {
         this.taskId = taskId;
         this.batchSize = batchSize;
         this.sourceAcl = sourceAcl;
@@ -48,9 +53,22 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
         this.commandFilter = commandFilter;
         this.keyFilter = keyFilter;
         this.filterType = filterType;
+        this.targetSentinelAuthPassword=targetSentinelAuthPassword;
+        this.sourceSentinelAuthPassword=sourceSentinelAuthPassword;
+        this.sourceRedisType=sourceRedisType;
+        this.targetRedisType=targetRedisType;
+        this.sourceRedisMasterName=sourceRedisMasterName;
+        this.targetRedisMasterName=targetRedisMasterName;
     }
 
-    public CreateTaskParam(@NotBlank(message = "源RedisCluster地址不能为空") String sourceRedisAddress, @NotBlank(message = "目标RedisCluster地址不能为空") String targetRedisAddress, String sourcePassword, String targetPassword, @NotBlank(message = "任务名称不能为空") String taskName, boolean autostart, boolean afresh, String taskId, int batchSize, boolean sourceAcl, boolean targetAcl, String sourceUserName, String targetUserName, long errorCount, FileType synctype, FileType fileType, String tasktype, String offsetPlace, Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter, String keyFilter, CommandKeyFilterType filterType) {
+    public CreateTaskParam(@NotBlank(message = "源RedisCluster地址不能为空") String sourceRedisAddress, String sourceSentinelAuthPassword,
+                           @NotBlank(message = "目标RedisCluster地址不能为空") String targetRedisAddress, String targetSentinelAuthPassword,
+                           RedisType sourceRedisType, RedisType targetRedisType,
+                           String sourceRedisMasterName,String targetRedisMasterName,
+                           String sourcePassword, String targetPassword, @NotBlank(message = "任务名称不能为空") String taskName, boolean autostart,
+                           boolean afresh, String taskId, int batchSize, boolean sourceAcl, boolean targetAcl, String sourceUserName,
+                           String targetUserName, long errorCount, FileType synctype, FileType fileType, String tasktype, String offsetPlace,
+                           Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter, String keyFilter, CommandKeyFilterType filterType) {
         super(sourceRedisAddress, targetRedisAddress, sourcePassword, targetPassword, taskName, autostart, afresh);
         this.taskId = taskId;
         this.batchSize = batchSize;
@@ -68,9 +86,16 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
         this.commandFilter = commandFilter;
         this.keyFilter = keyFilter;
         this.filterType = filterType;
+        this.targetSentinelAuthPassword=targetSentinelAuthPassword;
+        this.sourceSentinelAuthPassword=sourceSentinelAuthPassword;
+        this.sourceRedisType=sourceRedisType;
+        this.targetRedisType=targetRedisType;
+        this.sourceRedisMasterName=sourceRedisMasterName;
+        this.targetRedisMasterName=targetRedisMasterName;
     }
 
     public CreateTaskParam() {
+
     }
 
     private static final long serialVersionUID = -5809782578272943998L;
@@ -92,11 +117,47 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
      */
     @Builder.Default
     private String sourceUserName="";
+
+    /**
+     * 源哨兵密码
+     */
+    @Builder.Default
+    private String sourceSentinelAuthPassword="";
+
+    /**
+     * 源Redis类型
+     *
+     */
+    private RedisType sourceRedisType;
+
     /**
      * 目标用户名
      */
     @Builder.Default
     private String targetUserName="";
+
+    /**
+     * sentinel masterName
+     */
+    @Builder.Default
+    private String sourceRedisMasterName="";
+
+    /**
+     * sentinel masterName
+     */
+    @Builder.Default
+    private String targetRedisMasterName="";
+
+    /**
+     * 目标哨兵密码
+     */
+    @Builder.Default
+    private String targetSentinelAuthPassword="";
+
+    /**
+     * 目标Redis类型
+     */
+    private RedisType targetRedisType;
 
     /**
      * 抛弃Key阈值
@@ -144,6 +205,9 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
      */
     @Builder.Default
     private String keyFilter="";
+
+
+
 
     @Builder.Default
     private CommandKeyFilterType filterType=CommandKeyFilterType.NONE;

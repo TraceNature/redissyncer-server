@@ -11,7 +11,7 @@
 
 package syncer.transmission.compensator;
 
-import syncer.replica.util.RedisBranchTypeEnum;
+import syncer.replica.constant.RedisType;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.compensator.impl.MultiThreadSyncerCompensator;
 import syncer.transmission.compensator.impl.PipeLineSyncerCompensator;
@@ -20,9 +20,9 @@ import syncer.transmission.compensator.impl.PipeLineSyncerCompensator;
  * 补偿机制
  */
 public class ISyncerCompensatorFactory {
-    public static ISyncerCompensator createRedisClient(RedisBranchTypeEnum branchTypeEnum, String taskId, RedisClient client){
+    public static ISyncerCompensator createRedisClient(RedisType redisType, String taskId, RedisClient client){
         ISyncerCompensator iSyncerCompensator = null;
-        switch (branchTypeEnum) {
+        switch (redisType) {
         case SINGLE:
             iSyncerCompensator=new PipeLineSyncerCompensator();
             break;

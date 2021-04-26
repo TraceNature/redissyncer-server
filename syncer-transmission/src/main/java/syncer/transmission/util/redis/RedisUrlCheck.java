@@ -20,6 +20,7 @@ import syncer.jedis.exceptions.JedisDataException;
 import syncer.replica.cmd.CMD;
 import syncer.replica.config.RedisURI;
 import syncer.replica.config.ReplicConfig;
+import syncer.replica.constant.RedisType;
 import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.util.code.CodeUtils;
 
@@ -34,6 +35,23 @@ import java.net.URISyntaxException;
 @Slf4j
 public class RedisUrlCheck {
     public  void  checkRedisUrl(String url,String clientName)throws TaskMsgException {
+        try {
+            if (!checkRedisUrl(url)) {
+                //TaskMsgException("scheme must be [redis].");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_URI_ERROR_CODE,TaskMsgConstant.TASK_MSG_REDIS_URI_ERROR));
+            }
+            if (!checkClientConnectState(url, clientName,false)) {
+                // TaskMsgException(name + " :连接redis失败");
+                throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE,TaskMsgConstant.TASK_MSG_TARGET_REDIS_CONNECT_ERROR));
+            }
+        } catch (URISyntaxException e) {
+
+            throw new TaskMsgException(e.getMessage());
+        }
+    }
+
+
+    public  void  checkRedisUrl(String[] url,String clientName)throws TaskMsgException {
         try {
             if (!checkRedisUrl(url)) {
                 //TaskMsgException("scheme must be [redis].");
@@ -56,6 +74,34 @@ public class RedisUrlCheck {
         return false;
     }
 
+    public  boolean checkRedisUrl(String[] uri) throws URISyntaxException {
+        for (int i = 0; i < uri.length; i++) {
+            URI uriplus = new URI(uri[i]);
+            if (uriplus.getScheme() == null ||! "redis".equalsIgnoreCase(uriplus.getScheme())) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+    public boolean checkClientConnectState(String[] urls, String clientName)throws TaskMsgException{
+        TaskMsgException exception=null;
+        for (int i = 0; i < urls.length; i++) {
+            try {
+                boolean status=checkClientConnectState(urls[i], clientName,true);
+                if(status){
+                    return true;
+                }
+            }catch (TaskMsgException e){
+                exception=e;
+            }
+
+        }
+        throw exception;
+    }
+
 
 
     /**
@@ -66,17 +112,26 @@ public class RedisUrlCheck {
      * @throws TaskMsgException
      */
 
-    public boolean checkClientConnectState(String url,String clientName)throws TaskMsgException{
+    public boolean checkClientConnectState(String url, String clientName,boolean sentinel)throws TaskMsgException{
         RedisURI turi = null;
         Jedis target = null;
         try {
+
+
             turi = new RedisURI(url);
             target = new Jedis(turi.getHost(), turi.getPort());
             ReplicConfig tconfig = ReplicConfig.valueOf(turi);
             //获取password
-            if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
-                String auth = target.auth(tconfig.getAuthPassword());
+            if(sentinel){
+                if (!StringUtils.isEmpty(tconfig.getSentinelAuthPassword())) {
+                    String auth = target.auth(tconfig.getSentinelAuthPassword());
+                }
+            }else {
+                if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
+                    String auth = target.auth(tconfig.getAuthPassword());
+                }
             }
+
 
             //重试三次
             int i = 3;

@@ -15,4 +15,7 @@ public interface Replication  extends Closeable, ReplicationRegister, Replicatio
 
     @Override
     void close() throws IOException;
+
+    void broken(String reason)throws IOException;
+
 }

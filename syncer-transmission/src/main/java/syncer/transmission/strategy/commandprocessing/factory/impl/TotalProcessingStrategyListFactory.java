@@ -38,6 +38,8 @@ public class TotalProcessingStrategyListFactory implements CommonProcessingStrat
         strategyList.add(CommandProcessingTimeCalculationStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         //过滤策略
         strategyList.add(CommandProcessingCommandFilterStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
+        //sentinel PUBLISH filter
+        strategyList.add(CommandProcessingSentinelCommandFileterStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
 
         strategyList.add(CommandProcessingDataAnalysisStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).client(client).build());
         //更新offset

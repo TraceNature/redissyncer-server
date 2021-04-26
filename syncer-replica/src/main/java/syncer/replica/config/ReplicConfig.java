@@ -70,6 +70,13 @@ public class ReplicConfig {
      */
     private String authPassword = null;
 
+    /**
+     * sentinel auth password
+     */
+    private String sentinelAuthPassword = null;
+
+    private String masterRedisName=null;
+
 
     /**
      * discard rdb event
@@ -188,6 +195,15 @@ public class ReplicConfig {
         if (parameters.containsKey("authPassword")) {
             configuration.setAuthPassword(parameters.get("authPassword"));
         }
+
+        if (parameters.containsKey("masterRedisName")) {
+            configuration.setMasterRedisName(parameters.get("masterRedisName"));
+        }
+
+        if (parameters.containsKey("sentinelAuthPassword")) {
+            configuration.setSentinelAuthPassword(parameters.get("sentinelAuthPassword"));
+        }
+
         if (parameters.containsKey("discardRdbEvent")) {
             configuration.setDiscardRdbEvent(getBool(parameters.get("discardRdbEvent"), false));
         }
@@ -224,6 +240,7 @@ public class ReplicConfig {
         if (uri.getPassword() != null) {
             configuration.setAuthPassword(uri.getPassword());
         }
+
         return configuration;
     }
 

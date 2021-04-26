@@ -5,9 +5,9 @@ server:
   #为空会自动获取内网地址
   nodeAddr:
   #数据存储类型  sqlite etcd
-  storageType: sqlite
+  storageType: etcd
   # 是否已单节点部署 当storageType为etcd时生效 若不使用portal时请设为true否则为false
-  singleNode: true
+  singleNode: false
   #断点续传类型
   # v1 基于内存保存，目标库不存入任何offset数据
   # v2 将所有命令封装事务，并在每批事务中写入offset数据即checkpoint检查点，断点续传时寻找最大的offset进行续传

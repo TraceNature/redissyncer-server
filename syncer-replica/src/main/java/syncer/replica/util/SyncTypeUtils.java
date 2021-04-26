@@ -1,5 +1,6 @@
 package syncer.replica.util;
 
+import syncer.replica.constant.RedisType;
 import syncer.replica.status.TaskStatus;
 import syncer.replica.type.FileType;
 import syncer.replica.type.SyncType;
@@ -22,7 +23,7 @@ public class SyncTypeUtils {
     public static final Map<Integer, OffsetPlace>offSetMap=new HashMap<>();
 
 
-    public static final Map<Integer, RedisBranchType>redisBranchTypeMap=new HashMap<>();
+    public static final Map<Integer, RedisType>redisTypeMap=new HashMap<>();
 
     public static final Map<Integer, TaskStatus>taskStatusTypeMap=new HashMap<>();
 
@@ -44,10 +45,11 @@ public class SyncTypeUtils {
         offSetMap.put(OffsetPlace.BEGINBUFFER.getCode(),OffsetPlace.BEGINBUFFER);
 
 
-        redisBranchTypeMap.put(RedisBranchType.SINGLE.getCode(),RedisBranchType.SINGLE);
-        redisBranchTypeMap.put(RedisBranchType.CLUSTER.getCode(),RedisBranchType.CLUSTER);
-        redisBranchTypeMap.put(RedisBranchType.FILE.getCode(),RedisBranchType.FILE);
-        redisBranchTypeMap.put(RedisBranchType.SENTINEL.getCode(),RedisBranchType.SENTINEL);
+        redisTypeMap.put(RedisType.SINGLE.getCode(),RedisType.SINGLE);
+        redisTypeMap.put(RedisType.CLUSTER.getCode(),RedisType.CLUSTER);
+        redisTypeMap.put(RedisType.FILE.getCode(),RedisType.FILE);
+        redisTypeMap.put(RedisType.SENTINEL.getCode(),RedisType.SENTINEL);
+        redisTypeMap.put(RedisType.NONE.getCode(),RedisType.NONE);
 
         taskStatusTypeMap.put(TaskStatus.STARTING.getCode(),TaskStatus.STARTING);
         taskStatusTypeMap.put(TaskStatus.CREATING.getCode(),TaskStatus.CREATING);
@@ -130,10 +132,10 @@ public class SyncTypeUtils {
      * @param sourceRedisType
      * @return
      */
-    public static RedisBranchType getRedisBranchType(int sourceRedisType){
-        if(redisBranchTypeMap.containsKey(sourceRedisType)){
-            return redisBranchTypeMap.get(sourceRedisType);
+    public static RedisType getRedisType(int sourceRedisType){
+        if(redisTypeMap.containsKey(sourceRedisType)){
+            return redisTypeMap.get(sourceRedisType);
         }
-        return RedisBranchType.SINGLE;
+        return RedisType.SINGLE;
     }
 }

@@ -14,7 +14,7 @@ package syncer.transmission.client;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.config.BreakPointConfig;
 import syncer.common.constant.BreakpointContinuationType;
-import syncer.replica.util.RedisBranchTypeEnum;
+import syncer.replica.constant.RedisType;
 import syncer.transmission.client.impl.JedisMultiExecPipeLineClient;
 import syncer.transmission.client.impl.JedisPipeLineClient;
 import syncer.transmission.client.impl.RedisJedisClusterClient;
@@ -26,9 +26,9 @@ import syncer.transmission.client.impl.RedisJedisClusterClient;
  */
 @Slf4j
 public class RedisClientFactory {
-    public static RedisClient createRedisClient(RedisBranchTypeEnum branchType, String host, Integer port, String password,String sourceHost, Integer sourcePort, int count, long errorCount, String taskId, String jimUrl, String cfsUrl) {
+    public static RedisClient createRedisClient(RedisType redisType, String host, Integer port, String password, String sourceHost, Integer sourcePort, int count, long errorCount, String taskId, String jimUrl, String cfsUrl) {
         RedisClient redisClient = null;
-        switch (branchType) {
+        switch (redisType) {
             case SINGLE:
                 if(BreakPointConfig.getBreakpointContinuationType().equals(BreakpointContinuationType.v1)){
                     redisClient = new JedisPipeLineClient(host,port,password,count,errorCount,taskId);
@@ -46,9 +46,9 @@ public class RedisClientFactory {
             case SENTINEL:
                 redisClient = new JedisPipeLineClient(host,port,password,count,errorCount,taskId);
                 break;
-            case JIMDB:
+//            case JIMDB:
 //                redisClient = new JimDb2Client(jimUrl,cfsUrl,taskId);
-                break;
+//                break;
             default:
                 break;
         }

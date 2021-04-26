@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import syncer.common.exception.TaskMsgException;
 import syncer.common.util.ThreadPoolUtils;
+import syncer.replica.constant.RedisType;
 import syncer.replica.status.TaskStatus;
 import syncer.replica.type.SyncType;
 import syncer.replica.util.SyncTypeUtils;
@@ -80,13 +81,22 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         }
         TaskDataEntity dataEntity = null;
         if (taskModel.getSyncType().equals(SyncType.SYNC.getCode()) || taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())) {
-            //获取offset和服务id
-            String[] data = redisReplIdCheck.selectSyncerBuffer(taskModel.getSourceUri(), SyncTypeUtils.getOffsetPlace(taskModel.getOffsetPlace()).getOffsetPlace());
-            dataEntity = TaskDataEntity.builder()
-                    .taskModel(taskModel)
-                    .offSetEntity(OffSetEntity.builder().replId(data[1]).build())
-                    .build();
-            dataEntity.getOffSetEntity().getReplOffset().set(taskModel.getOffset());
+
+            if(RedisType.SENTINEL.getCode().equals(taskModel.getSourceRedisType())){
+                dataEntity = TaskDataEntity.builder()
+                        .taskModel(taskModel)
+                        .offSetEntity(OffSetEntity.builder().replId("").build())
+                        .build();
+            }else {
+                //获取offset和服务id
+                String[] data = redisReplIdCheck.selectSyncerBuffer(taskModel.getSourceUri(), SyncTypeUtils.getOffsetPlace(taskModel.getOffsetPlace()).getOffsetPlace());
+                dataEntity = TaskDataEntity.builder()
+                        .taskModel(taskModel)
+                        .offSetEntity(OffSetEntity.builder().replId(data[1]).build())
+                        .build();
+                dataEntity.getOffSetEntity().getReplOffset().set(taskModel.getOffset());
+
+            }
         } else {
             dataEntity = TaskDataEntity.builder()
                     .taskModel(taskModel)
