@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  * @Description 统一异常捕获处理
  * @Date 2020/12/8
  */
-//@RestControllerAdvice
+@RestControllerAdvice
 @Slf4j
 public class ExceptionAdvice {
 
