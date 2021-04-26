@@ -43,28 +43,17 @@ public class DtoToTaskModelUtils {
     public synchronized static List<TaskModel> getTaskModelList(CreateTaskParam param, boolean change){
         List<TaskModel>taskModelList= Lists.newArrayList();
 
-        String[] addressList;
+        String[] addressList=param.getSourceRedisAddress().split(";");
 
-        if(!RedisType.SENTINEL.equals(param.getSourceRedisType())){
-            addressList=param.getSourceRedisAddress().split(";");
-        }else {
-            addressList=new String[]{param.getSourceRedisAddress()};
-        }
+        RedisType sourceRedisType=RedisType.SINGLE;
 
-        RedisType sourceRedisType=RedisType.NONE;
-        //源Redis类型
-        if(Objects.nonNull(param.getSourceRedisType())){
-             sourceRedisType=param.getSourceRedisType();
-        }
-
-//        else {
-//            sourceRedisType=taskType(addressList);
-//        }
         RedisType targetRedisType=RedisType.NONE;
-        //目标Redis类型
-        if(Objects.nonNull(param.getTargetRedisType())){
-            targetRedisType=param.getTargetRedisType();
-        }
+
+            if(param.getTargetRedisAddress().contains(";")){
+                targetRedisType=RedisType.CLUSTER;
+            }else {
+                targetRedisType=RedisType.SINGLE;
+            }
 
 //
 //        else {
@@ -168,6 +157,145 @@ public class DtoToTaskModelUtils {
         return taskModelList;
     }
 
+
+    public synchronized static List<TaskModel> getTaskModelList1(CreateTaskParam param, boolean change){
+        List<TaskModel>taskModelList= Lists.newArrayList();
+
+        String[] addressList;
+
+        if(!RedisType.SENTINEL.equals(param.getSourceRedisType())){
+            addressList=param.getSourceRedisAddress().split(";");
+        }else {
+            addressList=new String[]{param.getSourceRedisAddress()};
+        }
+
+        RedisType sourceRedisType=RedisType.NONE;
+        //源Redis类型
+        if(Objects.nonNull(param.getSourceRedisType())){
+            sourceRedisType=param.getSourceRedisType();
+        }else {
+            sourceRedisType=RedisType.SENTINEL;
+        }
+
+
+
+
+//        else {
+//            sourceRedisType=taskType(addressList);
+//        }
+        RedisType targetRedisType=RedisType.NONE;
+        //目标Redis类型
+        if(Objects.nonNull(param.getTargetRedisType())){
+            targetRedisType=param.getTargetRedisType();
+        }else {
+            if(param.getTargetRedisAddress().contains(";")){
+                targetRedisType=RedisType.CLUSTER;
+            }else {
+                targetRedisType=RedisType.NONE;
+            }
+        }
+
+//
+//        else {
+//            String[] targetAddressList=param.getTargetRedisAddress().split(";");
+//            targetRedisType=taskType(targetAddressList);
+//        }
+
+
+        String taskId=null;
+        for (String address:addressList) {
+            if(StringUtils.isEmpty(address)){
+                continue;
+            }
+            if(change){
+                taskId=param.getTaskId();
+            }else{
+                taskId= TemplateUtils.uuid();
+            }
+            FileType syncerType=null;
+
+            if(Objects.nonNull(param.getFileType())){
+                syncerType=param.getFileType();
+            }
+            if(Objects.nonNull(param.getSynctype())){
+                syncerType=param.getSynctype();
+            }
+            if(Objects.isNull(syncerType)){
+                syncerType=FileType.SYNC;
+            }
+
+            String keyFilter=param.getKeyFilter();
+            CommandKeyFilterType commandKeyFilterType= param.getFilterType()==null?CommandKeyFilterType.NONE:param.getFilterType();
+            TaskModel taskModel=TaskModel.builder()
+                    .afresh(param.isAfresh())
+                    //自动启动
+                    .autostart(param.isAutostart())
+                    //批次大小
+                    .batchSize(param.getBatchSize())
+                    .targetUserName("")
+                    .sourceUserName("")
+                    //offset
+                    .offset(-1L)
+                    //id
+                    .id(taskId)
+                    //taskName
+                    .taskName(param.getTaskName())
+                    //源地址
+                    .sourceRedisAddress(address)
+                    //源密码
+                    .sourcePassword(param.getSourcePassword())
+                    //目标地址
+                    .targetRedisAddress(param.getTargetRedisAddress())
+                    //目标密码
+                    .targetPassword(param.getTargetPassword())
+                    //任务状态
+                    .status(TaskStatus.CREATING.getCode())
+                    //原目标类型
+                    .sourceRedisType(sourceRedisType.getCode())
+
+                    .targetRedisType(targetRedisType.getCode())
+                    //文件地址
+                    .fileAddress("")
+                    //Redis 6.0 ACL相关
+                    .sourceAcl(param.isSourceAcl())
+//                    .sourceUserName(param.getSourceUserName())
+                    .targetAcl(param.isTargetAcl())
+//                    .targetUserName(param.getTargetUserName())
+                    .syncType(SyncTypeUtils.getSyncType(syncerType).getCode())
+                    .errorCount(param.getErrorCount())
+                    .timeDeviation(param.getTimeDeviation())
+                    .commandFilter(param.getCommandFilter())
+                    .keyFilter(keyFilter)
+                    .filterType(commandKeyFilterType)
+                    .sourceRedisMasterName(param.getSourceRedisMasterName())
+                    .targetRedisMasterName(param.getTargetRedisMasterName())
+                    .sourceSentinelAuthPassword(param.getSourceSentinelAuthPassword())
+                    .targetSentinelAuthPassword(param.getTargetSentinelAuthPassword())
+                    .build();
+            if(param.getDbMapper()!=null){
+                taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
+            }else {
+                taskModel.setDbMapper(JSON.toJSONString(new HashMap<>()));
+            }
+            if("total".equalsIgnoreCase(param.getTasktype())){
+                taskModel.setTasktype(TaskType.TOTAL.getCode());
+            }else if("stockonly".equalsIgnoreCase(param.getTasktype())){
+                taskModel.setTasktype(TaskType.STOCKONLY.getCode());
+            }else if("incrementonly".equalsIgnoreCase(param.getTasktype())){
+                taskModel.setTasktype(TaskType.INCREMENTONLY.getCode());
+            }
+
+            if("endbuffer".equalsIgnoreCase(param.getOffsetPlace())){
+                taskModel.setOffsetPlace(OffsetPlace.ENDBUFFER.getCode());
+            }else if("beginbuffer".equalsIgnoreCase(param.getOffsetPlace())){
+                taskModel.setOffsetPlace(OffsetPlace.BEGINBUFFER.getCode());
+            }
+            taskModel.setSyncType(getFileType(param.getSynctype()));
+            taskModel.setMd5(getTaskMd5(taskModel));
+            taskModelList.add(taskModel);
+        }
+        return taskModelList;
+    }
 
     public synchronized static List<TaskModel>getTaskModelList(CreateFileTaskParam param, boolean change){
         List<TaskModel>taskModelList=Lists.newArrayList();
