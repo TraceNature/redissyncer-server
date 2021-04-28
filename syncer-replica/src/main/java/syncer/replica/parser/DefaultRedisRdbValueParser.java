@@ -1,5 +1,6 @@
 package syncer.replica.parser;
 
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import syncer.replica.constant.Constants;
 import syncer.replica.datatype.command.ModuleParser;

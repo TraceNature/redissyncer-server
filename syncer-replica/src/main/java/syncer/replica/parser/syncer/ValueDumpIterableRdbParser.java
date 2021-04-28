@@ -15,6 +15,7 @@ import syncer.replica.parser.DefaultRedisRdbParser;
 import syncer.replica.parser.IRdbValueParser;
 import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
+import syncer.replica.util.strings.Strings;
 import syncer.replica.util.type.KvDataType;
 
 import java.io.IOException;
@@ -226,14 +227,11 @@ public class ValueDumpIterableRdbParser extends DefaultRedisRdbParser {
         BaseRdbParser parser = new BaseRdbParser(in);
         KeyValuePairEvent<byte[], byte[]> o0 = new DumpKeyValuePairEvent();
         byte[] key = parser.rdbLoadEncodedStringObject().first();
-
         o0.setValueRdbType(RDB_TYPE_STRING);
+        byte[]val=rdbValueParser.parseString(in, version);
         o0.setKey(key);
-        o0.setValue(rdbValueParser.parseString(in, version));
+        o0.setValue(val);
         o0.setDataType(KvDataType.STRING);
-//        System.out.println("++"+parser.rdbLoadLen().len);
-        //      o0.setSize(Long.valueOf(o0.getValue().length+key.length));
-
         return context.valueOf(o0);
     }
 

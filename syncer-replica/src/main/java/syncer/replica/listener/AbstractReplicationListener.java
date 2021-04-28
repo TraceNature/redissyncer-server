@@ -92,11 +92,11 @@ public abstract class AbstractReplicationListener implements ReplicationListener
 
     @Override
     public boolean addRawByteListener(TaskRawByteListener listener) {
-        return false;
+        return rawByteListenerList.add(listener);
     }
 
     @Override
     public boolean removeRawByteListener(TaskRawByteListener listener) {
-        return false;
+        return rawByteListenerList.remove(listener);
     }
 }

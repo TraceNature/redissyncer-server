@@ -28,6 +28,7 @@ import syncer.replica.listener.EventListener;
 import syncer.replica.listener.TaskStatusListener;
 import syncer.replica.listener.ValueDumpIterableEventListener;
 import syncer.replica.parser.syncer.ValueDumpIterableRdbParser;
+import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.register.DefaultCommandRegister;
 import syncer.replica.replication.RedisReplication;
 import syncer.replica.replication.Replication;
@@ -35,6 +36,7 @@ import syncer.replica.status.TaskStatus;
 import syncer.replica.type.SyncType;
 import syncer.replica.util.SyncTypeUtils;
 import syncer.replica.util.TaskRunTypeEnum;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.checkpoint.breakpoint.BreakPoint;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.client.RedisClientFactory;
@@ -121,6 +123,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
             //注册RDB全量解析器
 
             replicationHandler.setRdbParser(new ValueDumpIterableRdbParser(replicationHandler, taskModel.getRdbVersion()));
+
             OffSetEntity offset =null;
 
 
@@ -243,7 +246,6 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                     String taskId=event.getTaskId();
                     try {
                         SingleTaskDataManagerUtils.changeThreadStatus(taskId,event.getOffset(),event.getEvent());
-                        System.out.println(JSON.toJSONString(event));
                         if(Objects.nonNull(event.getMsg())&&event.getEvent().equals(TaskStatus.BROKEN)){
                             SingleTaskDataManagerUtils.updateThreadMsg(taskId,event.getMsg());
                         }

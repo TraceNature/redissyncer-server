@@ -154,7 +154,6 @@ public class SyncerRedisSentinel implements Sentinel {
         replication.addEventListener(new EventListener() {
             @Override
             public void onEvent(Replication replicator, Event event) {
-                System.out.println(JSON.toJSONString(event));
             }
 
             @Override
@@ -168,7 +167,7 @@ public class SyncerRedisSentinel implements Sentinel {
 
             @Override
             public void handler(Replication replication, SyncerTaskEvent event) {
-                System.out.println(JSON.toJSONString(event));
+
             }
 
             @Override

@@ -34,31 +34,30 @@ import static syncer.replica.constant.Constants.RDB_MODULE_OPCODE_SINT;
 import static syncer.replica.constant.Constants.RDB_MODULE_OPCODE_STRING;
 import static syncer.replica.constant.Constants.RDB_MODULE_OPCODE_UINT;
 
-
 /**
  * @author Leon Chen
  * @since 2.4.6
  */
 public class SkipRdbParser {
-    
+
     protected final RedisInputStream in;
-    
+
     public SkipRdbParser(RedisInputStream in) {
         this.in = in;
     }
-    
+
     public void rdbLoadTime() throws IOException {
         in.skip(4);
     }
-    
+
     public void rdbLoadMillisecondTime() throws IOException {
         in.skip(8);
     }
-    
+
     public BaseRdbParser.Len rdbLoadLen() throws IOException {
         return new BaseRdbParser(in).rdbLoadLen();
     }
-    
+
     public void rdbLoadIntegerObject(int enctype) throws IOException {
         switch (enctype) {
             case RDB_ENC_INT8:
@@ -74,13 +73,13 @@ public class SkipRdbParser {
                 break;
         }
     }
-    
+
     public void rdbLoadLzfStringObject() throws IOException {
         long clen = rdbLoadLen().len;
         rdbLoadLen();
         in.skip(clen);
     }
-    
+
     public void rdbGenericLoadStringObject() throws IOException {
         BaseRdbParser.Len lenObj = rdbLoadLen();
         long len = (int) lenObj.len;
@@ -101,15 +100,15 @@ public class SkipRdbParser {
         }
         in.skip(len);
     }
-    
+
     public void rdbLoadPlainStringObject() throws IOException {
         rdbGenericLoadStringObject();
     }
-    
+
     public void rdbLoadEncodedStringObject() throws IOException {
         rdbGenericLoadStringObject();
     }
-    
+
     public void rdbLoadDoubleValue() throws IOException {
         int len = in.read();
         switch (len) {
@@ -121,15 +120,15 @@ public class SkipRdbParser {
                 in.skip(len);
         }
     }
-    
+
     public void rdbLoadBinaryDoubleValue() throws IOException {
         in.skip(8);
     }
-    
+
     public float rdbLoadBinaryFloatValue() throws IOException {
         return in.skip(4);
     }
-    
+
     public void rdbLoadCheckModuleValue() throws IOException {
         int opcode;
         while ((opcode = (int) rdbLoadLen().len) != RDB_MODULE_OPCODE_EOF) {

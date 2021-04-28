@@ -46,7 +46,6 @@
                          }
 
                      }
-                     System.out.println(Strings.byteToString(defaultCommand.getCommand())+Strings.format(defaultCommand.getArgs()));
                  }
              }
 

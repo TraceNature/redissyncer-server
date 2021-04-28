@@ -52,7 +52,7 @@ public class DefaultRedisRdbParser implements IRdbParser {
 
     private Replication replication;
     protected IRdbValueParser rdbValueParser;
-    private final static String REDIS_Flag="REDIS";
+    private final static String REDIS_FlAG="REDIS";
 
     public DefaultRedisRdbParser(Replication replication) {
         this(replication, new DefaultRedisRdbValueParser(replication));
@@ -74,7 +74,7 @@ public class DefaultRedisRdbParser implements IRdbParser {
     public String parseMagic(RedisInputStream in) throws IOException {
         //REDIS
         String magic = BaseRdbParser.StringHelper.str(in, 5);
-        if (!REDIS_Flag.equals(magic)) {
+        if (!REDIS_FlAG.equals(magic)) {
             throw new UnsupportedOperationException("can't read MAGIC STRING [REDIS] ,value:" + magic);
         }
         return magic;
@@ -277,6 +277,16 @@ public class DefaultRedisRdbParser implements IRdbParser {
 
     @Override
     public Event parseString(RedisInputStream in, int version, ContextKeyValue context) throws IOException {
+//        BaseRdbParser parser = new BaseRdbParser(in);
+//        KeyValuePairEvent<byte[], byte[]> o0 = new KeyStringValueStringEvent();
+//        byte[] key = parser.rdbLoadEncodedStringObject().first();
+//
+//        byte[] val = rdbValueParser.parseString(in, version);
+//        o0.setValueRdbType(RDB_TYPE_STRING);
+//        o0.setValue(val);
+//        o0.setKey(key);
+//        return context.valueOf(o0);
+
         BaseRdbParser parser = new BaseRdbParser(in);
         KeyValuePairEvent<byte[], byte[]> o0 = new KeyStringValueStringEvent();
         byte[] key = parser.rdbLoadEncodedStringObject().first();
@@ -285,6 +295,7 @@ public class DefaultRedisRdbParser implements IRdbParser {
         o0.setValueRdbType(RDB_TYPE_STRING);
         o0.setValue(val);
         o0.setKey(key);
+
         return context.valueOf(o0);
     }
 

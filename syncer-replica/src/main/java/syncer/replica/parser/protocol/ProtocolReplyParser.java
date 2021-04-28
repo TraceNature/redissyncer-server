@@ -69,7 +69,7 @@ public class ProtocolReplyParser implements IProtocolReplyParser {
             int first=in.read();
             switch (first) {
                 case DOLLAR:
-                    // RESP Bulk Stringsdabao
+                    // RESP Bulk Strings
                     ByteBuilder builder = ByteBuilder.allocate(128);
                     while (true) {
                         while ((first = in.read()) != '\r') {

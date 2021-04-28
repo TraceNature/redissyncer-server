@@ -27,6 +27,7 @@ import syncer.replica.replication.Replication;
 import syncer.replica.status.TaskStatus;
 import syncer.replica.type.FileType;
 import syncer.replica.util.TaskRunTypeEnum;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.compensator.ISyncerCompensator;
 import syncer.transmission.constants.RedisCommandTypeEnum;
@@ -128,6 +129,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
 
                 //String类型
                 if(typeEnum.equals(RedisCommandTypeEnum.STRING)){
+
                     BatchedKeyStringValueStringEvent valueString = (BatchedKeyStringValueStringEvent) event;
                     if (ms == null || ms <= 0L) {
                         Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
