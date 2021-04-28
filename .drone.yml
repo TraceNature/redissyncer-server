@@ -1,5 +1,15 @@
 ---
 kind: pipeline
+type: exec
+name: open_proxy
+
+steps:
+  - name: open
+    commands:
+      - systemctl start v2ray
+
+---
+kind: pipeline
 type: docker
 name: build
 
@@ -81,5 +91,19 @@ volumes:
   - name: m2
     host:
       path: /root/.m2
+depends_on:
+  - open_proxy
+
+---
+
+---
+kind: pipeline
+type: exec
+name: close_proxy
+
+steps:
+  - name: close
+    commands:
+      - systemctl stop v2ray
 
 ...
