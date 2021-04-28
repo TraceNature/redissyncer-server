@@ -3,6 +3,10 @@ kind: pipeline
 type: exec
 name: open_proxy
 
+platform:
+  os: linux
+  arch: amd64
+
 steps:
   - name: open
     commands:
@@ -100,6 +104,10 @@ depends_on:
 kind: pipeline
 type: exec
 name: close_proxy
+
+platform:
+  os: linux
+  arch: amd64
 
 steps:
   - name: close
