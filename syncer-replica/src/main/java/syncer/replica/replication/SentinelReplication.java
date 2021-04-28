@@ -165,7 +165,6 @@ public class SentinelReplication implements Replication, SentinelListener{
 
     @Override
     public void onSwitch(Sentinel sentinel, HostAndPort next) {
-        System.out.println(JSON.toJSONString(next));
         if (prev == null || !prev.equals(next)) {
             log.info("TASKID[{}]Sentinel switch master to [{}]", getConfig().getTaskId(),next);
             closeQuietly(replication);
@@ -194,10 +193,8 @@ public class SentinelReplication implements Replication, SentinelListener{
                     }
                     e.printStackTrace();
                 }
-                System.out.println(getConfig().getReplId() +": "+getConfig().getReplOffset());
 
                 String replid=data[1];
-                System.out.println(replid +": "+data[0]);
                 replication.setStatus(false);
                 getConfig().setReplId(replid);
                 long offsetNum = Long.parseLong(data[0]);

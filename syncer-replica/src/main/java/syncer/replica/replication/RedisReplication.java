@@ -148,7 +148,6 @@ public class RedisReplication implements Replication{
             }
         } else {
             if(RedisType.SENTINEL.equals(redisType)){
-                System.out.println(configuration.getMasterRedisName()+":"+configuration.getSentinelAuthPassword());
                 this.replication=new SentinelReplication(hosts,configuration.getMasterRedisName(),configuration,status);
             }else {
                 this.replication = new SocketReplication(uri.getHost(), uri.getPort(), configuration,status);

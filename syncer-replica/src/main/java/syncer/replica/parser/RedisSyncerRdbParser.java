@@ -87,6 +87,7 @@ public class RedisSyncerRdbParser {
      * @throws IOException when read timeout
      */
     public long parse() throws IOException, IncrementException {
+
         long offset = 0L;
         this.replication.submitEvent(new PreRdbSyncEvent(), Tuples.of(0L, 0L));
         this.replication.setStatus(TaskStatus.RDBRUNNING);
@@ -101,6 +102,8 @@ public class RedisSyncerRdbParser {
         in.mark();
         rdbParser.parseMagic(in);
         int version = rdbParser.parseRdbVersion(in);
+        //rdb verion mapping
+
         log.info("[TASKID {}] source redis node rdb version: {}",replication.getConfig().getTaskId(),version);
         offset += in.unmark();
         RedisDB db = null;
@@ -147,7 +150,130 @@ public class RedisSyncerRdbParser {
                     offset += in.unmark();
                     this.replication.submitEvent(new PostRdbSyncEvent(checksum), Tuples.of(start, offset));
                     break loop;
-                case Constants.RDB_TYPE_STRING: ;
+                case Constants.RDB_TYPE_STRING:
+                    event = rdbParser.parseString(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_LIST:
+                    event = rdbParser.parseList(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_SET:
+                    event = rdbParser.parseSet(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_ZSET:
+                    event = rdbParser.parseZSet(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_ZSET_2:
+                    event = rdbParser.parseZSet2(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_HASH:
+                    event = rdbParser.parseHash(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_HASH_ZIPMAP:
+                    event = rdbParser.parseHashZipMap(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_LIST_ZIPLIST:
+                    event = rdbParser.parseListZipList(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_SET_INTSET:
+                    event = rdbParser.parseSetIntSet(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_ZSET_ZIPLIST:
+                    event = rdbParser.parseZSetZipList(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_HASH_ZIPLIST:
+                    event = rdbParser.parseHashZipList(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_LIST_QUICKLIST:
+                    event = rdbParser.parseListQuickList(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_MODULE:
+                    event = rdbParser.parseModule(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_MODULE_2:
+                    event = rdbParser.parseModule2(in, version, kv);
+                    break;
+                case Constants.RDB_TYPE_STREAM_LISTPACKS:
+                    event = rdbParser.parseStreamListPacks(in, version, kv);
+                    break;
+                default:
+
+                    throw new IncrementException("unexpected value type:" + type + ", check your ModuleParser or ValueIterableRdbVisitor.");
+            }
+            long start = offset;
+            offset += in.unmark();
+            if (Objects.isNull(event)) {
+                continue;
+            }
+            this.replication.submitEvent(event, Tuples.of(start, offset),replication.getConfig().getReplId(),offset);
+        }
+        return offset;
+    }
+/**
+
+    public long parse() throws IOException, IncrementException {
+        long offset = 0L;
+        this.replication.submitEvent(new PreRdbSyncEvent(), Tuples.of(0L, 0L));
+        this.replication.setStatus(TaskStatus.RDBRUNNING);
+        this.replication.submitSyncerTaskEvent(SyncerTaskEvent
+                .builder()
+                .taskId(replication.getConfig().getTaskId())
+                .offset(replication.getConfig().getReplOffset())
+                .replid(replication.getConfig().getReplId())
+                .event(TaskStatus.RDBRUNNING)
+                .msg("RDBRUNING")
+                .build());
+        in.mark();
+        rdbParser.parseMagic(in);
+        int version = rdbParser.parseRdbVersion(in);
+        //rdb verion mapping
+
+        log.info("[TASKID {}] source redis node rdb version: {}",replication.getConfig().getTaskId(),version);
+        offset += in.unmark();
+        RedisDB db = null;
+        loop:
+        while (isRunning()) {
+            Event event = null;
+            in.mark();
+            int type = rdbParser.parseValueType(in);
+            ContextKeyValue kv = new ContextKeyValue();
+            kv.setDb(db);
+            switch (type) {
+                //FD $unsigned int
+                case Constants.RDB_OPCODE_EXPIRETIME:
+                    event = rdbParser.parseExpireTime(in, version, kv);
+                    break;
+                //FC $unsigned long
+                case Constants.RDB_OPCODE_EXPIRETIME_MS:
+                    event = rdbParser.parseExpireTimeMs(in, version, kv);
+                    break;
+                case Constants.RDB_OPCODE_FREQ:
+                    event = rdbParser.parseFreq(in, version, kv);
+                    break;
+                case Constants.RDB_OPCODE_IDLE:
+                    event = rdbParser.parseIdle(in, version, kv);
+                    break;
+                case Constants.RDB_OPCODE_AUX:
+                    event = rdbParser.parseAux(in, version);
+                    break;
+                case Constants.RDB_OPCODE_MODULE_AUX:
+                    event = rdbParser.parseModuleAux(in, version);
+                    break;
+                case Constants.RDB_OPCODE_RESIZEDB:
+                    rdbParser.parseResizeDB(in, version, kv);
+
+                    break;
+                case Constants.RDB_OPCODE_SELECTDB:
+                    db = rdbParser.parseCurrentDb(in, version);
+                    break;
+                //RDB结束
+                case Constants.RDB_OPCODE_EOF:
+                    log.info("rdb parser end");
+                    long checksum = rdbParser.parseEof(in, version);
+                    long start = offset;
+                    offset += in.unmark();
+                    this.replication.submitEvent(new PostRdbSyncEvent(checksum), Tuples.of(start, offset));
+                    break loop;
+                case Constants.RDB_TYPE_STRING:
                     event = rdbParser.parseString(in, version, kv);
                     break;
                 case Constants.RDB_TYPE_LIST:
@@ -206,6 +332,7 @@ public class RedisSyncerRdbParser {
         return offset;
     }
 
+    **/
 
     private boolean isRunning() {
         return replication.getStatus().equals(TaskStatus.RDBRUNNING)

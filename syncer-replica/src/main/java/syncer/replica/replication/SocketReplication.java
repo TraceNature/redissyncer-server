@@ -43,7 +43,6 @@ public class SocketReplication  extends AbstractReplication{
 
     protected DefaultSyncRedisProtocol syncRedisProtocol;
 
-
     private SocketReplicationRetrier socketReplicationRetrier;
 
 
