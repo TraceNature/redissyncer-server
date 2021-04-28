@@ -72,7 +72,9 @@ steps:
       script:
         - /root/redissyncer-server/redissyncer.sh start
       username: root
-
+trigger:
+  branch:
+    - dev
 volumes:
   - name: m2
     host:
