@@ -18,10 +18,12 @@ steps:
   - name: clone
     image: alpine/git
     commands:
-      #      - export https_proxy=http://10.0.0.101:1081
-      #      - export http_proxy=http://10.0.0.101:1081
-      #      - export all_proxy=socks5://10.0.0.101:1080
+      - systemctl start v2ray
+      - export https_proxy=http://10.0.0.101:1081
+      - export http_proxy=http://10.0.0.101:1081
+      - export all_proxy=socks5://10.0.0.101:1080
       - git clone -v https://github.com/TraceNature/redissyncer-server.git .
+      - - systemctl stop v2ray
 
   - name: build
     image: maven:3-jdk-8
