@@ -167,7 +167,7 @@
                             <type>${project.packaging}</type>
                             <overWrite>true</overWrite>
                             <outputDirectory>${project.basedir}</outputDirectory>
-                            <destFileName>${parent.artifactId}-${syncer.version}.jar</destFileName>
+                            <destFileName>${parent.artifactId}.jar</destFileName>
                         </artifactItem>
                     </artifactItems>
                 </configuration>
