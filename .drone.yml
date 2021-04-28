@@ -32,7 +32,7 @@ steps:
       #      - export https_proxy=http://10.0.0.101:1081
       #      - export http_proxy=http://10.0.0.101:1081
       #      - export all_proxy=socks5://10.0.0.101:1080
-      - git checkout origin dev
+      - git checkout -b dev remotes/origin/dev
       - mvn clean package -Ddockerfile.skip -B -V
 
   - name: stopserver
