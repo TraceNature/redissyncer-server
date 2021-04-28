@@ -1,5 +1,15 @@
 ---
 kind: pipeline
+type: exec
+name: open_proxy
+
+steps:
+  - name: open
+    commands:
+      - systemctl start v2ray
+
+---
+kind: pipeline
 type: docker
 name: build
 
@@ -23,7 +33,7 @@ steps:
       - export http_proxy=http://10.0.0.101:1081
       - export all_proxy=socks5://10.0.0.101:1080
       - git clone -v https://github.com/TraceNature/redissyncer-server.git .
-      - - systemctl stop v2ray
+      - systemctl stop v2ray
 
   - name: build
     image: maven:3-jdk-8
@@ -81,5 +91,19 @@ volumes:
   - name: m2
     host:
       path: /root/.m2
+depends_on:
+  - open_proxy
+
+---
+
+---
+kind: pipeline
+type: exec
+name: close_proxy
+
+steps:
+  - name: close
+    commands:
+      - systemctl stop v2ray
 
 ...
