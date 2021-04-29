@@ -44,7 +44,8 @@ steps:
         #- 10.0.0.23
       key_path: ./id_rsa
       script:
-        - /root/redissyncer-server/redissyncer.sh stop
+        - cd /root/redissyncer-server
+        - ./redissyncer.sh stop
         - sleep 15
       username: root
 
@@ -70,7 +71,8 @@ steps:
         #- 10.0.0.23
       key_path: ./id_rsa
       script:
-        - /root/redissyncer-server/redissyncer.sh start
+        - cd /root/redissyncer-server
+        - ./redissyncer.sh start
       username: root
 trigger:
   branch:
