@@ -138,7 +138,7 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 
 [comment]: <> (| DECRBY     | 单元格      | 单元格 |)
 
-## 致谢
+## 致谢!
 
 ### [Jedis](https://github.com/redis/jedis)
 
