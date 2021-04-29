@@ -769,7 +769,7 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                 .sourceRedisType(SyncTypeUtils.getRedisType(taskModel.getSourceRedisType()))
                 .targetRedisType(SyncTypeUtils.getRedisType(taskModel.getTargetRedisType()))
                 .status(SyncTypeUtils.getTaskStatusType(taskModel.getStatus()))
-                .dbMapper(taskModel.getDbMapping())
+                .dbMapper(taskModel.loadDbMapping())
                 .analysisMap(taskModel.getDataAnalysis())
                 .createTime(taskModel.getCreateTime())
                 .updateTime(taskModel.getUpdateTime())

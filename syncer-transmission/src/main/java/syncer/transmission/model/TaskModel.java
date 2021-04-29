@@ -368,7 +368,7 @@ public class TaskModel {
         return mapObj;
     }
 
-    public Map<Integer,Integer>getDbMapping(){
+    public Map<Integer,Integer>loadDbMapping(){
         Map mapObj =null;
         try {
             if(StringUtils.isEmpty(dbMapper)){

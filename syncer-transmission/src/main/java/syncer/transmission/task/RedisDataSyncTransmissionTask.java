@@ -213,7 +213,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
 
                     KeyValueEventEntity node = KeyValueEventEntity.builder()
                             .event(event)
-                            .dbMapper(taskModel.getDbMapping())
+                            .dbMapper(taskModel.loadDbMapping())
                             .redisVersion(taskModel.getRedisVersion())
                             .baseOffSet(baseoffset)
                             .replId(replicationHandler.getConfig().getReplId())
