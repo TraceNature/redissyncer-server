@@ -60,14 +60,6 @@ public class SyncerplusWebappApplication {
 //    ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
 
-//    int info=1;
-//    @Scheduled(fixedRate = 1000)
-//    public void outputLogger(){
-//        log.info("测试日志输出"+info++);
-//    }
-    /**
-     * 推送日志到/topic/pullLogger
-     */
 
 /**
     @PostConstruct
@@ -148,43 +140,6 @@ public class SyncerplusWebappApplication {
         ThreadPoolUtils.exec(new SqliteSettingPersistenceTask());
         ThreadPoolUtils.exec(new DbDataCommitTask());
         ThreadPoolUtils.exec(new OffsetCommitTask());
-//        String logFilePath=EnvironmentUtils.searchByKey("syncer.config.path.logfile")+"/"+EnvironmentUtils.searchByKey("syncer.config.path.logfileName");
-//        ThreadPoolUtils.exec(new TailLogThread(logFilePath));
-        String md5A="A239";
-        String md5B="B240";
-
-
-
-//        Thread threadA=new Thread(new RedisDataMultiSyncTransmissionTask("redis://114.67.100.239:20001?authPassword=redistest0102", "114.67.100.240",20001,md5A,md5B,"A239"));
-//        Thread threadB=new Thread(new RedisDataMultiSyncTransmissionTask("redis://114.67.100.240:20001?authPassword=redistest0102","114.67.100.239",20001,md5A,md5B,"B240"));
-
-//        Thread threadA=new Thread(new RedisDataMultiSyncTransmissionTask("redis://10.0.1.45:20001?authPassword=redistest0102","10.0.1.46",20001,md5A,md5B,"A239"));
-//        Thread threadB=new Thread(new RedisDataMultiSyncTransmissionTask("redis://10.0.1.46:20001?authPassword=redistest0102","10.0.1.45",20001,md5A,md5B,"B240"));
-//        threadA.start();
-//        threadB.start();
-
-//        String settingPath = System.getProperty("user.dir") + FileUtils.getSettingName();
-//        if(FileUtils.existsFile(settingPath)){
-////            ConcurrentHashMap<String,ThreadMsgEntity> data=JSON.parseObject(FileUtils.getText(System.getProperty("user.dir")+ FileUtils.getSettingName()),new TypeReference<ConcurrentHashMap<String, ThreadMsgEntity>>() {});
-//            ConcurrentHashMap<String, ThreadMsgEntity> data= (ConcurrentHashMap<String, ThreadMsgEntity>) FileUtils.FileInputToObject(settingPath);
-//            for (Map.Entry<String, ThreadMsgEntity> entry:data.entrySet()
-//                 ) {
-//                ThreadMsgEntity msgEntity=entry.getValue();
-//                msgEntity.setRList(new ArrayList<>());
-//                msgEntity.setStatus(ThreadStatusEnum.STOP);
-//                data.put(entry.getKey(),msgEntity);
-//            }
-//            if(data==null){
-//                data=new  ConcurrentHashMap<String,ThreadMsgEntity>(10);
-//            }
-//            TaskMsgUtils.setAliveThreadHashMap(data);
-//
-//        }
-
-//
-//        while(true){
-//            log.warn("---------------------------------------------------------------------------------------------------------------------------------------");
-//        }
     }
 
 
