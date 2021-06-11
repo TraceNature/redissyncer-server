@@ -159,45 +159,6 @@ public class SyncerWebappApplication {
         }
 
 
-//
-//        List<HostAndPort> hosts = new ArrayList<>();
-//        // sentinel hosts
-//        hosts.add(new HostAndPort("114.67.76.82", 26379));
-//        hosts.add(new HostAndPort("114.67.76.82", 26380));
-//        hosts.add(new HostAndPort("114.67.76.82", 26381));
-//        ReplicConfig config1=ReplicConfig.defaultConfig();
-//
-//        config1.setAuthPassword("123456");
-//        config1.setSentinelAuthPassword("123456");
-//        Replication replication = new SentinelReplication(hosts, "local-master",config1,true );
-//        DefaultCommandRegister.addCommandParser(replication);
-//        replication.addEventListener(new EventListener() {
-//            @Override
-//            public void onEvent(Replication replicator, Event event) {
-//                if(event instanceof DefaultCommand){
-//                    DefaultCommand zcommand= (DefaultCommand) event;
-//                    if(DefaultCommandNames.PUBLISH.equalsIgnoreCase(Strings.byteToString(zcommand.getCommand()))){
-//                        PublishCommandParser parser=new PublishCommandParser();
-//                        PublishCommand publishCommand=parser.parse(zcommand.getArgs());
-//                        if("__sentinel__:hello".equalsIgnoreCase(Strings.byteToString(publishCommand.getChannel()))){
-//                            return;
-//                        }
-//                    }
-//                    System.out.println(Strings.byteToString(zcommand.getCommand())+":"+Strings.format(zcommand.getArgs()));
-//                }else{
-//                    System.out.println(JSON.toJSONString(event));
-//                }
-//
-//
-////                System.out.println(JSON.toJSONString(event));
-//            }
-//
-//            @Override
-//            public String eventListenerName() {
-//                return null;
-//            }
-//        });
-//        replication.open();
     }
 
     @Bean

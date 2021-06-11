@@ -38,7 +38,7 @@
 
 #### 单节点模式(每个节点一个任务)
     {
-        "sourceRedisAddress":"114.67.76.82:16379",
+        "sourceRedisAddress":"127.0.0.1:16379",
         "sourcePassword": "123456",          
         "sourceRedisType":"SINGLE",
         "targetRedisAddress": "127.0.0.1:6379",
