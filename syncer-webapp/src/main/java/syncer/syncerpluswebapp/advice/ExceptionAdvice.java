@@ -71,6 +71,7 @@ public class ExceptionAdvice {
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResultMap ConstraintViolationException(ConstraintViolationException e){
+        log.warn(e.getMessage());
         List<ConstraintViolation> errorInformation = new ArrayList<ConstraintViolation>(e.getConstraintViolations());
         return ResultMap.builder().code(CodeConstant.VALITOR_ERROR_CODE)
                 .msg(errorInformation.get(0).getMessage());
@@ -83,6 +84,7 @@ public class ExceptionAdvice {
      */
     @ExceptionHandler(BindException.class)
     public ResultMap BindException(BindException e){
+        log.warn(e.getMessage());
         List<String> errorInformation = e.getBindingResult().getAllErrors()
                 .stream()
                 .map(ObjectError::getDefaultMessage)
@@ -100,6 +102,7 @@ public class ExceptionAdvice {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResultMap MethodArgumentNotValidException(MethodArgumentNotValidException e){
+        log.warn(e.getMessage());
         String msg = msgConvertor(((MethodArgumentNotValidException) e).getBindingResult());
         return ResultMap.builder().code(CodeConstant.VALITOR_ERROR_CODE)
                 .msg(msg);
@@ -165,7 +168,8 @@ public class ExceptionAdvice {
      * @return
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResultMap HttpMessageNotReadableException(){
+    public ResultMap HttpMessageNotReadableException(HttpMessageNotReadableException e){
+        log.warn(e.getMessage());
         return ResultMap.builder().code(CodeConstant.HTTP_MSG_PARSE_ERROR_CODE)
                 .msg(HttpMsgConstant.HTTP_MSG_PARSE_ERROR_CODE);
     }
@@ -175,7 +179,8 @@ public class ExceptionAdvice {
      * @return
      */
     @ExceptionHandler(Exception.class)
-    public ResultMap Exception(){
+    public ResultMap Exception(Exception e){
+        log.warn(e.getMessage());
         return ResultMap.builder().code(CodeConstant.HTTP_ERROR_CODE)
                 .msg(HttpMsgConstant.HTTP_ERROR_MESSAGE);
     }
