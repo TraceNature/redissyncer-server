@@ -22,6 +22,7 @@ steps:
       - export http_proxy=http://10.0.0.101:1081
       - export all_proxy=socks5://10.0.0.101:1080
       - git clone -v https://github.com/TraceNature/redissyncer-server.git .
+      - git checkout -b dev remotes/origin/dev
 
   - name: build
     image: maven:3-jdk-8
@@ -32,7 +33,6 @@ steps:
       #      - export https_proxy=http://10.0.0.101:1081
       #      - export http_proxy=http://10.0.0.101:1081
       #      - export all_proxy=socks5://10.0.0.101:1080
-      - git checkout -b dev remotes/origin/dev
       - mvn clean package -Ddockerfile.skip -B -V
 
   - name: stopserver
