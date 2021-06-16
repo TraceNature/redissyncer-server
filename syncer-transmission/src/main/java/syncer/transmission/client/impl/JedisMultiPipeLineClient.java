@@ -747,6 +747,15 @@ public class JedisMultiPipeLineClient implements RedisClient {
     }
 
     @Override
+    public void close() {
+        if (Objects.nonNull(this.pipelined)) {
+            pipelined.close();
+        }
+        targetClient.close();
+    }
+
+
+    @Override
     public void select(Integer dbNum) {
         commitLock.lock();
         try {

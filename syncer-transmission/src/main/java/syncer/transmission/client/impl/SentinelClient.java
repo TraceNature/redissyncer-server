@@ -221,7 +221,7 @@ public class SentinelClient implements RedisClient {
         }
     }
 
-    private void close() {
+    public void close() {
         try {
             log.error("[TASKID {}]任务异常关闭...",taskId);
             SingleTaskDataManagerUtils.brokenTask(taskId);
@@ -260,8 +260,10 @@ public class SentinelClient implements RedisClient {
         }
     }
 
-    void doSwitchListener(HostAndPort host) {
 
+    //client切换操作
+    void doSwitchListener(HostAndPort host) {
+//        client=
     }
 
 }

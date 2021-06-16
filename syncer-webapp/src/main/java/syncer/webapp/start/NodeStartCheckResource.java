@@ -65,9 +65,12 @@ public class NodeStartCheckResource {
                             close();
                             status.set(true);
                             return;
+                        }else {
+                            log.info("etcd check success");
                         }
 
                         if(config.isSingleNode()){
+                            log.info("init single node task status");
                             initTaskStatus(configCenter);
                         }
 

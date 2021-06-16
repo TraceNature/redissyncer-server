@@ -251,6 +251,11 @@ public class RedisJedisClusterClient implements RedisClient {
 
     }
 
+    @Override
+    public void close() {
+
+    }
+
 
     @Override
     public void select(Integer dbNum) {

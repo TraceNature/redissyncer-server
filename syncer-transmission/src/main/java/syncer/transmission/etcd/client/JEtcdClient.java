@@ -237,7 +237,8 @@ public class JEtcdClient implements IEtcdOpCenter {
             lock.unlock(key);
 //            log.info("释放锁...");
         } catch (Exception e) {
-            log.warn("etcd lock error {}",e.getMessage());
+
+            log.warn("etcd lock error {} ,cause {}",e.getMessage(),e.getCause());
         }
     }
 

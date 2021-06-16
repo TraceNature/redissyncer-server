@@ -131,7 +131,6 @@ public class Strings {
     public static String[]byteToString(List<byte[]> bytes) {
         Objects.requireNonNull(bytes);
         String[]res=new String[bytes.size()];
-
         for (int i=0;i<bytes.size();i++){
             try {
                 String strContent = new String(bytes.get(i), "utf-8");

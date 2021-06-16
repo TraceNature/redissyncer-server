@@ -110,8 +110,9 @@ public class SyncerRedisSentinel implements Sentinel {
                 log.info("subscribe sentinel {}", sentinel);
                 jedis.subscribe(new PubSub(), this.channel);
             } catch (Throwable cause) {
-                cause.printStackTrace();
                 log.warn("suspend sentinel {}, cause: {}", sentinel, cause);
+                cause.printStackTrace();
+
             }
         }
     }
@@ -149,11 +150,13 @@ public class SyncerRedisSentinel implements Sentinel {
         hosts.add(new HostAndPort("114.67.76.82", 26380));
         hosts.add(new HostAndPort("114.67.76.82", 26381));
         ReplicConfig config = ReplicConfig.defaultConfig();
-//        config.setAuthPassword("123456");
+        config.setAuthPassword("123456");
+//        config.setSentinelAuthPassword("123456");
         Replication replication = new SentinelReplication(hosts, "mymaster", config, true);
         replication.addEventListener(new EventListener() {
             @Override
             public void onEvent(Replication replicator, Event event) {
+                System.out.println(JSON.toJSONString(event));
             }
 
             @Override
@@ -167,7 +170,7 @@ public class SyncerRedisSentinel implements Sentinel {
 
             @Override
             public void handler(Replication replication, SyncerTaskEvent event) {
-
+                System.out.println(JSON.toJSONString(event));
             }
 
             @Override

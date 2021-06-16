@@ -1,17 +1,9 @@
 package syncer.transmission.mapper.etcd;
 
-import com.alibaba.fastjson.JSON;
-import com.google.protobuf.ByteString;
-import com.ibm.etcd.api.DeleteRangeRequest;
-import com.ibm.etcd.api.RequestOp;
-import com.ibm.etcd.api.TxnRequest;
 import lombok.Builder;
 import lombok.Data;
-import syncer.transmission.constants.EtcdKeyCmd;
 import syncer.transmission.etcd.client.JEtcdClient;
-import syncer.transmission.lock.EtcdLockCommandRunner;
 import syncer.transmission.mapper.RubbishDataMapper;
-import syncer.transmission.model.TaskModel;
 
 /**
  * TODO
