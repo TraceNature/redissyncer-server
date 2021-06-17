@@ -72,7 +72,12 @@ public class DtoToTaskModelUtils {
         if(Objects.nonNull(param.getTargetRedisType())&&!RedisType.NONE.equals(param.getTargetRedisType())){
             targetRedisType=param.getTargetRedisType();
         }else{
-            targetRedisType=RedisType.SINGLE;
+
+            if(param.getTargetRedisAddress().split(";").length>1){
+                targetRedisType=RedisType.CLUSTER;
+            }else{
+                targetRedisType=RedisType.SINGLE;
+            }
         }
 
 //
