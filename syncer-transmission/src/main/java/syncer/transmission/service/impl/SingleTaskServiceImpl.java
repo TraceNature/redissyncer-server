@@ -11,6 +11,7 @@
 
 package syncer.transmission.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -116,7 +117,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
             SingleTaskDataManagerUtils.brokenTask(taskModel.getId());
             throw e;
         }
-
         ThreadPoolUtils.exec(new RedisDataSyncTransmissionTask(taskModel, true));
         return taskModel.getId();
     }
@@ -373,10 +373,13 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
 
 
                 } catch (Exception e) {
+
                     result.setCode("1000");
                     result.setTaskId(taskId);
                     result.setMsg("Error_" + e.getMessage());
                     log.error("startTaskByTaskId {} fail ",taskId);
+                    SingleTaskDataManagerUtils.brokenStatusAndLog(e, this.getClass(), taskId);
+                    e.printStackTrace();
                     return;
                 }
             }

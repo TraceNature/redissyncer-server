@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8080
   nodeId: 2
   nodetype: redissyncernodeserver
   #为空会自动获取内网地址

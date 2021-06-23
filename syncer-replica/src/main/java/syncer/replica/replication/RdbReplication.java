@@ -10,6 +10,7 @@ import syncer.replica.protocol.DefaultSyncRedisProtocol;
 import syncer.replica.socket.NetStream;
 import syncer.replica.status.TaskStatus;
 
+import javax.net.ssl.SSLHandshakeException;
 import java.io.*;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,15 +34,17 @@ public class RdbReplication extends AbstractReplication{
     }
 
 
-    public RdbReplication(String filePath, ReplicConfig config){
+    public RdbReplication(String filePath, ReplicConfig config) throws IOException {
         this(filePath,config,false);
     }
-    public RdbReplication(String filePath, ReplicConfig config,boolean online) {
+    public RdbReplication(String filePath, ReplicConfig config,boolean online) throws IOException {
         InputStream in = null;
         try {
             if(online){
                 NetStream netStream= NetStream.builder().build();
+
                 in=netStream.getInputStreamByOnlineFile(filePath);
+
             }else {
                 in = new FileInputStream(filePath);
             }
@@ -56,6 +59,18 @@ public class RdbReplication extends AbstractReplication{
                     .msg(e.getMessage())
                     .build());
             log.warn("任务Id【{}】异常停止，停止原因【{}】", config.getTaskId(), "本地文件未找到");
+            throw e;
+        } catch (SSLHandshakeException e){
+            doTaskStatusListener(this, SyncerTaskEvent
+                    .builder()
+                    .event(TaskStatus.BROKEN)
+                    .offset(config.getReplOffset())
+                    .replid(config.getReplId())
+                    .taskId(config.getTaskId())
+                    .msg(e.getMessage())
+                    .build());
+            log.warn("任务Id【{}】异常停止，停止原因【{}】", config.getTaskId(), "文件下载异常:"+e.getMessage());
+            throw e;
         } catch (IOException e) {
             connected.set(TaskStatus.BROKEN);
             doTaskStatusListener(this, SyncerTaskEvent
@@ -67,6 +82,7 @@ public class RdbReplication extends AbstractReplication{
                     .msg(e.getMessage())
                     .build());
             log.warn("任务Id【{}】异常停止，停止原因【{}】", config.getTaskId(), "文件下载异常");
+            throw e;
         }
 
         Objects.requireNonNull(in);
