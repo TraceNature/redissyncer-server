@@ -27,9 +27,8 @@ server:
 
 etcd:
   endpoints:
-    - 116.196.106.51:2379
-  username: etcdtest
-  password: 123456
+  username:
+  password:
 
 
 syncerplus:
