@@ -85,8 +85,4 @@ public class KeyCountUtils {
 
     }
 
-    public static void main(String[] args) throws URISyntaxException {
-        //redis://45.40.203.109:20001?authPassword=redistest0102
-        updateKeyCount("",new RedisURI("redis://114.67.100.239:6379?authPassword=redistest0102"));
-    }
 }

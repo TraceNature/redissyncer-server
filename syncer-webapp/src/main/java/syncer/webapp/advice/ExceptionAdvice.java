@@ -204,7 +204,8 @@ public class ExceptionAdvice {
      * @return
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseResult HttpMessageNotReadableException(){
+    public ResponseResult HttpMessageNotReadableException(HttpMessageNotReadableException e){
+        log.error(e.getMessage());
         return ResponseResult.builder()
                 .code(CodeConstant.HTTP_MSG_PARSE_ERROR_CODE)
                 .msg(HttpMsgConstant.HTTP_MSG_PARSE_ERROR_CODE)
@@ -216,7 +217,8 @@ public class ExceptionAdvice {
      * @return
      */
     @ExceptionHandler(Exception.class)
-    public ResponseResult Exception(){
+    public ResponseResult Exception(Exception e){
+        log.error(e.getMessage());
         return ResponseResult.builder()
                 .code(CodeConstant.HTTP_ERROR_CODE)
                 .msg(HttpMsgConstant.HTTP_ERROR_MESSAGE)

@@ -90,4 +90,3 @@ RedisSyncer一款通过replication协议模拟slave来获取源Redis节点数据
 #### 如何开启v2
  * 默认为v1,若想使用v2断点续传机制，请在启动syncer时设置  --server.breakpointContinuationType=v2 
 
-    
