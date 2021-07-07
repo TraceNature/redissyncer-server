@@ -7,9 +7,9 @@ platform:
   os: linux
   arch: amd64
 
-#workspace:
-#  base: /java
-#  path: src/redissyncer-server
+workspace:
+  base: /java
+  path: src/redissyncer-server
 
 clone:
   disable: true
@@ -22,7 +22,6 @@ steps:
       - export http_proxy=http://10.0.0.101:1081
       - export all_proxy=socks5://10.0.0.101:1080
       - git clone -v https://github.com/TraceNature/redissyncer-server.git .
-      - git checkout -b dev remotes/origin/dev
 
   - name: build
     image: maven:3-jdk-8
@@ -35,67 +34,47 @@ steps:
       #      - export all_proxy=socks5://10.0.0.101:1080
       - mvn clean package -Ddockerfile.skip -B -V
 
-  - name: stopserver
-    image: appleboy/drone-ssh
-    settings:
-      host:
-        - 10.0.0.21
-        #- 10.0.0.22
-        #- 10.0.0.23
-      key_path: ./id_rsa
-      script:
-        - cd /root/redissyncer-server
-        - ./redissyncer.sh stop
-        - sleep 15
-      username: root
+#  - name: stopserver
+#    image: appleboy/drone-ssh
+#    settings:
+#      host:
+#        - 10.0.0.21
+#        - 10.0.0.22
+#        - 10.0.0.23
+#      key_path: ./id_rsa
+#      script:
+#        - /root/redissyncer-server/redissyncer.sh stop
+#        - sleep 15
+#      username: root
+#
+#  - name: publish
+#    image: appleboy/drone-scp
+#    settings:
+#      host:
+#        - 10.0.0.21
+#        - 10.0.0.22
+#        - 10.0.0.23
+#      key_path: ./id_rsa
+#      port: 22
+#      source: syncer-webapp/redissyncer-server.jar
+#      target: /root/redissyncer-server/
+#      user: root
+#
+#  - name: startserver
+#    image: appleboy/drone-ssh
+#    settings:
+#      host:
+#        - 10.0.0.21
+#        - 10.0.0.22
+#        - 10.0.0.23
+#      key_path: ./id_rsa
+#      script:
+#        - /root/redissyncer-server/redissyncer.sh start
+#      username: root
 
-  - name: publish
-    image: appleboy/drone-scp
-    settings:
-      host:
-        - 10.0.0.21
-        #- 10.0.0.22
-        #- 10.0.0.23
-      key_path: ./id_rsa
-      port: 22
-      source: syncer-webapp/redissyncer-server.jar
-      target: /root/redissyncer-server/
-      user: root
-
-  - name: startserver
-    image: appleboy/drone-ssh
-    settings:
-      host:
-        - 10.0.0.21
-        #- 10.0.0.22
-        #- 10.0.0.23
-      key_path: ./id_rsa
-      script:
-        - cd /root/redissyncer-server
-        - ./redissyncer.sh start
-      username: root
-trigger:
-  branch:
-    - dev
 volumes:
   - name: m2
     host:
       path: /root/.m2
-#depends_on:
-#  - open_proxy
-
-#---
-#kind: pipeline
-#type: exec
-#name: close_proxy
-#
-#platform:
-#  os: linux
-#  arch: amd64
-#
-#steps:
-#  - name: close
-#    commands:
-#      - systemctl stop v2ray
 
 ...

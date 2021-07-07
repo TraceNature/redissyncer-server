@@ -39,70 +39,61 @@ public class DtoToTaskModelUtils {
      * @param param
      * @return
      */
-
-    public synchronized static List<TaskModel> getTaskModelList(CreateTaskParam param, boolean change){
-        List<TaskModel>taskModelList= Lists.newArrayList();
-
+    public synchronized static List<TaskModel>getTaskModelList(CreateTaskParam param, boolean change) {
+        List<TaskModel> taskModelList = Lists.newArrayList();
         String[] addressList;
-
-        if(Objects.isNull(param.getSourceRedisType())||RedisType.NONE.equals(param.getSourceRedisType())){
-            addressList=param.getSourceRedisAddress().split(";");
-        }else {
-            if(!RedisType.SENTINEL.equals(param.getSourceRedisType())){
-                addressList=param.getSourceRedisAddress().split(";");
-            }else {
-                addressList=new String[]{param.getSourceRedisAddress()};
+        if (Objects.isNull(param.getSourceRedisType()) || RedisType.NONE.equals(param.getSourceRedisType())) {
+            addressList = param.getSourceRedisAddress().split(";");
+        } else {
+            if (!RedisType.SENTINEL.equals(param.getSourceRedisType())) {
+                addressList = param.getSourceRedisAddress().split(";");
+            } else {
+                addressList = new String[]{param.getSourceRedisAddress()};
             }
         }
-
-
-        RedisType sourceRedisType=RedisType.NONE;
+        RedisType sourceRedisType = RedisType.NONE;
         //源Redis类型
-        if(Objects.nonNull(param.getSourceRedisType())&&!RedisType.NONE.equals(param.getSourceRedisType())){
-             sourceRedisType=param.getSourceRedisType();
-        }else {
-            sourceRedisType=RedisType.SINGLE;
+        if (Objects.nonNull(param.getSourceRedisType()) && !RedisType.NONE.equals(param.getSourceRedisType())) {
+            sourceRedisType = param.getSourceRedisType();
+        } else {
+            sourceRedisType = RedisType.SINGLE;
         }
-
-        RedisType targetRedisType=RedisType.NONE;
+        RedisType targetRedisType = RedisType.NONE;
         //目标Redis类型
-        if(Objects.nonNull(param.getTargetRedisType())&&!RedisType.NONE.equals(param.getTargetRedisType())){
-            targetRedisType=param.getTargetRedisType();
-        }else{
-            if(param.getTargetRedisAddress().split(";").length>1){
-                targetRedisType=RedisType.CLUSTER;
-            }else{
-                targetRedisType=RedisType.SINGLE;
+        if (Objects.nonNull(param.getTargetRedisType()) && !RedisType.NONE.equals(param.getTargetRedisType())) {
+            targetRedisType = param.getTargetRedisType();
+        } else {
+            if (param.getTargetRedisAddress().split(";").length > 1) {
+                targetRedisType = RedisType.CLUSTER;
+            } else {
+                targetRedisType = RedisType.SINGLE;
             }
         }
-
-
-
-        String taskId=null;
-        for (String address:addressList) {
-            if(StringUtils.isEmpty(address)){
+        String taskId = null;
+        for (String address : addressList) {
+            if (StringUtils.isEmpty(address)) {
                 continue;
             }
-            if(change){
-                taskId=param.getTaskId();
-            }else{
-                taskId= TemplateUtils.uuid();
+            if (change) {
+                taskId = param.getTaskId();
+            } else {
+                taskId = TemplateUtils.uuid();
             }
-            FileType syncerType=null;
+            FileType syncerType = null;
 
-            if(Objects.nonNull(param.getFileType())){
-                syncerType=param.getFileType();
+            if (Objects.nonNull(param.getFileType())) {
+                syncerType = param.getFileType();
             }
-            if(Objects.nonNull(param.getSynctype())){
-                syncerType=param.getSynctype();
+            if (Objects.nonNull(param.getSynctype())) {
+                syncerType = param.getSynctype();
             }
-            if(Objects.isNull(syncerType)){
-                syncerType=FileType.SYNC;
+            if (Objects.isNull(syncerType)) {
+                syncerType = FileType.SYNC;
             }
 
-            String keyFilter=param.getKeyFilter();
-            CommandKeyFilterType commandKeyFilterType= param.getFilterType()==null?CommandKeyFilterType.NONE:param.getFilterType();
-            TaskModel taskModel=TaskModel.builder()
+            String keyFilter = param.getKeyFilter();
+            CommandKeyFilterType commandKeyFilterType = param.getFilterType() == null ? CommandKeyFilterType.NONE : param.getFilterType();
+            TaskModel taskModel = TaskModel.builder()
                     .afresh(param.isAfresh())
                     //自动启动
                     .autostart(param.isAutostart())
@@ -147,8 +138,6 @@ public class DtoToTaskModelUtils {
                     .targetRedisMasterName(param.getTargetRedisMasterName())
                     .sourceSentinelAuthPassword(param.getSourceSentinelAuthPassword())
                     .targetSentinelAuthPassword(param.getTargetSentinelAuthPassword())
-                    .topicName(param.getTopicName())
-                    .targetKafkaAddress(param.getTargetKafkaAddress())
                     .build();
             if(param.getDbMapper()!=null){
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
@@ -207,56 +196,63 @@ public class DtoToTaskModelUtils {
             }
         }
 
-        if(param.getFileAddress().indexOf(";")>0){
-            addressList= Arrays.asList(param.getFileAddress().split(";"));
-        } else if(param.getFileAddress().startsWith("http://")||param.getFileAddress().startsWith("https://")){
+        if (param.getFileAddress().indexOf(";") > 0) {
+            addressList = Arrays.asList(param.getFileAddress().split(";"));
+        } else if (param.getFileAddress().startsWith("http://") || param.getFileAddress().startsWith("https://")) {
             addressList.add(param.getFileAddress());
-        }  else {
-            File file=new File(param.getFileAddress());
-            if(file.isDirectory()){
-                addressList= FileUtils.getFiles(param.getFileAddress()).stream().filter(data->{
-                    if(param.getFileType().equals(FileType.RDB)){
-                        if(data.endsWith(".rdb")){
+        } else {
+            File file = new File(param.getFileAddress());
+            if (file.isDirectory()) {
+                addressList = FileUtils.getFiles(param.getFileAddress()).stream().filter(data -> {
+                    if (param.getFileType().equals(FileType.RDB)) {
+                        if (data.endsWith(".rdb")) {
                             return true;
                         }
                     }
-                    if(param.getFileType().equals(FileType.AOF)){
-                        if(data.endsWith(".aof")){
+                    if (param.getFileType().equals(FileType.AOF)) {
+                        if (data.endsWith(".aof")) {
                             return true;
                         }
                     }
-                    if(param.getFileType().equals(FileType.MIXED)){
-                        if(data.endsWith(".mixed")){
+                    if (param.getFileType().equals(FileType.MIXED)) {
+                        if (data.endsWith(".mixed")) {
                             return true;
                         }
                     }
                     return false;
                 }).collect(Collectors.toList());
-            }else if(file.isFile()){
+            } else if (file.isFile()) {
                 addressList.add(param.getFileAddress());
             }
         }
 
-        RedisType targetRedisType= RedisType.NONE;
+
+        RedisType targetRedisType = RedisType.NONE;
         //目标Redis类型
-        if(Objects.nonNull(param.getTargetRedisType())){
-            targetRedisType=param.getTargetRedisType();
+        if (Objects.nonNull(param.getTargetRedisType()) && !RedisType.NONE.equals(param.getTargetRedisType())) {
+            targetRedisType = param.getTargetRedisType();
+        } else {
+            if (param.getTargetRedisAddress().split(";").length > 1) {
+                targetRedisType = RedisType.CLUSTER;
+            } else {
+                targetRedisType = RedisType.SINGLE;
+            }
         }
 
-        for (String address:
+        for (String address :
                 addressList) {
-            if(StringUtils.isEmpty(address)){
+            if (StringUtils.isEmpty(address)) {
                 continue;
             }
 
-            if(change){
-                taskId=param.getTaskId();
-            }else{
-                taskId=TemplateUtils.uuid();
+            if (change) {
+                taskId = param.getTaskId();
+            } else {
+                taskId = TemplateUtils.uuid();
             }
-            String keyFilter=param.getKeyFilter();
-            CommandKeyFilterType commandKeyFilterType= param.getFilterType()==null?CommandKeyFilterType.NONE:param.getFilterType();
-            TaskModel taskModel=TaskModel.builder()
+            String keyFilter = param.getKeyFilter();
+            CommandKeyFilterType commandKeyFilterType = param.getFilterType() == null ? CommandKeyFilterType.NONE : param.getFilterType();
+            TaskModel taskModel = TaskModel.builder()
                     .afresh(true)
                     //自动启动
                     .autostart(param.isAutostart())
@@ -294,9 +290,9 @@ public class DtoToTaskModelUtils {
                     .filterType(commandKeyFilterType)
                     .build();
 
-            if(param.getDbMapper()!=null){
+            if (param.getDbMapper() != null) {
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
-            }else {
+            } else {
                 taskModel.setDbMapper(JSON.toJSONString(new HashMap<>()));
             }
 
@@ -316,22 +312,22 @@ public class DtoToTaskModelUtils {
      * @return
      */
     public synchronized static List<TaskModel> getTaskModelList(CreateDumpUpParam param, boolean change) throws TaskMsgException {
-        List<TaskModel>taskModelList=Lists.newArrayList();
-        String[]addressList=param.getSourceRedisAddress().split(";");
-        if(!param.getFileType().equals(SyncType.COMMANDDUMPUP.getFileType())){
+        List<TaskModel> taskModelList = Lists.newArrayList();
+        String[] addressList = param.getSourceRedisAddress().split(";");
+        if (!param.getFileType().equals(SyncType.COMMANDDUMPUP.getFileType())) {
             throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_SYNCTYPE_ERROR_CODE, TaskMsgConstant.TASK_MSG_SYNCTYPE_ERROR));
         }
-        String taskId=null;
-        for (String address:addressList) {
-            if(StringUtils.isEmpty(address)){
+        String taskId = null;
+        for (String address : addressList) {
+            if (StringUtils.isEmpty(address)) {
                 continue;
             }
-            if(change){
-                taskId=param.getTaskId();
-            }else {
-                taskId=TemplateUtils.uuid();
+            if (change) {
+                taskId = param.getTaskId();
+            } else {
+                taskId = TemplateUtils.uuid();
             }
-            TaskModel taskModel=TaskModel.builder()
+            TaskModel taskModel = TaskModel.builder()
                     .afresh(true)
                     //自动启动
                     .autostart(param.isAutostart())
@@ -364,9 +360,9 @@ public class DtoToTaskModelUtils {
                     .targetUserName(param.getTargetUserName())
                     .errorCount(param.getErrorCount())
                     .build();
-            if(param.getDbMapper()!=null){
+            if (param.getDbMapper() != null) {
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
-            }else {
+            } else {
                 taskModel.setDbMapper(JSON.toJSONString(Maps.newHashMap()));
             }
             taskModel.setMd5(getTaskMd5(taskModel));
@@ -381,29 +377,29 @@ public class DtoToTaskModelUtils {
      * @param addressList
      * @return
      */
-    static RedisType taskType(String[] addressList){
-        RedisType sourceRedisType=RedisType.SENTINEL;
-        if(addressList.length>1){
-            sourceRedisType=RedisType.CLUSTER;
+    static RedisType taskType(String[] addressList) {
+        RedisType sourceRedisType = RedisType.SENTINEL;
+        if (addressList.length > 1) {
+            sourceRedisType = RedisType.CLUSTER;
         }
         return sourceRedisType;
     }
 
 
-    public synchronized static String getTaskMd5(TaskModel taskModel){
-        StringBuilder stringBuilder=new StringBuilder();
-        if(!StringUtils.isEmpty(taskModel.getTargetRedisAddress())){
+    public synchronized static String getTaskMd5(TaskModel taskModel) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (!StringUtils.isEmpty(taskModel.getTargetRedisAddress())) {
             stringBuilder.append(taskModel.getTargetRedisAddress());
             stringBuilder.append("_");
-        }else {
+        } else {
             stringBuilder.append("null");
             stringBuilder.append("_");
         }
 
-        if(!StringUtils.isEmpty(taskModel.getTargetPassword())){
+        if (!StringUtils.isEmpty(taskModel.getTargetPassword())) {
             stringBuilder.append(taskModel.getTargetPassword());
             stringBuilder.append("_");
-        }else {
+        } else {
             stringBuilder.append("null");
             stringBuilder.append("_");
         }

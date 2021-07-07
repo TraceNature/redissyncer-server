@@ -11,6 +11,7 @@
 
 package syncer.transmission.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,6 @@ import syncer.transmission.service.ISingleTaskService;
 import syncer.transmission.strategy.taskcheck.RedisTaskStrategyGroupType;
 import syncer.transmission.strategy.taskcheck.TaskCheckStrategyGroupSelecter;
 import syncer.transmission.task.RedisDataCommandUpTransmissionTask;
-import syncer.transmission.task.RedisDataSyncTransmission2KafkaTask;
 import syncer.transmission.task.RedisDataSyncTransmissionTask;
 import syncer.transmission.util.ExpandTaskUtils;
 import syncer.transmission.util.lock.TaskRunUtils;
@@ -117,12 +117,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
             SingleTaskDataManagerUtils.brokenTask(taskModel.getId());
             throw e;
         }
-
-        if(RedisType.KAFKA.getCode().equals(taskModel.getTargetRedisType())){
-            ThreadPoolUtils.exec(new RedisDataSyncTransmission2KafkaTask(taskModel, true));
-        }else {
-            ThreadPoolUtils.exec(new RedisDataSyncTransmissionTask(taskModel, true));
-        }
+        ThreadPoolUtils.exec(new RedisDataSyncTransmissionTask(taskModel, true));
         return taskModel.getId();
     }
 
@@ -205,7 +200,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
 
                                 try {
                                     data.getReplication().close();
-                                    data.getReplication().closeClean();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -379,10 +373,13 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
 
 
                 } catch (Exception e) {
+
                     result.setCode("1000");
                     result.setTaskId(taskId);
                     result.setMsg("Error_" + e.getMessage());
                     log.error("startTaskByTaskId {} fail ",taskId);
+                    SingleTaskDataManagerUtils.brokenStatusAndLog(e, this.getClass(), taskId);
+                    e.printStackTrace();
                     return;
                 }
             }

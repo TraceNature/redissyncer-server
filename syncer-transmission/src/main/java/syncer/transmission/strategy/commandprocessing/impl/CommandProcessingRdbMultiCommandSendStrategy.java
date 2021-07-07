@@ -37,6 +37,7 @@ import syncer.transmission.util.RedisCommandTypeUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * 断点续传2.0
@@ -229,6 +230,7 @@ public class CommandProcessingRdbMultiCommandSendStrategy implements CommonProce
             //继续执行下一Filter节点
             toNext(replication,eventEntity,taskModel);
         }catch (Exception e){
+            e.printStackTrace();
             throw new StartegyNodeException(e.getMessage()+"->RdbCommandSendStrategy",e.getCause());
         }
     }

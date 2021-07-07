@@ -28,6 +28,17 @@ import syncer.common.constant.StoreType;
 import syncer.common.util.ThreadPoolUtils;
 import syncer.common.util.file.FileUtils;
 import syncer.common.util.spring.SpringUtil;
+import syncer.jedis.HostAndPort;
+import syncer.replica.config.ReplicConfig;
+import syncer.replica.datatype.command.DefaultCommand;
+import syncer.replica.datatype.command.pubsub.PublishCommand;
+import syncer.replica.event.Event;
+import syncer.replica.listener.EventListener;
+import syncer.replica.parser.command.pubsub.PublishCommandParser;
+import syncer.replica.register.DefaultCommandNames;
+import syncer.replica.register.DefaultCommandRegister;
+import syncer.replica.replication.Replication;
+import syncer.replica.replication.SentinelReplication;
 import syncer.replica.status.TaskStatus;
 import syncer.replica.util.strings.Strings;
 import syncer.transmission.entity.TaskDataEntity;
@@ -124,7 +135,6 @@ public class SyncerWebappApplication {
             //etcd  node heartbeat
             NodeStartCheckResource checkResource=new NodeStartCheckResource();
             try {
-
                 boolean status=checkResource.initCheckResource();
                 if(!status){
                     Heartbeat heartbeat=new Heartbeat(10000,new DefaultHeartbeatCommandRunner());
@@ -136,7 +146,7 @@ public class SyncerWebappApplication {
                      * 持久化任务
                      */
 
-                    log.info("node start success");
+
                     ThreadPoolUtils.exec(new SqliteSettingPersistenceTask());
                     ThreadPoolUtils.exec(new DbDataCommitTask());
                     ThreadPoolUtils.exec(new OffsetCommitTask());
@@ -147,7 +157,6 @@ public class SyncerWebappApplication {
                 SpringUtil.getBean(ShutdownContext.class).showdown();
             }
         }
-
 
 
     }
