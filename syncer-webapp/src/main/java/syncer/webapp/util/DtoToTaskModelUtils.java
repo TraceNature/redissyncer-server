@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
  * @Date 2020/3/19
  */
 public class DtoToTaskModelUtils {
-
     /**
      * 获取在线任务列表
      * @param param
@@ -138,6 +137,8 @@ public class DtoToTaskModelUtils {
                     .targetRedisMasterName(param.getTargetRedisMasterName())
                     .sourceSentinelAuthPassword(param.getSourceSentinelAuthPassword())
                     .targetSentinelAuthPassword(param.getTargetSentinelAuthPassword())
+                    .topicName(param.getTopicName())
+                    .targetKafkaAddress(param.getTargetKafkaAddress())
                     .build();
             if(param.getDbMapper()!=null){
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
