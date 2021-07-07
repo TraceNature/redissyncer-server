@@ -64,9 +64,6 @@ public class DtoToTaskModelUtils {
             sourceRedisType=RedisType.SINGLE;
         }
 
-//        else {
-//            sourceRedisType=taskType(addressList);
-//        }
         RedisType targetRedisType=RedisType.NONE;
         //目标Redis类型
         if(Objects.nonNull(param.getTargetRedisType())&&!RedisType.NONE.equals(param.getTargetRedisType())){
@@ -75,11 +72,6 @@ public class DtoToTaskModelUtils {
             targetRedisType=RedisType.SINGLE;
         }
 
-//
-//        else {
-//            String[] targetAddressList=param.getTargetRedisAddress().split(";");
-//            targetRedisType=taskType(targetAddressList);
-//        }
 
 
         String taskId=null;
@@ -151,6 +143,8 @@ public class DtoToTaskModelUtils {
                     .targetRedisMasterName(param.getTargetRedisMasterName())
                     .sourceSentinelAuthPassword(param.getSourceSentinelAuthPassword())
                     .targetSentinelAuthPassword(param.getTargetSentinelAuthPassword())
+                    .topicName(param.getTopicName())
+                    .targetKafkaAddress(param.getTargetKafkaAddress())
                     .build();
             if(param.getDbMapper()!=null){
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));

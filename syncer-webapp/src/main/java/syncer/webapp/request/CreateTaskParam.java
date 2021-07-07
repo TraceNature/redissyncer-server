@@ -36,7 +36,7 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
                            String sourceSentinelAuthPassword,String targetSentinelAuthPassword,
                            FileType synctype, FileType fileType, String tasktype, String offsetPlace,
                            Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter,
-                           String keyFilter, CommandKeyFilterType filterType) {
+                           String keyFilter, CommandKeyFilterType filterType,String topicName,String targetKafkaAddress) {
         this.taskId = taskId;
         this.batchSize = batchSize;
         this.sourceAcl = sourceAcl;
@@ -59,16 +59,18 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
         this.targetRedisType=targetRedisType;
         this.sourceRedisMasterName=sourceRedisMasterName;
         this.targetRedisMasterName=targetRedisMasterName;
+        this.topicName=topicName;
+        this.targetKafkaAddress=targetKafkaAddress;
     }
 
     public CreateTaskParam(@NotBlank(message = "源RedisCluster地址不能为空") String sourceRedisAddress, String sourceSentinelAuthPassword,
-                           @NotBlank(message = "目标RedisCluster地址不能为空") String targetRedisAddress, String targetSentinelAuthPassword,
+                           String targetRedisAddress, String targetSentinelAuthPassword,
                            RedisType sourceRedisType, RedisType targetRedisType,
                            String sourceRedisMasterName,String targetRedisMasterName,
                            String sourcePassword, String targetPassword, @NotBlank(message = "任务名称不能为空") String taskName, boolean autostart,
                            boolean afresh, String taskId, int batchSize, boolean sourceAcl, boolean targetAcl, String sourceUserName,
                            String targetUserName, long errorCount, FileType synctype, FileType fileType, String tasktype, String offsetPlace,
-                           Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter, String keyFilter, CommandKeyFilterType filterType) {
+                           Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter, String keyFilter, CommandKeyFilterType filterType,String topicName,String targetKafkaAddress) {
         super(sourceRedisAddress, targetRedisAddress, sourcePassword, targetPassword, taskName, autostart, afresh);
         this.taskId = taskId;
         this.batchSize = batchSize;
@@ -92,6 +94,8 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
         this.targetRedisType=targetRedisType;
         this.sourceRedisMasterName=sourceRedisMasterName;
         this.targetRedisMasterName=targetRedisMasterName;
+        this.topicName=topicName;
+        this.targetKafkaAddress=targetKafkaAddress;
     }
 
     public CreateTaskParam() {
@@ -207,10 +211,14 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
     private String keyFilter="";
 
 
-
-
     @Builder.Default
     private CommandKeyFilterType filterType=CommandKeyFilterType.NONE;
+
+    @Builder.Default
+    private String topicName="";
+
+    @Builder.Default
+    private String targetKafkaAddress="";
 
     public Map<Integer, Integer> getDbMapper() {
         if(dbMapper!=null){

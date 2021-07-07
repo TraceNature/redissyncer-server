@@ -247,6 +247,11 @@ public class RedisReplication implements Replication{
     }
 
     @Override
+    public void closeClean() {
+        replication.closeClean();
+    }
+
+    @Override
     public void open() throws IOException {
         replication.open();
     }

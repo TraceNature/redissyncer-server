@@ -253,5 +253,15 @@ public  class AbstractReplication extends AbstractReplicationListener implements
         return config;
     }
 
+    @Override
+    public void closeClean() {
+        if(Objects.nonNull(modules)){
+            modules.clear();
+        }
+        if(Objects.nonNull(commands)){
+            commands.clear();
+        }
+    }
+
 
 }

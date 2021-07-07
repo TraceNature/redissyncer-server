@@ -16,9 +16,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import syncer.replica.event.Event;
-import syncer.replica.event.iter.datatype.BatchedKeyValuePairEvent;
+import syncer.replica.event.iter.datatype.*;
 import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.exception.KeyWeed0utException;
 import syncer.transmission.exception.StartegyNodeException;
@@ -79,6 +80,106 @@ public class CommandProcessingTimeCalculationStrategy implements CommonProcessin
                     return;
                 }
             }
+
+
+            if(event instanceof BatchedKeyStringValueStringEvent){
+                BatchedKeyStringValueStringEvent stringEvent= (BatchedKeyStringValueStringEvent) event;
+                if(stringEvent.getBatch()==0&&null==stringEvent.getValue()){
+                    return;
+                }
+                Long time=stringEvent.getExpiredMs();
+                try {
+                    timeCalculation(eventEntity,time);
+                } catch (KeyWeed0utException e) {
+                    //抛弃此kv
+                    return;
+                }
+            }
+
+            if(event instanceof BatchedKeyStringValueHashEvent) {
+                BatchedKeyStringValueHashEvent hashEvent= (BatchedKeyStringValueHashEvent) event;
+                if(hashEvent.getBatch()==0&&null==hashEvent.getValue()){
+                    return;
+                }
+                Long time=hashEvent.getExpiredMs();
+                try {
+                    timeCalculation(eventEntity,time);
+                } catch (KeyWeed0utException e) {
+                    //抛弃此kv
+                    return;
+                }
+            }
+
+            if (event instanceof BatchedKeyStringValueSetEvent) {
+                BatchedKeyStringValueSetEvent setEvent= (BatchedKeyStringValueSetEvent) event;
+                if(setEvent.getBatch()==0&&null==setEvent.getValue()){
+                    return;
+                }
+                Long time=setEvent.getExpiredMs();
+                try {
+                    timeCalculation(eventEntity,time);
+                } catch (KeyWeed0utException e) {
+                    //抛弃此kv
+                    return;
+                }
+            }
+
+            if (event instanceof BatchedKeyStringValueListEvent) {
+                BatchedKeyStringValueListEvent listEvent= (BatchedKeyStringValueListEvent) event;
+                if(listEvent.getBatch()==0&&null==listEvent.getValue()){
+                    return;
+                }
+                Long time=listEvent.getExpiredMs();
+                try {
+                    timeCalculation(eventEntity,time);
+                } catch (KeyWeed0utException e) {
+                    //抛弃此kv
+                    return;
+                }
+            }
+
+            if (event instanceof BatchedKeyStringValueZSetEvent) {
+                BatchedKeyStringValueZSetEvent  zSetEvent= (BatchedKeyStringValueZSetEvent) event;
+                if(zSetEvent.getBatch()==0&&null==zSetEvent.getValue()){
+                    return;
+                }
+                Long time=zSetEvent.getExpiredMs();
+                try {
+                    timeCalculation(eventEntity,time);
+                } catch (KeyWeed0utException e) {
+                    //抛弃此kv
+                    return;
+                }
+            }
+            if (event instanceof BatchedKeyStringValueModuleEvent) {
+                BatchedKeyStringValueModuleEvent moduleEvent= (BatchedKeyStringValueModuleEvent) event;
+                if(moduleEvent.getBatch()==0&&null==moduleEvent.getValue()){
+                    return;
+                }
+                Long time=moduleEvent.getExpiredMs();
+                try {
+                    timeCalculation(eventEntity,time);
+                } catch (KeyWeed0utException e) {
+                    //抛弃此kv
+                    return;
+                }
+            }
+
+            if (event instanceof BatchedKeyStringValueStreamEvent) {
+                BatchedKeyStringValueStreamEvent streamEvent= (BatchedKeyStringValueStreamEvent) event;
+                if(streamEvent.getBatch()==0&&null==streamEvent.getValue()){
+                    return;
+                }
+                Long time=streamEvent.getExpiredMs();
+                try {
+                    timeCalculation(eventEntity,time);
+                } catch (KeyWeed0utException e) {
+                    //抛弃此kv
+                    return;
+                }
+            }
+
+
             //继续执行下一Filter节点
             toNext(replication,eventEntity,taskModel);
         }catch (Exception e){

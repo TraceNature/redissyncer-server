@@ -344,6 +344,11 @@ public class TaskModel {
      */
     private String targetRedisMasterName;
 
+    private String topicName;
+
+    private String targetKafkaAddress;
+
+
     public String getExpandJson() {
         if (StringUtils.isEmpty(this.expandJson)){
             this.expandJson= JSON.toJSONString(new ExpandTaskModel());
@@ -538,7 +543,7 @@ public class TaskModel {
             , Integer targetPort, String dbMapper, String md5, String createTime, String updateTime
             , String dataAnalysis, String replId, Long rdbKeyCount, Long allKeyCount, Long realKeyCount, Long lastKeyUpdateTime,
             Long lastKeyCommitTime, boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName,Long errorCount
-            ,String expandJson,Long timeDeviation,CommandKeyFilterType filterType,String commandFilter,String keyFilter,String sourceRedisMasterName,String targetRedisMasterName) {
+            ,String expandJson,Long timeDeviation,CommandKeyFilterType filterType,String commandFilter,String keyFilter,String sourceRedisMasterName,String targetRedisMasterName,String topicName,String targetKafkaAddress) {
         this.id = id;
         this.taskId=taskId;
         this.groupId = groupId;
@@ -591,6 +596,8 @@ public class TaskModel {
         this.targetRedisType = targetRedisType;
         this.sourceRedisMasterName=sourceRedisMasterName;
         this.targetRedisMasterName=targetRedisMasterName;
+        this.topicName=topicName;
+        this.targetKafkaAddress=targetKafkaAddress;
         setTargetRedisAddress(this.getTargetRedisAddress());
         setSourceRedisAddress(this.getSourceRedisAddress());
         EtcdServerConfig config=new EtcdServerConfig();

@@ -32,8 +32,9 @@ public class BaseTaskParam implements Serializable {
     private String sourceRedisAddress;
     @ApiModelProperty(value = "目标redis地址",required = true, allowableValues = "目标redis地址 ,当目标redis为单实例或proxy时，" +
             "填写单一地址即可，当目标redis为集群且需要借助jedis访问集群时地址用';'分割，'192.168.0.1:6379;192.168.0.3:6379;192.168.0.3:6379'")
-    @NotBlank(message = "目标RedisCluster地址不能为空")
-    private String targetRedisAddress;
+//    @NotBlank(message = "目标RedisCluster地址不能为空")
+    @Builder.Default
+    private String targetRedisAddress="";
     @ApiModelProperty(value = "源redis密码",required = true)
     private String sourcePassword;
     @ApiModelProperty(value = "目标redis密码",required = true)

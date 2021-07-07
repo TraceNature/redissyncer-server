@@ -35,7 +35,7 @@ public class TaskCheckNotDistinctStrategyFactory implements ITaskCheckStrategyFa
         List<ITaskCheckStrategy>taskCheckStrategyList= Lists.newArrayList();
 
         taskCheckStrategyList.add(TaskCheckRedisUrlStrategy.builder().client(client).taskModel(taskModel).build());
-        taskCheckStrategyList.add(TaskCheckRedisUrlStrategy.builder().client(client).taskModel(taskModel).build());
+//        taskCheckStrategyList.add(TaskCheckRedisUrlStrategy.builder().client(client).taskModel(taskModel).build());
 
         return taskCheckStrategyList;
     }

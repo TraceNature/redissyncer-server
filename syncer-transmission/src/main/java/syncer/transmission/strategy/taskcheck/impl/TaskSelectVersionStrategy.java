@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.constant.ResultCodeAndMessage;
 import syncer.common.exception.TaskMsgException;
+import syncer.replica.constant.RedisType;
 import syncer.replica.type.SyncType;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.RdbVersionModel;
@@ -56,6 +57,11 @@ public class TaskSelectVersionStrategy implements ITaskCheckStrategy {
                 ||taskModel.getSyncType().equals(SyncType.ONLINERDB.getCode())
                 ||taskModel.getSyncType().equals(SyncType.ONLINEAOF.getCode())
                 ||taskModel.getSyncType().equals(SyncType.ONLINEMIXED.getCode())){
+            //目标为kafka时直接进入下一策略
+            if(RedisType.KAFKA.getCode().equals(taskModel.getTargetRedisType())){
+                toNext(client,taskModel);
+                return;
+            }
             String version=redisVersionUtil.selectSyncerVersion(String.valueOf(taskModel.getTargetUri().toArray()[0]));
             log.warn("自动获取redis版本号：{},手动输入版本号：{}",version,taskModel.getRedisVersion());
             if(DEFAULT_NO_VERSION.equalsIgnoreCase(version)){

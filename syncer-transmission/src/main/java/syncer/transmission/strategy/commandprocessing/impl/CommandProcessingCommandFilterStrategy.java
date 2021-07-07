@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.event.Event;
-import syncer.replica.event.iter.datatype.BatchedKeyValuePairEvent;
+import syncer.replica.event.iter.datatype.*;
 import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
 import syncer.replica.util.strings.Strings;
@@ -142,14 +142,12 @@ public class CommandProcessingCommandFilterStrategy implements CommonProcessingS
                         return;
                     }
                 }
-
                 if(filterType.equals(CommandKeyFilterType.COMMAND_FILTER_ACCEPT)||filterType.equals(CommandKeyFilterType.COMMAND_OR_KEY_FILTER_ACCEPT)){
                     if(!commandFilterSet.contains(getCommand(typeEnum))){
                         log.debug("command {} refused",getCommand(typeEnum));
                         return;
                     }
                 }
-
                 String stringKey=Strings.byteToString((byte[]) batchedKeyValuePair.getKey());
                 //key
                 if(filterType.equals(CommandKeyFilterType.KEY_FILTER_REFUSE)||filterType.equals(CommandKeyFilterType.COMMAND_OR_KEY_FILTER_REFUSE)){
@@ -159,21 +157,18 @@ public class CommandProcessingCommandFilterStrategy implements CommonProcessingS
                         return;
                     }
                 }
-
                 if(filterType.equals(CommandKeyFilterType.KEY_FILTER_ACCEPT)||filterType.equals(CommandKeyFilterType.COMMAND_OR_KEY_FILTER_ACCEPT)){
                     if(!Pattern.matches(keyFilter,stringKey)){
                         log.debug("TASKID[{}] command  key {} refused",taskId,stringKey);
                         return;
                     }
                 }
-
                 if(filterType.equals(CommandKeyFilterType.COMMAND_AND_KEY_FILTER_ACCEPT)){
                     if(!commandFilterSet.contains(getCommand(typeEnum))||!Pattern.matches(keyFilter,stringKey)){
                         log.debug("TASKID[{}] command  key {} refused",taskId,stringKey);
                         return;
                     }
                 }
-
                 if(filterType.equals(CommandKeyFilterType.COMMAND_AND_KEY_FILTER_REFUSE)){
                     if(commandFilterSet.contains(getCommand(typeEnum))&&Pattern.matches(keyFilter,stringKey)){
                         log.debug("TASKID[{}] command  key {} refused",taskId,stringKey);
@@ -235,6 +230,63 @@ public class CommandProcessingCommandFilterStrategy implements CommonProcessingS
 
                 }
             }
+
+            if(event instanceof BatchedKeyStringValueStringEvent){
+                BatchedKeyStringValueStringEvent stringEvent= (BatchedKeyStringValueStringEvent) event;
+                String stringKey=Strings.byteToString(stringEvent.getKey());
+                if(isRefuse(stringEvent.getValueRdbType(),filterType,stringKey,keyFilter)){
+                    return;
+                }
+            }
+
+            if(event instanceof BatchedKeyStringValueHashEvent) {
+                BatchedKeyStringValueHashEvent hashEvent= (BatchedKeyStringValueHashEvent) event;
+                String stringKey=Strings.byteToString(hashEvent.getKey());
+                if(isRefuse(hashEvent.getValueRdbType(),filterType,stringKey,keyFilter)){
+                    return;
+                }
+            }
+
+            if (event instanceof BatchedKeyStringValueSetEvent) {
+                BatchedKeyStringValueSetEvent setEvent= (BatchedKeyStringValueSetEvent) event;
+                String stringKey=Strings.byteToString(setEvent.getKey());
+                if(isRefuse(setEvent.getValueRdbType(),filterType,stringKey,keyFilter)){
+                    return;
+                }
+            }
+
+            if (event instanceof BatchedKeyStringValueListEvent) {
+                BatchedKeyStringValueListEvent listEvent= (BatchedKeyStringValueListEvent) event;
+                String stringKey=Strings.byteToString(listEvent.getKey());
+                if(isRefuse(listEvent.getValueRdbType(),filterType,stringKey,keyFilter)){
+                    return;
+                }
+            }
+
+            if (event instanceof BatchedKeyStringValueZSetEvent) {
+                BatchedKeyStringValueZSetEvent  zSetEvent= (BatchedKeyStringValueZSetEvent) event;
+                String stringKey=Strings.byteToString(zSetEvent.getKey());
+                if(isRefuse(zSetEvent.getValueRdbType(),filterType,stringKey,keyFilter)){
+                    return;
+                }
+            }
+            if (event instanceof BatchedKeyStringValueModuleEvent) {
+                BatchedKeyStringValueModuleEvent moduleEvent= (BatchedKeyStringValueModuleEvent) event;
+                String stringKey=Strings.byteToString(moduleEvent.getKey());
+                if(isRefuse(moduleEvent.getValueRdbType(),filterType,stringKey,keyFilter)){
+                    return;
+                }
+            }
+
+            if (event instanceof BatchedKeyStringValueStreamEvent) {
+                BatchedKeyStringValueStreamEvent streamEvent= (BatchedKeyStringValueStreamEvent) event;
+                String stringKey=Strings.byteToString(streamEvent.getKey());
+                if(isRefuse(streamEvent.getValueRdbType(),filterType,stringKey,keyFilter)){
+                    return;
+                }
+            }
+
+
             toNext(replication,eventEntity,taskModel);
         }catch (Exception e){
             throw new StartegyNodeException(e.getMessage() + "->CommandFilterStrategy", e.getCause());
@@ -269,6 +321,51 @@ public class CommandProcessingCommandFilterStrategy implements CommonProcessingS
             return "HMSET";
         }
         return "";
+    }
+
+
+    boolean isRefuse(int valueRdbType,CommandKeyFilterType filterType,String stringKey,String keyFilter){
+        RedisCommandTypeEnum typeEnum= RedisCommandTypeUtils.getRedisCommandTypeEnum(valueRdbType);
+        if(filterType.equals(CommandKeyFilterType.COMMAND_FILTER_REFUSE)||filterType.equals(CommandKeyFilterType.COMMAND_OR_KEY_FILTER_REFUSE)){
+            if(commandFilterSet.contains(getCommand(typeEnum))){
+                log.debug("command {} refused",getCommand(typeEnum));
+                return true;
+            }
+        }
+        if(filterType.equals(CommandKeyFilterType.COMMAND_FILTER_ACCEPT)||filterType.equals(CommandKeyFilterType.COMMAND_OR_KEY_FILTER_ACCEPT)){
+            if(!commandFilterSet.contains(getCommand(typeEnum))){
+                log.debug("command {} refused",getCommand(typeEnum));
+                return true;
+            }
+        }
+
+        //key
+        if(filterType.equals(CommandKeyFilterType.KEY_FILTER_REFUSE)||filterType.equals(CommandKeyFilterType.COMMAND_OR_KEY_FILTER_REFUSE)){
+
+            if(Pattern.matches(keyFilter,stringKey)){
+                log.debug("TASKID[{}] command  key {} refused",taskId,stringKey);
+                return true;
+            }
+        }
+        if(filterType.equals(CommandKeyFilterType.KEY_FILTER_ACCEPT)||filterType.equals(CommandKeyFilterType.COMMAND_OR_KEY_FILTER_ACCEPT)){
+            if(!Pattern.matches(keyFilter,stringKey)){
+                log.debug("TASKID[{}] command  key {} refused",taskId,stringKey);
+                return true;
+            }
+        }
+        if(filterType.equals(CommandKeyFilterType.COMMAND_AND_KEY_FILTER_ACCEPT)){
+            if(!commandFilterSet.contains(getCommand(typeEnum))||!Pattern.matches(keyFilter,stringKey)){
+                log.debug("TASKID[{}] command  key {} refused",taskId,stringKey);
+                return true;
+            }
+        }
+        if(filterType.equals(CommandKeyFilterType.COMMAND_AND_KEY_FILTER_REFUSE)){
+            if(commandFilterSet.contains(getCommand(typeEnum))&&Pattern.matches(keyFilter,stringKey)){
+                log.debug("TASKID[{}] command  key {} refused",taskId,stringKey);
+                return true;
+            }
+        }
+        return false;
     }
 
 }

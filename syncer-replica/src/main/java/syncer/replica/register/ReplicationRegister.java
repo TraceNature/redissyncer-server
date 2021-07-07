@@ -57,4 +57,6 @@ public interface ReplicationRegister {
 
     ReplicConfig getConfig();
 
+
+    void closeClean();
 }

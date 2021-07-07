@@ -90,6 +90,7 @@ public class TaskGroupController {
                     .msg(ApiConstants.TASK_ABOVE_THRESHOLD_MSG)
                     .build();
         }
+
         List<StartTaskEntity> startTaskEntityList=taskGroupService.createRedisToRedisTask(taskModelList);
         return ResponseResult.builder()
                 .code(ApiConstants.SUCCESS_CODE)

@@ -22,7 +22,7 @@ import syncer.common.util.TimeUtils;
 import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.event.Event;
 import syncer.replica.event.end.PostRdbSyncEvent;
-import syncer.replica.event.iter.datatype.BatchedKeyValuePairEvent;
+import syncer.replica.event.iter.datatype.*;
 import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
 import syncer.replica.util.strings.Strings;
@@ -160,11 +160,45 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
 
             }
 
-
             //增量数据
             if (event instanceof DefaultCommand) {
                 dataEntity.getAllKeyCount().incrementAndGet();
             }
+
+            if(event instanceof BatchedKeyStringValueStringEvent){
+                BatchedKeyStringValueStringEvent stringEvent= (BatchedKeyStringValueStringEvent) event;
+                addAnalysisMap(stringEvent.getDataType());
+            }
+
+            if(event instanceof BatchedKeyStringValueHashEvent) {
+                BatchedKeyStringValueHashEvent hashEvent= (BatchedKeyStringValueHashEvent) event;
+                addAnalysisMap(hashEvent.getDataType());
+            }
+
+            if (event instanceof BatchedKeyStringValueSetEvent) {
+                BatchedKeyStringValueSetEvent setEvent= (BatchedKeyStringValueSetEvent) event;
+                addAnalysisMap(setEvent.getDataType());
+            }
+
+            if (event instanceof BatchedKeyStringValueListEvent) {
+                BatchedKeyStringValueListEvent listEvent= (BatchedKeyStringValueListEvent) event;
+                addAnalysisMap(listEvent.getDataType());
+            }
+
+            if (event instanceof BatchedKeyStringValueZSetEvent) {
+                BatchedKeyStringValueZSetEvent  zSetEvent= (BatchedKeyStringValueZSetEvent) event;
+                addAnalysisMap(zSetEvent.getDataType());
+            }
+            if (event instanceof BatchedKeyStringValueModuleEvent) {
+                BatchedKeyStringValueModuleEvent moduleEvent= (BatchedKeyStringValueModuleEvent) event;
+                addAnalysisMap(moduleEvent.getDataType());
+            }
+
+            if (event instanceof BatchedKeyStringValueStreamEvent) {
+                BatchedKeyStringValueStreamEvent streamEvent= (BatchedKeyStringValueStreamEvent) event;
+                addAnalysisMap(streamEvent.getDataType());
+            }
+
 
             toNext(replication, eventEntity,taskModel);
         } catch (Exception e) {
@@ -173,6 +207,7 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
             } else {
                 analysisMap.put(RedisDataTypeAnalysisConstant.EROR_KEY, 1L);
             }
+
             throw new StartegyNodeException(e.getMessage() + "->DataAnalysisStrategy", e.getCause());
         }
     }

@@ -147,6 +147,11 @@ public class SentinelReplication implements Replication, SentinelListener{
     }
 
     @Override
+    public void closeClean() {
+        replication.closeClean();
+    }
+
+    @Override
     public void open() throws IOException {
         this.sentinel.open();
 
@@ -154,6 +159,7 @@ public class SentinelReplication implements Replication, SentinelListener{
 
     @Override
     public void close() throws IOException {
+
         this.sentinel.close();
     }
 
