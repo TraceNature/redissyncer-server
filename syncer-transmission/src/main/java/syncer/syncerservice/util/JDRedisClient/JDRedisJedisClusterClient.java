@@ -12,6 +12,7 @@ import syncer.syncerservice.util.jedis.cluster.SyncJedisClusterClient;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Slf4j
@@ -182,10 +183,18 @@ public class JDRedisJedisClusterClient implements JDRedisClient {
 
     @Override
     public Object send(byte[] cmd, byte[]... args) {
-        if(Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("FLUSHALL")){
+        if(Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("FLUSHALL")
+                ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("MULTI")
+                ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("EXEC")
+        ){
             return "OK";
         }
-        return redisClient.sendCommand(args[0], ClusterProtocolCommand.builder().raw(cmd).build(),args);
+        System.out.println(Strings.byteToString(cmd)+" "+Strings.byteToString(args));
+        if(Objects.isNull(args)||args.length<1){
+            return redisClient.sendCommand(ClusterProtocolCommand.builder().raw(cmd).build(),args);
+        }else {
+            return redisClient.sendCommand(args[0], ClusterProtocolCommand.builder().raw(cmd).build(),args);
+        }
     }
 
     @Override
