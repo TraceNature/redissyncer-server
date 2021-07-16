@@ -189,7 +189,6 @@ public class JDRedisJedisClusterClient implements JDRedisClient {
         ){
             return "OK";
         }
-        System.out.println(Strings.byteToString(cmd)+" "+Strings.byteToString(args));
         if(Objects.isNull(args)||args.length<1){
             return redisClient.sendCommand(ClusterProtocolCommand.builder().raw(cmd).build(),args);
         }else {

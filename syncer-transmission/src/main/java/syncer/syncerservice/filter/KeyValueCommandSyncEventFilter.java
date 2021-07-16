@@ -88,20 +88,7 @@ public class KeyValueCommandSyncEventFilter implements CommonFilter {
         //命令解析器
         if (event instanceof DefaultCommand) {
             DefaultCommand dc = (DefaultCommand) event;
-//            String stringCmd= Strings.byteToString(dc.getCommand());
-//            System.out.println(stringCmd);
-
-              client.send(dc.getCommand(),dc.getArgs());
-//              if(dc.getArgs()!=null&&dc.getArgs().length>0){
-//                  if(Strings.byteToString(dc.getArgs()[0]).toLowerCase().indexOf("pfadd")>=0){
-//                      log.warn(Strings.byteToString(dc.getCommand())+ JSON.toJSONString(Strings.byteToString(dc.getArgs())));
-//                  }
-//              }
-
-//            Configuration configuration=eventEntity.getConfiguration();
-//            eventEntity.getBaseOffSet().setReplId(configuration.getReplId());
-//            eventEntity.getBaseOffSet().getReplOffset().set(configuration.getReplOffset());
-
+            client.send(dc.getCommand(),dc.getArgs());
             eventEntity.getBaseOffSet().setReplId(eventEntity.getReplId());
             eventEntity.getBaseOffSet().getReplOffset().set(eventEntity.getReplOffset());
         }
