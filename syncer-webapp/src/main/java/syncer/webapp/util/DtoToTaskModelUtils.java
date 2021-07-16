@@ -33,10 +33,8 @@ import java.util.stream.Collectors;
  * @Date 2020/3/19
  */
 public class DtoToTaskModelUtils {
-
     /**
      * 获取在线任务列表
-     *
      * @param param
      * @return
      */
@@ -139,23 +137,25 @@ public class DtoToTaskModelUtils {
                     .targetRedisMasterName(param.getTargetRedisMasterName())
                     .sourceSentinelAuthPassword(param.getSourceSentinelAuthPassword())
                     .targetSentinelAuthPassword(param.getTargetSentinelAuthPassword())
+                    .topicName(param.getTopicName())
+                    .targetKafkaAddress(param.getTargetKafkaAddress())
                     .build();
-            if (param.getDbMapper() != null) {
+            if(param.getDbMapper()!=null){
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
-            } else {
+            }else {
                 taskModel.setDbMapper(JSON.toJSONString(new HashMap<>()));
             }
-            if ("total".equalsIgnoreCase(param.getTasktype())) {
+            if("total".equalsIgnoreCase(param.getTasktype())){
                 taskModel.setTasktype(TaskType.TOTAL.getCode());
-            } else if ("stockonly".equalsIgnoreCase(param.getTasktype())) {
+            }else if("stockonly".equalsIgnoreCase(param.getTasktype())){
                 taskModel.setTasktype(TaskType.STOCKONLY.getCode());
-            } else if ("incrementonly".equalsIgnoreCase(param.getTasktype())) {
+            }else if("incrementonly".equalsIgnoreCase(param.getTasktype())){
                 taskModel.setTasktype(TaskType.INCREMENTONLY.getCode());
             }
 
-            if ("endbuffer".equalsIgnoreCase(param.getOffsetPlace())) {
+            if("endbuffer".equalsIgnoreCase(param.getOffsetPlace())){
                 taskModel.setOffsetPlace(OffsetPlace.ENDBUFFER.getCode());
-            } else if ("beginbuffer".equalsIgnoreCase(param.getOffsetPlace())) {
+            }else if("beginbuffer".equalsIgnoreCase(param.getOffsetPlace())){
                 taskModel.setOffsetPlace(OffsetPlace.BEGINBUFFER.getCode());
             }
             taskModel.setSyncType(getFileType(param.getSynctype()));
@@ -166,35 +166,33 @@ public class DtoToTaskModelUtils {
     }
 
 
-    public synchronized static List<TaskModel> getTaskModelList(CreateFileTaskParam param, boolean change) {
-        List<TaskModel> taskModelList = Lists.newArrayList();
-        List<String> addressList = Lists.newArrayList();
-        String taskId = null;
-
-
-        if (param.getFileType().equals(SyncType.RDB.getFileType())) {
-            if (param.getFileAddress().trim().toLowerCase().startsWith("http://") ||
-                    param.getFileAddress().trim().toLowerCase().startsWith("https://")) {
+    public synchronized static List<TaskModel>getTaskModelList(CreateFileTaskParam param, boolean change){
+        List<TaskModel>taskModelList=Lists.newArrayList();
+        List<String>addressList=Lists.newArrayList();
+        String taskId=null;
+        if(param.getFileType().equals(SyncType.RDB.getFileType())){
+            if(param.getFileAddress().trim().toLowerCase().startsWith("http://")||
+                    param.getFileAddress().trim().toLowerCase().startsWith("https://")){
                 param.setFileType(FileType.ONLINERDB);
-            } else {
+            }else {
                 param.setFileType(FileType.RDB);
             }
         }
 
-        if (param.getFileType().equals(SyncType.AOF.getFileType())) {
-            if (param.getFileAddress().trim().toLowerCase().startsWith("http://") ||
-                    param.getFileAddress().trim().toLowerCase().startsWith("https://")) {
+        if(param.getFileType().equals(SyncType.AOF.getFileType())){
+            if(param.getFileAddress().trim().toLowerCase().startsWith("http://")||
+                    param.getFileAddress().trim().toLowerCase().startsWith("https://")){
                 param.setFileType(FileType.ONLINEAOF);
-            } else {
+            }else {
                 param.setFileType(FileType.AOF);
             }
         }
 
-        if (param.getFileType().equals(SyncType.MIXED.getFileType())) {
-            if (param.getFileAddress().trim().toLowerCase().startsWith("http://") ||
-                    param.getFileAddress().trim().toLowerCase().startsWith("https://")) {
+        if(param.getFileType().equals(SyncType.MIXED.getFileType())){
+            if(param.getFileAddress().trim().toLowerCase().startsWith("http://")||
+                    param.getFileAddress().trim().toLowerCase().startsWith("https://")){
                 param.setFileType(FileType.ONLINEMIXED);
-            } else {
+            }else {
                 param.setFileType(FileType.MIXED);
             }
         }
@@ -310,7 +308,6 @@ public class DtoToTaskModelUtils {
 
     /**
      * 根据createDumpup param生成List<TaskModel>
-     *
      * @param param
      * @param change
      * @return
@@ -378,7 +375,6 @@ public class DtoToTaskModelUtils {
 
     /**
      * 判断任务类型
-     *
      * @param addressList
      * @return
      */
@@ -409,60 +405,66 @@ public class DtoToTaskModelUtils {
             stringBuilder.append("_");
         }
 
-        if (!StringUtils.isEmpty(taskModel.getSourceRedisAddress())) {
+        if(!StringUtils.isEmpty(taskModel.getSourceRedisAddress())){
             stringBuilder.append(taskModel.getSourceRedisAddress());
             stringBuilder.append("_");
-        } else {
+        }else {
             stringBuilder.append("null");
             stringBuilder.append("_");
         }
 
-        if (!StringUtils.isEmpty(taskModel.getSourcePassword())) {
+        if(!StringUtils.isEmpty(taskModel.getSourcePassword())){
             stringBuilder.append(taskModel.getSourcePassword());
             stringBuilder.append("_");
-        } else {
-            stringBuilder.append("null");
-            stringBuilder.append("_");
-        }
-        if (!StringUtils.isEmpty(taskModel.getFileAddress())) {
-            stringBuilder.append(taskModel.getFileAddress());
-            stringBuilder.append("_");
-        } else {
+        }else {
             stringBuilder.append("null");
             stringBuilder.append("_");
         }
 
-        if (!StringUtils.isEmpty(taskModel.getTaskName())) {
-            stringBuilder.append(taskModel.getTaskName());
+
+        if(!StringUtils.isEmpty(taskModel.getFileAddress())){
+            stringBuilder.append(taskModel.getFileAddress());
             stringBuilder.append("_");
-        } else {
+        }else {
             stringBuilder.append("null");
             stringBuilder.append("_");
         }
-        String md5 = MD5Utils.getMD5(stringBuilder.toString());
+
+        if(!StringUtils.isEmpty(taskModel.getTaskName())){
+            stringBuilder.append(taskModel.getTaskName());
+            stringBuilder.append("_");
+        }else {
+            stringBuilder.append("null");
+            stringBuilder.append("_");
+        }
+
+
+        String md5= MD5Utils.getMD5(stringBuilder.toString());
         return md5;
     }
 
 
-    public synchronized static Integer getFileType(FileType fileType) {
-        if (FileType.SYNC.equals(fileType)) {
-            return SyncType.SYNC.getCode();
-        } else if (FileType.RDB.equals(fileType)) {
+
+
+    public synchronized static Integer getFileType(FileType fileType){
+        if(FileType.SYNC.equals(fileType)){
+            return  SyncType.SYNC.getCode();
+        }else if(FileType.RDB.equals(fileType)){
             return SyncType.RDB.getCode();
-        } else if (FileType.AOF.equals(fileType)) {
+        }else if(FileType.AOF.equals(fileType)){
             return SyncType.AOF.getCode();
-        } else if (FileType.MIXED.equals(fileType)) {
+        }else if(FileType.MIXED.equals(fileType)){
             return SyncType.MIXED.getCode();
-        } else if (FileType.ONLINERDB.equals(fileType)) {
+        }else if(FileType.ONLINERDB.equals(fileType)){
             return SyncType.ONLINERDB.getCode();
-        } else if (FileType.ONLINEAOF.equals(fileType)) {
+        }else if(FileType.ONLINEAOF.equals(fileType)){
             return SyncType.ONLINEAOF.getCode();
-        } else if (FileType.ONLINEMIXED.equals(fileType)) {
-            return SyncType.ONLINEMIXED.getCode();
-        } else if (FileType.COMMANDDUMPUP.equals(fileType)) {
-            return SyncType.COMMANDDUMPUP.getCode();
+        }else if(FileType.ONLINEMIXED.equals(fileType)){
+            return  SyncType.ONLINEMIXED.getCode();
+        }else if(FileType.COMMANDDUMPUP.equals(fileType)){
+            return  SyncType.COMMANDDUMPUP.getCode();
         }
-        return SyncType.SYNC.getCode();
+        return  SyncType.SYNC.getCode();
     }
 
 

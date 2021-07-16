@@ -12,6 +12,7 @@ import java.util.Objects;
 public class ConnectErrorRetry {
     public static final int MAX_TIMES=5;
     private String taskId;
+    private boolean closeStatus=false;
     //2n-1
     public ConnectErrorRetry(String taskId) {
         this.taskId = taskId;
@@ -22,6 +23,10 @@ public class ConnectErrorRetry {
         JedisConnectionException ret=null;
         while (times++<MAX_TIMES){
             try {
+                if(closeStatus){
+                    log.info("[TASKID {}],ConnectErrorRetry send close event");
+                    break;
+                }
                 log.error("[TASKID {}],send target retry {} times",taskId,times);
                 retryRunner.run();
                 return;
@@ -39,5 +44,9 @@ public class ConnectErrorRetry {
         if(Objects.nonNull(ret)){
             throw ret;
         }
+    }
+
+    public void close(){
+        closeStatus=true;
     }
 }

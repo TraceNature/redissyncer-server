@@ -15,10 +15,10 @@ import com.google.common.collect.Maps;
 import syncer.replica.util.TaskRunTypeEnum;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.TaskModel;
+import syncer.transmission.mq.kafka.KafkaProducerClient;
 import syncer.transmission.strategy.commandprocessing.factory.CommonProcessingStrategyListFactory;
-import syncer.transmission.strategy.commandprocessing.factory.impl.IncrementOnlyProcessingStrategyListFactory;
-import syncer.transmission.strategy.commandprocessing.factory.impl.StockonlyProcessingStrategyListFactory;
-import syncer.transmission.strategy.commandprocessing.factory.impl.TotalProcessingStrategyListFactory;
+import syncer.transmission.strategy.commandprocessing.factory.KafkaCommonProcessingStrategyListFactory;
+import syncer.transmission.strategy.commandprocessing.factory.impl.*;
 
 import java.util.List;
 import java.util.Map;
@@ -26,11 +26,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author zhanenqiang
- * @Description 描述
+ * @Description 策略选择器
  * @Date 2020/12/24
  */
 public class ProcessingRunStrategyListSelecter {
     private static final Map<TaskRunTypeEnum, CommonProcessingStrategyListFactory> kvFilterListSelectorMap= Maps.newConcurrentMap();
+    private static final Map<TaskRunTypeEnum, KafkaCommonProcessingStrategyListFactory> kvKafkaFilterListSelectorMap= Maps.newConcurrentMap();
+
+
 
     public static List<CommonProcessingStrategy> getStrategyList(TaskRunTypeEnum taskRunTypeEnum, TaskModel taskModel, RedisClient client){
         if(!kvFilterListSelectorMap.containsKey(taskRunTypeEnum)){
@@ -45,4 +48,17 @@ public class ProcessingRunStrategyListSelecter {
         return kvFilterListSelectorMap.get(taskRunTypeEnum).getStrategyList(taskModel,client);
     }
 
+
+    public static List<CommonProcessingStrategy> getKafkaStrategyList(TaskRunTypeEnum taskRunTypeEnum, TaskModel taskModel, KafkaProducerClient client){
+        if(!kvKafkaFilterListSelectorMap.containsKey(taskRunTypeEnum)){
+            if(taskRunTypeEnum.equals(TaskRunTypeEnum.TOTAL)){
+                kvKafkaFilterListSelectorMap.put(taskRunTypeEnum, KafkaTotalProcessingStrategyListFactory.builder().build());
+            }else if(taskRunTypeEnum.equals(TaskRunTypeEnum.STOCKONLY)){
+                kvKafkaFilterListSelectorMap.put(taskRunTypeEnum, KafkaStockonlyProcessingStrategyListFactory.builder().build());
+            }else if(taskRunTypeEnum.equals(TaskRunTypeEnum.INCREMENTONLY)){
+                kvKafkaFilterListSelectorMap.put(taskRunTypeEnum, KafkaIncrementOnlyProcessingStrategyListFactory.builder().build());
+            }
+        }
+        return kvKafkaFilterListSelectorMap.get(taskRunTypeEnum).getStrategyList(taskModel,client);
+    }
 }

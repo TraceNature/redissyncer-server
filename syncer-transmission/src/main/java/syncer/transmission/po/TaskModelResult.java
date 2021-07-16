@@ -207,4 +207,10 @@ public class TaskModelResult implements Serializable {
      */
     private long lastDataOutPutInterval;
 
+    /**
+     * REDIS
+     * KAFKA
+     *
+     */
+    private String targetType;
 }

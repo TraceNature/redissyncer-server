@@ -110,4 +110,6 @@ public interface RedisClient {
     void updateLastReplidAndOffset(String replid,long offset);
 
     void commitCheckPoint();
+
+    void close();
 }

@@ -31,6 +31,7 @@ import syncer.transmission.service.ISingleTaskService;
 import syncer.transmission.strategy.taskcheck.RedisTaskStrategyGroupType;
 import syncer.transmission.strategy.taskcheck.TaskCheckStrategyGroupSelecter;
 import syncer.transmission.task.RedisDataCommandUpTransmissionTask;
+import syncer.transmission.task.RedisDataSyncTransmission2KafkaTask;
 import syncer.transmission.task.RedisDataSyncTransmissionTask;
 import syncer.transmission.util.ExpandTaskUtils;
 import syncer.transmission.util.lock.TaskRunUtils;
@@ -117,7 +118,12 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
             SingleTaskDataManagerUtils.brokenTask(taskModel.getId());
             throw e;
         }
-        ThreadPoolUtils.exec(new RedisDataSyncTransmissionTask(taskModel, true));
+
+        if(RedisType.KAFKA.getCode().equals(taskModel.getTargetRedisType())){
+            ThreadPoolUtils.exec(new RedisDataSyncTransmission2KafkaTask(taskModel, true));
+        }else {
+            ThreadPoolUtils.exec(new RedisDataSyncTransmissionTask(taskModel, true));
+        }
         return taskModel.getId();
     }
 

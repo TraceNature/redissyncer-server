@@ -27,11 +27,8 @@ public class NodeStartInitService {
      */
     public void initResource(){
         JEtcdClient client= JEtcdClient.build();
-
-
         try {
             EtcdID etcdID= EtcdID.builder().client(client).nodeId(config.getNodeId()).build();
-
             client.lockCommandRunner(new EtcdLockCommandRunner() {
                 @Override
                 public void run() {
@@ -41,7 +38,6 @@ public class NodeStartInitService {
                         log.info("user init success");
                         client.put(userKey,JSON.toJSONString(UserModel.builder().username("admin").password("123456").salt(TemplateUtils.uuid()).build()));
                     }
-
                     SingleTaskDataManagerUtils.getRDB_VERSION_MAP().entrySet().stream().forEach(version->{
                         try {
                             String vkey=EtcdKeyCmd.getRdbVersionByRedisVersionAndRdbVerison(version.getKey(),version.getValue());
@@ -73,6 +69,8 @@ public class NodeStartInitService {
             });
         }catch (Exception e){
             log.error("initResource fail {}",e.getMessage());
+            throw e;
+
         }finally {
             client.close();
         }

@@ -87,7 +87,6 @@ public class RedisSyncerRdbParser {
      * @throws IOException when read timeout
      */
     public long parse() throws IOException, IncrementException {
-
         long offset = 0L;
         this.replication.submitEvent(new PreRdbSyncEvent(), Tuples.of(0L, 0L));
         this.replication.setStatus(TaskStatus.RDBRUNNING);

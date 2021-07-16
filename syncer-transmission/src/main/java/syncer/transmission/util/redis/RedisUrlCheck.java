@@ -11,6 +11,7 @@
 
 package syncer.transmission.util.redis;
 
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.common.exception.TaskMsgException;
@@ -26,6 +27,7 @@ import syncer.transmission.util.code.CodeUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Objects;
 
 /**
  * @author zhanenqiang
@@ -93,11 +95,12 @@ public class RedisUrlCheck {
                 boolean status=checkClientConnectState(urls[i], clientName,true);
                 if(status){
                     return true;
+                }else {
+                    throw new TaskMsgException(urls[i]+"连接失败");
                 }
             }catch (TaskMsgException e){
                 exception=e;
             }
-
         }
         throw exception;
     }

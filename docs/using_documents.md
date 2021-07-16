@@ -78,6 +78,17 @@ RedisSyncer一款通过replication协议模拟slave来获取源Redis节点数据
    * repl-ping-slave-period要小于readTimeout（redissyncer默认60000ms）
    * 源节点内存不够无法进行bgsave
    * 续传offset刷过
+4.出现 ERR unknown command 'REPLCONF' 'SYNC'问题 
+   * 请检查源Redis是否支持 SYNC、PSYNC命令
+   * 若增量同步阶段 target端 出现ERR unknown command "xxx", 可以提issue或自行修改syncer.replica.register.DefaultCommandRegister添加对应的命令解析器
+
+### 断点续传机制
+ 3.3以上版本有两种断点续传机制 v1、v2
+ * v1 基于offset实现简陋版本的断点续传，即将offset持久化到本地，当出现程序突然宕掉可能会导致最新的offset无法持久化,进而可能造成增量续传阶段offset不为最新导致部分命令二次拉取,但该版本机制不会在目标redis写入记录数据
+ * v2 增强版断点续传机制，每次命令提交syncer会自动将每一批次数据封装成一个事务，并在每个事务中加入一个key为 syncer-hash-offset-checkpoint的检查点写入目标库，能够尽最大可能满足数据一致性。但本机制会往目标redis每个存有数据的db中插入一条名为syncer-hash-offset-checkpoint的hash结构记录相关数据，并暂时仅支持目标为单节节点的类型
+ 
+#### 如何开启v2
+ * 默认为v1,若想使用v2断点续传机制，请在启动syncer时设置  --server.breakpointContinuationType=v2 
 
 ### 断点续传机制
 3.3以上版本有两种断点续传机制 v1、v2

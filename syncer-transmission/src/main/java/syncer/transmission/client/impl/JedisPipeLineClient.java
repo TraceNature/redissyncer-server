@@ -739,6 +739,15 @@ public class JedisPipeLineClient implements RedisClient {
 
     }
 
+    @Override
+    public void close() {
+        if(Objects.nonNull(pipelined)){
+            pipelined.close();
+        }
+        targetClient.close();
+        
+    }
+
 
     @Override
     public void select(Integer dbNum) {

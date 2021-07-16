@@ -63,7 +63,6 @@ public class RedisReplIdCheck {
             }else if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
                 Object targetAuth = target.auth(targetConfig.getAuthPassword());
             }
-            System.out.println(targetUri);
 
             String info=target.info();
             version = getRedisBuffer(info,type);

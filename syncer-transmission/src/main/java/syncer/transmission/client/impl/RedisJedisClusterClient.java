@@ -27,6 +27,7 @@ import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Slf4j
@@ -231,10 +232,17 @@ public class RedisJedisClusterClient implements RedisClient {
     @Override
     public Object send(byte[] cmd, byte[]... args) {
         updateCommitTime();
-        if(Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("FLUSHALL")){
+        if(Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("FLUSHALL")
+                ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("MULTI")
+                ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("EXEC")
+        ){
             return "OK";
         }
-        return redisClient.sendCommand(args[0], ClusterProtocolCommand.builder().raw(cmd).build(),args);
+        if(Objects.isNull(args)||args.length<1){
+            return redisClient.sendCommand(ClusterProtocolCommand.builder().raw(cmd).build(),args);
+        }else {
+            return redisClient.sendCommand(args[0], ClusterProtocolCommand.builder().raw(cmd).build(),args);
+        }
     }
 
     /**
@@ -248,6 +256,11 @@ public class RedisJedisClusterClient implements RedisClient {
 
     @Override
     public void commitCheckPoint() {
+
+    }
+
+    @Override
+    public void close() {
 
     }
 

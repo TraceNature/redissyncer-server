@@ -24,6 +24,7 @@ import syncer.common.constant.ResultCodeAndMessage;
 import syncer.common.exception.TaskMsgException;
 import syncer.common.util.TemplateUtils;
 import syncer.common.util.ThreadPoolUtils;
+import syncer.replica.constant.RedisType;
 import syncer.replica.status.TaskStatus;
 import syncer.replica.type.SyncType;
 import syncer.replica.util.SyncTypeUtils;
@@ -193,9 +194,7 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                                                         .build();
                                                 dataEntity.getOffSetEntity().getReplOffset().set(-1L);
                                                 SingleTaskDataManagerUtils.addMemThread(taskModel.getId(),dataEntity);
-
                                                 String id=singleTaskService.runSyncerTask(taskModel);
-
                                                 StartTaskEntity startTaskEntity=StartTaskEntity
                                                         .builder()
                                                         .code("2000")
@@ -247,82 +246,6 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                                 });
                             }
                         }));
-
-
-
-
-
-//                TaskRunUtils.getTaskLock(taskModel.getTaskId(), new EtcdLockCommandRunner() {
-//                    @Override
-//                    public void run() {
-//                        try{
-//                            taskModel.setGroupId(groupId);
-//                            taskModel.setStatus(TaskStatus.STOP.getCode());
-//                            SingleTaskDataManagerUtils.addDbThread(taskModel.getId(),taskModel);
-//                            if(taskModel.isAutostart()){
-//
-//                                TaskModel testTaskModel=new TaskModel();
-//                                BeanUtils.copyProperties(taskModel,testTaskModel);
-//                                testTaskModel.setStatus(TaskStatus.CREATING.getCode());
-//                                TaskDataEntity dataEntity=TaskDataEntity.builder()
-//                                        .taskModel(testTaskModel)
-//                                        .offSetEntity(OffSetEntity.builder().replId("").build())
-//                                        .build();
-//                                dataEntity.getOffSetEntity().getReplOffset().set(-1L);
-//                                SingleTaskDataManagerUtils.addMemThread(taskModel.getId(),dataEntity);
-//
-//                                String id=singleTaskService.runSyncerTask(taskModel);
-//
-//                                StartTaskEntity startTaskEntity=StartTaskEntity
-//                                        .builder()
-//                                        .code("2000")
-//                                        .taskId(taskModel.getId())
-//                                        .groupId(taskModel.getGroupId())
-//                                        .msg("Task created successfully and entered running state")
-//                                        .build();
-//                                resultList.add(startTaskEntity);
-//
-//                            }else {
-//                                StartTaskEntity startTaskEntity=StartTaskEntity
-//                                        .builder()
-//                                        .code("2000")
-//                                        .taskId(taskModel.getId())
-//                                        .groupId(taskModel.getGroupId())
-//                                        .msg("Task created successfully")
-//                                        .build();
-//                                resultList.add(startTaskEntity);
-//                                SingleTaskDataManagerUtils.updateThreadStatus(taskModel.getId(), TaskStatus.STOP);
-//                            }
-//
-//                        }catch (Exception e){
-//                            try {
-//                                SingleTaskDataManagerUtils.brokenTask(taskModel.getId());
-//                            } catch (Exception ex) {
-//                                log.error(e.getMessage());
-//                            }
-//                            e.printStackTrace();
-//                            log.error("taskId[{}],error[{}]",taskModel.getId(),e.getMessage());
-//                            StartTaskEntity startTaskEntity=StartTaskEntity
-//                                    .builder()
-//                                    .code("1000")
-//                                    .taskId(taskModel.getId())
-//                                    .groupId(taskModel.getGroupId())
-//                                    .msg("Error_"+e.getMessage())
-//                                    .build();
-//                            resultList.add(startTaskEntity);
-//                        }
-//                    }
-//
-//                    @Override
-//                    public String lockName() {
-//                        return "startRunLock"+taskModel.getTaskId();
-//                    }
-//
-//                    @Override
-//                    public int grant() {
-//                        return 30;
-//                    }
-//                });
             }
 
             taskFutureList.stream().forEach(taskFuture->{
@@ -769,15 +692,16 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                 .sourceRedisType(SyncTypeUtils.getRedisType(taskModel.getSourceRedisType()))
                 .targetRedisType(SyncTypeUtils.getRedisType(taskModel.getTargetRedisType()))
                 .status(SyncTypeUtils.getTaskStatusType(taskModel.getStatus()))
-                .dbMapper(taskModel.getDbMapping())
+                .dbMapper(taskModel.loadDbMapping())
                 .analysisMap(taskModel.getDataAnalysis())
+                .targetType(taskModel.getTargetRedisType().equals(RedisType.KAFKA.getCode())?"KAFKA":"REDIS")
                 .createTime(taskModel.getCreateTime())
                 .updateTime(taskModel.getUpdateTime())
                 .replId(taskModel.getReplId())
                 .rdbKeyCount(taskModel.getRdbKeyCount())
                 .allKeyCount(allKeyCount)
                 .realKeyCount(realKeyCount)
-                .commandKeyCount(commandKeyCount)
+                .commandKeyCount(Math.abs(commandKeyCount))
                 .rate(rate)
                 .lastDataInPutInterval(lastDataUpdateIntervalTime)
                 .lastDataOutPutInterval(lastDataCommitIntervalTime)

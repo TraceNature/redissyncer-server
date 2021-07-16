@@ -18,7 +18,7 @@ public enum RedisType {
     CLUSTER(2,"cluster集群模式"),
     FILE(3,"文件模式"),
     SENTINEL(4,"哨兵模式"),
-
+    KAFKA(5,"kafka"),
     NONE(-1,"失败");
 
     private Integer code;

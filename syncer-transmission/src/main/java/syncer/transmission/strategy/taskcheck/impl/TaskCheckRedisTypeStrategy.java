@@ -25,11 +25,8 @@ public class TaskCheckRedisTypeStrategy implements ITaskCheckStrategy {
     private RedisClient client;
     private TaskModel taskModel;
 
-
     @Override
     public void run(RedisClient client, TaskModel taskModel) throws Exception {
-
-
         //SYNC
         if(SyncType.SYNC.getCode().equals(taskModel.getSyncType())){
             if(RedisType.NONE.getCode().equals(taskModel.getSourceRedisType())){
@@ -44,7 +41,6 @@ public class TaskCheckRedisTypeStrategy implements ITaskCheckStrategy {
             }
         }
 
-
         if(RedisType.SENTINEL.getCode().equals(taskModel.getSourceRedisType())){
             if(StringUtils.isEmpty(taskModel.getSourceRedisMasterName())){
                 throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_MSG_TASK_SOURCE_MASTER_REDIS_NAME_NULL.getCode(),ResultCodeAndMessage.TASK_MSG_TASK_SOURCE_MASTER_REDIS_NAME_NULL.getMsg()));
@@ -57,9 +53,9 @@ public class TaskCheckRedisTypeStrategy implements ITaskCheckStrategy {
             }
         }
 
+
         //下一节点
         toNext(client,taskModel);
-
     }
 
     @Override

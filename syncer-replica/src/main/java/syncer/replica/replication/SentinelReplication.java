@@ -147,6 +147,11 @@ public class SentinelReplication implements Replication, SentinelListener{
     }
 
     @Override
+    public void closeClean() {
+        replication.closeClean();
+    }
+
+    @Override
     public void open() throws IOException {
         this.sentinel.open();
 
@@ -154,6 +159,7 @@ public class SentinelReplication implements Replication, SentinelListener{
 
     @Override
     public void close() throws IOException {
+
         this.sentinel.close();
     }
 
@@ -166,6 +172,8 @@ public class SentinelReplication implements Replication, SentinelListener{
     @Override
     public void onSwitch(Sentinel sentinel, HostAndPort next) {
         if (prev == null || !prev.equals(next)) {
+//            next.setHost("114.67.76.82");
+//            System.out.println("TASKID["+getConfig().getTaskId()+"]Sentinel switch master to ["+next+"]");
             log.info("TASKID[{}]Sentinel switch master to [{}]", getConfig().getTaskId(),next);
             closeQuietly(replication);
             if(failoverNum.getAndIncrement()>0){

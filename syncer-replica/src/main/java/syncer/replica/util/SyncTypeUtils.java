@@ -49,6 +49,7 @@ public class SyncTypeUtils {
         redisTypeMap.put(RedisType.CLUSTER.getCode(),RedisType.CLUSTER);
         redisTypeMap.put(RedisType.FILE.getCode(),RedisType.FILE);
         redisTypeMap.put(RedisType.SENTINEL.getCode(),RedisType.SENTINEL);
+        redisTypeMap.put(RedisType.KAFKA.getCode(),RedisType.KAFKA);
         redisTypeMap.put(RedisType.NONE.getCode(),RedisType.NONE);
 
         taskStatusTypeMap.put(TaskStatus.STARTING.getCode(),TaskStatus.STARTING);

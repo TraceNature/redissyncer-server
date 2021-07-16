@@ -20,7 +20,7 @@ import org.springframework.beans.BeanUtils;
 import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.entity.RedisDB;
 import syncer.replica.event.Event;
-import syncer.replica.event.iter.datatype.BatchedKeyValuePairEvent;
+import syncer.replica.event.iter.datatype.*;
 import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
 import syncer.transmission.client.RedisClient;
@@ -124,6 +124,137 @@ public class CommandProcessingDbMappingStrategy implements CommonProcessingStrat
                 SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId).getRealKeyCount().incrementAndGet();
             }
 
+
+            if(event instanceof BatchedKeyStringValueStringEvent){
+                BatchedKeyStringValueStringEvent stringEvent= (BatchedKeyStringValueStringEvent) event;
+                if ((stringEvent.getBatch() == 0 && null == stringEvent.getValue()) || null == stringEvent.getValue()) {
+                    return;
+                }
+
+                SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId).getRealKeyCount().incrementAndGet();
+
+                RedisDB db = stringEvent.getDb();
+                RedisDB newDb = new RedisDB();
+                BeanUtils.copyProperties(db, newDb);
+                try {
+                    dbMapping(eventEntity, newDb);
+                } catch (KeyWeed0utException e) {
+                    log.debug("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                    //抛弃此kv
+                    return;
+                }
+
+            }
+
+            if(event instanceof BatchedKeyStringValueHashEvent) {
+                BatchedKeyStringValueHashEvent hashEvent= (BatchedKeyStringValueHashEvent) event;
+                if ((hashEvent.getBatch() == 0 && null == hashEvent.getValue()) || null == hashEvent.getValue()) {
+                    return;
+                }
+                SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId).getRealKeyCount().incrementAndGet();
+                RedisDB db = hashEvent.getDb();
+                RedisDB newDb = new RedisDB();
+                BeanUtils.copyProperties(db, newDb);
+                try {
+                    dbMapping(eventEntity, newDb);
+                } catch (KeyWeed0utException e) {
+                    log.debug("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                    //抛弃此kv
+                    return;
+                }
+            }
+
+            if (event instanceof BatchedKeyStringValueSetEvent) {
+                BatchedKeyStringValueSetEvent setEvent= (BatchedKeyStringValueSetEvent) event;
+                if ((setEvent.getBatch() == 0 && null == setEvent.getValue()) || null == setEvent.getValue()) {
+                    return;
+                }
+                SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId).getRealKeyCount().incrementAndGet();
+                RedisDB db = setEvent.getDb();
+                RedisDB newDb = new RedisDB();
+                BeanUtils.copyProperties(db, newDb);
+                try {
+                    dbMapping(eventEntity, newDb);
+                } catch (KeyWeed0utException e) {
+                    log.debug("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                    //抛弃此kv
+                    return;
+                }
+            }
+
+            if (event instanceof BatchedKeyStringValueListEvent) {
+                BatchedKeyStringValueListEvent listEvent= (BatchedKeyStringValueListEvent) event;
+                if ((listEvent.getBatch() == 0 && null == listEvent.getValue()) || null == listEvent.getValue()) {
+                    return;
+                }
+                SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId).getRealKeyCount().incrementAndGet();
+                RedisDB db = listEvent.getDb();
+                RedisDB newDb = new RedisDB();
+                BeanUtils.copyProperties(db, newDb);
+                try {
+                    dbMapping(eventEntity, newDb);
+                } catch (KeyWeed0utException e) {
+                    log.debug("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                    //抛弃此kv
+                    return;
+                }
+            }
+
+            if (event instanceof BatchedKeyStringValueZSetEvent) {
+                BatchedKeyStringValueZSetEvent  zSetEvent= (BatchedKeyStringValueZSetEvent) event;
+                if ((zSetEvent.getBatch() == 0 && null == zSetEvent.getValue()) || null == zSetEvent.getValue()) {
+                    return;
+                }
+                SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId).getRealKeyCount().incrementAndGet();
+                RedisDB db = zSetEvent.getDb();
+                RedisDB newDb = new RedisDB();
+                BeanUtils.copyProperties(db, newDb);
+                try {
+                    dbMapping(eventEntity, newDb);
+                } catch (KeyWeed0utException e) {
+                    log.debug("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                    //抛弃此kv
+                    return;
+                }
+            }
+            if (event instanceof BatchedKeyStringValueModuleEvent) {
+                BatchedKeyStringValueModuleEvent moduleEvent= (BatchedKeyStringValueModuleEvent) event;
+                if ((moduleEvent.getBatch() == 0 && null == moduleEvent.getValue()) || null == moduleEvent.getValue()) {
+                    return;
+                }
+                SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId).getRealKeyCount().incrementAndGet();
+                RedisDB db = moduleEvent.getDb();
+                RedisDB newDb = new RedisDB();
+                BeanUtils.copyProperties(db, newDb);
+                try {
+                    dbMapping(eventEntity, newDb);
+                } catch (KeyWeed0utException e) {
+                    log.debug("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                    //抛弃此kv
+                    return;
+                }
+            }
+
+            if (event instanceof BatchedKeyStringValueStreamEvent) {
+                BatchedKeyStringValueStreamEvent streamEvent= (BatchedKeyStringValueStreamEvent) event;
+                if ((streamEvent.getBatch() == 0 && null == streamEvent.getValue()) || null == streamEvent.getValue()) {
+                    return;
+                }
+                SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId).getRealKeyCount().incrementAndGet();
+                RedisDB db = streamEvent.getDb();
+                RedisDB newDb = new RedisDB();
+                BeanUtils.copyProperties(db, newDb);
+                try {
+                    dbMapping(eventEntity, newDb);
+                } catch (KeyWeed0utException e) {
+                    log.debug("全量数据key[{}]不符合DB映射规则，被抛弃..", JSON.toJSONString(eventEntity));
+                    //抛弃此kv
+                    return;
+                }
+            }
+
+
+
             //继续执行下一Filter节点
             toNext(replication, eventEntity,taskModel);
         } catch (Exception e) {
@@ -183,7 +314,38 @@ public class CommandProcessingDbMappingStrategy implements CommonProcessingStrat
             db.setCurrentDbNumber(dbbnum);
             batchedKeyValuePair.setDb(db);
             eventEntity.setEvent(batchedKeyValuePair);
+        } else if (event instanceof BatchedKeyStringValueHashEvent) {
+            BatchedKeyStringValueHashEvent stringValueHashEvent = (BatchedKeyStringValueHashEvent) event;
+            db.setCurrentDbNumber(dbbnum);
+            stringValueHashEvent.setDb(db);
+            eventEntity.setEvent(stringValueHashEvent);
+        } else if (event instanceof BatchedKeyStringValueListEvent) {
+            BatchedKeyStringValueListEvent listEvent = (BatchedKeyStringValueListEvent) event;
+            db.setCurrentDbNumber(dbbnum);
+            listEvent.setDb(db);
+            eventEntity.setEvent(listEvent);
+        } else if (event instanceof BatchedKeyStringValueSetEvent) {
+            BatchedKeyStringValueSetEvent setEvent = (BatchedKeyStringValueSetEvent) event;
+            db.setCurrentDbNumber(dbbnum);
+            setEvent.setDb(db);
+            eventEntity.setEvent(setEvent);
+        } else if (event instanceof BatchedKeyStringValueModuleEvent) {
+            BatchedKeyStringValueModuleEvent moduleEvent = (BatchedKeyStringValueModuleEvent) event;
+            db.setCurrentDbNumber(dbbnum);
+            moduleEvent.setDb(db);
+            eventEntity.setEvent(moduleEvent);
+        } else if (event instanceof BatchedKeyStringValueZSetEvent) {
+            BatchedKeyStringValueZSetEvent zSetEvent = (BatchedKeyStringValueZSetEvent) event;
+            db.setCurrentDbNumber(dbbnum);
+            zSetEvent.setDb(db);
+            eventEntity.setEvent(zSetEvent);
+        } else if (event instanceof BatchedKeyStringValueStreamEvent) {
+            BatchedKeyStringValueStreamEvent streamEvent = (BatchedKeyStringValueStreamEvent) event;
+            db.setCurrentDbNumber(dbbnum);
+            streamEvent.setDb(db);
+            eventEntity.setEvent(streamEvent);
         }
+
         eventEntity.setDbNum(dbbnum);
 
     }

@@ -11,7 +11,6 @@
 
 package syncer.transmission.task;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,6 @@ import syncer.replica.listener.EventListener;
 import syncer.replica.listener.TaskStatusListener;
 import syncer.replica.listener.ValueDumpIterableEventListener;
 import syncer.replica.parser.syncer.ValueDumpIterableRdbParser;
-import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.register.DefaultCommandRegister;
 import syncer.replica.replication.RedisReplication;
 import syncer.replica.replication.Replication;
@@ -36,7 +34,6 @@ import syncer.replica.status.TaskStatus;
 import syncer.replica.type.SyncType;
 import syncer.replica.util.SyncTypeUtils;
 import syncer.replica.util.TaskRunTypeEnum;
-import syncer.replica.util.strings.Strings;
 import syncer.transmission.checkpoint.breakpoint.BreakPoint;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.client.RedisClientFactory;
@@ -54,9 +51,7 @@ import syncer.transmission.util.redis.KeyCountUtils;
 import syncer.transmission.util.redis.RedisReplIdCheck;
 import syncer.transmission.util.sql.SqlOPUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
-
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 
@@ -85,7 +80,6 @@ public class RedisDataSyncTransmissionTask implements Runnable{
     @Override
     public void run() {
 //        Thread.currentThread().setName(taskModel.getId()+": "+Thread.currentThread().getName());
-
         if(Objects.isNull(taskModel.getBatchSize())||taskModel.getBatchSize()==0){
             taskModel.setBatchSize(500);
         }
@@ -160,6 +154,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                     offsetNum -= 1;
                     //offsetNum -= 1;
                 } catch (Exception e) {
+
                 }
                 if (offsetNum != 0L && !StringUtils.isEmpty(data[1])) {
                     replicationHandler.getConfig().setReplOffset(offsetNum);
@@ -196,8 +191,6 @@ public class RedisDataSyncTransmissionTask implements Runnable{
             replicationHandler.addEventListener(new ValueDumpIterableEventListener(taskModel.getBatchSize(), new EventListener() {
                 @Override
                 public void onEvent(Replication replicator, Event event) {
-
-
                     if (SingleTaskDataManagerUtils.isTaskClose(taskModel.getId())) {
                         //判断任务是否关闭
                         try {
@@ -214,10 +207,9 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                         return;
                     }
 
-
                     KeyValueEventEntity node = KeyValueEventEntity.builder()
                             .event(event)
-                            .dbMapper(taskModel.getDbMapping())
+                            .dbMapper(taskModel.loadDbMapping())
                             .redisVersion(taskModel.getRedisVersion())
                             .baseOffSet(baseoffset)
                             .replId(replicationHandler.getConfig().getReplId())
@@ -256,7 +248,6 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
                 }
 
                 @Override
@@ -264,13 +255,9 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                     return taskModel.getTaskId()+"_TaskStatusListener";
                 }
             });
-
             //任务运行
             SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatus.STARTING);
-
-
             replicationHandler.open();
-
         }catch (Exception e){
             SingleTaskDataManagerUtils.brokenStatusAndLog(e,this.getClass(),taskModel.getId());
             e.printStackTrace();

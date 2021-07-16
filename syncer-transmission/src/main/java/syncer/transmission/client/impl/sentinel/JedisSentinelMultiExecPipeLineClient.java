@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package syncer.transmission.client.impl;
+package syncer.transmission.client.impl.sentinel;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +23,10 @@ import syncer.replica.cmd.CMD;
 import syncer.replica.datatype.rdb.zset.ZSetEntry;
 import syncer.replica.replication.Replication;
 import syncer.replica.util.strings.Strings;
-import syncer.transmission.client.MultiRedisClient;
 import syncer.transmission.client.RedisClient;
+import syncer.transmission.client.impl.ConnectErrorRetry;
+import syncer.transmission.client.impl.JedisPipeLineMultiRetryRunner;
+import syncer.transmission.client.impl.JedisPipelineSubmitMultiCommandRetryRunner;
 import syncer.transmission.cmd.JedisProtocolCommand;
 import syncer.transmission.compensator.PipeLineCompensatorEnum;
 import syncer.transmission.entity.*;
@@ -48,7 +50,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author zhanenqiang
- * @Description 单机redis pipeleine版本  已修复补偿机制问题  基于Jedis
+ * @Description 单机redis pipeleine版本  已修复补偿机制问题  基于Jedis   sentinel
  * 断点续传基于事务机制，尽最大可能保证续传offset最新
  * 在目标中每一个库写入一个hash结构  syncer-hash-offset-checkpoint
  *
@@ -59,7 +61,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @Date 2020/12/14
  */
 @Slf4j
-public class JedisMultiExecPipeLineClient implements RedisClient {
+public class JedisSentinelMultiExecPipeLineClient implements RedisClient {
     protected String host;
     protected Integer port;
     protected String sourceHost;
@@ -131,7 +133,7 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
     private AtomicBoolean hasMulti=new AtomicBoolean(false);
 
 
-    public JedisMultiExecPipeLineClient(String host, Integer port, String password,String sourceHost, Integer sourcePort,int count, long errorCount, String taskId) {
+    public JedisSentinelMultiExecPipeLineClient(String host, Integer port, String password, String sourceHost, Integer sourcePort, int count, long errorCount, String taskId) {
         this.host = host;
         this.port = port;
         this.taskId = taskId;
@@ -152,7 +154,7 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
         retry=new ConnectErrorRetry(taskId);
         //定时回收线程
 
-        ThreadPoolUtils.exec(new JedisMultiExecPipeLineClient.PipelineSubmitThread(taskId));
+        ThreadPoolUtils.exec(new JedisSentinelMultiExecPipeLineClient.PipelineSubmitThread(taskId));
     }
 
 
@@ -161,6 +163,7 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
         targetClient=createJedis(this.host,this.port,password);
         pipelined = targetClient.pipelined();
         retry=new ConnectErrorRetry(taskId);
+
     }
 
     @Override
@@ -231,11 +234,11 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
 
     @Override
     public void close() {
-        if(Objects.nonNull(this.pipelined)){
-            this.pipelined.close();
+        if(Objects.nonNull(pipelined)){
+            pipelined.close();
         }
-        retry.close();
-        this.targetClient.close();
+        targetClient.close();
+
     }
 
     @Override
@@ -1012,6 +1015,7 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
     }
 
 
+
     /**
      * 判断是否是setnx带时间(SET)的命令
      *
@@ -1123,7 +1127,7 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
             }
         } catch (JedisConnectionException e) {
             try {
-                retry.retry(new JedisPipelineSubmitMultiCommandRetryRunner(this));
+//                retry.retry(new JedisPipelineSubmitMultiCommandRetryRunner(this));
             }catch (JedisConnectionException ex){
                 log.error("[TASKDI {}] pipelined retry fail",taskId);
                 brokenTaskByConnectError(ex);
@@ -1151,7 +1155,7 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
             }
         } catch (JedisConnectionException e) {
             try {
-                retry.retry(new JedisPipeLineMultiRetryRunner(this));
+//                retry.retry(new JedisPipeLineMultiRetryRunner(this));
             }catch (JedisConnectionException ex){
                 log.error("[TASKDI {}] pipelined retry fail",taskId);
                 brokenTaskByConnectError(ex);
@@ -1656,7 +1660,6 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
 
 
 
-
     /**
      * 清理非幂等命令内存结构缓存
      *
@@ -1701,15 +1704,7 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
                     }
                     continue;
                 }
-//                if(!multiLock.get()){
-//                    System.out.println("-------"+multiLock.get());
-//                    try {
-//                        Thread.sleep(10);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                    continue;
-//                }
+
 
                 compensatorLock.lock();
                 try {
