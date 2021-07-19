@@ -32,17 +32,11 @@ import java.util.Set;
 
 @Slf4j
 public class RedisJedisClusterClient implements RedisClient {
-
-
-
     private String host;
     //任务id
     private String taskId;
     private JedisCluster redisClient;
-
-
-
-
+    public static final String OK="OK";
 
     public RedisJedisClusterClient(String host, String password, String taskId) {
         this.host = host;
@@ -230,16 +224,20 @@ public class RedisJedisClusterClient implements RedisClient {
     }
 
     @Override
-    public Object send(byte[] cmd, byte[]... args) {
+    public Object send(byte[] cmd, byte[]... args) throws Exception {
         updateCommitTime();
         if(Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("FLUSHALL")
+                ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("FLUSHDB")
                 ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("MULTI")
                 ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("EXEC")
         ){
-            return "OK";
+            return OK;
         }
+
+
         if(Objects.isNull(args)||args.length<1){
-            return redisClient.sendCommand(ClusterProtocolCommand.builder().raw(cmd).build(),args);
+            log.error("[{}] commands not supported by cluster mode [{}]",taskId,Strings.byteToString(cmd));
+            throw new Exception("["+taskId+"] commands not supported by cluster mode ["+Strings.byteToString(cmd)+"]");
         }else {
             return redisClient.sendCommand(args[0], ClusterProtocolCommand.builder().raw(cmd).build(),args);
         }

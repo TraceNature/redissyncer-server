@@ -149,15 +149,25 @@ public class RedisMultiSyncBreakingRingByAuxiliaryKeyTransmissionTask implements
                                 DefaultCommand selectComand = new DefaultCommand(Protocol.Command.SELECT.getRaw(), selectNum);
                                 String[] data = new String[]{circle.getMd5(selectComand, sourceNodeId), "1", "1"};
                                 byte[][] ndata = new byte[][]{data[0].getBytes(), data[1].getBytes(), data[2].getBytes()};
-                                client.send("PSETEX".getBytes(), ndata);
-                                client.send(selectComand.getCommand(), selectComand.getArgs());
+                                try {
+                                    client.send("PSETEX".getBytes(), ndata);
+                                    client.send(selectComand.getCommand(), selectComand.getArgs());
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+
                                 db = -1;
                             }
 
                             String[] data = new String[]{circle.getMd5(command, sourceNodeId), "1", "1"};
                             byte[][] ndata = new byte[][]{data[0].getBytes(), data[1].getBytes(), data[2].getBytes()};
-                            client.send("PSETEX".getBytes(), ndata);
-                            client.send(command.getCommand(), command.getArgs());
+                            try {
+                                client.send("PSETEX".getBytes(), ndata);
+                                client.send(command.getCommand(), command.getArgs());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
                         }
                     }
 
@@ -174,7 +184,11 @@ public class RedisMultiSyncBreakingRingByAuxiliaryKeyTransmissionTask implements
                         long ttl = (ms == null || ms < 0) ? 0 : ms;
                         String[] data = new String[]{circle.getRdbDumpMd5(valueDump, sourceNodeId, 3.0), "1", "1"};
                         byte[][] ndata = new byte[][]{data[0].getBytes(), data[1].getBytes(), data[2].getBytes()};
-                        client.send("PSETEX".getBytes(), ndata);
+                        try {
+                            client.send("PSETEX".getBytes(), ndata);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         client.restoreReplace(dbNum, valueDump.getKey(), ttl, valueDump.getValue(), true);
                     }
 
