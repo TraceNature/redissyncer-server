@@ -94,7 +94,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
             //全量同步结束
             if (event instanceof PostRdbSyncEvent) {
                 long secTime=(System.currentTimeMillis()-date.getTime())/(1000);
-                String time=secTime==0?(System.currentTimeMillis()-date.getTime())+"ms":secTime+"s";
+                String time=secTime<1?(System.currentTimeMillis()-date.getTime())+"ms":secTime+"s";
                 if(eventEntity.getFileType().equals(FileType.ONLINERDB)
                         ||eventEntity.getFileType().equals(FileType.RDB)
                         ||eventEntity.getFileType().equals(FileType.ONLINEAOF)
