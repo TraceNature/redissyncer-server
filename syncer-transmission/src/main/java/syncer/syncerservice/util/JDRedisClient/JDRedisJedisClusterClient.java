@@ -5,6 +5,7 @@ import syncer.syncerjedis.JedisCluster;
 import syncer.syncerjedis.params.SetParams;
 import syncer.syncerplusredis.rdb.datatype.ZSetEntry;
 import syncer.syncerservice.cmd.ClusterProtocolCommand;
+import syncer.syncerservice.exception.FilterNodeException;
 import syncer.syncerservice.util.common.Strings;
 import syncer.syncerservice.util.jedis.ObjectUtils;
 import syncer.syncerservice.util.jedis.StringUtils;
@@ -17,16 +18,11 @@ import java.util.Set;
 
 @Slf4j
 public class JDRedisJedisClusterClient implements JDRedisClient {
-
-
-
     private String host;
     //任务id
     private String taskId;
     private JedisCluster redisClient;
-
-
-
+    public static final String OK="OK";
 
 
     public JDRedisJedisClusterClient(String host,  String password,String taskId) {
@@ -182,15 +178,18 @@ public class JDRedisJedisClusterClient implements JDRedisClient {
     }
 
     @Override
-    public Object send(byte[] cmd, byte[]... args) {
+    public Object send(byte[] cmd, byte[]... args) throws Exception {
         if(Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("FLUSHALL")
+                ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("FLUSHDB")
                 ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("MULTI")
                 ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("EXEC")
         ){
-            return "OK";
+            return OK;
         }
+
         if(Objects.isNull(args)||args.length<1){
-            return redisClient.sendCommand(ClusterProtocolCommand.builder().raw(cmd).build(),args);
+            log.error("[{}] commands not supported by cluster mode [{}]",taskId,Strings.byteToString(cmd));
+            throw new Exception("["+taskId+"] commands not supported by cluster mode ["+Strings.byteToString(cmd)+"]");
         }else {
             return redisClient.sendCommand(args[0], ClusterProtocolCommand.builder().raw(cmd).build(),args);
         }

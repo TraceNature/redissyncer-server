@@ -44,7 +44,7 @@ public interface ISyncerCompensator {
     void restore(final Long dbNum,final byte[] key, final long ttl, final byte[] serializedValue,String res);
     void restoreReplace(final Long dbNum,final byte[] key, final long ttl, final byte[] serializedValue,String res);
     void restoreReplace(final Long dbNum,byte[] key, long ttl, byte[] serializedValue,boolean highVersion,String res);
-    void send(final byte[] cmd,Object res, final byte[]... args);
+    void send(final byte[] cmd,Object res, final byte[]... args) throws Exception;
     void select(final Integer dbNum);
 
 

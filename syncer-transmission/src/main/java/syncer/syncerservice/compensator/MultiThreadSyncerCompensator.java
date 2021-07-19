@@ -402,7 +402,7 @@ public class MultiThreadSyncerCompensator implements ISyncerCompensator{
     }
 
     @Override
-    public void send(byte[] cmd, Object res, byte[]... args) {
+    public void send(byte[] cmd, Object res, byte[]... args) throws Exception {
         if(isIdempotentCommand(cmd)){
 
             retryIdempotentCommand(cmd,res,args);

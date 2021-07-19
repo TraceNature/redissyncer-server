@@ -74,7 +74,7 @@ public interface JDRedisClient {
     String restoreReplace(final Long dbNum,final byte[] key, final long ttl, final byte[] serializedValue);
     String restoreReplace(final Long dbNum,byte[] key, long ttl, byte[] serializedValue,boolean highVersion);
 
-    Object send(final byte[] cmd, final byte[]... args);
+    Object send(final byte[] cmd, final byte[]... args) throws Exception;
 
     void select(final Integer dbNum);
 
