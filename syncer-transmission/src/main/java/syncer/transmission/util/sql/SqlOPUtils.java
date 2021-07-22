@@ -168,6 +168,15 @@ public class SqlOPUtils {
         return taskMapper.updateTaskMsgById(taskMsg, id);
     }
 
+    /**
+     * 更新key记录
+     * @param id
+     * @param rdbKeyCount
+     * @param allKeyCount
+     * @param realKeyCount
+     * @return
+     * @throws Exception
+     */
     public static boolean updateKeyCountById(String id, Long rdbKeyCount, Long allKeyCount, Long realKeyCount) throws Exception {
 
         return taskMapper.updateKeyCountById(id, rdbKeyCount, allKeyCount, realKeyCount);

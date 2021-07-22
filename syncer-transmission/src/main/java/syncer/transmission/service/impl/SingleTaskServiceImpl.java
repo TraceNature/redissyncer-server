@@ -26,6 +26,7 @@ import syncer.transmission.entity.OffSetEntity;
 import syncer.transmission.entity.StartTaskEntity;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.lock.EtcdLockCommandRunner;
+import syncer.transmission.model.ExpandTaskModel;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.service.ISingleTaskService;
 import syncer.transmission.strategy.taskcheck.RedisTaskStrategyGroupType;
@@ -349,7 +350,10 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                         result.setMsg("The task has not been created yet");
                         return;
                     }
-
+                    ExpandTaskModel expandTaskModel=taskModel.getExpandTaskJson();
+                    expandTaskModel.fileSize.set(0L);
+                    expandTaskModel.readFileSize.set(0L);
+                    taskModel.updateExpandJson(expandTaskModel);
                     taskModel.setTaskMsg("");
                     /**
                      * todo offset更新

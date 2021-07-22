@@ -36,6 +36,7 @@ public  class AbstractReplication extends AbstractReplicationListener implements
     private final AtomicBoolean manual = new AtomicBoolean(false);
     protected AtomicBoolean handStop =new AtomicBoolean(false);
     protected String brokenMSg="";
+
     /**
      * 状态
      */
@@ -163,6 +164,8 @@ public  class AbstractReplication extends AbstractReplicationListener implements
 //            doExceptionListener(this, e, event);
         }
     }
+
+
 
 
     /**

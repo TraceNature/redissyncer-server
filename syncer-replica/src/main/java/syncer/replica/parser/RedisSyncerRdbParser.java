@@ -200,6 +200,7 @@ public class RedisSyncerRdbParser {
             }
             long start = offset;
             offset += in.unmark();
+            replication.getConfig().setReadFileSize(offset);
             if (Objects.isNull(event)) {
                 continue;
             }

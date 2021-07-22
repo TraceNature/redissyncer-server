@@ -96,7 +96,7 @@ public enum TaskStatus implements Serializable {
     @Getter
     private Status status;
     @Getter
-    private int code;
+    private Integer code;
     @Getter
     private String msg;
 }

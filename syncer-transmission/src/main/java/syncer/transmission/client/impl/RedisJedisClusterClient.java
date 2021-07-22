@@ -230,6 +230,7 @@ public class RedisJedisClusterClient implements RedisClient {
                 ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("FLUSHDB")
                 ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("MULTI")
                 ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("EXEC")
+                ||Strings.byteToString(cmd).toUpperCase().equalsIgnoreCase("SELECT")
         ){
             return OK;
         }

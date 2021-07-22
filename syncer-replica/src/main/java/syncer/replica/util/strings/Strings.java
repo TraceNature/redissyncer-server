@@ -116,7 +116,6 @@ public class Strings {
     public static String[]byteToString(byte[]... bytes) {
         Objects.requireNonNull(bytes);
         String[]res=new String[bytes.length];
-
         for (int i=0;i<bytes.length;i++){
             try {
                 String strContent = new String(bytes[i], "utf-8");
@@ -159,5 +158,17 @@ public class Strings {
             res[i++]=strContent;
         }
         return res;
+    }
+
+
+    public static int getByteLength(Object[] raw){
+        int length=0;
+        for (int i=0;i<raw.length;i++){
+            if(raw[i]!=null){
+                byte[] data= (byte[]) raw[i];
+                length+=data.length;
+            }
+        }
+        return length;
     }
 }

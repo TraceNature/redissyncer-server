@@ -41,6 +41,7 @@ import syncer.transmission.compensator.ISyncerCompensator;
 import syncer.transmission.compensator.ISyncerCompensatorFactory;
 import syncer.transmission.entity.OffSetEntity;
 import syncer.transmission.entity.TaskDataEntity;
+import syncer.transmission.model.ExpandTaskModel;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.po.entity.KeyValueEventEntity;
 import syncer.transmission.queue.SendCommandWithOutQueue;
@@ -217,8 +218,6 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                             .taskRunTypeEnum(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType())
                             .fileType(SyncTypeUtils.getSyncType(taskModel.getSyncType()).getFileType())
                             .build();
-
-
                     //更新offset
                     updateOffset(taskModel.getId(),replicationHandler,node);
 
@@ -281,11 +280,28 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                         .build());
             }
             Event event=node.getEvent();
+
+            try {
+                ExpandTaskModel expandTaskModel=data.getExpandTaskModel();
+                expandTaskModel.readFileSize.set(replicationHandler.getConfig().getReadFileSize());
+                expandTaskModel.fileSize.set(replicationHandler.getConfig().getFileSize());
+                taskModel.updateExpandJson(expandTaskModel);
+            }catch (Exception e){
+
+            }
+
             //全量同步结束
             if (event instanceof PostRdbSyncEvent ||event instanceof DefaultCommand ||event instanceof PreCommandSyncEvent) {
                 data.getOffSetEntity().setReplId(replicationHandler.getConfig().getReplId());
                 data.getOffSetEntity().getReplOffset().set(replicationHandler.getConfig().getReplOffset());
 
+                try {
+                    ExpandTaskModel expandTaskModel=data.getExpandTaskModel();
+                    expandTaskModel.readFileSize.set(replicationHandler.getConfig().getFileSize());
+                    taskModel.updateExpandJson(expandTaskModel);
+                }catch (Exception e){
+
+                }
                 if(node.getTaskRunTypeEnum().equals(TaskRunTypeEnum.STOCKONLY)||event instanceof PreCommandSyncEvent){
                     SqlOPUtils.updateOffsetAndReplId(taskId,replicationHandler.getConfig().getReplOffset(),replicationHandler.getConfig().getReplId());
                 }
@@ -293,6 +309,5 @@ public class RedisDataSyncTransmissionTask implements Runnable{
         }catch (Exception e){
             log.info("[{}]update offset fail,replid[{}],offset[{}]",taskId,replicationHandler.getConfig().getReplId(),replicationHandler.getConfig().getReplOffset());
         }
-
     }
 }

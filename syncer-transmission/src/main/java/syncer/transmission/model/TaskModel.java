@@ -349,11 +349,25 @@ public class TaskModel {
     private String targetKafkaAddress;
 
 
+
     public String getExpandJson() {
         if (StringUtils.isEmpty(this.expandJson)){
             this.expandJson= JSON.toJSONString(new ExpandTaskModel());
         }
         return this.expandJson;
+    }
+
+
+    public ExpandTaskModel getExpandTaskJson() {
+        if (StringUtils.isEmpty(this.expandJson)){
+            ExpandTaskModel taskModel=new ExpandTaskModel();
+            return taskModel;
+        }
+        return JSON.parseObject(this.expandJson,ExpandTaskModel.class);
+    }
+
+    public void updateExpandJson(ExpandTaskModel expandTaskModel) {
+        this.expandJson= JSON.toJSONString(expandTaskModel);
     }
 
     public Map<String,Object> getDataAnalysis(){

@@ -199,7 +199,6 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
                 addAnalysisMap(streamEvent.getDataType());
             }
 
-
             toNext(replication, eventEntity,taskModel);
         } catch (Exception e) {
             if (analysisMap.containsKey(RedisDataTypeAnalysisConstant.EROR_KEY)) {
