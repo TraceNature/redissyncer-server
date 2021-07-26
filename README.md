@@ -152,4 +152,4 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 
 ### [replicatior](https://github.com/leonchen83/redis-replicator) 
 
-### [IntelliJ IDEA](https://www.jetbrains.com/?from=redis-replicator)
+### [IntelliJ IDEA](https://www.jetbrains.com/?from=redissyncer-server)
