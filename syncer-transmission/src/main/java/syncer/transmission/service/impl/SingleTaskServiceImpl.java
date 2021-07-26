@@ -55,7 +55,6 @@ import java.util.concurrent.locks.Lock;
 @Slf4j
 public class SingleTaskServiceImpl implements ISingleTaskService {
     RedisReplIdCheck redisReplIdCheck = new RedisReplIdCheck();
-
     /**
      * 运行之前已经创建过任务
      *
@@ -167,7 +166,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), -1L, TaskStatus.CREATING);
 
         try {
-
             //校验
             TaskCheckStrategyGroupSelecter.select(RedisTaskStrategyGroupType.NODISTINCT, null, taskModel).run(null, taskModel);
 
@@ -175,7 +173,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
             SingleTaskDataManagerUtils.brokenTask(taskModel.getId());
             throw e;
         }
-
 
         //创建完成
         SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), -1L, TaskStatus.CREATED);
@@ -185,7 +182,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         } catch (Exception e) {
             SingleTaskDataManagerUtils.brokenStatusAndLog(e, this.getClass(), taskModel.getId());
         }
-
 
         return taskModel.getId();
     }
@@ -204,7 +200,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                             TaskDataEntity data = SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId());
                             try {
                                 SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), data.getOffSetEntity().getReplOffset().get(), TaskStatus.STOP);
-
                                 try {
                                     data.getReplication().close();
                                 } catch (IOException e) {
@@ -247,7 +242,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                             }
                         }
                     }
-
                     @Override
                     public String lockName() {
                         return "startRunLock" + taskModel.getTaskId();
@@ -263,7 +257,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return result;
     }
 
@@ -305,7 +298,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                             result.setMsg("The task does not exist. Please create the task first");
                         }
                     }
-
                 } catch (Exception e) {
                     result.setCode("1000");
                     result.setTaskId(taskId);
@@ -331,7 +323,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
     @Override
     public StartTaskEntity startTaskByTaskId(String taskId, boolean afresh) {
         final StartTaskEntity result = StartTaskEntity.builder().build();
-
         TaskRunUtils.getTaskLock(taskId, new EtcdLockCommandRunner() {
             @Override
             public void run() {
@@ -343,7 +334,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                         return ;
                     }
                     TaskModel taskModel = SqlOPUtils.findTaskById(taskId);
-
                     if (Objects.isNull(taskModel)) {
                         result.setCode("1002");
                         result.setTaskId(taskId);
@@ -359,8 +349,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                      * todo offset更新
                      */
                     taskModel.setAfresh(afresh);
-
-
                     SqlOPUtils.updateAfreshsetById(taskId, afresh);
                     String id = null;
                     if (!SingleTaskDataManagerUtils.isTaskClose(taskId)) {
@@ -375,15 +363,11 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                     } else {
                         id = runSyncerTask(taskModel);
                     }
-
                     result.setCode("2000");
                     result.setTaskId(id);
                     result.setMsg("OK");
                     return;
-
-
                 } catch (Exception e) {
-
                     result.setCode("1000");
                     result.setTaskId(taskId);
                     result.setMsg("Error_" + e.getMessage());
@@ -424,7 +408,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                                 .msg("task is running,please stop the task first")
                                 .build();
                         result.add(startTaskEntity);
-
                     } else {
                         try {
                             SqlOPUtils.deleteTaskById(taskModel.getId());
@@ -476,7 +459,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                     .build();
             return result;
         }
-
         try {
             if (SqlOPUtils.findTaskById(taskId) != null) {
                 SqlOPUtils.deleteTaskById(taskId);

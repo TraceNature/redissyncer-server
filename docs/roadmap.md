@@ -33,19 +33,23 @@
 - [x] key过滤 
 - [x] 命令过滤
 - [x] 限制任务数，根据内存容量限制创建任务
-- [ ] 实现增量续传2.0,通过redis事务命令，尽最大可能保证数据一致性
-- [ ] 支持源Redis主从故障转移以及支持sentinel模式
-- [x] 目标连接retry机制  
-- [ ] 实现 rewrite
-- [ ] source.type target.type
-- [ ] 内存级别双向同步
+- [x] 实现增量续传2.0,通过redis事务命令，尽最大可能保证数据一致性
+- [x] 目标连接retry机制
+- [x] source.type target.type
+- [x] 目标为kafka,实现命令订阅
 - [x] 集成log4j2,日志可通过application.yml或启动参数配置，默认输出位置 ./log
-- [ ] 数据校验，由goclient集成
 - [x]  incr 、incrby等命令幂等操作
 - [x]  swagger 补充api说明
-- [ ] goclient 适应v2 api
-- [ ] goclient 实现交互模式类似redis-cli
+- [x] goclient 适应v2 api
+- [x] goclient 实现交互模式类似redis-cli
+- [ ] 源端节点scan模式,使用scan命令实现不支持sync命令云的Redis的全量数据拉取
+- [ ] 数据校验，由goclient集成
+- [ ] 支持目标Redis sentinel模式
+- [ ] 支持源Redis主从故障转移以及支持sentinel模式
+- [ ] 实现 rewrite
+- [ ] 内存级别双向同步  
 - [ ] 目标为rediscluster 实现pipeline写入
+
 
 * testcase完善，形成完整回归测试案例
    - [x] single2single
@@ -60,7 +64,7 @@
 
 
 * 4.X
-- [ ] 任务元数据改为ETCD存储
+- [x] 任务元数据改为ETCD存储
 - [ ] 实现portal及任务调度
 - [ ] 实现任务在集群某节点不可用的情况下自动迁移至其他节点并续传任务
 - [ ] 兼容redis协议的其他kv产品例如Tides，TiKV

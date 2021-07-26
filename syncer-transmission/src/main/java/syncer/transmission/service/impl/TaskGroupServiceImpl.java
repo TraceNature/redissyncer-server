@@ -365,9 +365,7 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                     return 30;
                 }
             });
-
         }
-
         return resultList;
     }
 
