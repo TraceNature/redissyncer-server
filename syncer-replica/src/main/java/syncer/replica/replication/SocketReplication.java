@@ -114,6 +114,7 @@ public class SocketReplication  extends AbstractReplication{
         AtomicBoolean status=new AtomicBoolean(true);
         super.open();
         try {
+            brokenMSg="";
             socketReplicationRetrier=new SocketReplicationRetrier(syncRedisProtocol,this,config,replyParser);
             socketReplicationRetrier.retry(this);
         } catch (IncrementException  e) {
@@ -128,11 +129,11 @@ public class SocketReplication  extends AbstractReplication{
                     .replid(config.getReplId())
                     .msg(e.getMessage())
                     .build());
+            brokenMSg=e.getMessage();
         }catch (Exception e){
 //            e.printStackTrace();
             log.error("Exception {} ,msg {}",e.getClass(),e.getMessage());
-        }
-        finally {
+        } finally {
             if(status.get()){
                 if(handStop.get()){
                     if(sentinelFailover){
@@ -165,8 +166,9 @@ public class SocketReplication  extends AbstractReplication{
                             .offset(config.getReplOffset())
                             .taskId(config.getTaskId())
                             .replid(config.getReplId())
-                            .msg("重试多次后失败")
+                            .msg("重试多次后失败->"+brokenMSg)
                             .build();
+
                     if(!Strings.isEquals("",brokenMSg)&&brokenMSg!=null){
                         event.setMsg(brokenMSg);
                     }
@@ -204,7 +206,7 @@ public class SocketReplication  extends AbstractReplication{
                             .offset(config.getReplOffset())
                             .taskId(config.getTaskId())
                             .replid(config.getReplId())
-                            .msg("重试多次后失败")
+                            .msg("重试多次后失败->"+brokenMSg)
                             .build();
                     if(!Strings.isEquals("",brokenMSg)&&brokenMSg!=null){
                         event.setMsg(brokenMSg);
