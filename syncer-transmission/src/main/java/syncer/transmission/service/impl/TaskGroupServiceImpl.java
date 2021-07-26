@@ -365,9 +365,7 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                     return 30;
                 }
             });
-
         }
-
         return resultList;
     }
 
@@ -582,9 +580,6 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
      * @return
      */
     public synchronized static TaskModelResult toTaskModelResult(TaskModel taskModel){
-//        if(Objects.isNull(taskModel)){
-//            return null;
-//        }
         Long allKeyCount=taskModel.getAllKeyCount();
         Long realKeyCount=taskModel.getAllKeyCount();
         Long lastTime=taskModel.getLastKeyUpdateTime();
@@ -613,6 +608,7 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
             df.setMaximumFractionDigits(2);
             df.setGroupingSize(0);
             df.setRoundingMode(RoundingMode.FLOOR);
+
             if(taskModel.getRdbKeyCount()!=0){
                 rate=(float)allKeyCount/(float)taskModel.getRdbKeyCount();
                 if(rate>1.0){
@@ -634,11 +630,47 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
             if(allKeyCount==0&&taskModel.getRdbKeyCount()==0){
                 rate=0.0;
             }
+
+            /**
+             * 文件进度计算
+             */
+            if(!SyncType.SYNC.getCode().equals(taskModel.getSyncType())&&!SyncType.COMMANDDUMPUP.getCode().equals(taskModel.getSyncType())){
+                if(TaskStatus.FINISH.getCode().equals(taskModel.getStatus())){
+                    rate=1.0;
+                }else if(TaskStatus.STOP.getCode().equals(taskModel.getStatus())){
+                    rate=0.0;
+                }else {
+                    if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(taskModel.getId())){
+                        TaskDataEntity taskDataEntity=SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId());
+                        ExpandTaskModel expandTaskModel=taskDataEntity.getTaskModel().getExpandTaskJson();
+                        try {
+                            rate=(float)expandTaskModel.getReadFileSize().get()/(float)expandTaskModel.getFileSize().get();
+                        }catch (Exception e){
+                            rate=0L;
+                        }
+                    }else{
+                        ExpandTaskModel expandTaskModel=taskModel.getExpandTaskJson();
+                        try {
+                            rate=(float)expandTaskModel.getReadFileSize().get()/(float)expandTaskModel.getFileSize().get();
+                        }catch (Exception e){
+                            rate=0L;
+                        }
+                    }
+
+                }
+            }
+
+//            if(!taskModel.getSyncType().equals(SyncType.SYNC.getCode())){
+//                rate=
+//            }
+
             rate2Int=Integer.parseInt(new DecimalFormat("0").format(rate*100));
 
         }catch (Exception e){
             log.warn("[{}]进度计算失败",taskModel.getId());
         }
+
+
 
         //最后一次数据间隔时间计算
         long lastDataUpdateIntervalTime=0L;

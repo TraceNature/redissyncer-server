@@ -24,3 +24,13 @@
         repl-ping-slave-period要小于readTimeout（redissyncer默认60000ms）
         源节点内存不够无法进行bgsave
         offset刷过
+
+
+### Broken状态
+  请查询反馈导致异常的问题，常见问题如下：
+
+|                          异常信息                           |                原因                 |
+| :----------------------------------------------------------: | :---------------------------------: |
+| WRONGTYPE Operation against a key holding the wrong kind of value | 目标中已存在key和源节点中type不一致 |
+|                                                              |                                     |
+|                                                              |                                     |

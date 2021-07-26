@@ -41,6 +41,7 @@ import syncer.transmission.compensator.ISyncerCompensator;
 import syncer.transmission.compensator.ISyncerCompensatorFactory;
 import syncer.transmission.entity.OffSetEntity;
 import syncer.transmission.entity.TaskDataEntity;
+import syncer.transmission.model.ExpandTaskModel;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.po.entity.KeyValueEventEntity;
 import syncer.transmission.queue.SendCommandWithOutQueue;
@@ -51,6 +52,7 @@ import syncer.transmission.util.redis.KeyCountUtils;
 import syncer.transmission.util.redis.RedisReplIdCheck;
 import syncer.transmission.util.sql.SqlOPUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -62,53 +64,50 @@ import java.util.Objects;
  */
 @Slf4j
 @AllArgsConstructor
-public class RedisDataSyncTransmissionTask implements Runnable{
+public class RedisDataSyncTransmissionTask implements Runnable {
     private TaskModel taskModel;
     /**
      * 目标Redis类型
      */
-
     private boolean status = true;
-
     public RedisDataSyncTransmissionTask(TaskModel taskModel, boolean status) {
         this.taskModel = taskModel;
         this.status = status;
     }
 
-    RedisReplIdCheck redisReplIdCheck=new RedisReplIdCheck();
-    BreakPoint breakPoint=new BreakPoint();
+    RedisReplIdCheck redisReplIdCheck = new RedisReplIdCheck();
+    BreakPoint breakPoint = new BreakPoint();
     @Override
     public void run() {
 //        Thread.currentThread().setName(taskModel.getId()+": "+Thread.currentThread().getName());
-        if(Objects.isNull(taskModel.getBatchSize())||taskModel.getBatchSize()==0){
+        if (Objects.isNull(taskModel.getBatchSize()) || taskModel.getBatchSize() == 0) {
             taskModel.setBatchSize(500);
         }
-
-        try{
-            Replication replication=null;
+        try {
+            Replication replication = null;
             //replication
             if (taskModel.getSyncType().equals(SyncType.SYNC.getCode())) {
-                RedisType redisType=null;
-                List<HostAndPort>hostAndPorts= Lists.newArrayList();
+                RedisType redisType = null;
+                List<HostAndPort> hostAndPorts = Lists.newArrayList();
                 RedisURI suri = new RedisURI(taskModel.getSourceUri());
-                if(RedisType.SENTINEL.getCode().equals(taskModel.getSourceRedisType())){
-                    redisType=RedisType.SENTINEL;
-                    String hosts=taskModel.getSourceHost();
-                    String[]hosp=hosts.split(";");
+                if (RedisType.SENTINEL.getCode().equals(taskModel.getSourceRedisType())) {
+                    redisType = RedisType.SENTINEL;
+                    String hosts = taskModel.getSourceHost();
+                    String[] hosp = hosts.split(";");
                     for (int i = 0; i < hosp.length; i++) {
-                        if(hosp[i].contains(":")){
-                            String[]host=hosp[i].split(":");
-                            hostAndPorts.add(new HostAndPort(host[0],Integer.valueOf(host[1])));
+                        if (hosp[i].contains(":")) {
+                            String[] host = hosp[i].split(":");
+                            hostAndPorts.add(new HostAndPort(host[0], Integer.valueOf(host[1])));
                         }
                     }
-                }else{
-                    KeyCountUtils.updateKeyCount(taskModel.getId(),suri);
+                } else {
+                    KeyCountUtils.updateKeyCount(taskModel.getId(), suri);
                 }
 
-                replication = new RedisReplication(suri, taskModel.isAfresh(),redisType,hostAndPorts);
+                replication = new RedisReplication(suri, taskModel.isAfresh(), redisType, hostAndPorts);
             } else {
                 //文件
-                replication = new RedisReplication(taskModel.getFileAddress(), SyncTypeUtils.getSyncType(taskModel.getSyncType()).getFileType(),  ReplicConfig.defaultConfig().setTaskId(taskModel.getTaskId()));
+                replication = new RedisReplication(taskModel.getFileAddress(), SyncTypeUtils.getSyncType(taskModel.getSyncType()).getFileType(), ReplicConfig.defaultConfig().setTaskId(taskModel.getTaskId()));
             }
             //注册增量命令解析器
             final Replication replicationHandler = DefaultCommandRegister.addCommandParser(replication);
@@ -116,19 +115,16 @@ public class RedisDataSyncTransmissionTask implements Runnable{
             //注册RDB全量解析器
 
             replicationHandler.setRdbParser(new ValueDumpIterableRdbParser(replicationHandler, taskModel.getRdbVersion()));
-
-            OffSetEntity offset =null;
-
-
-            offset=breakPoint.checkPointOffset(taskModel);
+            OffSetEntity offset = null;
+            offset = breakPoint.checkPointOffset(taskModel);
 
             /** old version
 
-            TaskDataEntity taskDataEntity=SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId());
-            if(Objects.nonNull(taskDataEntity)){
-                offset = taskDataEntity.getOffSetEntity();
-            }
-           */
+             TaskDataEntity taskDataEntity=SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getId());
+             if(Objects.nonNull(taskDataEntity)){
+             offset = taskDataEntity.getOffSetEntity();
+             }
+             */
 
             if (offset == null) {
                 offset = new OffSetEntity();
@@ -164,21 +160,21 @@ public class RedisDataSyncTransmissionTask implements Runnable{
 
 
             /**
-            if(taskModel.getTargetUri().size()>1){
-                taskModel.setTargetRedisType(2);
-            }
-            **/
-            RedisType branchType=SyncTypeUtils.getRedisType(taskModel.getTargetRedisType());
-            RedisClient client = RedisClientFactory.createRedisClient(branchType, taskModel.getTargetHost(), taskModel.getTargetPort(), taskModel.getTargetPassword(),taskModel.getSourceHost(), taskModel.getSourcePort(), taskModel.getBatchSize(),taskModel.getErrorCount(), taskModel.getId(),null,null);
+             if(taskModel.getTargetUri().size()>1){
+             taskModel.setTargetRedisType(2);
+             }
+             **/
+            RedisType branchType = SyncTypeUtils.getRedisType(taskModel.getTargetRedisType());
+            RedisClient client = RedisClientFactory.createRedisClient(branchType, taskModel.getTargetHost(), taskModel.getTargetPort(), taskModel.getTargetPassword(), taskModel.getSourceHost(), taskModel.getSourcePort(), taskModel.getBatchSize(), taskModel.getErrorCount(), taskModel.getId(), null, null);
 
-            if(Objects.isNull(client)){
-                log.error("[{}] target client 创建失败，请检查targetRedisType是否正确,当前targetRedisType为[{}]",taskModel.getTaskId(),branchType);
-                throw new Exception("target client 创建失败，请检查targetRedisType是否正确,当前为："+branchType);
+            if (Objects.isNull(client)) {
+                log.error("[{}] target client 创建失败，请检查targetRedisType是否正确,当前targetRedisType为[{}]", taskModel.getTaskId(), branchType);
+                throw new Exception("target client 创建失败，请检查targetRedisType是否正确,当前为：" + branchType);
             }
             //根据type生成相对节点List [List顺序即为filter节点执行顺序]
-            List<CommonProcessingStrategy> commonFilterList = ProcessingRunStrategyListSelecter.getStrategyList(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType(),taskModel,client);
-            ISyncerCompensator syncerCompensator= ISyncerCompensatorFactory.createRedisClient(branchType,taskModel.getId(),client);
-            SendCommandWithOutQueue sendCommandWithOutQueue=SendCommandWithOutQueue.builder()
+            List<CommonProcessingStrategy> commonFilterList = ProcessingRunStrategyListSelecter.getStrategyList(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType(), taskModel, client);
+            ISyncerCompensator syncerCompensator = ISyncerCompensatorFactory.createRedisClient(branchType, taskModel.getId(), client);
+            SendCommandWithOutQueue sendCommandWithOutQueue = SendCommandWithOutQueue.builder()
                     .filterChain(ProcessingRunStrategyChain.builder().commonFilterList(commonFilterList).build())
                     .replication(replicationHandler)
                     .taskId(taskModel.getTaskId())
@@ -186,7 +182,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                     .syncerCompensator(syncerCompensator)
                     .build();
 
-            final  OffSetEntity baseoffset=offset;
+            final OffSetEntity baseoffset = offset;
 
             replicationHandler.addEventListener(new ValueDumpIterableEventListener(taskModel.getBatchSize(), new EventListener() {
                 @Override
@@ -198,7 +194,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                             if (status) {
                                 Thread.currentThread().interrupt();
                                 status = false;
-                                log.info("[{}] 线程正准备关闭..." ,Thread.currentThread().getName());
+                                log.info("[{}] 线程正准备关闭...", Thread.currentThread().getName());
                             }
 
                         } catch (IOException e) {
@@ -217,19 +213,14 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                             .taskRunTypeEnum(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType())
                             .fileType(SyncTypeUtils.getSyncType(taskModel.getSyncType()).getFileType())
                             .build();
-
-
                     //更新offset
-                    updateOffset(taskModel.getId(),replicationHandler,node);
-
+                    updateOffset(taskModel.getId(), replicationHandler, node);
                     sendCommandWithOutQueue.run(node);
-
-
                 }
 
                 @Override
                 public String eventListenerName() {
-                    return taskModel.getTaskId()+"_eventListenerName";
+                    return taskModel.getTaskId() + "_eventListenerName";
                 }
             }));
 
@@ -239,11 +230,11 @@ public class RedisDataSyncTransmissionTask implements Runnable{
             replicationHandler.addTaskStatusListener(new TaskStatusListener() {
                 @Override
                 public void handler(Replication replication, SyncerTaskEvent event) {
-                    String taskId=event.getTaskId();
+                    String taskId = event.getTaskId();
                     try {
-                        SingleTaskDataManagerUtils.changeThreadStatus(taskId,event.getOffset(),event.getEvent());
-                        if(Objects.nonNull(event.getMsg())&&event.getEvent().equals(TaskStatus.BROKEN)){
-                            SingleTaskDataManagerUtils.updateThreadMsg(taskId,event.getMsg());
+                        SingleTaskDataManagerUtils.changeThreadStatus(taskId, event.getOffset(), event.getEvent());
+                        if (Objects.nonNull(event.getMsg()) && event.getEvent().equals(TaskStatus.BROKEN)) {
+                            SingleTaskDataManagerUtils.updateThreadMsg(taskId, event.getMsg());
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -252,14 +243,14 @@ public class RedisDataSyncTransmissionTask implements Runnable{
 
                 @Override
                 public String eventListenerName() {
-                    return taskModel.getTaskId()+"_TaskStatusListener";
+                    return taskModel.getTaskId() + "_TaskStatusListener";
                 }
             });
             //任务运行
-            SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(),taskModel.getOffset(), TaskStatus.STARTING);
+            SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), taskModel.getOffset(), TaskStatus.STARTING);
             replicationHandler.open();
-        }catch (Exception e){
-            SingleTaskDataManagerUtils.brokenStatusAndLog(e,this.getClass(),taskModel.getId());
+        } catch (Exception e) {
+            SingleTaskDataManagerUtils.brokenStatusAndLog(e, this.getClass(), taskModel.getId());
             e.printStackTrace();
         }
 
@@ -268,31 +259,46 @@ public class RedisDataSyncTransmissionTask implements Runnable{
 
     /**
      * 计算offset
+     *
      * @param taskId
      * @param replicationHandler
      * @param node
      */
-    private void updateOffset(String taskId, Replication replicationHandler, KeyValueEventEntity node){
+    private void updateOffset(String taskId, Replication replicationHandler, KeyValueEventEntity node) {
         try {
-            TaskDataEntity data=SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId);
-            if(data.getOffSetEntity()==null){
+            TaskDataEntity data = SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskId);
+            if (data.getOffSetEntity() == null) {
                 data.setOffSetEntity(OffSetEntity.builder()
                         .replId(replicationHandler.getConfig().getReplId())
                         .build());
             }
-            Event event=node.getEvent();
+            Event event = node.getEvent();
+            try {
+                ExpandTaskModel expandTaskModel = data.getExpandTaskModel();
+                expandTaskModel.readFileSize.set(replicationHandler.getConfig().getReadFileSize());
+                expandTaskModel.fileSize.set(replicationHandler.getConfig().getFileSize());
+                taskModel.updateExpandJson(expandTaskModel);
+            } catch (Exception e) {
+
+            }
+
             //全量同步结束
-            if (event instanceof PostRdbSyncEvent ||event instanceof DefaultCommand ||event instanceof PreCommandSyncEvent) {
+            if (event instanceof PostRdbSyncEvent || event instanceof DefaultCommand || event instanceof PreCommandSyncEvent) {
                 data.getOffSetEntity().setReplId(replicationHandler.getConfig().getReplId());
                 data.getOffSetEntity().getReplOffset().set(replicationHandler.getConfig().getReplOffset());
+                try {
+                    ExpandTaskModel expandTaskModel = data.getExpandTaskModel();
+                    expandTaskModel.readFileSize.set(replicationHandler.getConfig().getFileSize());
+                    taskModel.updateExpandJson(expandTaskModel);
+                } catch (Exception e) {
 
-                if(node.getTaskRunTypeEnum().equals(TaskRunTypeEnum.STOCKONLY)||event instanceof PreCommandSyncEvent){
-                    SqlOPUtils.updateOffsetAndReplId(taskId,replicationHandler.getConfig().getReplOffset(),replicationHandler.getConfig().getReplId());
+                }
+                if (node.getTaskRunTypeEnum().equals(TaskRunTypeEnum.STOCKONLY) || event instanceof PreCommandSyncEvent) {
+                    SqlOPUtils.updateOffsetAndReplId(taskId, replicationHandler.getConfig().getReplOffset(), replicationHandler.getConfig().getReplId());
                 }
             }
-        }catch (Exception e){
-            log.info("[{}]update offset fail,replid[{}],offset[{}]",taskId,replicationHandler.getConfig().getReplId(),replicationHandler.getConfig().getReplOffset());
+        } catch (Exception e) {
+            log.info("[{}]update offset fail,replid[{}],offset[{}]", taskId, replicationHandler.getConfig().getReplId(), replicationHandler.getConfig().getReplOffset());
         }
-
     }
 }

@@ -42,6 +42,7 @@ public class RedisInputStream extends InputStream {
     protected final InputStream in;
     protected List<TaskRawByteListener> rawByteListenerList;
 
+
     public RedisInputStream(final InputStream in) {
         this(in, 8192);
     }

@@ -60,9 +60,14 @@ public class MixedReplication extends AbstractReplication{
         try {
             if(online){
                 NetStream netStream= NetStream.builder().build();
-                in=netStream.getInputStreamByOnlineFile(filePath);
+                in=netStream.getInputStreamByOnlineFile(filePath,config);
             }else {
                 in = new FileInputStream(filePath);
+                try {
+                    config.setFileSize(in.available());
+                }catch (Exception e){
+                    log.error("获取在本地数据文件大小失败...");
+                }
             }
         } catch (FileNotFoundException e) {
             connected.set(TaskStatus.BROKEN);
@@ -207,8 +212,8 @@ public class MixedReplication extends AbstractReplication{
             while (getStatus() == TaskStatus.COMMANDRUNNING) {
                 Object obj = replyParser.parse(len -> offset[0] = len);
                 if (obj instanceof Object[]) {
-
                     Object[] raw = (Object[]) obj;
+
                     CommandName name = CommandName.name(Strings.toString(raw[0]));
                     final CommandParser<? extends Command> parser;
                     if ((parser = commands.get(name)) == null) {
@@ -224,10 +229,16 @@ public class MixedReplication extends AbstractReplication{
                     log.warn("unexpected redis reply:{}", obj);
                 }
                 config.addOffset(offset[0]);
+                try {
+                    config.setReadFileSize(config.getReplOffset());
+                }catch (Exception e){
+
+                }
                 offset[0] = 0L;
             }
         } catch (EOFException ignore) {
             submitEvent(new PostCommandSyncEvent());
+            config.setReadFileSize(config.getFileSize());
         }
     }
 

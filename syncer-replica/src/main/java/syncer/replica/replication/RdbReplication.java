@@ -42,11 +42,14 @@ public class RdbReplication extends AbstractReplication{
         try {
             if(online){
                 NetStream netStream= NetStream.builder().build();
-
-                in=netStream.getInputStreamByOnlineFile(filePath);
-
+                in=netStream.getInputStreamByOnlineFile(filePath,config);
             }else {
                 in = new FileInputStream(filePath);
+                try {
+                    config.setFileSize(in.available());
+                }catch (Exception e){
+                    log.error("获取在本地数据文件大小失败...");
+                }
             }
         } catch (FileNotFoundException e) {
             connected.set(TaskStatus.BROKEN);

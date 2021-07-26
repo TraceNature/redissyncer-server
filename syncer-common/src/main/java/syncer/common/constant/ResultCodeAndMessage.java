@@ -60,8 +60,10 @@ public enum ResultCodeAndMessage {
     TASK_MSG_TASK_TARGET_TOPIC_NAME_NULL("4031","kafka命令订阅模式topicName不能为空","kafka命令订阅模式topicName不能为空"),
     TASK_MSG_TASK_TARGET_KAFKA_ADDRESS_NULL("4032","kafka命令订阅模式targetKafkaAddress不能为空","kafka命令订阅模式targetKafkaAddress不能为空"),
 
+    TASK_MSG_RDB_VERSION_MSG_ERROR("4033","rdb版本获取失败,暂不支持目标Redis版本","rdb version错误"),
 
     TASK_MSG_TASK_TARGET_REDIS_ADDRESS_NULL("100","目标redis地址不能为空","目标redis地址不能为空")
+
 
 
     ;

@@ -10,7 +10,6 @@
 // limitations under the License.
 
 package syncer.webapp.controller.v2.api;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +26,6 @@ import syncer.webapp.constants.ApiConstants;
 import syncer.webapp.request.DeleteRdbVersionParam;
 import syncer.webapp.request.InsertRdbVersionParam;
 import syncer.webapp.request.PageParam;
-
 import java.util.List;
 
 /**
@@ -43,7 +41,6 @@ import java.util.List;
 public class RdbController {
     @Autowired
     IRdbVersionService rdbVersionService;
-
     @ApiOperation(value="获取Redis版本与RDB映射版本列表", notes="获取Redis版本与RDB映射版本列表")
     @RequestMapping(value = "/getRdbList",method = {RequestMethod.POST},produces="application/json;charset=utf-8;")
     public ResponseResult<List<RdbVersionModel>> getRdbList()throws Exception{

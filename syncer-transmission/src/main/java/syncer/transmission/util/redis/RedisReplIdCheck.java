@@ -67,7 +67,6 @@ public class RedisReplIdCheck {
             String info=target.info();
             version = getRedisBuffer(info,type);
         }catch (Exception e){
-            e.printStackTrace();
             log.error("check redis replid error  {} : {} {}",targetUriplus.getHost(), targetUriplus.getPort(),e.getMessage());
         } finally {
             if (target != null) {

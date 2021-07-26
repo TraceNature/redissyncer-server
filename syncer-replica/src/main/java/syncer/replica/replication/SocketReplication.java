@@ -40,12 +40,8 @@ public class SocketReplication  extends AbstractReplication{
     private Heartbeat heartbeat;
     private RedisOutputStream outputStream;
     protected RedisSocketFactory socketFactory;
-
     protected DefaultSyncRedisProtocol syncRedisProtocol;
-
     private SocketReplicationRetrier socketReplicationRetrier;
-
-
     /**
      * sentinel failover 结束
      *      * 是否属于哨兵模式-》哨兵模式不会进入break 而是 failover

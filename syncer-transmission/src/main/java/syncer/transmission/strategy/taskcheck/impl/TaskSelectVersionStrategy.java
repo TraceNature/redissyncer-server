@@ -84,6 +84,12 @@ public class TaskSelectVersionStrategy implements ITaskCheckStrategy {
                         .redis_version(version)
                         .build();
             }
+
+            if(Objects.isNull(rdbVersion.getRdb_version())||rdbVersion.getRdb_version()<6){
+                log.error("[{}]获取rdb version失败，暂不支持目标版本{}",taskModel.getTaskId(),version);
+                throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_MSG_RDB_VERSION_MSG_ERROR.getCode(),ResultCodeAndMessage.TASK_MSG_RDB_VERSION_MSG_ERROR.getMsg()));
+            }
+
             taskModel.setRdbVersion(rdbVersion.getRdb_version());
         }
 

@@ -52,7 +52,7 @@ public class CommonController {
     @RequestMapping(value = "/chardashboardInfo" ,method = {RequestMethod.GET,RequestMethod.POST})
     public ResponseResult<SeriesDataResponse> chardashboard(){
 
-        String []legendData=new String[]{"实时同步", "RDB导入", "在线RDB导入", "AOF导入", "在线AOF导入","MIXED导入","在线MIXED导入"};
+        String []legendData=new String[]{"实时同步", "本地RDB导入", "在线RDB导入", "本地AOF导入", "在线AOF导入","本地MIXED导入","在线MIXED导入"};
         List<SeriesData> list= Lists.newArrayList();
         CharDashBoardInfoDto charDashBoardInfo=dashService.getCharDashBoardInfo();
         list.add(SeriesData.builder().name(legendData[0]).value(charDashBoardInfo.getSyncCount()).build());

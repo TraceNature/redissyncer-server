@@ -16,6 +16,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * @author zhanenqiang
  * @Description Task扩展类对应 expandJson 字段
@@ -28,4 +30,8 @@ import lombok.NoArgsConstructor;
 public class ExpandTaskModel {
     @Builder.Default
     private String brokenReason="";
+    @Builder.Default
+    public AtomicLong fileSize=new AtomicLong(0L);
+    @Builder.Default
+    public AtomicLong readFileSize=new AtomicLong(0L);
 }

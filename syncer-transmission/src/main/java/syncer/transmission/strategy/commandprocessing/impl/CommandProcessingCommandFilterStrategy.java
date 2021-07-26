@@ -64,21 +64,17 @@ public class CommandProcessingCommandFilterStrategy implements CommonProcessingS
             return;
         }
 
-
-
         if(Objects.isNull(commandFilterSet)){
             commandFilterSet=taskModel.getCommandFilter()==null? Sets.newHashSet(): Sets.newHashSet(Arrays.asList(taskModel.getCommandFilter().split(",")).stream().map(s->{
                 return s.trim().toUpperCase();
             }).collect(Collectors.toList()));
         }
         CommandKeyFilterType filterType=taskModel.getFilterType()==null?CommandKeyFilterType.NONE:taskModel.getFilterType();
-
         if(CommandKeyFilterType.NONE.equals(taskModel.getFilterType())){
             toNext(replication,eventEntity,taskModel);
             return;
         }
         String keyFilter=taskModel.getKeyFilter()==null?"":taskModel.getKeyFilter();
-
         Event event = eventEntity.getEvent();
         try {
 

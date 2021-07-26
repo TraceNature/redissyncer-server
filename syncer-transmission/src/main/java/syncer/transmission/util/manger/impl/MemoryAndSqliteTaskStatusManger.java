@@ -118,6 +118,9 @@ public class MemoryAndSqliteTaskStatusManger implements ITaskStatusManger {
                         if(offset!=null&&offset>=-1L){
                             SqlOPUtils.updateTaskOffsetById(taskId,offset);
                         }
+
+                        SqlOPUtils.updateKeyCountById(taskId,taskDataEntity.getRdbKeyCount().get(),taskDataEntity.getAllKeyCount().get(),taskDataEntity.getRealKeyCount().get());
+                        updateExpandTaskModel(taskId);
                         if(taskType.getStatus().equals(Status.BROKEN)||taskType.getStatus().equals(Status.STOP)||taskType.getStatus().equals(Status.FINISH)){
                             aliveThreadHashMap.remove(taskId);
                             deleteTaskDataByTaskId(taskId);
@@ -151,6 +154,8 @@ public class MemoryAndSqliteTaskStatusManger implements ITaskStatusManger {
                 public void run() throws Exception {
                     TaskDataEntity data=aliveThreadHashMap.get(taskId);
                     SqlOPUtils.updateTaskStatusById(taskId, taskStatusType.getCode());
+                    SqlOPUtils.updateKeyCountById(taskId,data.getRdbKeyCount().get(),data.getAllKeyCount().get(),data.getRealKeyCount().get());
+                    updateExpandTaskModel(taskId);
                     data.getTaskModel().setStatus(taskStatusType.getCode());
                     if(taskStatusType.getStatus().equals(Status.BROKEN)
                             ||taskStatusType.getStatus().equals(Status.STOP)||taskStatusType.getStatus().equals(Status.FINISH)){
@@ -184,7 +189,9 @@ public class MemoryAndSqliteTaskStatusManger implements ITaskStatusManger {
     public void brokenTask(String taskId) throws Exception {
         if(aliveThreadHashMap.containsKey(taskId)){
             TaskDataEntity data=aliveThreadHashMap.get(taskId);
+            SqlOPUtils.updateKeyCountById(taskId,data.getRdbKeyCount().get(),data.getAllKeyCount().get(),data.getRealKeyCount().get());
             SqlOPUtils.updateTaskStatusById(taskId, TaskStatus.BROKEN.getCode());
+            updateExpandTaskModel(taskId);
             if(data.getOffSetEntity().getReplOffset()!=null&&data.getOffSetEntity().getReplOffset().get()>-1){
                 SqlOPUtils.updateTaskOffsetById(taskId,data.getOffSetEntity().getReplOffset().get());
             }
@@ -239,8 +246,7 @@ public class MemoryAndSqliteTaskStatusManger implements ITaskStatusManger {
             try {
                 SqlOPUtils.updateExpandTaskModelById(taskId, JSON.toJSONString(dataEntity.getExpandTaskModel()));
             } catch (Exception e) {
-                log.error("[{}]更新扩展字段失败",taskId);
-                e.printStackTrace();
+                log.error("[{}]更新扩展字段失败{}",taskId,e.getMessage());
             }
         }
     }

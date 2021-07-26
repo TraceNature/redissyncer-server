@@ -144,6 +144,16 @@ public class ReplicConfig {
      */
     private HostnameVerifier hostnameVerifier;
 
+
+    /**
+     * 用于进度计算
+     */
+    private long readFileSize;
+    /**
+     * 文件总大小
+     */
+    private long fileSize;
+
     public void setReplOffset(long offset){
         replOffset.set(offset);
     }

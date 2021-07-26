@@ -93,7 +93,8 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
 
             //全量同步结束
             if (event instanceof PostRdbSyncEvent) {
-                String time=(System.currentTimeMillis()-date.getTime())/(1000)+":s";
+                long secTime=(System.currentTimeMillis()-date.getTime())/(1000);
+                String time=secTime<1?(System.currentTimeMillis()-date.getTime())+"ms":secTime+"s";
                 if(eventEntity.getFileType().equals(FileType.ONLINERDB)
                         ||eventEntity.getFileType().equals(FileType.RDB)
                         ||eventEntity.getFileType().equals(FileType.ONLINEAOF)
@@ -101,16 +102,16 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
                         ||eventEntity.getFileType().equals(FileType.ONLINEMIXED)
                         ||eventEntity.getFileType().equals(FileType.MIXED)){
                     log.warn("taskId为[{}]的文件任务全量同步结束[任务完成]..时间为:"+time,taskId);
-                    SingleTaskDataManagerUtils.updateThreadMsg(taskId,"文件同步结束[任务完成] 时间(ms)："+time);
+                    SingleTaskDataManagerUtils.updateThreadMsg(taskId,"文件同步结束[任务完成] 时间："+time);
 //                    SingleTaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "文件同步结束[任务完成] 时间(ms)："+time,TaskStatusType.STOP);
                 }else {
                     if(eventEntity.getTaskRunTypeEnum().equals(TaskRunTypeEnum.TOTAL)){
                         log.warn("taskId为[{}]的任务全量同步结束..进入增量同步模式 time:[{}] ",taskId,time);
-                        SingleTaskDataManagerUtils.updateThreadMsg(taskId,"全量同步结束进入增量同步 时间(ms)："+time+" 进入增量状态");
+                        SingleTaskDataManagerUtils.updateThreadMsg(taskId,"全量同步结束进入增量同步 时间："+time+" 进入增量状态");
 //                        SingleTaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "全量同步结束进入增量同步 时间(ms)："+time+" 进入增量状态",TaskStatusType.COMMANDRUNING);
                     }else if(eventEntity.getTaskRunTypeEnum().equals(TaskRunTypeEnum.STOCKONLY)){
                         log.warn("taskId为[{}]的任务全量同步结束[任务完成]..",taskId);
-                        SingleTaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "全量同步结束[任务完成] 时间(ms)："+time, TaskStatus.STOP);
+                        SingleTaskDataManagerUtils.updateThreadStatusAndMsg(taskId, "全量同步结束[任务完成] 时间："+time, TaskStatus.STOP);
 //                        SingleTaskDataManagerUtils.updateThreadMsg(taskId,"全量同步结束[任务完成] 时间(ms)："+time);
                     }
                 }

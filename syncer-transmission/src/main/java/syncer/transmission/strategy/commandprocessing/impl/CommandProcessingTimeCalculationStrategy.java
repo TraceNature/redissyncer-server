@@ -183,6 +183,7 @@ public class CommandProcessingTimeCalculationStrategy implements CommonProcessin
             //继续执行下一Filter节点
             toNext(replication,eventEntity,taskModel);
         }catch (Exception e){
+            e.printStackTrace();
             throw new StartegyNodeException(e.getMessage()+"->CommandProcessingTimeCalculationStrategy",e.getCause());
         }
     }

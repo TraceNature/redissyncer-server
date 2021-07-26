@@ -72,9 +72,7 @@ public class TaskCheckRedisUrlStrategy implements ITaskCheckStrategy {
                         kafkaProducerClient.close();
                     }
                 }
-
             }
-
 
             //只校验目标
         } else if (taskModel.getSyncType().equals(SyncType.RDB.getCode())

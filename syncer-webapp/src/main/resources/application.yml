@@ -69,7 +69,7 @@ logging:
 
 syncer:
   config:
-    auth: false
+    auth: true
     swagger: false
     path:
       logfile: ./log
@@ -80,7 +80,7 @@ syncer:
 info:
   app:
     name: redis syncer
-    version: 3.0.1
+    version: 3.3.3
     description: redis数据同步服务
 
 spring:

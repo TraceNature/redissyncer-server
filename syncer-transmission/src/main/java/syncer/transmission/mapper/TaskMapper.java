@@ -84,6 +84,8 @@ public interface TaskMapper {
     boolean updateTaskOffsetById(@Param("id") String id, @Param("offset") long offset)throws Exception;
 
 
+
+
     @Update("UPDATE t_task SET afresh=#{afresh},updateTime=(datetime('now', 'localtime')) WHERE id=#{id}")
     boolean updateAfreshsetById(@Param("id") String id, @Param("afresh") boolean afresh)throws Exception;
 

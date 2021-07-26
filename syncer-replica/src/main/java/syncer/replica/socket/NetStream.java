@@ -2,6 +2,7 @@ package syncer.replica.socket;
 
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import syncer.replica.config.ReplicConfig;
 
 import javax.net.ssl.SSLHandshakeException;
 import java.io.IOException;
@@ -17,7 +18,7 @@ import java.net.URL;
 @Builder
 @Slf4j
 public class NetStream {
-    public InputStream getInputStreamByOnlineFile(String FileUrl) throws IOException {
+    public InputStream getInputStreamByOnlineFile(String FileUrl,ReplicConfig config) throws IOException {
 
         try {
             URL url = new URL(FileUrl);
@@ -26,6 +27,12 @@ public class NetStream {
             conn.setConnectTimeout(6 * 1000);
             //防止屏蔽程序抓取而返回403错误
             conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0; Windows NT; DigExt)");
+            try {
+                config.setFileSize(conn.getContentLength());
+            }catch (Exception e){
+                log.error("获取在线数据文件大小失败...");
+            }
+
             //得到输入流
             InputStream in = conn.getInputStream();
             return in;
@@ -34,4 +41,8 @@ public class NetStream {
             throw e;
         }
     }
+
+
+
+
 }

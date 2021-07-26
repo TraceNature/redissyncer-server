@@ -55,31 +55,32 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
     private String fileAdress;
     private String sourceUri;
     private TaskModel taskModel;
-    private boolean status=true;
-    private Lock lock=new ReentrantLock();
-    private volatile OutputStream out ;
+    private boolean status = true;
+    private Lock lock = new ReentrantLock();
+    private volatile OutputStream out;
     private volatile AtomicInteger acc = new AtomicInteger(0);
     private Date time;
-    private boolean taskStatus=true;
+    private boolean taskStatus = true;
     private Replication replication;
-    RedisReplIdCheck check=new RedisReplIdCheck();
+    RedisReplIdCheck check = new RedisReplIdCheck();
+
     public RedisDataCommandUpTransmissionTask(TaskModel taskModel) {
         this.taskModel = taskModel;
         this.taskId = taskModel.getId();
         this.fileAdress = taskModel.getFileAddress();
         this.sourceUri = taskModel.getSourceUri();
-        this.time=new Date();
+        this.time = new Date();
         try {
 
-            if(FileUtils.isDirectory(fileAdress)){
-                fileAdress+="/"+taskId+".aof";
+            if (FileUtils.isDirectory(fileAdress)) {
+                fileAdress += "/" + taskId + ".aof";
             }
 
 
-            this.out=new BufferedOutputStream(new FileOutputStream(new File(fileAdress)));
-        }  catch (Exception e) {
+            this.out = new BufferedOutputStream(new FileOutputStream(new File(fileAdress)));
+        } catch (Exception e) {
             try {
-                DefaultSyncerStatusManger.brokenStatusAndLog(e,this.getClass(),taskModel.getId());
+                DefaultSyncerStatusManger.brokenStatusAndLog(e, this.getClass(), taskModel.getId());
             } catch (Exception ex) {
                 log.warn("任务Id【{}】异常结束任务失败，失败原因【{}】", taskId, e.getMessage());
                 ex.printStackTrace();
@@ -92,11 +93,11 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
 
     @Override
     public void run() {
-        try{
-            Thread.currentThread().setName(taskId+": "+Thread.currentThread().getName());
-            final TaskRawByteListener rawByteListener=rawByteListener();
+        try {
+            Thread.currentThread().setName(taskId + ": " + Thread.currentThread().getName());
+            final TaskRawByteListener rawByteListener = rawByteListener();
             RedisURI suri = new RedisURI(sourceUri);
-            Replication loadRepli =new RedisReplication(suri);
+            Replication loadRepli = new RedisReplication(suri);
             replication = DefaultCommandRegister.addCommandParser(loadRepli);
             String[] data = check.selectSyncerBuffer(sourceUri, "endbuf");
             long offsetNum = 0L;
@@ -117,10 +118,10 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
             replication.addEventListener(new EventListener() {
                 @Override
                 public void onEvent(Replication replicator, Event event) {
-                    if(taskStatus){
+                    if (taskStatus) {
                         try {
-                            taskStatus=false;
-                            DefaultSyncerStatusManger.changeThreadStatus(taskModel.getId(),-1L, TaskStatus.COMMANDRUNNING);
+                            taskStatus = false;
+                            DefaultSyncerStatusManger.changeThreadStatus(taskModel.getId(), -1L, TaskStatus.COMMANDRUNNING);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -131,11 +132,9 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
                         replication.addRawByteListener(rawByteListener);
                     }
 
-                if(event instanceof PingCommand){
-                    return;
-                }
-
-
+                    if (event instanceof PingCommand) {
+                        return;
+                    }
                     if (event instanceof Command) {
                         if (acc.incrementAndGet() >= 1000) {
                             sumbit();
@@ -153,7 +152,7 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
                                 if (status) {
                                     Thread.currentThread().interrupt();
                                     status = false;
-                                    log.warn("[{}]增量备份任务线程进入关闭保护状态....",Thread.currentThread().getName());
+                                    log.warn("[{}]增量备份任务线程进入关闭保护状态....", Thread.currentThread().getName());
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -169,59 +168,59 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
                     return null;
                 }
             });
-            DefaultSyncerStatusManger.changeThreadStatus(taskModel.getId(),-1L, TaskStatus.STARTING);
+            DefaultSyncerStatusManger.changeThreadStatus(taskModel.getId(), -1L, TaskStatus.STARTING);
             replication.open();
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
 
     }
-
 
 
     /**
      * 刷新缓冲区
      */
-    void sumbit(){
+    void sumbit() {
         lock.lock();
         try {
 
             out.flush();
             acc.set(0);
-            time=new Date();
-        }catch (Exception e){
+            time = new Date();
+        } catch (Exception e) {
             e.printStackTrace();
-        } finally{
+        } finally {
             lock.unlock();
         }
     }
 
-    TaskRawByteListener rawByteListener(){
-        return new TaskRawByteListener(){
-            List<byte[]> command=new ArrayList<>();
-            boolean status=false;
+    TaskRawByteListener rawByteListener() {
+        return new TaskRawByteListener() {
+            List<byte[]> command = new ArrayList<>();
+            boolean status = false;
+
             @Override
             public void handler(byte... rawBytes) {
                 try {
-                    String stringdata= Strings.byteToString(rawBytes);
+                    String stringdata = Strings.byteToString(rawBytes);
 
-                    if(command.size()>0&&stringdata.startsWith("*")){
-                        if(command.size()>0&&!status){
-                            for (byte[]raw:command
+                    if (command.size() > 0 && stringdata.startsWith("*")) {
+                        if (command.size() > 0 && !status) {
+                            for (byte[] raw : command
                             ) {
                                 out.write(raw);
                             }
                             command.clear();
-                            status=false;
-                        }else {
+                            status = false;
+                        } else {
                             command.clear();
-                            status=false;
+                            status = false;
                         }
                         command.add(rawBytes);
-                    }else {
-                        if(PING.equalsIgnoreCase(stringdata)){
-                            status=true;
-                        }else{
+                    } else {
+                        if (PING.equalsIgnoreCase(stringdata)) {
+                            status = true;
+                        } else {
                             command.add(rawBytes);
                         }
 
@@ -240,7 +239,7 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
                             if (status) {
                                 Thread.currentThread().interrupt();
                                 status = false;
-                                log.warn("[{}]增量备份任务线程进入关闭保护状态....",Thread.currentThread().getName());
+                                log.warn("[{}]增量备份任务线程进入关闭保护状态....", Thread.currentThread().getName());
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -260,12 +259,12 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
     /**
      * 磁盘刷新线程
      */
-    class sumbitTask implements Runnable{
+    class sumbitTask implements Runnable {
 
         @Override
         public void run() {
-            Thread.currentThread().setName(taskId+": "+Thread.currentThread().getName());
-            while (true){
+            Thread.currentThread().setName(taskId + ": " + Thread.currentThread().getName());
+            while (true) {
                 sumbit();
                 if (DefaultSyncerStatusManger.isTaskClose(taskModel.getId())) {
                     //判断任务是否关闭
@@ -280,7 +279,7 @@ public class RedisDataCommandUpTransmissionTask implements Runnable {
                         if (status) {
                             Thread.currentThread().interrupt();
                             status = false;
-                            log.warn("[{}]增量备份任务线程进入关闭保护状态....",Thread.currentThread().getName());
+                            log.warn("[{}]增量备份任务线程进入关闭保护状态....", Thread.currentThread().getName());
                             break;
                         }
                     } catch (Exception e) {
