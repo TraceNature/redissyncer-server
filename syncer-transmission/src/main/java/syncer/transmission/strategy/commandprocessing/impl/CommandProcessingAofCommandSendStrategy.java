@@ -31,6 +31,7 @@ import syncer.transmission.strategy.commandprocessing.CommonProcessingStrategy;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * 增量数据同步节点
@@ -103,7 +104,9 @@ public class CommandProcessingAofCommandSendStrategy implements CommonProcessing
             //命令解析器
             if (event instanceof DefaultCommand) {
                 DefaultCommand dc = (DefaultCommand) event;
-
+                if(Objects.nonNull(dc.getArgs())&&dc.getArgs().length>1){
+                    sendRewrite(true,dc.getCommand(),dc.getArgs()[0]);
+                }
                 client.send(dc.getCommand(),dc.getArgs());
 
                 eventEntity.getBaseOffSet().setReplId(eventEntity.getReplId());
@@ -118,6 +121,18 @@ public class CommandProcessingAofCommandSendStrategy implements CommonProcessing
                 DefaultCommand dc = (DefaultCommand) eventEntity.getEvent();
             }
             throw new StartegyNodeException(e.getMessage()+"->AofCommandSendStrategy",e.getCause());
+        }
+    }
+
+
+    void sendRewrite(boolean status,byte[]command,byte[]key) throws Exception {
+        if(taskModel.isRewrite()){
+            if(status&& Objects.nonNull(client)){
+                if(Strings.byteToString(command).equalsIgnoreCase("RESTORE")){
+                    client.send("del".getBytes(),key);
+                }
+
+            }
         }
     }
 

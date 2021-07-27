@@ -116,6 +116,13 @@ public class CreateFileTaskParam {
     @Builder.Default
     private CommandKeyFilterType filterType=CommandKeyFilterType.NONE;
 
+
+    /**
+     * 目标存在相同key时是否覆盖
+     */
+    @Builder.Default
+    private boolean rewrite=false;
+
     public void setSynctype(FileType synctype) {
         if(Objects.nonNull(fileType)){
             this.fileType = synctype;

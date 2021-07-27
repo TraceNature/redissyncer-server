@@ -138,6 +138,7 @@ public class DtoToTaskModelUtils {
                     .sourceSentinelAuthPassword(param.getSourceSentinelAuthPassword())
                     .targetSentinelAuthPassword(param.getTargetSentinelAuthPassword())
                     .topicName(param.getTopicName())
+                    .rewrite(param.isRewrite())
                     .targetKafkaAddress(param.getTargetKafkaAddress())
                     .build();
             if(param.getDbMapper()!=null){
@@ -288,6 +289,7 @@ public class DtoToTaskModelUtils {
                     .errorCount(param.getErrorCount())
                     .timeDeviation(param.getTimeDeviation())
                     .keyFilter(keyFilter)
+                    .rewrite(param.isRewrite())
                     .filterType(commandKeyFilterType)
                     .build();
 

@@ -34,4 +34,6 @@ public class ExpandTaskModel {
     public AtomicLong fileSize=new AtomicLong(0L);
     @Builder.Default
     public AtomicLong readFileSize=new AtomicLong(0L);
+
+
 }

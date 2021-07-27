@@ -36,7 +36,7 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
                            String sourceSentinelAuthPassword,String targetSentinelAuthPassword,
                            FileType synctype, FileType fileType, String tasktype, String offsetPlace,
                            Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter,
-                           String keyFilter, CommandKeyFilterType filterType,String topicName,String targetKafkaAddress) {
+                           String keyFilter, CommandKeyFilterType filterType,String topicName,String targetKafkaAddress,boolean rewrite) {
         this.taskId = taskId;
         this.batchSize = batchSize;
         this.sourceAcl = sourceAcl;
@@ -61,6 +61,7 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
         this.targetRedisMasterName=targetRedisMasterName;
         this.topicName=topicName;
         this.targetKafkaAddress=targetKafkaAddress;
+        this.rewrite=rewrite;
     }
 
     public CreateTaskParam(@NotBlank(message = "源RedisCluster地址不能为空") String sourceRedisAddress, String sourceSentinelAuthPassword,
@@ -70,7 +71,7 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
                            String sourcePassword, String targetPassword, @NotBlank(message = "任务名称不能为空") String taskName, boolean autostart,
                            boolean afresh, String taskId, int batchSize, boolean sourceAcl, boolean targetAcl, String sourceUserName,
                            String targetUserName, long errorCount, FileType synctype, FileType fileType, String tasktype, String offsetPlace,
-                           Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter, String keyFilter, CommandKeyFilterType filterType,String topicName,String targetKafkaAddress) {
+                           Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter, String keyFilter, CommandKeyFilterType filterType,String topicName,String targetKafkaAddress,boolean rewrite) {
         super(sourceRedisAddress, targetRedisAddress, sourcePassword, targetPassword, taskName, autostart, afresh);
         this.taskId = taskId;
         this.batchSize = batchSize;
@@ -96,6 +97,7 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
         this.targetRedisMasterName=targetRedisMasterName;
         this.topicName=topicName;
         this.targetKafkaAddress=targetKafkaAddress;
+        this.rewrite=rewrite;
     }
 
     public CreateTaskParam() {
@@ -219,6 +221,12 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
 
     @Builder.Default
     private String targetKafkaAddress="";
+
+    /**
+     * 目标存在相同key时是否覆盖
+     */
+    @Builder.Default
+    private boolean rewrite=false;
 
     public Map<Integer, Integer> getDbMapper() {
         if(dbMapper!=null){

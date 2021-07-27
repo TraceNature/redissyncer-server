@@ -734,6 +734,7 @@ public class JedisPipeLineClient implements RedisClient {
     public void updateLastReplidAndOffset(String replid, long offset){
     }
 
+
     @Override
     public void commitCheckPoint() {
 

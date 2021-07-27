@@ -46,7 +46,7 @@
 - [ ] 数据校验，由goclient集成
 - [ ] 支持目标Redis sentinel模式
 - [ ] 支持源Redis主从故障转移以及支持sentinel模式
-- [ ] 实现 rewrite
+- [x] 实现 rewrite
 - [ ] 内存级别双向同步  
 - [ ] 目标为rediscluster 实现pipeline写入
 
