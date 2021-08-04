@@ -51,7 +51,7 @@ public class JedisPipeLineClient implements RedisClient {
     protected String password;
     protected Jedis targetClient;
     protected Pipeline pipelined;
-    private Integer currentDbNum = 0;
+    protected Integer currentDbNum = 0;
     //批次数
     protected Integer count = 1000;
     /**
@@ -60,33 +60,37 @@ public class JedisPipeLineClient implements RedisClient {
     protected Date date = new Date();
 
     //任务id
-    private String taskId;
+    protected String taskId;
     /**
      * 提交锁
      */
-    private Lock commitLock = new ReentrantLock();
+    protected Lock commitLock = new ReentrantLock();
     /**
      * 数据补偿锁
      */
-    private Lock compensatorLock = new ReentrantLock();
+    protected Lock compensatorLock = new ReentrantLock();
     protected AtomicInteger commandNums = new AtomicInteger();
 
     //错误次数
-    private long errorCount = 1;
+    protected long errorCount = 1;
 
-    private boolean connectError = false;
+    protected boolean connectError = false;
 
     //补偿存储
     protected KVPersistenceDataEntity kvPersistence = new KVPersistenceDataEntity();
-    private CompensatorUtils compensatorUtils = new CompensatorUtils();
+    protected CompensatorUtils compensatorUtils = new CompensatorUtils();
     //内存非幂等命令转幂等命令
-    private Map<String, Integer> incrMap = new LruCache<>(1000);
-    private Map<String, StringCompensatorEntity> appendMap = new LruCache<>(1000);
-    private Map<String, Float> incrDoubleMap = new LruCache<>(1000);
-    private CommandCompensatorUtils commandCompensatorUtils = new CommandCompensatorUtils();
+    protected Map<String, Integer> incrMap = new LruCache<>(1000);
+    protected Map<String, StringCompensatorEntity> appendMap = new LruCache<>(1000);
+    protected Map<String, Float> incrDoubleMap = new LruCache<>(1000);
+    protected CommandCompensatorUtils commandCompensatorUtils = new CommandCompensatorUtils();
 
     //断线重试机制
-    private ConnectErrorRetry retry=new ConnectErrorRetry(taskId);
+    protected ConnectErrorRetry retry=new ConnectErrorRetry(taskId);
+
+    public JedisPipeLineClient() {
+    }
+
     public JedisPipeLineClient(String host, Integer port, String password, int count, long errorCount, String taskId) {
 
         this.host = host;
@@ -862,7 +866,7 @@ public class JedisPipeLineClient implements RedisClient {
     }
 
     ///死锁
-    void submitCommandNum() {
+    protected void submitCommandNum() {
         if (SingleTaskDataManagerUtils.isTaskClose(taskId) && taskId != null) {
             return;
         }
@@ -903,7 +907,7 @@ public class JedisPipeLineClient implements RedisClient {
 
     }
 
-    void addCommandNum() {
+    protected void addCommandNum() {
         commitLock.lock();
         boolean staus=false;
 
@@ -929,7 +933,7 @@ public class JedisPipeLineClient implements RedisClient {
         }
     }
 
-    void submitCommandNumNow() {
+    protected void submitCommandNumNow() {
         commitLock.lock();
         try {
             List<Object> resultList = pipelined.syncAndReturnAll();
@@ -946,7 +950,7 @@ public class JedisPipeLineClient implements RedisClient {
      *
      * @param resultList
      */
-    void commitCompensator(List<Object> resultList) {
+    protected void commitCompensator(List<Object> resultList) {
         //更新时间
         updateTaskLastCommitTime(taskId, resultList);
         try {
@@ -986,7 +990,7 @@ public class JedisPipeLineClient implements RedisClient {
     }
 
 
-    void insertCompensationCommand(EventEntity data) {
+    protected void insertCompensationCommand(EventEntity data) {
         try {
             String key = data.getStringKey();
             if (StringUtils.isEmpty(key)) {
@@ -1007,7 +1011,7 @@ public class JedisPipeLineClient implements RedisClient {
         }
     }
 
-    void compensator(EventEntity eventEntity) {
+    protected void compensator(EventEntity eventEntity) {
         if (SingleTaskDataManagerUtils.isTaskClose(taskId) && taskId != null) {
             return;
         }
@@ -1378,7 +1382,7 @@ public class JedisPipeLineClient implements RedisClient {
                         log.warn("task[{}]数据传输模块进入关闭保护状态,不再接收新数据", taskId);
                         Date time = new Date(date.getTime());
                         if (status) {
-                            while (System.currentTimeMillis() - time.getTime() < 1000 * 60 * 1) {
+                            while (System.currentTimeMillis() - time.getTime() < 1000*5) {
                                 submitCommandNum();
                                 try {
                                     Thread.sleep(1000);

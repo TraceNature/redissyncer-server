@@ -18,7 +18,7 @@ public class ConnectErrorRetry {
         this.taskId = taskId;
     }
 
-    void retry(JedisRetryRunner retryRunner){
+    public void retry(JedisRetryRunner retryRunner){
         int times = 0;
         JedisConnectionException ret=null;
         while (times++<MAX_TIMES){

@@ -234,6 +234,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
             //继续执行下一Filter节点
             toNext(replication,eventEntity,taskModel);
         }catch (Exception e){
+            log.error("[{}] error [{}]",taskId,e.toString());
             throw new StartegyNodeException(e.getMessage()+"->RdbCommandSendStrategy",e.getCause());
         }
     }

@@ -135,7 +135,7 @@ public class TemplateUtils {
             }else {
                 path=filePath;
             }
-            System.out.println(path);
+
             FileOutputStream file = new FileOutputStream(path);
             //将Properties中的属性列表（键和元素对）写入输出流
           //  prop.store(new OutputStreamWriter( Thread.currentThread().getContextClassLoader().getResource("").getPath()+filePath);

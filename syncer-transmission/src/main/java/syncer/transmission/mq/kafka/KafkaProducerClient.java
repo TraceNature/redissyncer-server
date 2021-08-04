@@ -54,7 +54,6 @@ public class KafkaProducerClient {
 
 
     private void init(){
-        System.out.println(servers);
         this.producer = new KafkaProducer<String, String>(initConfig(servers));
     }
 

@@ -62,7 +62,13 @@ public class TaskSelectVersionStrategy implements ITaskCheckStrategy {
                 toNext(client,taskModel);
                 return;
             }
-            String version=redisVersionUtil.selectSyncerVersion(String.valueOf(taskModel.getTargetUri().toArray()[0]));
+            String version=null;
+            if(RedisType.SENTINEL.getCode().equals(taskModel.getTargetRedisType())){
+                 version=redisVersionUtil.selectSyncerVersionAboutSentinel(String.valueOf(taskModel.getTargetUri().toArray()[0]),taskModel.getTargetRedisMasterName());
+            }else {
+                 version=redisVersionUtil.selectSyncerVersion(String.valueOf(taskModel.getTargetUri().toArray()[0]));
+            }
+
             log.warn("自动获取redis版本号：{},手动输入版本号：{}",version,taskModel.getRedisVersion());
             if(DEFAULT_NO_VERSION.equalsIgnoreCase(version)){
                 if(taskModel.getRedisVersion()==0){

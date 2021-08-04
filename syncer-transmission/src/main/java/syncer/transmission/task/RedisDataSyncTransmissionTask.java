@@ -11,6 +11,7 @@
 
 package syncer.transmission.task;
 
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -165,7 +166,7 @@ public class RedisDataSyncTransmissionTask implements Runnable {
              }
              **/
             RedisType branchType = SyncTypeUtils.getRedisType(taskModel.getTargetRedisType());
-            RedisClient client = RedisClientFactory.createRedisClient(branchType, taskModel.getTargetHost(), taskModel.getTargetPort(), taskModel.getTargetPassword(), taskModel.getSourceHost(), taskModel.getSourcePort(), taskModel.getBatchSize(), taskModel.getErrorCount(), taskModel.getId(), null, null);
+            RedisClient client = RedisClientFactory.createRedisClient(branchType, taskModel.getTargetHost(), taskModel.getTargetPort(), taskModel.getTargetPassword(), taskModel.getSourceHost(), taskModel.getSourcePort(), taskModel.getBatchSize(), taskModel.getErrorCount(), taskModel.getId(), null, null,taskModel.getTargetRedisMasterName(),taskModel.getTargetRedisAddress());
 
             if (Objects.isNull(client)) {
                 log.error("[{}] target client 创建失败，请检查targetRedisType是否正确,当前targetRedisType为[{}]", taskModel.getTaskId(), branchType);
@@ -251,7 +252,7 @@ public class RedisDataSyncTransmissionTask implements Runnable {
             replicationHandler.open();
         } catch (Exception e) {
             SingleTaskDataManagerUtils.brokenStatusAndLog(e, this.getClass(), taskModel.getId());
-            e.printStackTrace();
+            log.error(e.toString());
         }
 
     }

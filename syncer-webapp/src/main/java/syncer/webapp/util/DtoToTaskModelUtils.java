@@ -79,7 +79,6 @@ public class DtoToTaskModelUtils {
                 taskId = TemplateUtils.uuid();
             }
             FileType syncerType = null;
-
             if (Objects.nonNull(param.getFileType())) {
                 syncerType = param.getFileType();
             }
@@ -124,9 +123,9 @@ public class DtoToTaskModelUtils {
                     .fileAddress("")
                     //Redis 6.0 ACL相关
                     .sourceAcl(param.isSourceAcl())
-//                    .sourceUserName(param.getSourceUserName())
+//                  .sourceUserName(param.getSourceUserName())
                     .targetAcl(param.isTargetAcl())
-//                    .targetUserName(param.getTargetUserName())
+//                  .targetUserName(param.getTargetUserName())
                     .syncType(SyncTypeUtils.getSyncType(syncerType).getCode())
                     .errorCount(param.getErrorCount())
                     .timeDeviation(param.getTimeDeviation())

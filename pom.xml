@@ -39,9 +39,6 @@
   </properties>
 
   <dependencies>
-
-
-
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
@@ -147,7 +144,6 @@
       <version>3.4.2</version>
     </dependency>
 
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -159,7 +155,6 @@
       <artifactId>lombok</artifactId>
       <optional>true</optional>
     </dependency>
-
 
     <!--json相关-->
     <dependency>
