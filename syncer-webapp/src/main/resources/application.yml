@@ -109,6 +109,7 @@ spring:
         password: admin
         instance:
           service-url:
+
 #  thymeleaf:
 #    cache: false
 #    prefix: classpath:/templates/
@@ -129,19 +130,22 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
-        exclude:
+        include: health,prometheus
     logfile:
-      external-file: ${syncer.config.path.logfile}/${syncer.config.path.logfileName}  #指向日志文件地址，需与LogBack配置的日志地址一致
+      #指向日志文件地址，需与LogBack配置的日志地址一致
+      external-file: ${syncer.config.path.logfile}/${syncer.config.path.logfileName}
     jmx:
       exposure:
-        include:
+        include: "*"
+
   endpoint:
     health:
       #显示详细信息
       show-details: always
-
-
+  metrics:
+    export:
+      datadog:
+        application-key: ${spring.application.name}
 
 
 mybatis-plus:

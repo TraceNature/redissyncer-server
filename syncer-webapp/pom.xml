@@ -50,6 +50,15 @@
             <scope>true</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!-- Micrometer Prometheus registry  -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
 
         <!--添加此依赖，可以通过在编译时创建候选对象的静态列表来提高大型应用程序的启动性能 -->
 <!--        <dependency>-->

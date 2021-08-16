@@ -44,7 +44,11 @@ public class UserFilter implements HandlerInterceptor {
         String swaggerFilterStatus=env.getProperty("syncer.config.swagger");
         if("false".equalsIgnoreCase(swaggerFilterStatus)){
             String url=request.getRequestURI();
-            if(url.equalsIgnoreCase("/csrf")||url.equalsIgnoreCase("/error")||url.contains("/swagger-ui.html")||url.contains("/webjars/")||url.contains("/swagger-resources")||url.contains("/swagger-ui.html/swagger-resources/")||url.equalsIgnoreCase("/v2/api-docs")){
+            if(url.equalsIgnoreCase("/csrf")
+                    ||url.equalsIgnoreCase("/error")
+                    ||url.contains("/swagger-ui.html")
+                    ||url.contains("/webjars/")
+                    ||url.contains("/swagger-resources")||url.contains("/swagger-ui.html/swagger-resources/")||url.equalsIgnoreCase("/v2/api-docs")){
                 return true;
             }
         }
@@ -54,6 +58,13 @@ public class UserFilter implements HandlerInterceptor {
          */
         String url=request.getRequestURI();
         if("/health".equalsIgnoreCase(url)){
+            return true;
+        }
+
+        /**
+         * prometheus 放行
+         */
+        if("/actuator/prometheus".equalsIgnoreCase(url)){
             return true;
         }
 
