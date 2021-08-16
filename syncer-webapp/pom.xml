@@ -87,6 +87,13 @@
             <artifactId>commons-codec</artifactId>
             <version>1.11</version>
         </dependency>
+
+        <!-- Micrometer Prometheus registry  -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
