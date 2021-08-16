@@ -9,9 +9,9 @@
     </parent>
     <groupId>syncer</groupId>
     <artifactId>syncer-webapp</artifactId>
-    <version>3.3.3</version>
+    <version>4.0.0</version>
     <name>redissyncer-server</name>
-    <description>Demo project for Spring Boot</description>
+    <description>RedisSyncer Server</description>
 
     <properties>
         <java.version>8</java.version>
