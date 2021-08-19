@@ -42,6 +42,14 @@ public class UserFilter implements HandlerInterceptor {
             }
         }
 
+        /**
+         * prometheus 放行
+         */
+        String url=request.getRequestURI();
+        if("/actuator/prometheus".equalsIgnoreCase(url)){
+            return true;
+        }
+
 
         if("false".equalsIgnoreCase(tokenFilterStatus)){
             return true;
