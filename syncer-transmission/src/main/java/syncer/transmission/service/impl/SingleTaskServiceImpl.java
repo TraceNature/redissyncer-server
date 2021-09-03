@@ -11,12 +11,10 @@
 
 package syncer.transmission.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import syncer.common.exception.TaskMsgException;
 import syncer.common.util.ThreadPoolUtils;
 import syncer.replica.constant.RedisType;
 import syncer.replica.status.TaskStatus;
@@ -27,6 +25,7 @@ import syncer.transmission.entity.StartTaskEntity;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.lock.EtcdLockCommandRunner;
 import syncer.transmission.model.ExpandTaskModel;
+import syncer.transmission.model.MultiTaskModel;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.service.ISingleTaskService;
 import syncer.transmission.strategy.taskcheck.RedisTaskStrategyGroupType;
@@ -34,6 +33,9 @@ import syncer.transmission.strategy.taskcheck.TaskCheckStrategyGroupSelecter;
 import syncer.transmission.task.RedisDataCommandUpTransmissionTask;
 import syncer.transmission.task.RedisDataSyncTransmission2KafkaTask;
 import syncer.transmission.task.RedisDataSyncTransmissionTask;
+import syncer.transmission.task.RedisMultiSyncBreakingRingByAuxiliaryKeyTransmissionTask;
+import syncer.transmission.task.RedisSyncFilterByAuxKeyTransmissionTask;
+import syncer.transmission.task.circle.MultiSyncCircle;
 import syncer.transmission.util.ExpandTaskUtils;
 import syncer.transmission.util.lock.TaskRunUtils;
 import syncer.transmission.util.redis.RedisReplIdCheck;
@@ -41,10 +43,8 @@ import syncer.transmission.util.sql.SqlOPUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.locks.Lock;
 
 /**
  * @author zhanenqiang
@@ -55,6 +55,7 @@ import java.util.concurrent.locks.Lock;
 @Slf4j
 public class SingleTaskServiceImpl implements ISingleTaskService {
     RedisReplIdCheck redisReplIdCheck = new RedisReplIdCheck();
+
     /**
      * 运行之前已经创建过任务
      *
@@ -84,12 +85,12 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         TaskDataEntity dataEntity = null;
         if (taskModel.getSyncType().equals(SyncType.SYNC.getCode()) || taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())) {
 
-            if(RedisType.SENTINEL.getCode().equals(taskModel.getSourceRedisType())){
+            if (RedisType.SENTINEL.getCode().equals(taskModel.getSourceRedisType())) {
                 dataEntity = TaskDataEntity.builder()
                         .taskModel(taskModel)
                         .offSetEntity(OffSetEntity.builder().replId("").build())
                         .build();
-            }else {
+            } else {
                 //获取offset和服务id
                 String[] data = redisReplIdCheck.selectSyncerBuffer(taskModel.getSourceUri(), SyncTypeUtils.getOffsetPlace(taskModel.getOffsetPlace()).getOffsetPlace());
                 dataEntity = TaskDataEntity.builder()
@@ -119,14 +120,79 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
             throw e;
         }
 
-        if(RedisType.KAFKA.getCode().equals(taskModel.getTargetRedisType())){
+        if (RedisType.KAFKA.getCode().equals(taskModel.getTargetRedisType())) {
             ThreadPoolUtils.exec(new RedisDataSyncTransmission2KafkaTask(taskModel, true));
-        }else {
+        } else if (taskModel.isCircleReplication()) {
+            //TODO multiAuxTask 循环复制其中一个单向任务
+            ThreadPoolUtils.exec(new RedisSyncFilterByAuxKeyTransmissionTask(taskModel, new MultiSyncCircle()));
+        } else {
             ThreadPoolUtils.exec(new RedisDataSyncTransmissionTask(taskModel, true));
         }
         return taskModel.getId();
     }
 
+    @Override
+    public String runCircleSyncerTask(TaskModel taskModel, MultiSyncCircle circle) throws Exception {
+        if (StringUtils.isEmpty(taskModel.getTaskName())) {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            if (taskModel.getSourceRedisType().equals(3)) {
+                stringBuilder.append(taskModel.getId())
+                        .append("【")
+                        .append(taskModel.getFileAddress())
+                        .append("数据文件】");
+                taskModel.setTaskName(stringBuilder.toString());
+            } else {
+                stringBuilder.append(taskModel.getId())
+                        .append("【")
+                        .append(taskModel.getSourceRedisAddress())
+                        .append("节点】");
+                taskModel.setTaskName(stringBuilder.toString());
+            }
+        }
+        TaskDataEntity dataEntity = null;
+        if (taskModel.getSyncType().equals(SyncType.SYNC.getCode()) || taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())) {
+
+            if (RedisType.SENTINEL.getCode().equals(taskModel.getSourceRedisType())) {
+                dataEntity = TaskDataEntity.builder()
+                        .taskModel(taskModel)
+                        .offSetEntity(OffSetEntity.builder().replId("").build())
+                        .build();
+            } else {
+                //获取offset和服务id
+                String[] data = redisReplIdCheck.selectSyncerBuffer(taskModel.getSourceUri(), SyncTypeUtils.getOffsetPlace(taskModel.getOffsetPlace()).getOffsetPlace());
+                dataEntity = TaskDataEntity.builder()
+                        .taskModel(taskModel)
+                        .offSetEntity(OffSetEntity.builder().replId(data[1]).build())
+                        .build();
+                dataEntity.getOffSetEntity().getReplOffset().set(taskModel.getOffset());
+
+            }
+        } else {
+            dataEntity = TaskDataEntity.builder()
+                    .taskModel(taskModel)
+                    .offSetEntity(OffSetEntity.builder().replId("").build())
+                    .build();
+        }
+        //初始化ExpandTaskModel
+        ExpandTaskUtils.loadingExpandTaskData(taskModel, dataEntity);
+        SingleTaskDataManagerUtils.addMemThread(taskModel.getId(), dataEntity, true);
+        //创建中
+        SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), taskModel.getOffset(), TaskStatus.CREATING);
+        try {
+            //校验
+            TaskCheckStrategyGroupSelecter.select(RedisTaskStrategyGroupType.NODISTINCT, null, taskModel).run(null, taskModel);
+
+        } catch (Exception e) {
+            SingleTaskDataManagerUtils.brokenTask(taskModel.getId());
+            throw e;
+        }
+        if (taskModel.isCircleReplication()) {
+            //TODO multiAuxTask 循环复制其中一个单向任务
+            ThreadPoolUtils.exec(new RedisSyncFilterByAuxKeyTransmissionTask(taskModel, circle));
+        }
+        return taskModel.getId();
+    }
 
     @Override
     public String runSyncerCommandDumpUpTask(TaskModel taskModel) throws Exception {
@@ -242,6 +308,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                             }
                         }
                     }
+
                     @Override
                     public String lockName() {
                         return "startRunLock" + taskModel.getTaskId();
@@ -302,13 +369,13 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                     result.setCode("1000");
                     result.setTaskId(taskId);
                     result.setMsg("Task stopped fail");
-                    log.error("task {} stop fail",taskId);
+                    log.error("task {} stop fail", taskId);
                 }
             }
 
             @Override
             public String lockName() {
-                return "startRunLock"+taskId;
+                return "startRunLock" + taskId;
             }
 
             @Override
@@ -331,7 +398,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                         result.setCode("1001");
                         result.setTaskId(taskId);
                         result.setMsg("The task is running");
-                        return ;
+                        return;
                     }
                     TaskModel taskModel = SqlOPUtils.findTaskById(taskId);
                     if (Objects.isNull(taskModel)) {
@@ -340,7 +407,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                         result.setMsg("The task has not been created yet");
                         return;
                     }
-                    ExpandTaskModel expandTaskModel=taskModel.getExpandTaskJson();
+                    ExpandTaskModel expandTaskModel = taskModel.getExpandTaskJson();
                     expandTaskModel.fileSize.set(0L);
                     expandTaskModel.readFileSize.set(0L);
                     taskModel.updateExpandJson(expandTaskModel);
@@ -371,7 +438,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                     result.setCode("1000");
                     result.setTaskId(taskId);
                     result.setMsg("Error_" + e.getMessage());
-                    log.error("startTaskByTaskId {} fail ",taskId);
+                    log.error("startTaskByTaskId {} fail ", taskId);
                     SingleTaskDataManagerUtils.brokenStatusAndLog(e, this.getClass(), taskId);
                     e.printStackTrace();
                     return;
@@ -380,7 +447,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
 
             @Override
             public String lockName() {
-                return "startRunLock"+taskId;
+                return "startRunLock" + taskId;
             }
 
             @Override
@@ -435,7 +502,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
 
                 @Override
                 public String lockName() {
-                    return "startRunLock"+taskModel.getTaskId();
+                    return "startRunLock" + taskModel.getTaskId();
                 }
 
                 @Override

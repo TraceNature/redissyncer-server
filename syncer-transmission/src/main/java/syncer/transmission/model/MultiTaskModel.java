@@ -47,6 +47,11 @@ public class MultiTaskModel {
      */
     private String nodeId;
 
+    /**
+     * 反向任务节点id
+     */
+    private String targetNodeId;
+
 
     /**
      * 任务名称

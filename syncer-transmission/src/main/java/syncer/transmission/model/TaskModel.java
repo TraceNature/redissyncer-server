@@ -45,6 +45,10 @@ public class TaskModel {
      */
     private String nodeId;
 
+    private boolean circleReplication;
+
+    private String targetNodeId;
+
     /**
      * 任务Id
      */
@@ -548,7 +552,7 @@ public class TaskModel {
         return sourceRedisType;
     }
 
-    public TaskModel(String nodeId,String id,String taskId, String groupId, String taskName, String sourceRedisAddress, String sourcePassword,
+    public TaskModel(String nodeId,boolean circleReplication, String targetNodeId, String id,String taskId, String groupId, String taskName, String sourceRedisAddress, String sourcePassword,
              String targetRedisAddress,String targetPassword, String fileAddress, boolean autostart,
              boolean afresh, Integer batchSize, Integer tasktype, Integer offsetPlace, String taskMsg,
              Long offset, Integer status, double redisVersion, Integer rdbVersion, Integer syncType,
@@ -560,6 +564,8 @@ public class TaskModel {
             ,String expandJson,Long timeDeviation,CommandKeyFilterType filterType,String commandFilter,String keyFilter,String sourceRedisMasterName,String targetRedisMasterName,String topicName,String targetKafkaAddress) {
         this.id = id;
         this.taskId=taskId;
+        this.circleReplication = circleReplication;
+        this.targetNodeId = targetNodeId;
         this.groupId = groupId;
         this.taskName = taskName;
         this.sourceRedisAddress = sourceRedisAddress;

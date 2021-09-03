@@ -28,24 +28,24 @@ public class TaskDistinctStrategy implements ITaskCheckStrategy {
 
     @Override
     public void run(RedisClient client, TaskModel taskModel) throws Exception {
-        List<TaskModel> taskModelList= SqlOPUtils.findTaskBytaskMd5(taskModel.getMd5());
-        if(taskModelList!=null&&taskModelList.size()>0){
-            throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_MSG_TASKSETTING_ERROR.getCode(),ResultCodeAndMessage.TASK_MSG_TASKSETTING_ERROR.getMsg()));
+        List<TaskModel> taskModelList = SqlOPUtils.findTaskBytaskMd5(taskModel.getMd5());
+        if (taskModelList != null && taskModelList.size() > 0) {
+            throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_MSG_TASKSETTING_ERROR.getCode(), ResultCodeAndMessage.TASK_MSG_TASKSETTING_ERROR.getMsg()));
         }
         //下一节点
-        toNext(client,taskModel);
+        toNext(client, taskModel);
 
     }
 
     @Override
     public void toNext(RedisClient client, TaskModel taskModel) throws Exception {
-        if(null!=next) {
-            next.run(client,taskModel);
+        if (null != next) {
+            next.run(client, taskModel);
         }
     }
 
     @Override
     public void setNext(ITaskCheckStrategy nextStrategy) {
-        this.next=nextStrategy;
+        this.next = nextStrategy;
     }
 }

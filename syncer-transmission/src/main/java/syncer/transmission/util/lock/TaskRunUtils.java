@@ -29,45 +29,45 @@ import java.util.concurrent.locks.ReentrantLock;
  * @Date 2020/12/16
  */
 public class TaskRunUtils {
-    static Map<String, Lock> LOCK_MAP=new ConcurrentHashMap<>();
-    static Map<String, Boolean> TASK_START_DATA=new ConcurrentHashMap<>();
+    static Map<String, Lock> LOCK_MAP = new ConcurrentHashMap<>();
+    static Map<String, Boolean> TASK_START_DATA = new ConcurrentHashMap<>();
     static EtcdServerConfig serverConfig = new EtcdServerConfig();
     private static JEtcdClient client;
 
     static {
 
-        if(!StoreType.SQLITE.equals(serverConfig.getStoreType())){
-            client= JEtcdClient.build();
+        if (!StoreType.SQLITE.equals(serverConfig.getStoreType())) {
+            client = JEtcdClient.build();
         }
     }
 
-    public static synchronized void  addTask(String taskId){
-        LOCK_MAP.put(taskId,new ReentrantLock());
+    public static synchronized void addTask(String taskId) {
+        LOCK_MAP.put(taskId, new ReentrantLock());
     }
 
-    public static synchronized void  removeTask(String taskId){
+    public static synchronized void removeTask(String taskId) {
         LOCK_MAP.remove(taskId);
     }
 
-    public static synchronized boolean  containsTask(String taskId){
-        return  LOCK_MAP.containsKey(taskId);
+    public static synchronized boolean containsTask(String taskId) {
+        return LOCK_MAP.containsKey(taskId);
     }
 
 
-    public static Lock getTaskLock(String taskId){
-        if(!LOCK_MAP.containsKey(taskId)){
-            LOCK_MAP.put(taskId,new ReentrantLock());
+    public static Lock getTaskLock(String taskId) {
+        if (!LOCK_MAP.containsKey(taskId)) {
+            LOCK_MAP.put(taskId, new ReentrantLock());
         }
         return LOCK_MAP.get(taskId);
     }
 
 
-    public static void getTaskLock(String taskId,EtcdLockCommandRunner runner){
-        if(StoreType.SQLITE.equals(serverConfig.getStoreType())){
-            if(!LOCK_MAP.containsKey(taskId)){
-                LOCK_MAP.put(taskId,new ReentrantLock());
+    public static void getTaskLock(String taskId, EtcdLockCommandRunner runner) {
+        if (StoreType.SQLITE.equals(serverConfig.getStoreType())) {
+            if (!LOCK_MAP.containsKey(taskId)) {
+                LOCK_MAP.put(taskId, new ReentrantLock());
             }
-            Lock lock=LOCK_MAP.get(taskId);
+            Lock lock = LOCK_MAP.get(taskId);
             lock.lock();
             try {
                 try {
@@ -75,52 +75,50 @@ public class TaskRunUtils {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }finally {
+            } finally {
                 lock.unlock();
             }
-        }else {
+        } else {
             client.lockCommandRunner(runner);
         }
     }
 
 
-    public static  void getTaskLockE(String taskId,EtcdLockCommandRunner runner) throws Exception {
-        if(StoreType.SQLITE.equals(serverConfig.getStoreType())){
-            if(!LOCK_MAP.containsKey(taskId)){
-                LOCK_MAP.put(taskId,new ReentrantLock());
+    public static void getTaskLockE(String taskId, EtcdLockCommandRunner runner) throws Exception {
+        if (StoreType.SQLITE.equals(serverConfig.getStoreType())) {
+            if (!LOCK_MAP.containsKey(taskId)) {
+                LOCK_MAP.put(taskId, new ReentrantLock());
             }
-            Lock lock=LOCK_MAP.get(taskId);
+            Lock lock = LOCK_MAP.get(taskId);
             lock.lock();
             try {
                 runner.run();
-            }finally {
+            } finally {
                 lock.unlock();
             }
-        }else {
+        } else {
             client.lockCommandRunner(runner);
         }
     }
 
-    public static void putTaskStartData(String taskId){
-        TASK_START_DATA.put(taskId,true);
+    public static void putTaskStartData(String taskId) {
+        TASK_START_DATA.put(taskId, true);
     }
 
 
-
-
     public static <T> T getTaskLock(String taskId, EtcdReturnLockCommandRunner<T> runner) throws Exception {
-        if(StoreType.SQLITE.equals(serverConfig.getStoreType())){
-            if(!LOCK_MAP.containsKey(taskId)){
-                LOCK_MAP.put(taskId,new ReentrantLock());
+        if (StoreType.SQLITE.equals(serverConfig.getStoreType())) {
+            if (!LOCK_MAP.containsKey(taskId)) {
+                LOCK_MAP.put(taskId, new ReentrantLock());
             }
-            Lock lock=LOCK_MAP.get(taskId);
+            Lock lock = LOCK_MAP.get(taskId);
             lock.lock();
             try {
                 return runner.run();
-            }finally {
+            } finally {
                 lock.unlock();
             }
-        }else {
+        } else {
             return client.lockCommandRunner(runner);
         }
     }
