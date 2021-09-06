@@ -122,10 +122,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
 
         if (RedisType.KAFKA.getCode().equals(taskModel.getTargetRedisType())) {
             ThreadPoolUtils.exec(new RedisDataSyncTransmission2KafkaTask(taskModel, true));
-        } else if (taskModel.isCircleReplication()) {
-            //TODO multiAuxTask 循环复制其中一个单向任务
-            ThreadPoolUtils.exec(new RedisSyncFilterByAuxKeyTransmissionTask(taskModel, new MultiSyncCircle()));
-        } else {
+        }  else {
             ThreadPoolUtils.exec(new RedisDataSyncTransmissionTask(taskModel, true));
         }
         return taskModel.getId();
