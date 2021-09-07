@@ -45,6 +45,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import static syncer.replica.cmd.CMD.PING;
 
 /**
+ *  aof实时备份任务
+ *
  * @author zhanenqiang
  * @Description 描述
  * @Date 2020/12/18

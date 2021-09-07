@@ -14,15 +14,18 @@ package syncer.transmission.task.circle;
 import com.google.common.collect.Lists;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import syncer.common.util.MD5Utils;
 import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.util.strings.Strings;
 import syncer.transmission.util.strings.StringUtils;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -37,29 +40,46 @@ import java.util.stream.Collectors;
  */
 @Data
 @Builder
+@Slf4j
 public class MultiSyncCircle {
-    private Map<String, Map<String, AtomicLong>>nodeGroupData;
 
-    private Map<String, AtomicInteger>dbData;
+    /**
+     * 存储 由于反向任务又同步过来的 "写入目标节点的辅助key"
+     *
+     * nodeId -> {circle-key, 次数}；
+     *
+     */
+    private Map<String, Map<String, AtomicLong>> nodeGroupData;
 
-    private Map<String, FlushCommandStatus>flushCommandStatus;
+    private Map<String, AtomicInteger> dbData;
+
+    private Map<String, FlushCommandStatus> flushCommandStatus;
 
     @Builder.Default
-    private AtomicInteger nodeStatus=new AtomicInteger(0);
+    private AtomicInteger nodeStatus = new AtomicInteger(0);
     @Builder.Default
-    private AtomicBoolean nodeSuccessStatus=new AtomicBoolean(true);
+    private AtomicBoolean nodeSuccessStatus = new AtomicBoolean(true);
     private int nodeCount;
     @Builder.Default
-    private AtomicInteger nodeSuccessStatusType=new AtomicInteger(0);
+    private AtomicInteger nodeSuccessStatusType = new AtomicInteger(0);
 
-    public MultiSyncCircle(Map<String, Map<String, AtomicLong>> nodeGroupData, Map<String, AtomicInteger> dbData, Map<String, FlushCommandStatus> flushCommandStatus, AtomicInteger nodeStatus, AtomicBoolean nodeSuccessStatus, int nodeCount,AtomicInteger nodeSuccessStatusType) {
+    public MultiSyncCircle() {
+        this.nodeGroupData = new ConcurrentHashMap<>();
+        this.dbData = new ConcurrentHashMap<>();
+        this.flushCommandStatus = new ConcurrentHashMap<>();
+        this.nodeStatus = new AtomicInteger(0);
+        this.nodeSuccessStatus = new AtomicBoolean(true);
+        this.nodeSuccessStatusType = new AtomicInteger(0);
+    }
+
+    public MultiSyncCircle(Map<String, Map<String, AtomicLong>> nodeGroupData, Map<String, AtomicInteger> dbData, Map<String, FlushCommandStatus> flushCommandStatus, AtomicInteger nodeStatus, AtomicBoolean nodeSuccessStatus, int nodeCount, AtomicInteger nodeSuccessStatusType) {
         this.nodeGroupData = nodeGroupData;
         this.dbData = dbData;
         this.flushCommandStatus = flushCommandStatus;
         this.nodeStatus = nodeStatus;
         this.nodeSuccessStatus = nodeSuccessStatus;
         this.nodeCount = nodeCount;
-        this.nodeSuccessStatusType= nodeSuccessStatusType;
+        this.nodeSuccessStatusType = nodeSuccessStatusType;
     }
 
 
@@ -95,7 +115,7 @@ public class MultiSyncCircle {
     }
 
     public String getMd5(DefaultCommand defaultCommand, String serverId) {
-        String command=Strings.byteToString(defaultCommand.getCommand()).toUpperCase();
+        String command = Strings.byteToString(defaultCommand.getCommand()).toUpperCase();
 
         if("RESTORE".equalsIgnoreCase(command)){
             List<String>list=restoreCommandValues(defaultCommand.getArgs());
@@ -108,21 +128,24 @@ public class MultiSyncCircle {
     /**
      * 获取restore 命令各个参数
      * RESTORE key ttl serialized-value [REPLACE]
+     *
      * @param value
      * @return
      */
-    List<String> restoreCommandValues(byte[][]value){
-        List<String>list= Lists.newArrayList();
-        String[] commandParam=Strings.byteToString(value);
-        for (int i=0;i<commandParam.length;i++){
-            if(!StringUtils.isEmpty(commandParam[i])){
+    List<String> restoreCommandValues(byte[][] value) {
+        List<String> list = Lists.newArrayList();
+        String[] commandParam = Strings.byteToString(value);
+        for (int i = 0; i < commandParam.length; i++) {
+            if (!StringUtils.isEmpty(commandParam[i])) {
                 list.add(commandParam[i]);
             }
         }
         return list;
     }
+
     /**
      * 根据增量Event获取MD5值
+     *
      * @param defaultCommand
      * @param serverId
      * @return
@@ -143,7 +166,6 @@ public class MultiSyncCircle {
          stringBuilder.append(Strings.byteToString(defaultCommand.getCommand()));
          stringBuilder.append("-");
          }
-
          **/
         stringBuilder.append(Strings.byteToString(defaultCommand.getCommand()));
         stringBuilder.append("-");
@@ -154,8 +176,8 @@ public class MultiSyncCircle {
 
 
     /**
-     *
      * 根据增量Event获取String
+     *
      * @param defaultCommand
      * @return
      */
@@ -179,21 +201,20 @@ public class MultiSyncCircle {
 
 
     /**
-     *
      * @param dumpKeyValuePair
      * @return
      */
     String getStringRdbDump(DumpKeyValuePairEvent dumpKeyValuePair) {
-        return getBaseStringRdbDump(dumpKeyValuePair.getKey(),dumpKeyValuePair.getValue(),dumpKeyValuePair.getExpiredMs());
+        return getBaseStringRdbDump(dumpKeyValuePair.getKey(), dumpKeyValuePair.getValue(), dumpKeyValuePair.getExpiredMs());
     }
 
 
-    String getBaseStringRdbDump(byte[]key,byte[]value,Long expiredMs) {
+    String getBaseStringRdbDump(byte[] key, byte[] value, Long expiredMs) {
         StringBuilder stringBuilder = new StringBuilder();
         if (Objects.nonNull(key)) {
             stringBuilder.append(Strings.byteToString(key).toUpperCase());
         }
-        if(Objects.nonNull(value)){
+        if (Objects.nonNull(value)) {
             stringBuilder.append(Strings.byteToString(value));
         }
 //        if(Objects.nonNull(expiredMs)){
@@ -204,7 +225,8 @@ public class MultiSyncCircle {
 
 
     /**
-     *  根据RDB dump获取md5
+     * 根据RDB dump获取md5
+     *
      * @param key
      * @param value
      * @param expiredMs
@@ -212,14 +234,14 @@ public class MultiSyncCircle {
      * @param redisVersion
      * @return
      */
-    public String getRdbDumpMd5(byte[]key,byte[]value,Long expiredMs, String serverId,double redisVersion) {
+    public String getRdbDumpMd5(byte[] key, byte[] value, Long expiredMs, String serverId, double redisVersion) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("circle-");
         stringBuilder.append(serverId);
         stringBuilder.append("-");
         stringBuilder.append("RESTORE");
         stringBuilder.append("-");
-        stringBuilder.append(MD5Utils.getMD5(getBaseStringRdbDump(key,value,expiredMs)));
+        stringBuilder.append(MD5Utils.getMD5(getBaseStringRdbDump(key, value, expiredMs)));
         return stringBuilder.toString().trim();
     }
 
@@ -247,8 +269,8 @@ public class MultiSyncCircle {
 
 
     public void addDataMap(String nodeId, String circleKey) {
-        Map<String, AtomicLong> map=getDataMap(nodeId);
-        circleKey=circleKey.trim();
+        Map<String, AtomicLong> map = getDataMap(nodeId);
+        circleKey = circleKey.trim();
         if (map.containsKey(circleKey)) {
             map.get(circleKey).incrementAndGet();
         } else {
@@ -257,7 +279,7 @@ public class MultiSyncCircle {
     }
 
     public void removeDataMap(Map<String, AtomicLong> map, String circleKey) {
-        circleKey=circleKey.trim();
+        circleKey = circleKey.trim();
         if (map.containsKey(circleKey)) {
             AtomicLong data = map.get(circleKey);
             if (data.get() <= 1) {
@@ -269,9 +291,10 @@ public class MultiSyncCircle {
 
         }
     }
+
     public void removeDataMap(String nodeId, String circleKey) {
-        Map<String, AtomicLong> map=getDataMap(nodeId);
-        circleKey=circleKey.trim();
+        Map<String, AtomicLong> map = getDataMap(nodeId);
+        circleKey = circleKey.trim();
         if (map.containsKey(circleKey)) {
             AtomicLong data = map.get(circleKey);
             if (data.get() <= 1) {
@@ -282,11 +305,14 @@ public class MultiSyncCircle {
         }
     }
 
-    public boolean isContinueTask(){
-        return nodeStatus.get()>=nodeCount;
+    public boolean isContinueTask() {
+        return nodeStatus.get() >= nodeCount;
     }
 
     public Map<String, AtomicLong> getDataMap(String nodeId) {
+        if (!nodeGroupData.containsKey(nodeId)) {
+            nodeGroupData.put(nodeId, new ConcurrentHashMap<>());
+        }
         return nodeGroupData.get(nodeId);
     }
 

@@ -16,11 +16,11 @@
 
 package syncer.replica.util.bytes;
 
-import syncer.replica.util.strings.Strings;
-
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
+import syncer.replica.util.strings.Strings;
 
 /**
  * @author Leon Chen
@@ -51,6 +51,16 @@ public class ByteBuilder {
             list.add(temp);
             buffer.clear();
             buffer.put(b);
+        }
+    }
+      
+    public void put(ByteBuffer buf) {
+        put(buf.array(), buf.position(), buf.limit());
+    }
+
+    public void put(byte[] bytes, int offset, int length) {
+        for (int i = offset; i < length; i++) {
+            put(bytes[i]);
         }
     }
 

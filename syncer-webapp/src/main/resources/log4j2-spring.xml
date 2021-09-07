@@ -4,7 +4,7 @@
 	<properties>
 		<Property name="logPath" value="${sys:logPath}"/>
 		<Property name="LOG_PATTERN"
-				  value="%d{yyyy-MM-dd HH:mm:ss.SSS}|[%5p ]|[%t] -> %c{1}#%M:%L | %msg%n%xwEx" />
+				  value="%d{yyyy-MM-dd HH:mm:ss.SSS}|[%p]|[%t] -> %c{1}#%M:%L | %msg%n%xwEx" />
 		<property name="logFile">syncer-log</property>
 		<Property name="logFileName" value="${sys:logFileName}"/>
 		<Property name="logLevel" value="${sys:logLevel}"/>

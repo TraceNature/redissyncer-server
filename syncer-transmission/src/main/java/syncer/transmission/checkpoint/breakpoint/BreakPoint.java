@@ -7,6 +7,7 @@ import syncer.common.config.BreakPointConfig;
 import syncer.common.constant.BreakpointContinuationType;
 import syncer.common.util.RegexUtil;
 import syncer.jedis.Jedis;
+import syncer.replica.constant.RedisType;
 import syncer.transmission.client.impl.JedisMultiExecPipeLineClient;
 import syncer.transmission.entity.OffSetEntity;
 import syncer.transmission.entity.TaskDataEntity;
@@ -30,7 +31,7 @@ public class BreakPoint {
         OffSetEntity offset = null;
         if (BreakPointConfig.getBreakpointContinuationType().equals(BreakpointContinuationType.v2)) {
             //单机版本
-            if (taskModel.getTargetRedisType().equals(1)) {
+            if (taskModel.getTargetRedisType().equals(RedisType.SINGLE.getCode())) {
                 offset = getTargetPointOffset(taskModel.getTaskId()
                         , taskModel.getTargetHost()
                         , taskModel.getTargetPort()

@@ -6,7 +6,6 @@ import syncer.replica.util.bytes.ByteArray;
 
 import java.io.IOException;
 
-import static syncer.replica.constant.Constants.*;
 import static syncer.replica.constant.Constants.RDB_14BITLEN;
 import static syncer.replica.constant.Constants.RDB_32BITLEN;
 import static syncer.replica.constant.Constants.RDB_64BITLEN;

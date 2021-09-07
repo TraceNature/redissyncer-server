@@ -174,30 +174,30 @@
                     </artifactItems>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>dockerfile-maven-plugin</artifactId>
-                <version>1.4.10</version>
-                <configuration>
-                    <repository>jiashiwen/redissyncer</repository>
-                    <contextDirectory>../</contextDirectory>
-                    <tag>${syncer.version}</tag>
-                    <buildArgs>
-                        <JAR_FILE>${project.parent.artifactId}-${syncer.version}.jar</JAR_FILE>
-                        <!--                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>-->
-                    </buildArgs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>default</id>
+<!--            <plugin>-->
+<!--                <groupId>com.spotify</groupId>-->
+<!--                <artifactId>dockerfile-maven-plugin</artifactId>-->
+<!--                <version>1.4.10</version>-->
+<!--                <configuration>-->
+<!--                    <repository>jiashiwen/redissyncer</repository>-->
+<!--                    <contextDirectory>../</contextDirectory>-->
+<!--                    <tag>${syncer.version}</tag>-->
+<!--                    <buildArgs>-->
+<!--                        <JAR_FILE>${project.parent.artifactId}-${syncer.version}.jar</JAR_FILE>-->
+<!--                        &lt;!&ndash;                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>&ndash;&gt;-->
+<!--                    </buildArgs>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>default</id>-->
 
-                        <goals>
-                            <goal>build</goal>
-                            <!--<goal>push</goal>-->
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--                        <goals>-->
+<!--                            <goal>build</goal>-->
+<!--                            &lt;!&ndash;<goal>push</goal>&ndash;&gt;-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
 
 <!--            <plugin>-->
 <!--                <groupId>org.graalvm.nativeimage</groupId>-->

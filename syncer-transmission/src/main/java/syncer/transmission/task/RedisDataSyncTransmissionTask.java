@@ -79,7 +79,7 @@ public class RedisDataSyncTransmissionTask implements Runnable {
     BreakPoint breakPoint = new BreakPoint();
     @Override
     public void run() {
-//        Thread.currentThread().setName(taskModel.getId()+": "+Thread.currentThread().getName());
+        Thread.currentThread().setName(taskModel.getId() + ": " + Thread.currentThread().getName());
         if (Objects.isNull(taskModel.getBatchSize()) || taskModel.getBatchSize() == 0) {
             taskModel.setBatchSize(500);
         }

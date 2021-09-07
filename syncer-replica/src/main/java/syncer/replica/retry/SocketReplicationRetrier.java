@@ -1,5 +1,9 @@
 package syncer.replica.retry;
 
+import java.io.IOException;
+import java.util.Objects;
+import java.util.concurrent.Executors;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,17 +23,13 @@ import syncer.replica.exception.IncrementException;
 import syncer.replica.exception.RedisAuthErrorException;
 import syncer.replica.parser.protocol.ProtocolReplyParser;
 import syncer.replica.protocol.DefaultSyncRedisProtocol;
-import syncer.replica.replication.SocketReplication;
 import syncer.replica.replication.Replication;
+import syncer.replica.replication.SocketReplication;
 import syncer.replica.status.TaskStatus;
 import syncer.replica.util.strings.Strings;
 import syncer.replica.util.tuple.Tuples;
 import syncer.replica.util.type.CapaSyncType;
 import syncer.replica.util.type.SyncStatusType;
-
-import java.io.IOException;
-import java.util.Objects;
-import java.util.concurrent.Executors;
 
 /**
  * @author: Eq Zhan
