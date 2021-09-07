@@ -60,6 +60,18 @@ steps:
       target: /root/redissyncer-server/
       user: root
 
+  - name: move_jar
+    image: appleboy/drone-ssh
+    settings:
+      host:
+        - 10.0.0.21
+        # - 10.0.0.22
+        # - 10.0.0.23
+      key_path: ./id_rsa
+      script:
+        - mv /root/redissyncer-server/syncer-webapp/redissyncer-server.jar /root/redissyncer-server/
+      username: root
+
   - name: startserver
     image: appleboy/drone-ssh
     settings:
