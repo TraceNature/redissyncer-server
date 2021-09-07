@@ -39,8 +39,8 @@ steps:
     settings:
       host:
         - 10.0.0.21
-        - 10.0.0.22
-        - 10.0.0.23
+        # - 10.0.0.22
+        # - 10.0.0.23
       key_path: ./id_rsa
       script:
         - /root/redissyncer-server/redissyncer.sh stop
@@ -52,8 +52,8 @@ steps:
     settings:
       host:
         - 10.0.0.21
-        - 10.0.0.22
-        - 10.0.0.23
+        # - 10.0.0.22
+        # - 10.0.0.23
       key_path: ./id_rsa
       port: 22
       source: syncer-webapp/redissyncer-server.jar
@@ -65,8 +65,8 @@ steps:
     settings:
       host:
         - 10.0.0.21
-        - 10.0.0.22
-        - 10.0.0.23
+        # - 10.0.0.22
+        # - 10.0.0.23
       key_path: ./id_rsa
       script:
         - /root/redissyncer-server/redissyncer.sh start
