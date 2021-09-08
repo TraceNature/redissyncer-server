@@ -43,6 +43,14 @@ public interface ITaskGroupService {
     List<StartTaskEntity> createRedisToRedisTask(List<TaskModel> taskModelList) throws TaskMsgException;
 
     /**
+     * 创建redis数据同步/数据文件恢复
+     * @param taskModelList
+     * @return
+     * @throws TaskMsgException
+     */
+    List<StartTaskEntity> createCircleTask(List<TaskModel> taskModelList) throws TaskMsgException;
+
+    /**
      * 根据taskIdList停止任务
      * @param taskIdList
      * @return

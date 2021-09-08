@@ -1,9 +1,23 @@
 package syncer.replica.listener;
 
+import static syncer.replica.constant.Constants.RDB_TYPE_SET;
+import static syncer.replica.constant.Constants.RDB_TYPE_SET_INTSET;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import syncer.replica.datatype.rdb.module.Module;
 import syncer.replica.datatype.rdb.stream.Stream;
 import syncer.replica.datatype.rdb.zset.ZSetEntry;
-import syncer.replica.event.*;
+import syncer.replica.event.Event;
+import syncer.replica.event.KeyStringValueModuleEvent;
+import syncer.replica.event.KeyStringValueStreamEvent;
+import syncer.replica.event.KeyStringValueStringEvent;
+import syncer.replica.event.KeyValuePairs;
 import syncer.replica.event.iter.KeyStringValueByteArrayIteratorEvent;
 import syncer.replica.event.iter.KeyStringValueMapEntryIteratorEvent;
 import syncer.replica.event.iter.KeyStringValueZSetEntryIteratorEvent;
@@ -13,11 +27,6 @@ import syncer.replica.replication.Replication;
 import syncer.replica.util.list.ByteArrayList;
 import syncer.replica.util.map.ByteArrayMap;
 import syncer.replica.util.set.ByteArraySet;
-
-import java.util.*;
-
-import static syncer.replica.constant.Constants.RDB_TYPE_SET;
-import static syncer.replica.constant.Constants.RDB_TYPE_SET_INTSET;
 
 /**
  * @author zhanenqiang

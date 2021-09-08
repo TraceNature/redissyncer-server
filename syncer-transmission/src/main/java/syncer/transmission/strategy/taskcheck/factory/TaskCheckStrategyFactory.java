@@ -31,7 +31,7 @@ import java.util.List;
 public class TaskCheckStrategyFactory implements ITaskCheckStrategyFactory {
     @Override
     public List<ITaskCheckStrategy> getStrategyList(RedisClient client, TaskModel taskModel) {
-        List<ITaskCheckStrategy>startCheckBaseStrategyList= Lists.newArrayList();
+        List<ITaskCheckStrategy> startCheckBaseStrategyList = Lists.newArrayList();
 
         //判断RedisType是否为空
 //        startCheckBaseStrategyList.add(TaskCheckRedisTypeStrategy.builder().client(client).taskModel(taskModel).build());

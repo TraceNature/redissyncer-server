@@ -11,8 +11,9 @@
 
 package syncer;
 
-import com.alibaba.fastjson.JSON;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.Map;
+
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,25 +23,15 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.StringUtils;
+
+import lombok.extern.slf4j.Slf4j;
 import syncer.common.config.BreakPointConfig;
 import syncer.common.config.EtcdServerConfig;
 import syncer.common.constant.StoreType;
 import syncer.common.util.ThreadPoolUtils;
 import syncer.common.util.file.FileUtils;
 import syncer.common.util.spring.SpringUtil;
-import syncer.jedis.HostAndPort;
-import syncer.replica.config.ReplicConfig;
-import syncer.replica.datatype.command.DefaultCommand;
-import syncer.replica.datatype.command.pubsub.PublishCommand;
-import syncer.replica.event.Event;
-import syncer.replica.listener.EventListener;
-import syncer.replica.parser.command.pubsub.PublishCommandParser;
-import syncer.replica.register.DefaultCommandNames;
-import syncer.replica.register.DefaultCommandRegister;
-import syncer.replica.replication.Replication;
-import syncer.replica.replication.SentinelReplication;
 import syncer.replica.status.TaskStatus;
-import syncer.replica.util.strings.Strings;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.heartbeat.DefaultHeartbeatCommandRunner;
 import syncer.transmission.heartbeat.Heartbeat;
@@ -56,10 +47,6 @@ import syncer.webapp.executor.SqlFileExecutor;
 import syncer.webapp.executor.SqliteUtil;
 import syncer.webapp.start.NodeStartCheckResource;
 import syncer.webapp.start.NodeStartInitService;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 @SpringBootApplication
 @ComponentScan(basePackages={"syncer","syncer.transmission.mapper"})
@@ -124,8 +111,6 @@ public class SyncerWebappApplication {
             /**
              * 持久化任务
              */
-
-
             ThreadPoolUtils.exec(new SqliteSettingPersistenceTask());
             ThreadPoolUtils.exec(new DbDataCommitTask());
             ThreadPoolUtils.exec(new OffsetCommitTask());

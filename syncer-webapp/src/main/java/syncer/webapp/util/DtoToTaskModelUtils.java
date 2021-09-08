@@ -93,6 +93,10 @@ public class DtoToTaskModelUtils {
             CommandKeyFilterType commandKeyFilterType = param.getFilterType() == null ? CommandKeyFilterType.NONE : param.getFilterType();
             TaskModel taskModel = TaskModel.builder()
                     .afresh(param.isAfresh())
+
+                    .circleReplication(param.isCircleReplication())
+                    .targetNodeId(param.getTargetNodeId())
+
                     //自动启动
                     .autostart(param.isAutostart())
                     //批次大小

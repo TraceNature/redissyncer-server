@@ -40,16 +40,18 @@ public class Constants {
 
     /**
      * rdb protocol
+     *
+     * @see https://github.com/redis/redis/blob/02fd76b97cbc5b8ad6f4c81c8538f02c76cbed46/src/rdb.h
      */
-    public static final int RDB_OPCODE_MODULE_AUX = 247;
-    public static final int RDB_OPCODE_IDLE = 248;
-    public static final int RDB_OPCODE_FREQ = 249;
-    public static final int RDB_OPCODE_AUX = 250;
-    public static final int RDB_OPCODE_RESIZEDB = 251;
-    public static final int RDB_OPCODE_EXPIRETIME_MS = 252;
-    public static final int RDB_OPCODE_EXPIRETIME = 253;
-    public static final int RDB_OPCODE_SELECTDB = 254;
-    public static final int RDB_OPCODE_EOF = 255;
+    public static final int RDB_OPCODE_MODULE_AUX = 247;  /* Module auxiliary data. */
+    public static final int RDB_OPCODE_IDLE = 248;  /* LRU idle time. */
+    public static final int RDB_OPCODE_FREQ = 249;  /* LFU frequency. */
+    public static final int RDB_OPCODE_AUX = 250;   /* RDB aux field. */
+    public static final int RDB_OPCODE_RESIZEDB = 251; /* Hash table resize hint. */
+    public static final int RDB_OPCODE_EXPIRETIME_MS = 252; /* Expire time in milliseconds. */
+    public static final int RDB_OPCODE_EXPIRETIME = 253; /* Old expire time in seconds. */
+    public static final int RDB_OPCODE_SELECTDB = 254; /* DB number of the following keys. */
+    public static final int RDB_OPCODE_EOF = 255;  /* End of the RDB file. */
 
     /**
      * rdb object encoding

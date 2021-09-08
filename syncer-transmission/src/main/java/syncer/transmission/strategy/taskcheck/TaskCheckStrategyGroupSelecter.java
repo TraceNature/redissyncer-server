@@ -31,17 +31,16 @@ public class TaskCheckStrategyGroupSelecter {
     /**
      * 策略组
      */
-    private  static volatile Map<RedisTaskStrategyGroupType, ITaskCheckStrategyFactory> strategyGroupMap=null;
+    private static volatile Map<RedisTaskStrategyGroupType, ITaskCheckStrategyFactory> strategyGroupMap = null;
 
-    public static final Object LOCK=new Object();
+    public static final Object LOCK = new Object();
 
 
-
-    public synchronized static ITaskCheckStrategy select(RedisTaskStrategyGroupType type, RedisClient client, TaskModel taskModel){
-        if(null==strategyGroupMap){
+    public synchronized static ITaskCheckStrategy select(RedisTaskStrategyGroupType type, RedisClient client, TaskModel taskModel) {
+        if (null == strategyGroupMap) {
             initGroupMap();
         }
-        if(!strategyGroupMap.containsKey(type)){
+        if (!strategyGroupMap.containsKey(type)) {
             //初始化
             return null;
         }
@@ -49,17 +48,17 @@ public class TaskCheckStrategyGroupSelecter {
         /**
          * 组装策略结构
          */
-        List<ITaskCheckStrategy>redisStartCheckBaseStrategyList=strategyGroupMap.get(type).getStrategyList(client, taskModel);
-        ITaskCheckStrategy result=null;
+        List<ITaskCheckStrategy> redisStartCheckBaseStrategyList = strategyGroupMap.get(type).getStrategyList(client, taskModel);
+        ITaskCheckStrategy result = null;
         //组装链式结构
-        if(redisStartCheckBaseStrategyList!=null&&redisStartCheckBaseStrategyList.size()>0){
-            for (int i = 0; i <redisStartCheckBaseStrategyList.size() ; i++) {
-                if(i<redisStartCheckBaseStrategyList.size()-1){
-                    ITaskCheckStrategy filter=redisStartCheckBaseStrategyList.get(i);
-                    filter.setNext(redisStartCheckBaseStrategyList.get(i+1));
+        if (redisStartCheckBaseStrategyList != null && redisStartCheckBaseStrategyList.size() > 0) {
+            for (int i = 0; i < redisStartCheckBaseStrategyList.size(); i++) {
+                if (i < redisStartCheckBaseStrategyList.size() - 1) {
+                    ITaskCheckStrategy filter = redisStartCheckBaseStrategyList.get(i);
+                    filter.setNext(redisStartCheckBaseStrategyList.get(i + 1));
                 }
             }
-            result=redisStartCheckBaseStrategyList.get(0);
+            result = redisStartCheckBaseStrategyList.get(0);
         }
 
         return result;
@@ -69,15 +68,15 @@ public class TaskCheckStrategyGroupSelecter {
     /**
      * 初始化strategyGroupMap
      */
-    private static void initGroupMap(){
+    private static void initGroupMap() {
 
         //双重校验锁
-        if(null==strategyGroupMap){
+        if (null == strategyGroupMap) {
             //类对象加锁
-            synchronized(LOCK){
+            synchronized (LOCK) {
                 //再次判断
-                if (null==strategyGroupMap){
-                    strategyGroupMap=new ConcurrentHashMap<>();
+                if (null == strategyGroupMap) {
+                    strategyGroupMap = new ConcurrentHashMap<>();
                     //初始化策略工厂
 
                     strategyGroupMap.put(RedisTaskStrategyGroupType.SYNCGROUP, TaskCheckStrategyFactory.builder().build());

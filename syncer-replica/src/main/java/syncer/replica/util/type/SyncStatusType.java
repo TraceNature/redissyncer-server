@@ -7,7 +7,7 @@ package syncer.replica.util.type;
  */
 public enum  SyncStatusType {
     /**
-     * 存量同步状态
+     * 全量同步状态
      */
     RdbSync(1,"存量同步状态"),
     /**

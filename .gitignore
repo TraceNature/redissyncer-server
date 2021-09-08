@@ -10,6 +10,7 @@
 !mvnw.cmd
 
 # Log file
+log/
 *.log
 **/log
 
@@ -40,6 +41,8 @@
 
 # vscode
 **/.vscode
+.settings/
+
 # rust ignore
 Cargo.lock
 **/target

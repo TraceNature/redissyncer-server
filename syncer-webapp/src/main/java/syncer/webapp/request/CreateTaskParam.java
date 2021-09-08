@@ -112,6 +112,10 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
     @ApiModelProperty(value = "pipline没次提交的最到key的数量", allowableValues = "默认值为500")
     private int batchSize;
 
+    private boolean circleReplication;
+
+    private String targetNodeId;
+
     @Builder.Default
     private boolean sourceAcl=false;
 

@@ -11,7 +11,7 @@ server:
   #断点续传类型
   # v1 基于内存保存，目标库不存入任何offset数据
   # v2 将所有命令封装事务，并在每批事务中写入offset数据即checkpoint检查点，断点续传时寻找最大的offset进行续传
-  breakpointContinuationType: v1
+  breakpointContinuationType: v2
 
 
 
