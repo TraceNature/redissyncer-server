@@ -46,7 +46,7 @@ public class KafkaTotalProcessingStrategyListFactory implements KafkaCommonProce
 
         strategyList.add(CommandProcessingDataAnalysisStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).build());
         //更新offset
-        strategyList.add(CommandProcessingOffsetUpdateStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).build());
+      //  strategyList.add(CommandProcessingOffsetUpdateStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).build());
 
         strategyList.add(CommandProcessingDbMappingStrategy.builder().taskId(taskModel.getId()).taskModel(taskModel).build());
 

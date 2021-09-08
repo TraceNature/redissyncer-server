@@ -55,4 +55,33 @@ public class RedisClientFactory {
         }
         return redisClient;
     }
+
+    public static RedisClient createRedisClient(RedisType redisType, String host, Integer port, String password, String sourceHost, Integer sourcePort, int count, long errorCount, String taskId, String jimUrl, String cfsUrl) {
+        RedisClient redisClient = null;
+        switch (redisType) {
+            case SINGLE:
+                if(BreakPointConfig.getBreakpointContinuationType().equals(BreakpointContinuationType.v1)){
+                    redisClient = new JedisPipeLineClient(host,port,password,count,errorCount,taskId);
+                }else{
+                    redisClient = new JedisMultiExecPipeLineClient(host,port,password,sourceHost,sourcePort,count,errorCount,taskId);
+                }
+                log.info("host[{}],port[{}] , {} client init success",host,port,BreakPointConfig.getBreakpointContinuationType());
+                break;
+            case CLUSTER:
+                redisClient = new RedisJedisClusterClient(host,password,taskId);
+                break;
+            case SENTINEL:
+//                redisClient = new FastRedisSentinelClient(address,password,count,errorCount,masterName,taskId);
+                //redisClient = new RedisJedisSentinelClient(address,password
+                //        ,masterName,taskId);
+                break;
+//            case JIMDB:
+//                redisClient = new JimDb2Client(jimUrl,cfsUrl,taskId);
+//                break;
+            default:
+                break;
+        }
+        return redisClient;
+    }
+
 }
