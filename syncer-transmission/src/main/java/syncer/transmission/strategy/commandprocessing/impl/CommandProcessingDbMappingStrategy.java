@@ -173,11 +173,6 @@ public class CommandProcessingDbMappingStrategy implements CommonProcessingStrat
             db.setCurrentDbNumber(dbbnum);
             batchedKeyValuePair.setDb(db);
             eventEntity.setEvent(batchedKeyValuePair);
-        } else if (event instanceof BatchedKeyStringValueHashEvent) {
-            BatchedKeyStringValueHashEvent stringValueHashEvent = (BatchedKeyStringValueHashEvent) event;
-            db.setCurrentDbNumber(dbbnum);
-            stringValueHashEvent.setDb(db);
-            eventEntity.setEvent(stringValueHashEvent);
         }
         eventEntity.setDbNum(dbbnum);
 
