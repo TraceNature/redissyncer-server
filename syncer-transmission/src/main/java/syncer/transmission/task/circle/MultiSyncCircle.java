@@ -88,11 +88,42 @@ public class MultiSyncCircle {
                 if (dataList.get(0).startsWith(key)) {
                     return true;
                 }
-
             }
         }
         return false;
     }
+
+    /**
+     * 判断是否是辅助key
+     * @param defaultCommand
+     * @param vkey
+     * @param serverId
+     * @return
+     */
+    public boolean isCircleKey(byte[] defaultCommand,byte[] vkey , String serverId) {
+        String key = new StringBuilder("circle-").append(serverId).append("-").toString();
+        //判断辅助key
+        if (defaultCommand != null && Strings.byteToString(defaultCommand).equalsIgnoreCase("PSETEX")) {
+            if (vkey!= null) {
+                if (Strings.byteToString(vkey).startsWith(key)) {
+                    return true;
+                }
+            }
+        } else if (defaultCommand != null && Strings.byteToString(defaultCommand).equalsIgnoreCase("DEL")) {
+            if (vkey != null &&vkey.length > 0) {
+                if (Strings.byteToString(vkey).startsWith(key)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public String getMd5(DumpKeyValuePairEvent dumpKeyValuePair, String serverId) {
+        String command="RESTORE".toUpperCase();
+        return getRdbDumpMd5(dumpKeyValuePair,serverId,3.0);
+    }
+
 
     public String getMd5(DefaultCommand defaultCommand, String serverId) {
         String command=Strings.byteToString(defaultCommand.getCommand()).toUpperCase();
@@ -222,6 +253,7 @@ public class MultiSyncCircle {
         stringBuilder.append(MD5Utils.getMD5(getBaseStringRdbDump(key,value,expiredMs)));
         return stringBuilder.toString().trim();
     }
+
 
     public String getRdbDumpMd5(DumpKeyValuePairEvent dumpKeyValuePair, String serverId, double redisVersion) {
         StringBuilder stringBuilder = new StringBuilder();

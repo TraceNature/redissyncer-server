@@ -319,6 +319,7 @@ public class TaskModel {
      * 过滤器类型
      * 任意不生效
      */
+    @Builder.Default
     private CommandKeyFilterType filterType=CommandKeyFilterType.NONE;
 
     /**

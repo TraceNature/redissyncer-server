@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MetricsConfig {
-
     @Bean
     MeterRegistryCustomizer<MeterRegistry> configurer(
             @Value("${spring.application.name}") String applicationName) {

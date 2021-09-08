@@ -131,6 +131,7 @@ management:
     web:
       exposure:
         include: health,prometheus
+#      base-path: /metrics
     logfile:
       #指向日志文件地址，需与LogBack配置的日志地址一致
       external-file: ${syncer.config.path.logfile}/${syncer.config.path.logfileName}
