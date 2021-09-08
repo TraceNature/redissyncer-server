@@ -167,7 +167,6 @@ public class CommandProcessingDbMappingStrategy implements CommonProcessingStrat
             DumpKeyValuePairEvent dumpKeyValuePair = (DumpKeyValuePairEvent) event;
             db.setCurrentDbNumber(dbbnum);
             dumpKeyValuePair.setDb(db);
-
             eventEntity.setEvent(dumpKeyValuePair);
         } else if (event instanceof BatchedKeyValuePairEvent<?, ?>) {
             BatchedKeyValuePairEvent batchedKeyValuePair = (BatchedKeyValuePairEvent) event;
@@ -179,33 +178,7 @@ public class CommandProcessingDbMappingStrategy implements CommonProcessingStrat
             db.setCurrentDbNumber(dbbnum);
             stringValueHashEvent.setDb(db);
             eventEntity.setEvent(stringValueHashEvent);
-        } else if (event instanceof BatchedKeyStringValueListEvent) {
-            BatchedKeyStringValueListEvent listEvent = (BatchedKeyStringValueListEvent) event;
-            db.setCurrentDbNumber(dbbnum);
-            listEvent.setDb(db);
-            eventEntity.setEvent(listEvent);
-        } else if (event instanceof BatchedKeyStringValueSetEvent) {
-            BatchedKeyStringValueSetEvent setEvent = (BatchedKeyStringValueSetEvent) event;
-            db.setCurrentDbNumber(dbbnum);
-            setEvent.setDb(db);
-            eventEntity.setEvent(setEvent);
-        } else if (event instanceof BatchedKeyStringValueModuleEvent) {
-            BatchedKeyStringValueModuleEvent moduleEvent = (BatchedKeyStringValueModuleEvent) event;
-            db.setCurrentDbNumber(dbbnum);
-            moduleEvent.setDb(db);
-            eventEntity.setEvent(moduleEvent);
-        } else if (event instanceof BatchedKeyStringValueZSetEvent) {
-            BatchedKeyStringValueZSetEvent zSetEvent = (BatchedKeyStringValueZSetEvent) event;
-            db.setCurrentDbNumber(dbbnum);
-            zSetEvent.setDb(db);
-            eventEntity.setEvent(zSetEvent);
-        } else if (event instanceof BatchedKeyStringValueStreamEvent) {
-            BatchedKeyStringValueStreamEvent streamEvent = (BatchedKeyStringValueStreamEvent) event;
-            db.setCurrentDbNumber(dbbnum);
-            streamEvent.setDb(db);
-            eventEntity.setEvent(streamEvent);
         }
-
         eventEntity.setDbNum(dbbnum);
 
     }
