@@ -11,16 +11,6 @@
 
 package syncer.transmission.task.circle;
 
-import com.google.common.collect.Lists;
-import lombok.Builder;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-import syncer.common.util.MD5Utils;
-import syncer.replica.datatype.command.DefaultCommand;
-import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
-import syncer.replica.util.strings.Strings;
-import syncer.transmission.util.strings.StringUtils;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +22,17 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
+
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import syncer.common.util.MD5Utils;
+import syncer.replica.datatype.command.DefaultCommand;
+import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
+import syncer.replica.util.strings.Strings;
+import syncer.transmission.util.strings.StringUtils;
 
 /**
  * @author zhanenqiang
@@ -200,7 +201,8 @@ public class MultiSyncCircle {
          **/
         stringBuilder.append(Strings.byteToString(defaultCommand.getCommand()));
         stringBuilder.append("-");
-
+        stringBuilder.append(hashTag(defaultCommand.getArgs()[0]));
+        stringBuilder.append("-");
         stringBuilder.append(MD5Utils.getMD5(getStringCommand(defaultCommand)));
         return stringBuilder.toString().trim();
     }
@@ -272,6 +274,8 @@ public class MultiSyncCircle {
         stringBuilder.append("-");
         stringBuilder.append("RESTORE");
         stringBuilder.append("-");
+        stringBuilder.append(hashTag(key));
+        stringBuilder.append("-");
         stringBuilder.append(MD5Utils.getMD5(getBaseStringRdbDump(key, value, expiredMs)));
         return stringBuilder.toString().trim();
     }
@@ -284,10 +288,15 @@ public class MultiSyncCircle {
         stringBuilder.append("-");
         stringBuilder.append("RESTORE");
         stringBuilder.append("-");
+        stringBuilder.append(hashTag(dumpKeyValuePair.getKey()));
+        stringBuilder.append("-");
         stringBuilder.append(MD5Utils.getMD5(getStringRdbDump(dumpKeyValuePair)));
         return stringBuilder.toString().trim();
     }
 
+    private String hashTag(byte[] key) {
+        return "{" + Strings.byteToString(key) + "}";
+    }
 
     String replace(String str) {
         String destination = "";
