@@ -315,7 +315,33 @@ public class EtcdTaskMapper implements TaskMapper {
 
     @Override
     public boolean updateTask(TaskModel taskModel) throws Exception {
-        client.put(EtcdKeyCmd.getTasksTaskId(taskModel.getTaskId()), JSON.toJSONString(taskModel));
+
+        client.lockCommandRunner(new EtcdLockCommandRunner() {
+            @Override
+            public void run() {
+                try {
+                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
+                    client.getKvClient()
+                            .txn(TxnRequest.newBuilder()
+                                    .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getTasksTaskId(taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(taskModel))).build()).build())
+                                    .build()).get();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public String lockName() {
+                return EtcdKeyCmd.getLockName("updateTaskModel", taskModel.getTaskId());
+            }
+
+            @Override
+            public int grant() {
+                return 30;
+            }
+        });
+
+//        client.put(EtcdKeyCmd.getTasksTaskId(taskModel.getTaskId()), JSON.toJSONString(taskModel));
         return true;
     }
 
@@ -358,9 +384,44 @@ public class EtcdTaskMapper implements TaskMapper {
                 return 30;
             }
         });
-
         return true;
     }
+
+
+    public boolean updateTaskStatusCommitTimeById(String id) throws Exception {
+        client.lockCommandRunner(new EtcdLockCommandRunner() {
+            @Override
+            public void run() {
+                try {
+                    //etcd上报lastCommitTime
+                    if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                        TaskDataEntity taskDataEntity= SingleTaskDataManagerUtils.getAliveThreadHashMap().get(id);
+                        TaskModel taskModel=taskDataEntity.getTaskModel();
+                        taskModel.setUpdateTime(TimeUtils.getNowTimeString());
+                        client.getKvClient()
+                                .txn(TxnRequest.newBuilder()
+                                        .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getTasksTaskId(taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(taskModel))).build()).build())
+                                        .build()).get();
+                    }
+                } catch (Exception e) {
+                    log.error("[{}]上报lastCommitTime and lastKeyUpdateTime fail,result [{}]",e.getMessage());
+
+                }
+            }
+
+            @Override
+            public String lockName() {
+                return EtcdKeyCmd.getLockName("updateTaskModel", id);
+            }
+
+            @Override
+            public int grant() {
+                return 30;
+            }
+        });
+        return true;
+    }
+
 
     @Override
     public boolean updateTaskStausByGroupId(String groupId, int status) throws Exception {
@@ -378,6 +439,8 @@ public class EtcdTaskMapper implements TaskMapper {
 
     @Override
     public boolean updateTaskOffsetById(String id, long offset) throws Exception {
+        //etcd上报lastCommitTime
+        updateTaskStatusCommitTimeById(id);
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
@@ -392,17 +455,7 @@ public class EtcdTaskMapper implements TaskMapper {
                     taskModel.setUpdateTime(TimeUtils.getNowTimeString());
                     offSetEntity= EtcdOffSetEntity.builder().replId(taskModel.getReplId()).replOffset(new AtomicLong(offset)).build();
                 }
-                //etcd上报lastCommitTime
-                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
-                    TaskDataEntity taskDataEntity= SingleTaskDataManagerUtils.getAliveThreadHashMap().get(id);
-                    TaskModel taskModel=taskDataEntity.getTaskModel();
-                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
-                    try {
-                        updateTask(taskModel);
-                    } catch (Exception e) {
-                        log.error("[{}]上报lastCommitTime and lastKeyUpdateTime fail,result [{}]",e.getMessage());
-                    }
-                }
+
 
                 client.put(EtcdKeyCmd.getOffset(id), JSON.toJSONString(offSetEntity));
             }
