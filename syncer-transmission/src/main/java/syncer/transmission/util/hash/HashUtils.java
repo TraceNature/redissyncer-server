@@ -56,7 +56,4 @@ public class HashUtils {
     }
 
 
-    public static void main(String[] args) {
-        System.out.println(getHash("dddhhhddhs",3));
-    }
 }

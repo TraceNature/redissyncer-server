@@ -39,6 +39,7 @@ import syncer.transmission.util.RedisCommandTypeUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * @author zhanenqiang
@@ -132,6 +133,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
                 if(typeEnum.equals(RedisCommandTypeEnum.STRING)){
 
                     BatchedKeyStringValueStringEvent valueString = (BatchedKeyStringValueStringEvent) event;
+                    sendRewrite(valueString.getBatch()==0,valueString.getKey());
                     if (ms == null || ms <= 0L) {
                         Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
                         iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
@@ -142,6 +144,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
                 }else if(typeEnum.equals(RedisCommandTypeEnum.LIST)){
                     //list类型
                     BatchedKeyStringValueListEvent valueList = (BatchedKeyStringValueListEvent) event;
+                    sendRewrite(valueList.getBatch()==0,valueList.getKey());
                     if (ms == null || ms <= 0L) {
                         Long res=client.rpush(duNum,valueList.getKey(), valueList.getValue());
                         iSyncerCompensator.rpush(duNum,valueList.getKey(), valueList.getValue(),res);
@@ -153,6 +156,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
 
                     //set类型
                     BatchedKeyStringValueSetEvent valueSet = (BatchedKeyStringValueSetEvent) event;
+                    sendRewrite(valueSet.getBatch()==0,valueSet.getKey());
                     if (ms == null || ms<=  0L) {
                         Long res= client.sadd(duNum,valueSet.getKey(), valueSet.getValue());
                         iSyncerCompensator.sadd(duNum,valueSet.getKey(), valueSet.getValue(),res);
@@ -163,6 +167,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
                 }else if (typeEnum.equals(RedisCommandTypeEnum.ZSET)) {
                     //zset类型
                     BatchedKeyStringValueZSetEvent valueZSet = (BatchedKeyStringValueZSetEvent) event;
+                    sendRewrite(valueZSet.getBatch()==0,valueZSet.getKey());
                     if (ms == null || ms <=  0L) {
                         Long res=client.zadd(duNum,valueZSet.getKey(), valueZSet.getValue());
                         iSyncerCompensator.zadd(duNum,valueZSet.getKey(), valueZSet.getValue(),res);
@@ -173,6 +178,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
                 }else if(typeEnum.equals(RedisCommandTypeEnum.HASH)){
                     //hash类型
                     BatchedKeyStringValueHashEvent valueHash = (BatchedKeyStringValueHashEvent) event;
+                    sendRewrite(valueHash.getBatch()==0,valueHash.getKey());
                     if (ms == null || ms <= 0L) {
                         String res=client.hmset(duNum,valueHash.getKey(), valueHash.getValue());
                         iSyncerCompensator.hmset(duNum,valueHash.getKey(), valueHash.getValue(),res);
@@ -228,6 +234,7 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
             //继续执行下一Filter节点
             toNext(replication,eventEntity,taskModel);
         }catch (Exception e){
+            log.error("[{}] error [{}]",taskId,e.toString());
             throw new StartegyNodeException(e.getMessage()+"->RdbCommandSendStrategy",e.getCause());
         }
     }
@@ -244,4 +251,12 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
         this.next = nextStrategy;
     }
 
+
+    void sendRewrite(boolean status,byte[]key) throws Exception {
+        if(taskModel.isRewrite()){
+            if(status&& Objects.nonNull(client)){
+                client.send("del".getBytes(),key);
+            }
+        }
+    }
 }

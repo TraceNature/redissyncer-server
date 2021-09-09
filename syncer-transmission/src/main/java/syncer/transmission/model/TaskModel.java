@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.common.config.EtcdServerConfig;
 import syncer.common.util.TimeUtils;
@@ -37,7 +38,7 @@ import java.util.Set;
 @Setter
 @Builder
 @NoArgsConstructor //无参构造
-
+@Slf4j
 public class TaskModel {
 
     /**
@@ -322,6 +323,7 @@ public class TaskModel {
      * 过滤器类型
      * 任意不生效
      */
+    @Builder.Default
     private CommandKeyFilterType filterType=CommandKeyFilterType.NONE;
 
     /**
@@ -352,6 +354,13 @@ public class TaskModel {
 
     private String targetKafkaAddress;
 
+    /**
+     * 当目标存在相同key的时候是否覆盖
+     *
+     * 适用于全量同步阶段
+     */
+    @Builder.Default
+    private boolean rewrite=false;
 
 
     public String getExpandJson() {
@@ -479,11 +488,17 @@ public class TaskModel {
      * @return
      */
     public String[] getSourceHostUris(){
-        String[]host=sourceHost.split(";");
-        for (int i = 0; i < host.length; i++) {
-            host[i]=getUri(host[i],sourcePassword,sourceRedisMasterName,sourceSentinelAuthPassword);
+        try {
+            String[]host=sourceHost.split(";");
+            for (int i = 0; i < host.length; i++) {
+                host[i]=getUri(host[i],sourcePassword,sourceRedisMasterName,sourceSentinelAuthPassword);
+            }
+            return host;
+        }catch (Exception e){
+            log.error("[{}] getSourceHostUris error [{}]",taskId,e.getMessage());
         }
-        return host;
+        return null;
+
     }
 
     /**
@@ -561,7 +576,7 @@ public class TaskModel {
             , Integer targetPort, String dbMapper, String md5, String createTime, String updateTime
             , String dataAnalysis, String replId, Long rdbKeyCount, Long allKeyCount, Long realKeyCount, Long lastKeyUpdateTime,
             Long lastKeyCommitTime, boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName,Long errorCount
-            ,String expandJson,Long timeDeviation,CommandKeyFilterType filterType,String commandFilter,String keyFilter,String sourceRedisMasterName,String targetRedisMasterName,String topicName,String targetKafkaAddress) {
+            ,String expandJson,Long timeDeviation,CommandKeyFilterType filterType,String commandFilter,String keyFilter,String sourceRedisMasterName,String targetRedisMasterName,String topicName,String targetKafkaAddress,boolean rewrite) {
         this.id = id;
         this.taskId=taskId;
         this.circleReplication = circleReplication;
@@ -622,6 +637,7 @@ public class TaskModel {
         setSourceRedisAddress(this.getSourceRedisAddress());
         EtcdServerConfig config=new EtcdServerConfig();
         this.setNodeId(config.getNodeId());
+        this.rewrite=rewrite;
     }
 
     public String getNodeId() {

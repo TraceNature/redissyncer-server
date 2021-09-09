@@ -15,6 +15,7 @@ import io.etcd.jetcd.Lease;
 import io.etcd.jetcd.Lock;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import syncer.common.config.EtcdServerConfig;
@@ -57,7 +58,7 @@ public class JEtcdClient implements IEtcdOpCenter {
 
 
     public JEtcdClient(KvStoreClient kvStoreClient, String url, String username, String password) {
-        if (Objects.nonNull(username) && Objects.nonNull(password)) {
+        if (Strings.isNotEmpty(username) && Strings.isNotEmpty(password)) {
 //            this.client = Client.builder().endpoints(config.getUrl()).user(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getUsername()))).password(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getPassword()))).build();
             this.kvStoreClient=EtcdClient.forEndpoints(config.getEtcdConfig().getUrl()).withCredentials(username,password).withPlainText().build();
         } else {
@@ -67,7 +68,7 @@ public class JEtcdClient implements IEtcdOpCenter {
         this.kvClient = kvStoreClient.getKvClient();
         this.leaseClient = kvStoreClient.getLeaseClient();
         this.lockClient = kvStoreClient.getLockClient();
-        if(Objects.nonNull(username)&&Objects.nonNull(password)){
+        if(Strings.isNotEmpty(username)&&Strings.isNotEmpty(password)){
             this.client=Client.builder().endpoints(endpoints).user(ByteSequence.from(ByteString.copyFromUtf8(username))).password(ByteSequence.from(ByteString.copyFromUtf8(password))).build();
         }else {
             this.client=Client.builder().endpoints(endpoints).build();
@@ -80,7 +81,7 @@ public class JEtcdClient implements IEtcdOpCenter {
         this.leaseClient = kvStoreClient.getLeaseClient();
         this.lockClient = kvStoreClient.getLockClient();
         this.kvStoreClient=kvStoreClient;
-        if(Objects.nonNull(config.getEtcdConfig().getUsername())&&Objects.nonNull(config.getEtcdConfig().getPassword())){
+        if(Strings.isNotEmpty(config.getEtcdConfig().getUsername())&&Strings.isNotEmpty(config.getEtcdConfig().getPassword())){
             this.client=Client.builder().endpoints(endpoints).user(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getUsername()))).password(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getPassword()))).build();
         }else {
             this.client=Client.builder().endpoints(endpoints).build();
@@ -90,7 +91,7 @@ public class JEtcdClient implements IEtcdOpCenter {
 
     public JEtcdClient() {
 
-        if (Objects.nonNull(config.getEtcdConfig().getUsername()) && Objects.nonNull(config.getEtcdConfig().getPassword())) {
+        if (Strings.isNotEmpty(config.getEtcdConfig().getUsername()) && Strings.isNotEmpty(config.getEtcdConfig().getPassword())) {
 //            this.client = Client.builder().endpoints(config.getUrl()).user(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getUsername()))).password(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getPassword()))).build();
             this.kvStoreClient=EtcdClient.forEndpoints(config.getEtcdConfig().getUrl()).withCredentials(config.getEtcdConfig().getUsername(),config.getEtcdConfig().getPassword()).withPlainText().build();
         } else {
@@ -100,7 +101,7 @@ public class JEtcdClient implements IEtcdOpCenter {
         this.kvClient = kvStoreClient.getKvClient();
         this.leaseClient = kvStoreClient.getLeaseClient();
         this.lockClient = kvStoreClient.getLockClient();
-        if(Objects.nonNull(config.getEtcdConfig().getUsername())&&Objects.nonNull(config.getEtcdConfig().getPassword())){
+        if(Strings.isNotEmpty(config.getEtcdConfig().getUsername())&&Strings.isNotEmpty(config.getEtcdConfig().getPassword())){
             this.client=Client.builder().endpoints(endpoints).user(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getUsername()))).password(ByteSequence.from(ByteString.copyFromUtf8(config.getEtcdConfig().getPassword()))).build();
         }else {
             this.client=Client.builder().endpoints(endpoints).build();
@@ -237,7 +238,7 @@ public class JEtcdClient implements IEtcdOpCenter {
             lock.unlock(key);
 //            log.info("释放锁...");
         } catch (Exception e) {
-
+            e.printStackTrace();
             log.warn("etcd lock error {} ,cause {}",e.getMessage(),e.getCause());
         }
     }

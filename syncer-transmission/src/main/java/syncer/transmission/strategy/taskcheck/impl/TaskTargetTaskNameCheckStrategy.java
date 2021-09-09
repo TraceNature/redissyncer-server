@@ -31,6 +31,13 @@ public class TaskTargetTaskNameCheckStrategy implements ITaskCheckStrategy {
                 throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_MSG_TASK_TARGET_KAFKA_ADDRESS_NULL.getCode(), ResultCodeAndMessage.TASK_MSG_TASK_TARGET_KAFKA_ADDRESS_NULL.getMsg()));
             }
         }
+
+        if(RedisType.SENTINEL.getCode().equals(taskModel.getTargetRedisType())){
+            if (StringUtils.isEmpty(taskModel.getTargetRedisMasterName())) {
+                throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_MSG_TARGET_SENTINEL_MASTERNAME_ERROR.getCode(), ResultCodeAndMessage.TASK_MSG_TARGET_SENTINEL_MASTERNAME_ERROR.getMsg()));
+            }
+        }
+
         toNext(client, taskModel);
     }
 

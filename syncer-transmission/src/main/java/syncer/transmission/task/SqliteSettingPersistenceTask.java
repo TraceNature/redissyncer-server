@@ -23,6 +23,7 @@ import java.util.Map;
  * @Date 2020/4/1
  */
 public class SqliteSettingPersistenceTask  implements Runnable{
+
     @Override
     public void run() {
         while (true){
@@ -44,6 +45,7 @@ public class SqliteSettingPersistenceTask  implements Runnable{
                         if(null!=sqliteTaskModel&&null!=sqliteTaskModel.getOffset()&&!sqliteTaskModel.getOffset().equals(data.getValue().getOffSetEntity().getReplOffset().get())){
                             SqlOPUtils.updateOffset(data.getKey(),data.getValue().getOffSetEntity().getReplOffset().get());
                         }
+
                     }
                 }
 

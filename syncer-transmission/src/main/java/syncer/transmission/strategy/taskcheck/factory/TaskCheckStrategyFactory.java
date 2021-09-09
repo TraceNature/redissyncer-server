@@ -39,7 +39,6 @@ public class TaskCheckStrategyFactory implements ITaskCheckStrategyFactory {
         startCheckBaseStrategyList.add(TaskTargetTaskNameCheckStrategy.builder().client(client).taskModel(taskModel).build());
         //判断是否重复
         startCheckBaseStrategyList.add(TaskDistinctStrategy.builder().client(client).taskModel(taskModel).build());
-
         startCheckBaseStrategyList.add(TaskCheckRedisUrlStrategy.builder().client(client).taskModel(taskModel).build());
         startCheckBaseStrategyList.add(TaskSelectVersionStrategy.builder().client(client).taskModel(taskModel).build());
 

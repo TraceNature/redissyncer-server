@@ -185,7 +185,6 @@ public class TaskGroupServiceImpl implements ITaskGroupService {
                                             taskModel.setStatus(TaskStatus.STOP.getCode());
                                             SingleTaskDataManagerUtils.addDbThread(taskModel.getId(),taskModel);
                                             if(taskModel.isAutostart()){
-
                                                 TaskModel testTaskModel=new TaskModel();
                                                 BeanUtils.copyProperties(taskModel,testTaskModel);
                                                 testTaskModel.setStatus(TaskStatus.CREATING.getCode());

@@ -79,7 +79,6 @@ public class DtoToTaskModelUtils {
                 taskId = TemplateUtils.uuid();
             }
             FileType syncerType = null;
-
             if (Objects.nonNull(param.getFileType())) {
                 syncerType = param.getFileType();
             }
@@ -128,9 +127,9 @@ public class DtoToTaskModelUtils {
                     .fileAddress("")
                     //Redis 6.0 ACL相关
                     .sourceAcl(param.isSourceAcl())
-//                    .sourceUserName(param.getSourceUserName())
+//                  .sourceUserName(param.getSourceUserName())
                     .targetAcl(param.isTargetAcl())
-//                    .targetUserName(param.getTargetUserName())
+//                  .targetUserName(param.getTargetUserName())
                     .syncType(SyncTypeUtils.getSyncType(syncerType).getCode())
                     .errorCount(param.getErrorCount())
                     .timeDeviation(param.getTimeDeviation())
@@ -142,6 +141,7 @@ public class DtoToTaskModelUtils {
                     .sourceSentinelAuthPassword(param.getSourceSentinelAuthPassword())
                     .targetSentinelAuthPassword(param.getTargetSentinelAuthPassword())
                     .topicName(param.getTopicName())
+                    .rewrite(param.isRewrite())
                     .targetKafkaAddress(param.getTargetKafkaAddress())
                     .build();
             if(param.getDbMapper()!=null){
@@ -292,6 +292,7 @@ public class DtoToTaskModelUtils {
                     .errorCount(param.getErrorCount())
                     .timeDeviation(param.getTimeDeviation())
                     .keyFilter(keyFilter)
+                    .rewrite(param.isRewrite())
                     .filterType(commandKeyFilterType)
                     .build();
 

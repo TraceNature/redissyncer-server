@@ -29,6 +29,8 @@ import syncer.transmission.po.entity.KeyValueEventEntity;
 import syncer.transmission.strategy.commandprocessing.CommonProcessingStrategy;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
+import java.util.Objects;
+
 /**
  * 断点续传2.0
  * 增量数据同步节点
@@ -92,6 +94,9 @@ public class CommandProcessingAofMultiCommandSendStrategy implements CommonProce
             //命令解析器
             if (event instanceof DefaultCommand) {
                 DefaultCommand dc = (DefaultCommand) event;
+                if(Objects.nonNull(dc.getArgs())&&dc.getArgs().length>1){
+                    sendRewrite(true,dc.getCommand(),dc.getArgs()[0]);
+                }
                 client.updateLastReplidAndOffset(replication.getConfig().getReplId(),replication.getConfig().getReplOffset());
                 client.send(dc.getCommand(),dc.getArgs());
                 eventEntity.getBaseOffSet().setReplId(eventEntity.getReplId());
@@ -109,6 +114,19 @@ public class CommandProcessingAofMultiCommandSendStrategy implements CommonProce
             throw new StartegyNodeException(e.getMessage()+"->AofCommandSendStrategy",e.getCause());
         }
     }
+
+
+    void sendRewrite(boolean status,byte[]command,byte[]key) throws Exception {
+        if(taskModel.isRewrite()){
+            if(status&& Objects.nonNull(client)){
+                if(Strings.byteToString(command).equalsIgnoreCase("RESTORE")){
+                    client.send("del".getBytes(),key);
+                }
+            }
+        }
+    }
+
+
 
     @Override
     public void toNext(Replication replication, KeyValueEventEntity eventEntity, TaskModel taskModel) throws StartegyNodeException {
