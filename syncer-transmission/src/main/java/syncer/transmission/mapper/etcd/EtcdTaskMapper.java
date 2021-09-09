@@ -395,11 +395,8 @@ public class EtcdTaskMapper implements TaskMapper {
                 //etcd上报lastCommitTime
                 if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
                     TaskDataEntity taskDataEntity= SingleTaskDataManagerUtils.getAliveThreadHashMap().get(id);
-                    String taskData=client.get(EtcdKeyCmd.getTasksTaskId(id));
-                    TaskModel taskModel=JSON.parseObject(taskData,TaskModel.class);
+                    TaskModel taskModel=taskDataEntity.getTaskModel();
                     taskModel.setUpdateTime(TimeUtils.getNowTimeString());
-                    taskModel.setLastKeyCommitTime(taskDataEntity.getTaskModel().getLastKeyCommitTime());
-                    taskModel.setLastKeyUpdateTime(taskDataEntity.getTaskModel().getLastKeyUpdateTime());
                     try {
                         updateTask(taskModel);
                     } catch (Exception e) {
