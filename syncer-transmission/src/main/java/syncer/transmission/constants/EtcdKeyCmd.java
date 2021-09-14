@@ -17,12 +17,12 @@ public class EtcdKeyCmd {
 
     /**
      * 根据taskId查询lastKeyCommit和lastKeyUpdate
-     * /tasks/keytime/{taskId}
+     * /tasks/lastkeyacross/{taskId}
      * @param taskId
      * @return
      */
     public static String getKeyTimeTaskId(String taskId){
-        return "/tasks/taskid/"+taskId;
+        return "/tasks/lastkeyacross/"+taskId;
     }
 
 

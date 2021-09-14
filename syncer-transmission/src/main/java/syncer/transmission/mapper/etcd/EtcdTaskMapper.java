@@ -269,9 +269,6 @@ public class EtcdTaskMapper implements TaskMapper {
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getAbandonCommandByGroupIdPrefix(taskModel.getGroupId()))).clearPrevKv().build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getBigKeyByTaskIdPrefix(taskModel.getTaskId()))).clearPrevKv().build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getKeyTimeTaskId(taskModel.getTaskId()))).clearPrevKv().build()).build())
-
-
-
                                     .build()).get();
                 } catch (Exception e) {
                     e.printStackTrace();
