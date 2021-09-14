@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.util.TimeUtils;
+import syncer.replica.status.TaskStatus;
+import syncer.transmission.constants.CommandKeyFilterType;
 import syncer.transmission.constants.EtcdKeyCmd;
 import syncer.transmission.entity.OffSetEntity;
 import syncer.transmission.entity.TaskDataEntity;
@@ -17,7 +19,9 @@ import syncer.transmission.entity.etcd.*;
 import syncer.transmission.etcd.client.JEtcdClient;
 import syncer.transmission.lock.EtcdLockCommandRunner;
 import syncer.transmission.mapper.TaskMapper;
+import syncer.transmission.model.LastKeyTimeModel;
 import syncer.transmission.model.TaskModel;
+import syncer.transmission.util.strings.StringUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 import java.util.List;
@@ -202,7 +206,6 @@ public class EtcdTaskMapper implements TaskMapper {
                                     .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getMd5(taskModel.getMd5()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdMd5Entity.builder().taskId(taskModel.getTaskId()).groupId(taskModel.getGroupId()).nodeId(nodeId).build()))).build()).build())
                                     //taskType
                                     .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getTaskType(taskModel.getTasktype(),taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdMd5Entity.builder().taskId(taskModel.getTaskId()).groupId(taskModel.getGroupId()).nodeId(nodeId).build()))).build()).build())
-
                                     .build()).get();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -265,6 +268,9 @@ public class EtcdTaskMapper implements TaskMapper {
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getAbandonCommandByTaskIdPrefix(taskModel.getTaskId()))).clearPrevKv().build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getAbandonCommandByGroupIdPrefix(taskModel.getGroupId()))).clearPrevKv().build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getBigKeyByTaskIdPrefix(taskModel.getTaskId()))).clearPrevKv().build()).build())
+                                    .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getKeyTimeTaskId(taskModel.getTaskId()))).clearPrevKv().build()).build())
+
+
 
                                     .build()).get();
                 } catch (Exception e) {
@@ -388,7 +394,23 @@ public class EtcdTaskMapper implements TaskMapper {
     }
 
 
-    public boolean updateTaskStatusCommitTimeById(String id) throws Exception {
+    /**
+     * 增量同步阶段数据上报
+     * @param id
+     * @return
+     * @throws Exception
+     */
+    public boolean updateTaskKeyCommitTimeById(String id) throws Exception {
+        if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+            TaskDataEntity taskDataEntity= SingleTaskDataManagerUtils.getAliveThreadHashMap().get(id);
+            if(Objects.nonNull(taskDataEntity)){
+                if(!TaskStatus.COMMANDRUNNING.getCode().equals(taskDataEntity.getTaskModel().getStatus())){
+                    return false;
+                }
+            }else {
+                return false;
+            }
+        }
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
@@ -396,11 +418,15 @@ public class EtcdTaskMapper implements TaskMapper {
                     //etcd上报lastCommitTime
                     if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
                         TaskDataEntity taskDataEntity= SingleTaskDataManagerUtils.getAliveThreadHashMap().get(id);
-                        TaskModel taskModel=taskDataEntity.getTaskModel();
-                        taskModel.setUpdateTime(TimeUtils.getNowTimeString());
+                        TaskModel memTaskModel=taskDataEntity.getTaskModel();
+                        LastKeyTimeModel lastKeyTimeModel=new LastKeyTimeModel();
+                        lastKeyTimeModel.setGroupId(memTaskModel.getGroupId());
+                        lastKeyTimeModel.setTaskId(memTaskModel.getTaskId());
+                        lastKeyTimeModel.setLastKeyCommitTime(memTaskModel.getLastKeyCommitTime());
+                        lastKeyTimeModel.setLastKeyUpdateTime(memTaskModel.getLastKeyUpdateTime());
                         client.getKvClient()
                                 .txn(TxnRequest.newBuilder()
-                                        .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getTasksTaskId(taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(taskModel))).build()).build())
+                                        .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getKeyTimeTaskId(id))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(lastKeyTimeModel))).build()).build())
                                         .build()).get();
                     }
                 } catch (Exception e) {
@@ -411,7 +437,7 @@ public class EtcdTaskMapper implements TaskMapper {
 
             @Override
             public String lockName() {
-                return EtcdKeyCmd.getLockName("updateTaskModel", id);
+                return EtcdKeyCmd.getLockName("updateKeyCommitTimeModel", id);
             }
 
             @Override
@@ -440,7 +466,7 @@ public class EtcdTaskMapper implements TaskMapper {
     @Override
     public boolean updateTaskOffsetById(String id, long offset) throws Exception {
         //etcd上报lastCommitTime
-        updateTaskStatusCommitTimeById(id);
+        updateTaskKeyCommitTimeById(id);
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
@@ -452,7 +478,6 @@ public class EtcdTaskMapper implements TaskMapper {
                 }else {
                     String taskData=client.get(EtcdKeyCmd.getTasksTaskId(id));
                     TaskModel taskModel=JSON.parseObject(taskData,TaskModel.class);
-                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
                     offSetEntity= EtcdOffSetEntity.builder().replId(taskModel.getReplId()).replOffset(new AtomicLong(offset)).build();
                 }
 
@@ -506,7 +531,6 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-
                 try {
                     String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
                     TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
@@ -576,6 +600,8 @@ public class EtcdTaskMapper implements TaskMapper {
         return true;
     }
 
+
+
     @Override
     public boolean updateTime(String id) throws Exception {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
@@ -608,6 +634,7 @@ public class EtcdTaskMapper implements TaskMapper {
 
     @Override
     public boolean updateOffsetAndReplId(String id, Long offset, String replId) throws Exception {
+        updateTaskKeyCommitTimeById(id);
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
