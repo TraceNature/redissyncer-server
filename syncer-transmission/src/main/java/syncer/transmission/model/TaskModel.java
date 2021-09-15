@@ -11,22 +11,24 @@
 
 package syncer.transmission.model;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.util.StringUtils;
-import syncer.common.config.EtcdServerConfig;
-import syncer.common.util.TimeUtils;
-import syncer.replica.type.SyncType;
-import syncer.transmission.constants.CommandKeyFilterType;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+
+import org.springframework.util.StringUtils;
+
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import syncer.common.config.EtcdServerConfig;
+import syncer.common.util.TimeUtils;
+import syncer.replica.type.SyncType;
+import syncer.transmission.constants.CommandKeyFilterType;
 
 /**
  * @author zhanenqiang
@@ -69,6 +71,11 @@ public class TaskModel {
     private String taskName;
 
     /**
+    * 源redis名称
+    */
+    private String sourceRedisName;
+
+    /**
      * 源RedisUri
      */
     private String sourceRedisAddress;
@@ -77,6 +84,11 @@ public class TaskModel {
      * 源Redis密码
      */
     private String sourcePassword;
+
+    /**
+    * 目标redis名称
+    */
+    private String targetRedisName;
 
     /**
      * 目标RedisUri
@@ -552,7 +564,7 @@ public class TaskModel {
         return sourceRedisType;
     }
 
-    public TaskModel(String nodeId,boolean circleReplication, String targetNodeId, String id,String taskId, String groupId, String taskName, String sourceRedisAddress, String sourcePassword,
+    public TaskModel(String nodeId,boolean circleReplication, String targetNodeId, String sourceRedisName, String targetRedisName, String id,String taskId, String groupId, String taskName, String sourceRedisAddress, String sourcePassword,
              String targetRedisAddress,String targetPassword, String fileAddress, boolean autostart,
              boolean afresh, Integer batchSize, Integer tasktype, Integer offsetPlace, String taskMsg,
              Long offset, Integer status, double redisVersion, Integer rdbVersion, Integer syncType,
@@ -566,6 +578,8 @@ public class TaskModel {
         this.taskId=taskId;
         this.circleReplication = circleReplication;
         this.targetNodeId = targetNodeId;
+        this.sourceRedisName = sourceRedisName;
+        this.targetRedisName = targetRedisName;
         this.groupId = groupId;
         this.taskName = taskName;
         this.sourceRedisAddress = sourceRedisAddress;

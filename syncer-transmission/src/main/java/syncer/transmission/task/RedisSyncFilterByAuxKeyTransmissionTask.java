@@ -3,13 +3,16 @@ package syncer.transmission.task;
 import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
+import syncer.jedis.Protocol;
 import syncer.replica.config.RedisURI;
 import syncer.replica.constant.RedisType;
 import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.entity.RedisDB;
+import syncer.replica.event.Event;
 import syncer.replica.event.end.PostRdbSyncEvent;
 import syncer.replica.event.start.PreCommandSyncEvent;
 import syncer.replica.event.start.PreRdbSyncEvent;
+import syncer.replica.listener.EventListener;
 import syncer.replica.parser.syncer.DumpRdbParser;
 import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.register.DefaultCommandRegister;
@@ -17,6 +20,7 @@ import syncer.replica.replication.RedisReplication;
 import syncer.replica.replication.Replication;
 import syncer.replica.util.SyncTypeUtils;
 import syncer.replica.util.TaskRunTypeEnum;
+import syncer.replica.util.strings.Strings;
 import syncer.transmission.checkpoint.breakpoint.BreakPoint;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.client.RedisClientFactory;
@@ -29,6 +33,7 @@ import syncer.transmission.task.circle.MultiSyncCircle;
 import syncer.transmission.util.SyncerTaskTypeUtils;
 import syncer.transmission.util.redis.RedisVersionUtil;
 import syncer.transmission.util.sql.SqlOPUtils;
+import syncer.transmission.util.strings.StringUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 /**
@@ -79,8 +84,8 @@ public class RedisSyncFilterByAuxKeyTransmissionTask implements Runnable {
             RedisURI suri = new RedisURI(taskModel.getSourceUri());
             replication = new RedisReplication(suri, true);
             replication.getConfig().setTaskId(taskModel.getTaskId());
-            int rdbVersion = redisVersionUtil.getRdbVersionByRedisVersion(taskModel.getSourceRedisAddress(),
-                    taskModel.getRedisVersion());
+            // int rdbVersion = redisVersionUtil.getRdbVersionByRedisVersion(taskModel.getSourceRedisAddress(),
+            //         taskModel.getRedisVersion());
             //注册增量命令解析器
             final Replication replicationHandler = DefaultCommandRegister.addCommandParser(replication);
             replicationHandler.getConfig().setTaskId(taskModel.getTaskId());
@@ -308,7 +313,7 @@ public class RedisSyncFilterByAuxKeyTransmissionTask implements Runnable {
                 .redisVersion(taskModel.getRedisVersion()).baseOffSet(baseoffset)
                 .replId(replicationHandler.getConfig().getReplId())
                 .replOffset(replicationHandler.getConfig().getReplOffset())
-                .taskRunTypeEnum(SyncTypeUtils.getTaskType(taskModel.getTaskType()).getType())
+                .taskRunTypeEnum(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType())
                 .fileType(SyncTypeUtils.getSyncType(taskModel.getSyncType()).getFileType()).build();
         try {
             TaskDataEntity data = SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getTaskId());
