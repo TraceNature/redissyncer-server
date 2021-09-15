@@ -246,7 +246,6 @@ public class EtcdTaskMapper implements TaskMapper {
             @Override
             public void run() {
                 try {
-
                     String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
                     TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
                     client.getKvClient()
@@ -841,10 +840,12 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setExpandJson(expandJson);
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setExpandJson(expandJson);
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
             }
 
             @Override
