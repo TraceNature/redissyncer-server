@@ -18,6 +18,7 @@ import syncer.common.exception.TaskMsgException;
 import syncer.common.util.TemplateUtils;
 import syncer.common.util.file.FileUtils;
 import syncer.jedis.Jedis;
+import syncer.jedis.exceptions.JedisDataException;
 import syncer.replica.config.RedisURI;
 import syncer.replica.config.ReplicConfig;
 import syncer.transmission.constants.TaskMsgConstant;
@@ -25,6 +26,7 @@ import syncer.transmission.util.code.CodeUtils;
 import syncer.transmission.util.regex.RegexUtils;
 
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -98,6 +100,81 @@ public class RedisVersionUtil {
         return targetVersion;
     }
 
+    public String selectSyncerVersion(String host,Integer port,String password) throws URISyntaxException, TaskMsgException {
+        /**
+         * 源目标
+         */
+        Jedis target = null;
+        String targetVersion = null;
+        try {
+            target = new Jedis(host, port);
+
+            //获取password
+            if (!StringUtils.isEmpty(password)) {
+                Object targetAuth = target.auth(password);
+            }
+            String info = target.info();
+
+            targetVersion = getRedisVersionString(info);
+
+        } catch (Exception e) {
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE, e.getMessage()));
+
+        } finally {
+            if (target != null) {
+                target.close();
+            }
+        }
+        return targetVersion;
+    }
+
+    public String selectSyncerVersionAboutSentinel(String targetUri,String masterName) throws URISyntaxException, TaskMsgException {
+        RedisURI targetUriplus = new RedisURI(targetUri);
+        /**
+         * 源目标
+         */
+        Jedis target = null;
+        Jedis client=null;
+        String targetVersion = null;
+        try {
+            target = new Jedis(targetUriplus.getHost(), targetUriplus.getPort());
+            ReplicConfig targetConfig = ReplicConfig.valueOf(targetUriplus);
+
+            //获取password
+            if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
+                try {
+                    Object targetAuth = target.auth(targetConfig.getAuthPassword());
+                }catch (JedisDataException e){
+                    target = new Jedis(targetUriplus.getHost(), targetUriplus.getPort());
+                    if(!e.getMessage().contains("ERR AUTH <password> called without any password configured for the default user. Are you sure your configuration is correct?")){
+                        throw e;
+                    }
+                }
+
+            }
+
+            List<String> result=target.sentinelGetMasterAddrByName(masterName);
+            client=new Jedis(result.get(0), Integer.parseInt(result.get(1)));
+            if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
+                Object targetAuth = client.auth(targetConfig.getAuthPassword());
+            }
+
+            String info = client.info();
+            targetVersion = getRedisVersionString(info);
+
+        } catch (Exception e) {
+            throw new TaskMsgException(CodeUtils.codeMessages(TaskMsgConstant.TASK_MSG_REDIS_ERROR_CODE, e.getMessage()));
+
+        } finally {
+            if (target != null) {
+                target.close();
+            }
+            if (client != null) {
+                client.close();
+            }
+        }
+        return targetVersion;
+    }
 
     public String getRedisVersionString(String info) {
         String version = null;

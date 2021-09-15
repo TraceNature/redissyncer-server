@@ -256,8 +256,7 @@ public class CommandProcessingKafkaRdbCommandSendStrategy implements CommonProce
             } else if(event instanceof DefaultCommand){
 
             }else {
-                System.out.println("命令订阅全量数据暂不支持此结构");
-                System.out.println(JSON.toJSONString(event));
+                log.error("命令订阅全量数据暂不支持此结构[{}]",JSON.toJSONString(event));
             }
 
 

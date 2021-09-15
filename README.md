@@ -66,10 +66,6 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 | :----:| :----: |
 |  \[Redis\]    |         \[2.8-6.2\]  |
 
-## [dashboard](https://github.com/TraceNature/dashboard_release)
-
-![](docs/images/dashboard/dashborad1.png)
-
 
 ## 支持的命令(写命令)
 |   system   | String      | List         | Hash       |  Set        | ZSet     | Transactions |   GEO            |   Stream         | HyperLogLog      |
@@ -145,6 +141,12 @@ RedisSyncer是一个redis多任务同步工具集，应用于redis单实例及�
 [comment]: <> "|    DECR    | RPUSHX     | 单元格 |"
 
 [comment]: <> "| DECRBY     | 单元格      | 单元格 |"
+
+
+## [dashboard](https://github.com/TraceNature/dashboard_release)
+
+![](docs/images/dashboard/dashborad1.png)
+
 
 ## 致谢
 

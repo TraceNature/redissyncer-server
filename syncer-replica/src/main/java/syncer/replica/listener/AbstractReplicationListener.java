@@ -56,7 +56,7 @@ public abstract class AbstractReplicationListener implements ReplicationListener
             try {
                 listener.onEvent(replication, event);
             }catch (Exception e){
-                e.printStackTrace();
+                log.error(e.toString());
                 String res="";
                 if(event instanceof DefaultCommand){
                     res=Strings.byteToString(((DefaultCommand) event).getCommand())+Strings.format(((DefaultCommand) event).getArgs());

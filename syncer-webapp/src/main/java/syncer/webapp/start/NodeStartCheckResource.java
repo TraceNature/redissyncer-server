@@ -33,16 +33,11 @@ public class NodeStartCheckResource {
      * 初始化检测资源情况。
      */
     public boolean initCheckResource() {
-//        if (true) {
-
-//            return true;
-//        }
         if (Objects.isNull(config.getNodeId()) || "".equals(config.getNodeId().trim())) {
             log.error("nodeId is null");
             close();
             return true;
         }
-
 
         if (Objects.isNull(config.getEtcdConfig().getUrl()) || "".equals(config.getEtcdConfig().getUrl().trim())) {
             log.error("etcd host and port is empty");
@@ -51,7 +46,6 @@ public class NodeStartCheckResource {
         }
         IEtcdOpCenter configCenter = JEtcdClient.build();
         try {
-
             AtomicBoolean status = new AtomicBoolean(false);
             configCenter.lockCommandRunner(new EtcdLockCommandRunner() {
                 @Override

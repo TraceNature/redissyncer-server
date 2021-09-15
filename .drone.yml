@@ -76,5 +76,3 @@ volumes:
   - name: m2
     host:
       path: /root/.m2
-
-...

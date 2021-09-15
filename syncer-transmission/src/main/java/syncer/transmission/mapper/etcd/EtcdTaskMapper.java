@@ -22,6 +22,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.util.TimeUtils;
 import syncer.transmission.constants.EtcdKeyCmd;
+import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.entity.etcd.EtcdMd5Entity;
 import syncer.transmission.entity.etcd.EtcdNodeTaskEntity;
 import syncer.transmission.entity.etcd.EtcdOffSetEntity;
@@ -31,6 +32,7 @@ import syncer.transmission.etcd.client.JEtcdClient;
 import syncer.transmission.lock.EtcdLockCommandRunner;
 import syncer.transmission.mapper.TaskMapper;
 import syncer.transmission.model.TaskModel;
+import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 /**
  * @author: Eq Zhan
@@ -397,6 +399,17 @@ public class EtcdTaskMapper implements TaskMapper {
                     TaskModel taskModel=JSON.parseObject(taskData,TaskModel.class);
                     taskModel.setUpdateTime(TimeUtils.getNowTimeString());
                     offSetEntity= EtcdOffSetEntity.builder().replId(taskModel.getReplId()).replOffset(new AtomicLong(offset)).build();
+                }
+                //etcd上报lastCommitTime
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    TaskDataEntity taskDataEntity= SingleTaskDataManagerUtils.getAliveThreadHashMap().get(id);
+                    TaskModel taskModel=taskDataEntity.getTaskModel();
+                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
+                    try {
+                        updateTask(taskModel);
+                    } catch (Exception e) {
+                        log.error("[{}]上报lastCommitTime and lastKeyUpdateTime fail,result [{}]",e.getMessage());
+                    }
                 }
 
                 client.put(EtcdKeyCmd.getOffset(id), JSON.toJSONString(offSetEntity));

@@ -1718,7 +1718,7 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
                         log.warn("task[{}]数据传输模块进入关闭保护状态,不再接收新数据", taskId);
                         Date time = new Date(date.getTime());
                         if (status) {
-                            while (System.currentTimeMillis() - time.getTime() < 1000 * 60 * 1) {
+                            while (System.currentTimeMillis() - time.getTime() < 1000 * 10) {
                                 submitCommandNum();
                                 try {
                                     Thread.sleep(1000);
