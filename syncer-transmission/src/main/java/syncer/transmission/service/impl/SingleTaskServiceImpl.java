@@ -11,10 +11,16 @@
 
 package syncer.transmission.service.impl;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+
 import com.google.common.collect.Lists;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import lombok.extern.slf4j.Slf4j;
 import syncer.common.util.ThreadPoolUtils;
 import syncer.replica.constant.RedisType;
 import syncer.replica.status.TaskStatus;
@@ -25,7 +31,6 @@ import syncer.transmission.entity.StartTaskEntity;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.lock.EtcdLockCommandRunner;
 import syncer.transmission.model.ExpandTaskModel;
-import syncer.transmission.model.MultiTaskModel;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.service.ISingleTaskService;
 import syncer.transmission.strategy.taskcheck.RedisTaskStrategyGroupType;
@@ -33,18 +38,12 @@ import syncer.transmission.strategy.taskcheck.TaskCheckStrategyGroupSelecter;
 import syncer.transmission.task.RedisDataCommandUpTransmissionTask;
 import syncer.transmission.task.RedisDataSyncTransmission2KafkaTask;
 import syncer.transmission.task.RedisDataSyncTransmissionTask;
-import syncer.transmission.task.RedisMultiSyncBreakingRingByAuxiliaryKeyTransmissionTask;
 import syncer.transmission.task.RedisSyncFilterByAuxKeyTransmissionTask;
-import syncer.transmission.task.circle.MultiSyncCircle;
 import syncer.transmission.util.ExpandTaskUtils;
 import syncer.transmission.util.lock.TaskRunUtils;
 import syncer.transmission.util.redis.RedisReplIdCheck;
 import syncer.transmission.util.sql.SqlOPUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * @author zhanenqiang
@@ -123,70 +122,11 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         if (RedisType.KAFKA.getCode().equals(taskModel.getTargetRedisType())) {
             ThreadPoolUtils.exec(new RedisDataSyncTransmission2KafkaTask(taskModel, true));
         }  else {
-            ThreadPoolUtils.exec(new RedisDataSyncTransmissionTask(taskModel, true));
-        }
-        return taskModel.getId();
-    }
-
-    @Override
-    public String runCircleSyncerTask(TaskModel taskModel, MultiSyncCircle circle) throws Exception {
-        if (StringUtils.isEmpty(taskModel.getTaskName())) {
-            StringBuilder stringBuilder = new StringBuilder();
-
-            if (taskModel.getSourceRedisType().equals(3)) {
-                stringBuilder.append(taskModel.getId())
-                        .append("【")
-                        .append(taskModel.getFileAddress())
-                        .append("数据文件】");
-                taskModel.setTaskName(stringBuilder.toString());
-            } else {
-                stringBuilder.append(taskModel.getId())
-                        .append("【")
-                        .append(taskModel.getSourceRedisAddress())
-                        .append("节点】");
-                taskModel.setTaskName(stringBuilder.toString());
-            }
-        }
-        TaskDataEntity dataEntity = null;
-        if (taskModel.getSyncType().equals(SyncType.SYNC.getCode()) || taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())) {
-
-            if (RedisType.SENTINEL.getCode().equals(taskModel.getSourceRedisType())) {
-                dataEntity = TaskDataEntity.builder()
-                        .taskModel(taskModel)
-                        .offSetEntity(OffSetEntity.builder().replId("").build())
-                        .build();
-            } else {
-                //获取offset和服务id
-                String[] data = redisReplIdCheck.selectSyncerBuffer(taskModel.getSourceUri(), SyncTypeUtils.getOffsetPlace(taskModel.getOffsetPlace()).getOffsetPlace());
-                dataEntity = TaskDataEntity.builder()
-                        .taskModel(taskModel)
-                        .offSetEntity(OffSetEntity.builder().replId(data[1]).build())
-                        .build();
-                dataEntity.getOffSetEntity().getReplOffset().set(taskModel.getOffset());
-
-            }
-        } else {
-            dataEntity = TaskDataEntity.builder()
-                    .taskModel(taskModel)
-                    .offSetEntity(OffSetEntity.builder().replId("").build())
-                    .build();
-        }
-        //初始化ExpandTaskModel
-        ExpandTaskUtils.loadingExpandTaskData(taskModel, dataEntity);
-        SingleTaskDataManagerUtils.addMemThread(taskModel.getId(), dataEntity, true);
-        //创建中
-        SingleTaskDataManagerUtils.changeThreadStatus(taskModel.getId(), taskModel.getOffset(), TaskStatus.CREATING);
-        try {
-            //校验
-            TaskCheckStrategyGroupSelecter.select(RedisTaskStrategyGroupType.NODISTINCT, null, taskModel).run(null, taskModel);
-
-        } catch (Exception e) {
-            SingleTaskDataManagerUtils.brokenTask(taskModel.getId());
-            throw e;
-        }
-        if (taskModel.isCircleReplication()) {
-            //TODO multiAuxTask 循环复制其中一个单向任务
-            ThreadPoolUtils.exec(new RedisSyncFilterByAuxKeyTransmissionTask(taskModel, circle));
+            if (taskModel.isCircleReplication()) {
+                ThreadPoolUtils.exec(new RedisSyncFilterByAuxKeyTransmissionTask(taskModel));
+              } else {
+                ThreadPoolUtils.exec(new RedisDataSyncTransmissionTask(taskModel, true));
+              }
         }
         return taskModel.getId();
     }
@@ -286,29 +226,27 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                                 result.add(startTaskEntity);
                             }
                         } else {
-                            if (Objects.isNull(taskModel)) {
-                                StartTaskEntity startTaskEntity = StartTaskEntity
-                                        .builder()
-                                        .code("1001")
-                                        .taskId(taskModel.getId())
-                                        .msg("The current task is not running")
-                                        .build();
+                            StartTaskEntity startTaskEntity = StartTaskEntity
+                                    .builder()
+                                    .code("1001")
+                                    .taskId(taskModel.getId())
+                                    .msg("The current task is not running")
+                                    .build();
+                            result.add(startTaskEntity); 
                                 result.add(startTaskEntity);
-                            } else {
-                                StartTaskEntity startTaskEntity = StartTaskEntity
-                                        .builder()
-                                        .code("1002")
-                                        .taskId(taskModel.getId())
-                                        .msg("The task does not exist. Please create the task first")
-                                        .build();
+                            result.add(startTaskEntity); 
                                 result.add(startTaskEntity);
-                            }
+                            result.add(startTaskEntity); 
+                                result.add(startTaskEntity);
+                            result.add(startTaskEntity); 
+                                result.add(startTaskEntity);
+                            result.add(startTaskEntity); 
                         }
                     }
 
                     @Override
                     public String lockName() {
-                        return "startRunLock" + taskModel.getTaskId();
+                        return "taskRunLock" + taskModel.getTaskId();
                     }
 
                     @Override
@@ -334,6 +272,13 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
     @Override
     public StartTaskEntity stopTaskListByTaskId(String taskId) {
         final StartTaskEntity result = StartTaskEntity.builder().build();
+        TaskModel taskModel = SqlOPUtils.findTaskById(taskId);
+        if (taskModel == null) {
+            result.setCode("1002");
+            result.setTaskId(taskId);
+            result.setMsg("The task does not exist. Please create the task first");
+            return result;
+        }
         TaskRunUtils.getTaskLock(taskId, new EtcdLockCommandRunner() {
             @Override
             public void run() {
@@ -350,17 +295,9 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                         result.setTaskId(taskId);
                         result.setMsg("Task stopped successfully");
                     } else {
-                        TaskModel taskModel = SqlOPUtils.findTaskById(taskId);
-                        if (taskModel != null) {
-                            result.setCode("1001");
-                            result.setTaskId(taskId);
-                            result.setMsg("The current task is not running");
-
-                        } else {
-                            result.setCode("1002");
-                            result.setTaskId(taskId);
-                            result.setMsg("The task does not exist. Please create the task first");
-                        }
+                        result.setCode("1001");
+                        result.setTaskId(taskId);
+                        result.setMsg("The current task is not running");
                     }
                 } catch (Exception e) {
                     result.setCode("1000");
@@ -372,7 +309,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
 
             @Override
             public String lockName() {
-                return "startRunLock" + taskId;
+                return "taskRunLock" + taskId;
             }
 
             @Override
@@ -444,7 +381,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
 
             @Override
             public String lockName() {
-                return "startRunLock" + taskId;
+                return "taskRunLock" + taskId;
             }
 
             @Override
@@ -499,7 +436,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
 
                 @Override
                 public String lockName() {
-                    return "startRunLock" + taskModel.getTaskId();
+                    return "taskRunLock" + taskModel.getTaskId();
                 }
 
                 @Override

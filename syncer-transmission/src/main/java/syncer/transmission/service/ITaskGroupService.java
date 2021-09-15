@@ -11,13 +11,14 @@
 
 package syncer.transmission.service;
 
+import java.util.List;
+
 import syncer.common.bean.PageBean;
 import syncer.common.exception.TaskMsgException;
 import syncer.transmission.entity.StartTaskEntity;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.po.ListTaskParamDto;
 import syncer.transmission.po.TaskModelResult;
-import java.util.List;
 
 /**
  * @author zhanenqiang
@@ -41,14 +42,6 @@ public interface ITaskGroupService {
      * @throws TaskMsgException
      */
     List<StartTaskEntity> createRedisToRedisTask(List<TaskModel> taskModelList) throws TaskMsgException;
-
-    /**
-     * 创建redis数据同步/数据文件恢复
-     * @param taskModelList
-     * @return
-     * @throws TaskMsgException
-     */
-    List<StartTaskEntity> createCircleTask(List<TaskModel> taskModelList) throws TaskMsgException;
 
     /**
      * 根据taskIdList停止任务
