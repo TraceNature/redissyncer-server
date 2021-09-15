@@ -500,11 +500,14 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setAfresh(afresh);
-                taskModel.setUpdateTime(TimeUtils.getNowTimeString());
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setAfresh(afresh);
+                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
+
             }
 
             @Override
@@ -573,10 +576,12 @@ public class EtcdTaskMapper implements TaskMapper {
             @Override
             public void run() {
                 try {
-                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                    taskModel.setTaskMsg(taskMsg);
-                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                    if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)) {
+                        String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                        TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                        taskModel.setTaskMsg(taskMsg);
+                        client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                    }
                 }catch (Exception e){
                     log.error("updateTaskMsgById fail reason {}",e.getMessage());
                 }
@@ -603,10 +608,13 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setUpdateTime(TimeUtils.getNowTimeString());
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
+
             }
 
             @Override
@@ -717,10 +725,12 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setDataAnalysis(dataAnalysis);
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setDataAnalysis(dataAnalysis);
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
             }
 
             @Override
@@ -741,10 +751,12 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setRdbKeyCount(rdbKeyCount);
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setRdbKeyCount(rdbKeyCount);
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
             }
 
             @Override
@@ -765,10 +777,13 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setRealKeyCount(realKeyCount);
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setRealKeyCount(realKeyCount);
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
+
             }
 
             @Override
@@ -789,10 +804,13 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setAllKeyCount(allKeyCount);
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setAllKeyCount(allKeyCount);
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
+
             }
 
             @Override
@@ -813,13 +831,15 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setRdbKeyCount(rdbKeyCount);
-                taskModel.setAllKeyCount(allKeyCount);
-                taskModel.setRealKeyCount(realKeyCount);
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setRdbKeyCount(rdbKeyCount);
+                    taskModel.setAllKeyCount(allKeyCount);
+                    taskModel.setRealKeyCount(realKeyCount);
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
 
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
             }
 
             @Override
