@@ -19,12 +19,9 @@ import java.util.Set;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
+import lombok.*;
 import org.springframework.util.StringUtils;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.config.EtcdServerConfig;
 import syncer.common.util.TimeUtils;
@@ -579,16 +576,7 @@ public class TaskModel {
         return sourceRedisType;
     }
 
-    public TaskModel(String nodeId,boolean circleReplication, String targetNodeId, String sourceRedisName, String targetRedisName, String id,String taskId, String groupId, String taskName, String sourceRedisAddress, String sourcePassword,
-             String targetRedisAddress,String targetPassword, String fileAddress, boolean autostart,
-             boolean afresh, Integer batchSize, Integer tasktype, Integer offsetPlace, String taskMsg,
-             Long offset, Integer status, double redisVersion, Integer rdbVersion, Integer syncType,
-             Integer sourceRedisType,String sourceSentinelAuthPassword,Integer targetRedisType,String targetSentinelAuthPassword,
-             String sourceHost, String targetHost,  Integer sourcePort
-            , Integer targetPort, String dbMapper, String md5, String createTime, String updateTime
-            , String dataAnalysis, String replId, Long rdbKeyCount, Long allKeyCount, Long realKeyCount, Long lastKeyUpdateTime,
-            Long lastKeyCommitTime, boolean sourceAcl,boolean targetAcl,String sourceUserName,String targetUserName,Long errorCount
-            ,String expandJson,Long timeDeviation,CommandKeyFilterType filterType,String commandFilter,String keyFilter,String sourceRedisMasterName,String targetRedisMasterName,String topicName,String targetKafkaAddress,boolean rewrite) {
+    public TaskModel(String nodeId, boolean circleReplication, String targetNodeId, String id, String taskId, String groupId, String taskName, String sourceRedisName, String sourceRedisAddress, String sourcePassword, String targetRedisName, String targetRedisAddress, String targetPassword, String fileAddress, boolean autostart, boolean afresh, Integer batchSize, Integer tasktype, Integer offsetPlace, String taskMsg, Long offset, Integer status, double redisVersion, Integer rdbVersion, Integer syncType, Integer sourceRedisType, String sourceSentinelAuthPassword, Integer targetRedisType, String targetSentinelAuthPassword, String sourceHost, String targetHost, Integer sourcePort, Integer targetPort, String dbMapper, String createTime, String updateTime, String md5, String dataAnalysis, String replId, Long rdbKeyCount, Long allKeyCount, Long realKeyCount, long lastKeyUpdateTime, long lastKeyCommitTime, boolean sourceAcl, boolean targetAcl, String sourceUserName, String targetUserName, Long errorCount, String expandJson, Long timeDeviation, CommandKeyFilterType filterType, String commandFilter, String keyFilter, String sourceRedisMasterName, String targetRedisMasterName, String topicName, String targetKafkaAddress, boolean rewrite) {
         this.id = id;
         this.taskId=taskId;
         this.circleReplication = circleReplication;
@@ -653,6 +641,7 @@ public class TaskModel {
         this.setNodeId(config.getNodeId());
         this.rewrite=rewrite;
     }
+
 
     public String getNodeId() {
         if(Objects.isNull(nodeId)){

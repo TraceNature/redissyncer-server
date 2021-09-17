@@ -50,10 +50,7 @@ public class BaseTaskParam implements Serializable {
     @Builder.Default
     private boolean afresh=true;
 
-    public BaseTaskParam() {
-    }
-
-    public BaseTaskParam(@NotBlank(message = "源RedisCluster地址不能为空") String sourceRedisAddress, @NotBlank(message = "目标RedisCluster地址不能为空") String targetRedisAddress, String sourcePassword, String targetPassword, @NotBlank(message = "任务名称不能为空") String taskName, boolean autostart, boolean afresh) {
+    public BaseTaskParam(@NotBlank(message = "源RedisCluster地址不能为空") String sourceRedisAddress, String targetRedisAddress, String sourcePassword, String targetPassword, @NotBlank(message = "任务名称不能为空") String taskName, boolean autostart, boolean afresh) {
         this.sourceRedisAddress = sourceRedisAddress;
         this.targetRedisAddress = targetRedisAddress;
         this.sourcePassword = sourcePassword;
@@ -61,5 +58,8 @@ public class BaseTaskParam implements Serializable {
         this.taskName = taskName;
         this.autostart = autostart;
         this.afresh = afresh;
+    }
+
+    public BaseTaskParam() {
     }
 }

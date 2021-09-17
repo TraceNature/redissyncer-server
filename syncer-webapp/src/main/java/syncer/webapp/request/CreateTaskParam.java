@@ -12,6 +12,7 @@
 package syncer.webapp.request;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import syncer.replica.constant.RedisType;
@@ -29,56 +30,24 @@ import java.util.Map;
  */
 @Data
 public class CreateTaskParam extends BaseTaskParam implements Serializable {
-    public CreateTaskParam(String taskId, int batchSize, boolean sourceAcl, boolean targetAcl,
-                           String sourceUserName, String targetUserName, long errorCount,
-                           RedisType sourceRedisType,RedisType targetRedisType,
-                           String sourceRedisMasterName,String targetRedisMasterName,
-                           String sourceSentinelAuthPassword,String targetSentinelAuthPassword,
-                           FileType synctype, FileType fileType, String tasktype, String offsetPlace,
-                           Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter,
-                           String keyFilter, CommandKeyFilterType filterType,String topicName,String targetKafkaAddress,boolean rewrite) {
-        this.taskId = taskId;
-        this.batchSize = batchSize;
-        this.sourceAcl = sourceAcl;
-        this.targetAcl = targetAcl;
-        this.sourceUserName = sourceUserName;
-        this.targetUserName = targetUserName;
-        this.errorCount = errorCount;
-        this.synctype = synctype;
-        this.fileType = fileType;
-        this.tasktype = tasktype;
-        this.offsetPlace = offsetPlace;
-        this.dbMapper = dbMapper;
-        this.timeDeviation = timeDeviation;
-        this.commandFilter = commandFilter;
-        this.keyFilter = keyFilter;
-        this.filterType = filterType;
-        this.targetSentinelAuthPassword=targetSentinelAuthPassword;
-        this.sourceSentinelAuthPassword=sourceSentinelAuthPassword;
-        this.sourceRedisType=sourceRedisType;
-        this.targetRedisType=targetRedisType;
-        this.sourceRedisMasterName=sourceRedisMasterName;
-        this.targetRedisMasterName=targetRedisMasterName;
-        this.topicName=topicName;
-        this.targetKafkaAddress=targetKafkaAddress;
-        this.rewrite=rewrite;
-    }
 
-    public CreateTaskParam(@NotBlank(message = "源RedisCluster地址不能为空") String sourceRedisAddress, String sourceSentinelAuthPassword,
-                           String targetRedisAddress, String targetSentinelAuthPassword,@NotBlank(message = "目标Redis版本不能为空")String targetRedisVersion,
-                           RedisType sourceRedisType, RedisType targetRedisType,
-                           String sourceRedisMasterName,String targetRedisMasterName,
-                           String sourcePassword, String targetPassword, @NotBlank(message = "任务名称不能为空") String taskName, boolean autostart,
-                           boolean afresh, String taskId, int batchSize, boolean sourceAcl, boolean targetAcl, String sourceUserName,
-                           String targetUserName, long errorCount, FileType synctype, FileType fileType, String tasktype, String offsetPlace,
-                           Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter, String keyFilter, CommandKeyFilterType filterType,String topicName,String targetKafkaAddress,boolean rewrite) {
+    public CreateTaskParam(@NotBlank(message = "源RedisCluster地址不能为空") String sourceRedisAddress, String targetRedisAddress, String sourcePassword, String targetPassword, @NotBlank(message = "任务名称不能为空") String taskName, boolean autostart, boolean afresh, String taskId, int batchSize, boolean circleReplication, String targetNodeId, boolean sourceAcl, boolean targetAcl, String sourceUserName, String sourceSentinelAuthPassword, RedisType sourceRedisType, String targetUserName, String sourceRedisMasterName, String targetRedisMasterName, String targetSentinelAuthPassword, RedisType targetRedisType, @NotBlank(message = "目标Redis版本不能为空") String targetRedisVersion, long errorCount, FileType synctype, FileType fileType, String tasktype, String offsetPlace, Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter, String keyFilter, CommandKeyFilterType filterType, String topicName, String targetKafkaAddress, boolean rewrite) {
         super(sourceRedisAddress, targetRedisAddress, sourcePassword, targetPassword, taskName, autostart, afresh);
         this.taskId = taskId;
         this.batchSize = batchSize;
+        this.circleReplication = circleReplication;
+        this.targetNodeId = targetNodeId;
         this.sourceAcl = sourceAcl;
         this.targetAcl = targetAcl;
         this.sourceUserName = sourceUserName;
+        this.sourceSentinelAuthPassword = sourceSentinelAuthPassword;
+        this.sourceRedisType = sourceRedisType;
         this.targetUserName = targetUserName;
+        this.sourceRedisMasterName = sourceRedisMasterName;
+        this.targetRedisMasterName = targetRedisMasterName;
+        this.targetSentinelAuthPassword = targetSentinelAuthPassword;
+        this.targetRedisType = targetRedisType;
+        this.targetRedisVersion = targetRedisVersion;
         this.errorCount = errorCount;
         this.synctype = synctype;
         this.fileType = fileType;
@@ -89,20 +58,43 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
         this.commandFilter = commandFilter;
         this.keyFilter = keyFilter;
         this.filterType = filterType;
-        this.targetSentinelAuthPassword=targetSentinelAuthPassword;
-        this.sourceSentinelAuthPassword=sourceSentinelAuthPassword;
-        this.sourceRedisType=sourceRedisType;
-        this.targetRedisType=targetRedisType;
-        this.sourceRedisMasterName=sourceRedisMasterName;
-        this.targetRedisMasterName=targetRedisMasterName;
-        this.topicName=topicName;
-        this.targetKafkaAddress=targetKafkaAddress;
-        this.rewrite=rewrite;
-        this.targetRedisVersion=targetRedisVersion;
+        this.topicName = topicName;
+        this.targetKafkaAddress = targetKafkaAddress;
+        this.rewrite = rewrite;
+    }
+
+    public CreateTaskParam(String taskId, int batchSize, boolean circleReplication, String targetNodeId, boolean sourceAcl, boolean targetAcl, String sourceUserName, String sourceSentinelAuthPassword, RedisType sourceRedisType, String targetUserName, String sourceRedisMasterName, String targetRedisMasterName, String targetSentinelAuthPassword, RedisType targetRedisType, @NotBlank(message = "目标Redis版本不能为空") String targetRedisVersion, long errorCount, FileType synctype, FileType fileType, String tasktype, String offsetPlace, Map<Integer, Integer> dbMapper, Long timeDeviation, String commandFilter, String keyFilter, CommandKeyFilterType filterType, String topicName, String targetKafkaAddress, boolean rewrite) {
+        this.taskId = taskId;
+        this.batchSize = batchSize;
+        this.circleReplication = circleReplication;
+        this.targetNodeId = targetNodeId;
+        this.sourceAcl = sourceAcl;
+        this.targetAcl = targetAcl;
+        this.sourceUserName = sourceUserName;
+        this.sourceSentinelAuthPassword = sourceSentinelAuthPassword;
+        this.sourceRedisType = sourceRedisType;
+        this.targetUserName = targetUserName;
+        this.sourceRedisMasterName = sourceRedisMasterName;
+        this.targetRedisMasterName = targetRedisMasterName;
+        this.targetSentinelAuthPassword = targetSentinelAuthPassword;
+        this.targetRedisType = targetRedisType;
+        this.targetRedisVersion = targetRedisVersion;
+        this.errorCount = errorCount;
+        this.synctype = synctype;
+        this.fileType = fileType;
+        this.tasktype = tasktype;
+        this.offsetPlace = offsetPlace;
+        this.dbMapper = dbMapper;
+        this.timeDeviation = timeDeviation;
+        this.commandFilter = commandFilter;
+        this.keyFilter = keyFilter;
+        this.filterType = filterType;
+        this.topicName = topicName;
+        this.targetKafkaAddress = targetKafkaAddress;
+        this.rewrite = rewrite;
     }
 
     public CreateTaskParam() {
-
     }
 
     private static final long serialVersionUID = -5809782578272943998L;
