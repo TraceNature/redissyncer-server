@@ -67,7 +67,7 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         if (StringUtils.isEmpty(taskModel.getTaskName())) {
             StringBuilder stringBuilder = new StringBuilder();
 
-            if (taskModel.getSourceRedisType().equals(3)) {
+            if (taskModel.getSourceRedisType().equals(RedisType.FILE.getCode())) {
                 stringBuilder.append(taskModel.getId())
                         .append("【")
                         .append(taskModel.getFileAddress())
