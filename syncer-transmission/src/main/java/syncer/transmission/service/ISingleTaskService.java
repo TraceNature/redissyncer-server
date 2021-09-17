@@ -11,12 +11,11 @@
 
 package syncer.transmission.service;
 
+import java.util.List;
+
 import syncer.common.exception.TaskMsgException;
 import syncer.transmission.entity.StartTaskEntity;
 import syncer.transmission.model.TaskModel;
-import syncer.transmission.task.circle.MultiSyncCircle;
-
-import java.util.List;
 
 /**
  * @author zhanenqiang
@@ -31,16 +30,8 @@ public interface ISingleTaskService {
      * @throws Exception
      */
     String runSyncerTask(TaskModel taskModel) throws Exception;
-
-    /**
-     * 启动双向同步任务
-     * @param taskModel
-     * @return taskId
-     * @throws Exception
-     */
-    String runCircleSyncerTask(TaskModel taskModel, MultiSyncCircle circle) throws Exception;
-
-    /**
+    
+     /**
      * 开启增量数据任务
      * @param taskModel
      * @return

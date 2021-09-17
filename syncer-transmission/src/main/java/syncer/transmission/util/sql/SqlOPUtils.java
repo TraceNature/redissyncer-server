@@ -10,17 +10,40 @@
 // limitations under the License.
 
 package syncer.transmission.util.sql;
+import java.util.List;
+import java.util.Objects;
+
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.config.EtcdServerConfig;
 import syncer.common.constant.StoreType;
 import syncer.common.util.spring.SpringUtil;
 import syncer.transmission.etcd.client.JEtcdClient;
-import syncer.transmission.mapper.*;
-import syncer.transmission.mapper.etcd.*;
-import syncer.transmission.model.*;
-
-import java.util.List;
-import java.util.Objects;
+import syncer.transmission.mapper.AbandonCommandMapper;
+import syncer.transmission.mapper.BigKeyMapper;
+import syncer.transmission.mapper.DashBoardMapper;
+import syncer.transmission.mapper.DataCompensationMapper;
+import syncer.transmission.mapper.RdbVersionMapper;
+import syncer.transmission.mapper.RubbishDataMapper;
+import syncer.transmission.mapper.TaskMapper;
+import syncer.transmission.mapper.TaskOffsetMapper;
+import syncer.transmission.mapper.UserMapper;
+import syncer.transmission.mapper.etcd.EtcdAbandonCommandMapper;
+import syncer.transmission.mapper.etcd.EtcdBigKeyMapper;
+import syncer.transmission.mapper.etcd.EtcdDashBoardMapper;
+import syncer.transmission.mapper.etcd.EtcdDataCompensationMapper;
+import syncer.transmission.mapper.etcd.EtcdID;
+import syncer.transmission.mapper.etcd.EtcdRdbVersionMapper;
+import syncer.transmission.mapper.etcd.EtcdRubbishDataMapper;
+import syncer.transmission.mapper.etcd.EtcdTaskMapper;
+import syncer.transmission.mapper.etcd.EtcdTaskOffsetMapper;
+import syncer.transmission.mapper.etcd.EtcdUserMapper;
+import syncer.transmission.model.AbandonCommandModel;
+import syncer.transmission.model.BigKeyModel;
+import syncer.transmission.model.DataCompensationModel;
+import syncer.transmission.model.RdbVersionModel;
+import syncer.transmission.model.TaskModel;
+import syncer.transmission.model.TaskOffsetModel;
+import syncer.transmission.model.UserModel;
 
 /**
  * @author zhanenqiang
@@ -99,10 +122,8 @@ public class SqlOPUtils {
     }
 
 
-    public static TaskModel findTaskById(String id) throws Exception {
-
+    public static TaskModel findTaskById(String id) {
         return taskMapper.findTaskById(id);
-
     }
 
 

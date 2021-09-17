@@ -63,8 +63,21 @@ public class MultiSyncCircle {
     private int nodeCount;
     @Builder.Default
     private AtomicInteger nodeSuccessStatusType = new AtomicInteger(0);
+    
+    private static volatile MultiSyncCircle INSTANCE = null;
 
-    public MultiSyncCircle() {
+    public static final MultiSyncCircle getInsance() {
+        if (INSTANCE == null) {
+            synchronized(MultiSyncCircle.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new MultiSyncCircle();
+                }
+            }
+        }
+        return INSTANCE;
+    }
+
+    private MultiSyncCircle() {
         this.nodeGroupData = new ConcurrentHashMap<>();
         this.dbData = new ConcurrentHashMap<>();
         this.flushCommandStatus = new ConcurrentHashMap<>();

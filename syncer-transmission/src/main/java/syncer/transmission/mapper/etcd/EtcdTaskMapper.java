@@ -1,30 +1,38 @@
 package syncer.transmission.mapper.etcd;
 
-import com.alibaba.fastjson.JSON;
-
-import com.google.common.collect.Lists;
-import com.google.protobuf.ByteString;
-import com.ibm.etcd.api.*;
-import com.ibm.etcd.client.kv.KvClient;
-import lombok.Builder;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-import syncer.common.util.TimeUtils;
-import syncer.transmission.constants.EtcdKeyCmd;
-import syncer.transmission.entity.OffSetEntity;
-import syncer.transmission.entity.TaskDataEntity;
-import syncer.transmission.entity.etcd.*;
-import syncer.transmission.etcd.client.JEtcdClient;
-import syncer.transmission.lock.EtcdLockCommandRunner;
-import syncer.transmission.mapper.TaskMapper;
-import syncer.transmission.model.TaskModel;
-import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
+import com.google.protobuf.ByteString;
+import com.ibm.etcd.api.DeleteRangeRequest;
+import com.ibm.etcd.api.KeyValue;
+import com.ibm.etcd.api.PutRequest;
+import com.ibm.etcd.api.RequestOp;
+import com.ibm.etcd.api.TxnRequest;
+import com.ibm.etcd.api.TxnResponse;
+import com.ibm.etcd.client.kv.KvClient;
+
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import syncer.common.util.TimeUtils;
+import syncer.transmission.constants.EtcdKeyCmd;
+import syncer.transmission.entity.TaskDataEntity;
+import syncer.transmission.entity.etcd.EtcdMd5Entity;
+import syncer.transmission.entity.etcd.EtcdNodeTaskEntity;
+import syncer.transmission.entity.etcd.EtcdOffSetEntity;
+import syncer.transmission.entity.etcd.EtcdTaskGroup;
+import syncer.transmission.entity.etcd.EtcdTaskIdEntity;
+import syncer.transmission.etcd.client.JEtcdClient;
+import syncer.transmission.lock.EtcdLockCommandRunner;
+import syncer.transmission.mapper.TaskMapper;
+import syncer.transmission.model.TaskModel;
+import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 /**
  * @author: Eq Zhan
@@ -63,7 +71,7 @@ public class EtcdTaskMapper implements TaskMapper {
     }
 
     @Override
-    public TaskModel findTaskById(String id) throws Exception {
+    public TaskModel findTaskById(String id)  {
         String value = client.get(EtcdKeyCmd.getTasksTaskId(id));
         if(Objects.nonNull(value)){
             TaskModel taskModel = JSON.parseObject(value, TaskModel.class);

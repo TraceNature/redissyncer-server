@@ -11,11 +11,11 @@
 
 package syncer.webapp.controller.v2.api;
 
-import com.alibaba.fastjson.JSON;
+import java.util.List;
+import java.util.Objects;
+
 import com.google.common.collect.Lists;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -24,6 +24,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import syncer.common.bean.PageBean;
 import syncer.common.entity.ResponseResult;
 import syncer.common.exception.TaskMsgException;
@@ -31,7 +35,6 @@ import syncer.common.montitor.Montitor;
 import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.entity.StartTaskEntity;
 import syncer.transmission.model.TaskModel;
-import syncer.transmission.po.KeyFilterDto;
 import syncer.transmission.po.ListTaskParamDto;
 import syncer.transmission.po.TaskModelResult;
 import syncer.transmission.service.ITaskGroupService;
@@ -40,12 +43,12 @@ import syncer.transmission.strategy.taskcheck.TaskCheckStrategyGroupSelecter;
 import syncer.transmission.util.code.CodeUtils;
 import syncer.webapp.config.submit.Resubmit;
 import syncer.webapp.constants.ApiConstants;
-import syncer.webapp.request.*;
+import syncer.webapp.request.CreateTaskParam;
+import syncer.webapp.request.ListTaskParam;
+import syncer.webapp.request.RemoveTaskParam;
+import syncer.webapp.request.StartTaskParam;
+import syncer.webapp.request.StopTaskParam;
 import syncer.webapp.util.DtoToTaskModelUtils;
-
-import javax.swing.text.html.HTMLDocument;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * @author zhanenqiang
@@ -94,11 +97,7 @@ public class TaskGroupController {
                     .build();
         }
         List<StartTaskEntity> startTaskEntityList;
-        if (params.isCircleReplication()) {
-            startTaskEntityList = taskGroupService.createCircleTask(taskModelList);
-        } else {
-            startTaskEntityList = taskGroupService.createRedisToRedisTask(taskModelList);
-        }
+        startTaskEntityList = taskGroupService.createRedisToRedisTask(taskModelList);
         return ResponseResult.builder()
                 .code(ApiConstants.SUCCESS_CODE)
                 .msg(ApiConstants.REQUEST_SUCCESS_MSG)

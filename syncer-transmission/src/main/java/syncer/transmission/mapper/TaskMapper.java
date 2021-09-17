@@ -10,10 +10,16 @@
 // limitations under the License.
 
 package syncer.transmission.mapper;
-import org.apache.ibatis.annotations.*;
-import syncer.transmission.model.TaskModel;
-
 import java.util.List;
+
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
+
+import syncer.transmission.model.TaskModel;
 
 /**
  * @author zhanenqiang
@@ -28,7 +34,7 @@ public interface TaskMapper {
     List<TaskModel> selectAll()throws Exception;
 
     @Select("SELECT * FROM t_task WHERE id =#{id} order by createTime desc limit 1")
-    TaskModel findTaskById(@Param("id") String id)throws Exception;
+    TaskModel findTaskById(@Param("id") String id);
 
     @Select("select count(*) from t_task")
     int countItem()throws Exception;
