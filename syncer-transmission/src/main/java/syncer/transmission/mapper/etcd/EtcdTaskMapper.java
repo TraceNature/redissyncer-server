@@ -21,6 +21,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.util.TimeUtils;
+import syncer.replica.status.TaskStatus;
+import syncer.transmission.constants.CommandKeyFilterType;
 import syncer.transmission.constants.EtcdKeyCmd;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.entity.etcd.EtcdMd5Entity;
@@ -31,7 +33,9 @@ import syncer.transmission.entity.etcd.EtcdTaskIdEntity;
 import syncer.transmission.etcd.client.JEtcdClient;
 import syncer.transmission.lock.EtcdLockCommandRunner;
 import syncer.transmission.mapper.TaskMapper;
+import syncer.transmission.model.LastKeyTimeModel;
 import syncer.transmission.model.TaskModel;
+import syncer.transmission.util.strings.StringUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 /**
@@ -210,7 +214,6 @@ public class EtcdTaskMapper implements TaskMapper {
                                     .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getMd5(taskModel.getMd5()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdMd5Entity.builder().taskId(taskModel.getTaskId()).groupId(taskModel.getGroupId()).nodeId(nodeId).build()))).build()).build())
                                     //taskType
                                     .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getTaskType(taskModel.getTasktype(),taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(EtcdMd5Entity.builder().taskId(taskModel.getTaskId()).groupId(taskModel.getGroupId()).nodeId(nodeId).build()))).build()).build())
-
                                     .build()).get();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -251,7 +254,6 @@ public class EtcdTaskMapper implements TaskMapper {
             @Override
             public void run() {
                 try {
-
                     String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
                     TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
                     client.getKvClient()
@@ -273,7 +275,7 @@ public class EtcdTaskMapper implements TaskMapper {
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getAbandonCommandByTaskIdPrefix(taskModel.getTaskId()))).clearPrevKv().build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getAbandonCommandByGroupIdPrefix(taskModel.getGroupId()))).clearPrevKv().build()).build())
                                     .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getBigKeyByTaskIdPrefix(taskModel.getTaskId()))).clearPrevKv().build()).build())
-
+                                    .addSuccess(RequestOp.newBuilder().setRequestDeleteRange(DeleteRangeRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getKeyTimeTaskId(taskModel.getTaskId()))).clearPrevKv().build()).build())
                                     .build()).get();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -323,7 +325,33 @@ public class EtcdTaskMapper implements TaskMapper {
 
     @Override
     public boolean updateTask(TaskModel taskModel) throws Exception {
-        client.put(EtcdKeyCmd.getTasksTaskId(taskModel.getTaskId()), JSON.toJSONString(taskModel));
+
+        client.lockCommandRunner(new EtcdLockCommandRunner() {
+            @Override
+            public void run() {
+                try {
+                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
+                    client.getKvClient()
+                            .txn(TxnRequest.newBuilder()
+                                    .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getTasksTaskId(taskModel.getTaskId()))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(taskModel))).build()).build())
+                                    .build()).get();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public String lockName() {
+                return EtcdKeyCmd.getLockName("updateTaskModel", taskModel.getTaskId());
+            }
+
+            @Override
+            public int grant() {
+                return 30;
+            }
+        });
+
+//        client.put(EtcdKeyCmd.getTasksTaskId(taskModel.getTaskId()), JSON.toJSONString(taskModel));
         return true;
     }
 
@@ -366,9 +394,64 @@ public class EtcdTaskMapper implements TaskMapper {
                 return 30;
             }
         });
-
         return true;
     }
+
+
+    /**
+     * 增量同步阶段数据上报
+     * @param id
+     * @return
+     * @throws Exception
+     */
+    public boolean updateTaskKeyCommitTimeById(String id) throws Exception {
+        if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+            TaskDataEntity taskDataEntity= SingleTaskDataManagerUtils.getAliveThreadHashMap().get(id);
+            if(Objects.nonNull(taskDataEntity)){
+                if(!TaskStatus.COMMANDRUNNING.getCode().equals(taskDataEntity.getTaskModel().getStatus())){
+                    return false;
+                }
+            }else {
+                return false;
+            }
+        }
+        client.lockCommandRunner(new EtcdLockCommandRunner() {
+            @Override
+            public void run() {
+                try {
+                    //etcd上报lastCommitTime
+                    if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                        TaskDataEntity taskDataEntity= SingleTaskDataManagerUtils.getAliveThreadHashMap().get(id);
+                        TaskModel memTaskModel=taskDataEntity.getTaskModel();
+                        LastKeyTimeModel lastKeyTimeModel=new LastKeyTimeModel();
+                        lastKeyTimeModel.setGroupId(memTaskModel.getGroupId());
+                        lastKeyTimeModel.setTaskId(memTaskModel.getTaskId());
+                        lastKeyTimeModel.setLastKeyCommitTime(memTaskModel.getLastKeyCommitTime());
+                        lastKeyTimeModel.setLastKeyUpdateTime(memTaskModel.getLastKeyUpdateTime());
+                        client.getKvClient()
+                                .txn(TxnRequest.newBuilder()
+                                        .addSuccess(RequestOp.newBuilder().setRequestPut(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8(EtcdKeyCmd.getKeyTimeTaskId(id))).setValue(ByteString.copyFromUtf8(JSON.toJSONString(lastKeyTimeModel))).build()).build())
+                                        .build()).get();
+                    }
+                } catch (Exception e) {
+                    log.error("[{}]上报lastCommitTime and lastKeyUpdateTime fail,result [{}]",e.getMessage());
+
+                }
+            }
+
+            @Override
+            public String lockName() {
+                return EtcdKeyCmd.getLockName("updateKeyCommitTimeModel", id);
+            }
+
+            @Override
+            public int grant() {
+                return 30;
+            }
+        });
+        return true;
+    }
+
 
     @Override
     public boolean updateTaskStausByGroupId(String groupId, int status) throws Exception {
@@ -386,6 +469,8 @@ public class EtcdTaskMapper implements TaskMapper {
 
     @Override
     public boolean updateTaskOffsetById(String id, long offset) throws Exception {
+        //etcd上报lastCommitTime
+        updateTaskKeyCommitTimeById(id);
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
@@ -397,20 +482,9 @@ public class EtcdTaskMapper implements TaskMapper {
                 }else {
                     String taskData=client.get(EtcdKeyCmd.getTasksTaskId(id));
                     TaskModel taskModel=JSON.parseObject(taskData,TaskModel.class);
-                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
                     offSetEntity= EtcdOffSetEntity.builder().replId(taskModel.getReplId()).replOffset(new AtomicLong(offset)).build();
                 }
-                //etcd上报lastCommitTime
-                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
-                    TaskDataEntity taskDataEntity= SingleTaskDataManagerUtils.getAliveThreadHashMap().get(id);
-                    TaskModel taskModel=taskDataEntity.getTaskModel();
-                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
-                    try {
-                        updateTask(taskModel);
-                    } catch (Exception e) {
-                        log.error("[{}]上报lastCommitTime and lastKeyUpdateTime fail,result [{}]",e.getMessage());
-                    }
-                }
+
 
                 client.put(EtcdKeyCmd.getOffset(id), JSON.toJSONString(offSetEntity));
             }
@@ -434,11 +508,14 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setAfresh(afresh);
-                taskModel.setUpdateTime(TimeUtils.getNowTimeString());
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setAfresh(afresh);
+                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
+
             }
 
             @Override
@@ -461,7 +538,6 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-
                 try {
                     String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
                     TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
@@ -508,10 +584,12 @@ public class EtcdTaskMapper implements TaskMapper {
             @Override
             public void run() {
                 try {
-                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                    taskModel.setTaskMsg(taskMsg);
-                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                    if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)) {
+                        String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                        TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                        taskModel.setTaskMsg(taskMsg);
+                        client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                    }
                 }catch (Exception e){
                     log.error("updateTaskMsgById fail reason {}",e.getMessage());
                 }
@@ -531,15 +609,20 @@ public class EtcdTaskMapper implements TaskMapper {
         return true;
     }
 
+
+
     @Override
     public boolean updateTime(String id) throws Exception {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setUpdateTime(TimeUtils.getNowTimeString());
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setUpdateTime(TimeUtils.getNowTimeString());
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
+
             }
 
             @Override
@@ -563,6 +646,7 @@ public class EtcdTaskMapper implements TaskMapper {
 
     @Override
     public boolean updateOffsetAndReplId(String id, Long offset, String replId) throws Exception {
+        updateTaskKeyCommitTimeById(id);
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
@@ -649,10 +733,12 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setDataAnalysis(dataAnalysis);
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setDataAnalysis(dataAnalysis);
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
             }
 
             @Override
@@ -673,10 +759,12 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setRdbKeyCount(rdbKeyCount);
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setRdbKeyCount(rdbKeyCount);
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
             }
 
             @Override
@@ -697,10 +785,13 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setRealKeyCount(realKeyCount);
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setRealKeyCount(realKeyCount);
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
+
             }
 
             @Override
@@ -721,10 +812,13 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setAllKeyCount(allKeyCount);
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setAllKeyCount(allKeyCount);
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
+
             }
 
             @Override
@@ -745,13 +839,15 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setRdbKeyCount(rdbKeyCount);
-                taskModel.setAllKeyCount(allKeyCount);
-                taskModel.setRealKeyCount(realKeyCount);
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setRdbKeyCount(rdbKeyCount);
+                    taskModel.setAllKeyCount(allKeyCount);
+                    taskModel.setRealKeyCount(realKeyCount);
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
 
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
             }
 
             @Override
@@ -772,10 +868,12 @@ public class EtcdTaskMapper implements TaskMapper {
         client.lockCommandRunner(new EtcdLockCommandRunner() {
             @Override
             public void run() {
-                String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
-                TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
-                taskModel.setExpandJson(expandJson);
-                client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                if(SingleTaskDataManagerUtils.getAliveThreadHashMap().containsKey(id)){
+                    String result = client.get(EtcdKeyCmd.getTasksTaskId(id));
+                    TaskModel taskModel = JSON.parseObject(result, TaskModel.class);
+                    taskModel.setExpandJson(expandJson);
+                    client.put(EtcdKeyCmd.getTasksTaskId(id), JSON.toJSONString(taskModel));
+                }
             }
 
             @Override

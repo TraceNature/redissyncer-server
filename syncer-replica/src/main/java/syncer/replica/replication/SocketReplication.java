@@ -279,7 +279,68 @@ public class SocketReplication  extends AbstractReplication{
 
     }
 
+    /**
+     * 用于重试机制
+     * @param reply
+     * @return
+     * @throws IOException
+     * @throws IncrementException
+     * @throws RedisAuthErrorException
+     */
+    public CapaSyncType trySync(final String reply,int retries) throws IOException, IncrementException, RedisAuthErrorException {
+        log.info("[TASKID {}] response : {}",config.getTaskId(),reply);
+        if(reply.contains(REPLY_ERROR_MSG)){
+            if(count.get()>=3){
+                close();
+                throw new IncrementException("NOMASTERLINK Can't SYNC while not connected with my master");
+            }
+            count.incrementAndGet();
+        }
+        //全量开始  +FULLRESYNC repl_id repl_offset\r\n
+        if (reply.startsWith(CMD.FULL_RESYNC)) {
+            //当前重试次数>0
+            //即当 当增量过程中 psync repl_id repl_offset  --> FULLRESYNC时
+            //由于重试机制进入重连，但是源redis写入速度过快导致offset此时已经刷过，因此不应该重新全量
+            //应由人共干预决定是否全量
+            if(config.isFullResyncBrokenTask()){
+                if(retries>0){
+                    throw new IncrementException("由于全量阶段同步完成后,所记录offset已被刷过，导致增量重试同步失败,[请检查offset是否刷过/或者当前任务之前未进行过数据同步但afresh设置为false]");
+                }
+            }
 
+            //断点续传 offset刷过时
+            if(!status){
+                throw new IncrementException("增量同步runId不存在..结束,[请检查offset是否刷过/或者当前任务之前未进行过数据同步但afresh设置为false]");
+            }
+            // reset db
+            this.db = -1;
+            syncRedisProtocol.parseDump(this);
+            String[] ary = reply.split(" ");
+            config.setReplId(ary[1]);
+            config.setReplOffset(Long.parseLong(ary[2]));
+            return CapaSyncType.PSYNC;
+        } else if (reply.startsWith(CMD.CONTINUE)) {
+            // +CONTINUE\r\n
+            String[] ary = reply.split(" ");
+            // redis-4.0 compatible
+            String replId = config.getReplId();
+            if (ary.length > 1 && replId != null && !replId.equals(ary[1])){
+                config.setReplId(ary[1]);
+            }
+            return CapaSyncType.PSYNC;
+        } else if (reply.startsWith(CMD.NOMASTERLINK) || reply.startsWith(CMD.LOADING)) {
+            return CapaSyncType.SYNC_LATER;
+        } else {
+            //SYNC
+            log.info("[TASKID {}] {}",config.getTaskId(),CMD.SYNC);
+            syncRedisProtocol.send(CMD.SYNC.getBytes());
+            // reset db
+            this.db = -1;
+            syncRedisProtocol.parseDump(this);
+            return CapaSyncType.SYNC;
+        }
+
+    }
 
     public boolean isRunning(){
         return TaskStatus.RDBRUNNING.equals(getStatus())||TaskStatus.COMMANDRUNNING.equals(getStatus())||TaskStatus.STARTING.equals(getStatus());

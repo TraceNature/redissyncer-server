@@ -65,7 +65,7 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
     }
 
     public CreateTaskParam(@NotBlank(message = "源RedisCluster地址不能为空") String sourceRedisAddress, String sourceSentinelAuthPassword,
-                           String targetRedisAddress, String targetSentinelAuthPassword,
+                           String targetRedisAddress, String targetSentinelAuthPassword,@NotBlank(message = "目标Redis版本不能为空")String targetRedisVersion,
                            RedisType sourceRedisType, RedisType targetRedisType,
                            String sourceRedisMasterName,String targetRedisMasterName,
                            String sourcePassword, String targetPassword, @NotBlank(message = "任务名称不能为空") String taskName, boolean autostart,
@@ -98,6 +98,7 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
         this.topicName=topicName;
         this.targetKafkaAddress=targetKafkaAddress;
         this.rewrite=rewrite;
+        this.targetRedisVersion=targetRedisVersion;
     }
 
     public CreateTaskParam() {
@@ -158,6 +159,7 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
     @Builder.Default
     private String targetRedisMasterName="";
 
+
     /**
      * 目标哨兵密码
      */
@@ -168,6 +170,12 @@ public class CreateTaskParam extends BaseTaskParam implements Serializable {
      * 目标Redis类型
      */
     private RedisType targetRedisType;
+
+    /**
+     * 目标Redis版本
+     */
+    @NotBlank(message = "目标Redis版本不能为空")
+    private String targetRedisVersion;
 
     /**
      * 抛弃Key阈值

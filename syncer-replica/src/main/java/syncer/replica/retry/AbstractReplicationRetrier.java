@@ -33,11 +33,13 @@ public abstract class AbstractReplicationRetrier implements ReplicationRetrier {
             try {
                 //若连接成功... 则置0
                 if (connect()) {
-                    reset();
+                    if(!config.isFullResyncBrokenTask()){
+                        reset();
+                    }
                 }
 
                 //mode == SYNC_LATER && socketReplication.getStatus() == RDBRUNNING||COMMANDRUNNING
-                if (!open()) {
+                if (!open(retries)) {
                     //reset();
                     close(null);
                     sleep(interval);
@@ -104,6 +106,8 @@ public abstract class AbstractReplicationRetrier implements ReplicationRetrier {
     public abstract boolean isManualClosed();
 
     public abstract boolean open() throws IOException, IncrementException, RedisAuthErrorException;
+
+    public abstract boolean open(int retries) throws IOException, IncrementException, RedisAuthErrorException;
 
     public abstract boolean connect() throws IOException, IncrementException, RedisAuthErrorException;
 

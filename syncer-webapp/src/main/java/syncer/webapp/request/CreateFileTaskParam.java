@@ -88,6 +88,13 @@ public class CreateFileTaskParam {
      */
     private RedisType targetRedisType;
 
+
+    /**
+     * 目标Redis版本
+     */
+    @NotBlank(message = "目标Redis版本不能为空")
+    private String targetRedisVersion;
+
     /**
      * 时间偏差
      */
