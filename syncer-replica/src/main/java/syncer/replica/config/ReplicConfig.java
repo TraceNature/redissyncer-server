@@ -2,6 +2,7 @@ package syncer.replica.config;
 
 import com.alibaba.fastjson.JSON;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import syncer.replica.socket.SslContextFactory;
@@ -154,6 +155,22 @@ public class ReplicConfig {
      */
     private long fileSize;
 
+    /**
+     * 当全量同步目标存在相同的key时，用于需是否覆盖目标中的key
+     * 用于全量阶段非 dump restore类型的命令
+     * 若设为true 则
+     * 全量+增量同步时，当全量同步后，由于源redis写入数据速度过大，导致全量完成后所记录的offset再源redis已经被刷过，导致同步失败
+     * --> true      当全量完成--->增量时断开--->重连  psync replid  offset --> FULLRESYNC（重新全量） -->   若设置为true 则接受重新全量
+     *                                                                 --> CONTINUE(可继续增量)
+     *
+     * --> false     若设置为false 则遇到FULLRESYNC则宕掉任务
+     *
+     * 何时适合false 何时适合 true？？
+     * 根据redis协议默认是true ，因为默认全量数据走dump restore时是个幂等操作，可以覆盖目标内的重复数据，此时可以重复全量
+     * 为false，适合本同步工具，因为默认的同步过程中涉及到大key拆分，所以全量过程中list等命令会变成非幂等，重复写入会造成数据重复，因此遇到FULLRESYNC推荐broken，人工干预
+     */
+    private boolean fullResyncBrokenTask=false;
+
     public void setReplOffset(long offset){
         replOffset.set(offset);
     }
@@ -216,6 +233,10 @@ public class ReplicConfig {
 
         if (parameters.containsKey("discardRdbEvent")) {
             configuration.setDiscardRdbEvent(getBool(parameters.get("discardRdbEvent"), false));
+        }
+
+        if (parameters.containsKey("fullResyncBrokenTask")) {
+            configuration.setDiscardRdbEvent(getBool(parameters.get("fullResyncBrokenTask"), false));
         }
         if (parameters.containsKey("asyncCachedBytes")) {
             configuration.setAsyncCachedBytes(getInt(parameters.get("asyncCachedBytes"), 512 * 1024));
@@ -299,6 +320,14 @@ public class ReplicConfig {
         } catch (NumberFormatException e) {
             return defaultValue;
         }
+    }
+
+    public boolean isFullResyncBrokenTask() {
+        return fullResyncBrokenTask;
+    }
+
+    public void setFullResyncBrokenTask(boolean fullResyncBrokenTask) {
+        this.fullResyncBrokenTask = fullResyncBrokenTask;
     }
 
     public ReplicConfig setTaskId(String taskId) {

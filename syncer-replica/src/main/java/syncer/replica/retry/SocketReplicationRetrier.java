@@ -70,7 +70,112 @@ public class SocketReplicationRetrier extends AbstractReplicationRetrier{
             replicaType= SyncStatusType.RdbSync;
         }
 
-        CapaSyncType capaSyncType = socketReplication.trySync(reply);
+        CapaSyncType capaSyncType = socketReplication.trySync(reply,retries);
+
+        if(capaSyncType==CapaSyncType.PSYNC&&socketReplication.isRunning()){
+            syncRedisProtocol.heartbeat();
+        }else if(capaSyncType==CapaSyncType.SYNC_LATER && socketReplication.isRunning()){
+            log.warn("[TASKID {}] reply : {}",config.getTaskId(),reply);
+            return false;
+        }
+        if(!socketReplication.isRunning()){
+            return true;
+        }
+
+
+        //增量标志
+        socketReplication.submitEvent(new PreCommandSyncEvent());
+        //通知状态订阅
+        socketReplication.submitSyncerTaskEvent(SyncerTaskEvent
+                .builder()
+                .taskId(config.getTaskId())
+                .event(TaskStatus.COMMANDRUNNING)
+                .offset(config.getReplOffset())
+                .replid(config.getReplId())
+                .msg("COMMANDRUNING")
+                .build());
+
+        replicaType= SyncStatusType.CommandSync;
+
+        if (socketReplication.getDb() != -1) {
+            socketReplication.submitEvent(new SelectCommand(socketReplication.getDb()));
+        }
+        final long[] offset = new long[1];
+        //
+        while (socketReplication.isRunning()){
+            Object obj = protocolReplyParser.parse(len -> offset[0] = len);
+            if(obj instanceof Object[]){
+                Object[] raws = (Object[]) obj;
+                CommandName name = CommandName.name(Strings.toString(raws[0]));
+                final CommandParser<? extends Command> parser;
+                if(Objects.isNull(parser=socketReplication.getCommandParser(name))){
+                    log.warn("[TASKID {}] command [{}] not register. raw command:{}",config.getTaskId(),name,Strings.format(raws));
+                    config.addOffset(offset[0]);
+                    offset[0] = 0L;
+                    continue;
+                }
+                final long startOffset = config.getReplOffset();
+                final long endOffset = startOffset + offset[0];
+                //SELECT
+                if(Strings.isEquals(CMD.SELECT,Strings.toString(raws[0]))){
+                    socketReplication.setDb(CommandParsers.toInt(raws[1]));
+                    socketReplication.submitEvent(parser.parse(raws), Tuples.of(startOffset, endOffset),config.getReplId(),endOffset);
+                }else if(Strings.isEquals(CMD.REPLCONF,Strings.toString(raws[0]))&&Strings.isEquals(CMD.GETACK,Strings.toString(raws[1]))){
+                    //在每次进入IO多路复用的等待事件前，Redis会调用beforeSleep函数，
+                    //该函数会给所有slave发送REPLCONF GETACK命令，收到该命令的slave会马上发送自己的复制偏移量给master
+                    //REPLCONF ACK {offset}
+                    if(capaSyncType.equals(CapaSyncType.PSYNC)){
+                        Executors.newSingleThreadScheduledExecutor().execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                syncRedisProtocol.sendQuietly(CMD.REPLCONF.getBytes(),CMD.ACK.getBytes(),String.valueOf(config.getReplOffset()).getBytes());
+                                log.info("[TASKID {}] get GETACK command and send [REPLCONF ACK {}] to master {}",config.getTaskId(),config.getReplOffset(),config.getReplId());
+                            }
+                        });
+                    }
+
+                }else {
+                    // include ping command
+                    socketReplication.submitEvent(parser.parse(raws), Tuples.of(startOffset, endOffset),config.getReplId(),endOffset);
+                }
+
+            } else {
+                log.warn("[TASKID {}] unexpected redis reply:{}", config.getTaskId(),obj);
+            }
+            //add offset
+            config.addOffset(offset[0]);
+            offset[0] = 0L;
+        }
+        if(socketReplication.isRunning()){
+            // 理论上只有aof文件结束时会到达这里
+            // 此时应进入finish状态
+            socketReplication.getConnected().set(TaskStatus.FINISH);
+            socketReplication.submitEvent(new PostCommandSyncEvent());
+            socketReplication.submitSyncerTaskEvent(SyncerTaskEvent
+                    .builder()
+                    .event(TaskStatus.FINISH)
+                    .offset(config.getReplOffset())
+                    .replid(config.getReplId())
+                    .taskId(config.getTaskId())
+                    .msg("增量完成")
+                    .build());
+        }
+        return true;
+    }
+
+    @Override
+    public boolean open(int retries) throws IOException, IncrementException, RedisAuthErrorException {
+        String replId = config.getReplId();
+        long replOffset = config.getReplOffset();
+        String reoffset=String.valueOf(replOffset >= 0 ? replOffset + 1 : replOffset);
+        log.info("[TASKID {}] PSYNC {} {}",config.getTaskId(), replId, reoffset);
+        syncRedisProtocol.send(CMD.PSYNC.getBytes(), replId.getBytes(), reoffset.getBytes());
+        final String reply = Strings.toString(syncRedisProtocol.reply());
+        if(replOffset<0){
+            replicaType= SyncStatusType.RdbSync;
+        }
+
+        CapaSyncType capaSyncType = socketReplication.trySync(reply,retries);
 
         if(capaSyncType==CapaSyncType.PSYNC&&socketReplication.isRunning()){
             syncRedisProtocol.heartbeat();
@@ -188,7 +293,7 @@ public class SocketReplicationRetrier extends AbstractReplicationRetrier{
 
         socketReplication.doClose();
         if (Objects.nonNull(reason)) {
-            log.info("[TASKID {}] reconnecting to redis-server[{}:{}]. retry times:{}", config.getTaskId(),socketReplication.getHost(), socketReplication.getPort(), (retries + 1));
+            log.info("[TASKID {}] reconnecting to redis-server[{}:{}]. retry times:{}", config.getTaskId(),socketReplication.getHost(), socketReplication.getPort(), retries);
         }
         return true;
     }

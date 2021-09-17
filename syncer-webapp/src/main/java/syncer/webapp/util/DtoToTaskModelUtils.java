@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.springframework.util.StringUtils;
+import syncer.common.constant.ResultCodeAndMessage;
 import syncer.common.exception.TaskMsgException;
 import syncer.common.util.MD5Utils;
 import syncer.common.util.TemplateUtils;
@@ -38,7 +39,7 @@ public class DtoToTaskModelUtils {
      * @param param
      * @return
      */
-    public synchronized static List<TaskModel>getTaskModelList(CreateTaskParam param, boolean change) {
+    public synchronized static List<TaskModel>getTaskModelList(CreateTaskParam param, boolean change) throws TaskMsgException {
         List<TaskModel> taskModelList = Lists.newArrayList();
         String[] addressList;
         if (Objects.isNull(param.getSourceRedisType()) || RedisType.NONE.equals(param.getSourceRedisType())) {
@@ -68,6 +69,9 @@ public class DtoToTaskModelUtils {
                 targetRedisType = RedisType.SINGLE;
             }
         }
+
+
+
         String taskId = null;
         for (String address : addressList) {
             if (StringUtils.isEmpty(address)) {
@@ -144,6 +148,11 @@ public class DtoToTaskModelUtils {
                     .rewrite(param.isRewrite())
                     .targetKafkaAddress(param.getTargetKafkaAddress())
                     .build();
+            try {
+                taskModel.setRedisVersion(Double.valueOf(param.getTargetRedisVersion()));
+            }catch (Exception e){
+                throw new TaskMsgException(CodeUtils.codeMessages("100","请确保targetRedisVersion正确(请保留小数点后一位)"));
+            }
             if(param.getDbMapper()!=null){
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
             }else {
@@ -170,7 +179,7 @@ public class DtoToTaskModelUtils {
     }
 
 
-    public synchronized static List<TaskModel>getTaskModelList(CreateFileTaskParam param, boolean change){
+    public synchronized static List<TaskModel>getTaskModelList(CreateFileTaskParam param, boolean change) throws TaskMsgException {
         List<TaskModel>taskModelList=Lists.newArrayList();
         List<String>addressList=Lists.newArrayList();
         String taskId=null;
@@ -295,6 +304,13 @@ public class DtoToTaskModelUtils {
                     .rewrite(param.isRewrite())
                     .filterType(commandKeyFilterType)
                     .build();
+
+
+            try {
+                taskModel.setRedisVersion(Double.valueOf(param.getTargetRedisVersion()));
+            }catch (Exception e){
+                throw new TaskMsgException(CodeUtils.codeMessages("100","请确保targetRedisVersion正确(请保留小数点后一位)"));
+            }
 
             if (param.getDbMapper() != null) {
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));

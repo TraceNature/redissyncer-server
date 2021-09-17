@@ -62,12 +62,14 @@ public class TaskSelectVersionStrategy implements ITaskCheckStrategy {
                 toNext(client,taskModel);
                 return;
             }
+
             String version=null;
             if(RedisType.SENTINEL.getCode().equals(taskModel.getTargetRedisType())){
                  version=redisVersionUtil.selectSyncerVersionAboutSentinel(String.valueOf(taskModel.getTargetUri().toArray()[0]),taskModel.getTargetRedisMasterName());
             }else {
                  version=redisVersionUtil.selectSyncerVersion(String.valueOf(taskModel.getTargetUri().toArray()[0]));
             }
+
 
             log.warn("自动获取redis版本号：{},手动输入版本号：{}",version,taskModel.getRedisVersion());
             if(DEFAULT_NO_VERSION.equalsIgnoreCase(version)){
@@ -81,7 +83,11 @@ public class TaskSelectVersionStrategy implements ITaskCheckStrategy {
             if(version.contains(JIMDB_VERSION_HEADER)){
                 taskModel.setRedisVersion(JIMDB_DEFAULT_VERSION);
             }else {
-                taskModel.setRedisVersion(Double.valueOf(version));
+                try {
+                    taskModel.setRedisVersion(Double.valueOf(version));
+                }catch (Exception e){
+                    throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_MSG_RDB_VERSION_MSG_ERROR.getCode(),"请确保targetRedisVersion正确(请保留小数点后一位)"));
+                }
             }
             RdbVersionModel rdbVersion= SqlOPUtils.findRdbVersionModelByRedisVersion(version);
             if(Objects.isNull(rdbVersion)){
@@ -90,15 +96,12 @@ public class TaskSelectVersionStrategy implements ITaskCheckStrategy {
                         .redis_version(version)
                         .build();
             }
-
             if(Objects.isNull(rdbVersion.getRdb_version())||rdbVersion.getRdb_version()<6){
                 log.error("[{}]获取rdb version失败，暂不支持目标版本{}",taskModel.getTaskId(),version);
                 throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_MSG_RDB_VERSION_MSG_ERROR.getCode(),ResultCodeAndMessage.TASK_MSG_RDB_VERSION_MSG_ERROR.getMsg()));
             }
-
             taskModel.setRdbVersion(rdbVersion.getRdb_version());
         }
-
         toNext(client,taskModel);
     }
 
