@@ -113,10 +113,10 @@ public class RedisDataSyncTransmissionTask implements Runnable {
             //注册增量命令解析器
             final Replication replicationHandler = DefaultCommandRegister.addCommandParser(replication);
             replicationHandler.getConfig().setTaskId(taskModel.getTaskId());
-            //全量->增量 全量成功增量续传失败是否重新全量开始，true为宕掉任务。
-            //若全量阶段存在拆分大key，不全为序列化时设置为true  ，因为多次全量会导致 list等结构数据重复
-            //若全量全为dump格式时可设置为false
-            //默认为false
+            //全量->增量 全量成功增量续传失败是否重新全量开始，false为宕掉任务。
+            //若全量阶段存在拆分大key，不全为序列化时设置为false  ，因为多次全量会导致 list等结构数据重复
+            //若全量全为dump格式时可设置为true
+            //默认为true
             replicationHandler.getConfig().setAllowFullResync(false);
             //注册RDB全量解析器
             replicationHandler.setRdbParser(new ValueDumpIterableRdbParser(replicationHandler, taskModel.getRdbVersion()));
