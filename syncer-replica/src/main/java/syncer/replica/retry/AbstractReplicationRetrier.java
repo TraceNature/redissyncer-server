@@ -33,7 +33,7 @@ public abstract class AbstractReplicationRetrier implements ReplicationRetrier {
             try {
                 //若连接成功... 则置0
                 if (connect()) {
-                    if(!config.isFullResyncBrokenTask()){
+                    if(!config.isAllowFullResync()){
                         reset();
                     }
                 }

@@ -117,7 +117,7 @@ public class RedisDataSyncTransmissionTask implements Runnable {
             //若全量阶段存在拆分大key，不全为序列化时设置为true  ，因为多次全量会导致 list等结构数据重复
             //若全量全为dump格式时可设置为false
             //默认为false
-            replicationHandler.getConfig().setFullResyncBrokenTask(true);
+            replicationHandler.getConfig().setAllowFullResync(false);
             //注册RDB全量解析器
             replicationHandler.setRdbParser(new ValueDumpIterableRdbParser(replicationHandler, taskModel.getRdbVersion()));
             OffSetEntity offset = null;

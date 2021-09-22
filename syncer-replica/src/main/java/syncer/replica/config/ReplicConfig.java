@@ -167,9 +167,9 @@ public class ReplicConfig {
      *
      * 何时适合false 何时适合 true？？
      * 根据redis协议默认是true ，因为默认全量数据走dump restore时是个幂等操作，可以覆盖目标内的重复数据，此时可以重复全量
-     * 为false，适合本同步工具，因为默认的同步过程中涉及到大key拆分，所以全量过程中list等命令会变成非幂等，重复写入会造成数据重复，因此遇到FULLRESYNC推荐broken，人工干预
+     * 为false，适合本同步工具单向同步，因为默认的同步过程中涉及到大key拆分，所以全量过程中list等命令会变成非幂等，重复写入会造成数据重复，因此遇到FULLRESYNC推荐broken，人工干预
      */
-    private boolean fullResyncBrokenTask=false;
+    private boolean allowFullResync=true;
 
     public void setReplOffset(long offset){
         replOffset.set(offset);
@@ -322,12 +322,12 @@ public class ReplicConfig {
         }
     }
 
-    public boolean isFullResyncBrokenTask() {
-        return fullResyncBrokenTask;
+    public boolean isAllowFullResync() {
+        return allowFullResync;
     }
 
-    public void setFullResyncBrokenTask(boolean fullResyncBrokenTask) {
-        this.fullResyncBrokenTask = fullResyncBrokenTask;
+    public void setAllowFullResync(boolean allowFullResync) {
+        this.allowFullResync = allowFullResync;
     }
 
     public ReplicConfig setTaskId(String taskId) {

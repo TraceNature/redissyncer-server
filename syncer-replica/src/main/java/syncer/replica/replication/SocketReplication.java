@@ -302,7 +302,7 @@ public class SocketReplication  extends AbstractReplication{
             //即当 当增量过程中 psync repl_id repl_offset  --> FULLRESYNC时
             //由于重试机制进入重连，但是源redis写入速度过快导致offset此时已经刷过，因此不应该重新全量
             //应由人共干预决定是否全量
-            if(config.isFullResyncBrokenTask()){
+            if(config.isAllowFullResync()){
                 if(retries>0){
                     throw new IncrementException("由于全量阶段同步完成后,所记录offset已被刷过，导致增量重试同步失败,[请检查offset是否刷过/或者当前任务之前未进行过数据同步但afresh设置为false]");
                 }
