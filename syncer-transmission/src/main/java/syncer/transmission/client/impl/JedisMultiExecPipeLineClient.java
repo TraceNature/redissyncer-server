@@ -197,7 +197,7 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
     void addCheckPoint(){
         //checkpoint
         Map<String,String>chekpoint=new HashMap<>();
-        String hostName=sourceHost+":"+sourceHost;
+        String hostName=sourceHost+":"+sourcePort;
         chekpoint.put(hostName+"-offset", String.valueOf(lastOffset));
         chekpoint.put(hostName+"-runid", lastReplid);
         chekpoint.put(hostName+"-version", CHECKPOINT_VERSION);
@@ -1205,14 +1205,12 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
                 EventEntity eventEntity= kvPersistence.getKey(i);
                 byte[] cmd = eventEntity.getCmd();
                 String key = eventEntity.getStringKey();
-
                 if (!commandCompensatorUtils.isCommandSuccess(data, cmd, taskId, key)) {
                     log.error("Command[{}],KEY[{}]进入补偿机制：[{}] : RESPONSE[{}]->String[{}]", Strings.byteToString(cmd), eventEntity.getStringKey(), JSON.toJSONString(data), data, compensatorUtils.getRes(data));
                     newKvPersistence.addKey(eventEntity);
                     insertCompensationCommand(eventEntity);
                 }
             }
-
             kvPersistence.clear();
             resultList.clear();
             date = new Date();
@@ -1220,8 +1218,6 @@ public class JedisMultiExecPipeLineClient implements RedisClient {
             newKvPersistence.getKeys().stream().forEach(data -> {
                 compensator(data);
             });
-
-
             newKvPersistence.clear();
         } finally {
 

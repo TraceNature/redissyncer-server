@@ -69,7 +69,7 @@ public class BreakPoint {
 
                 return null;
             }
-            String hostName = sourceHost + ":" + sourceHost;
+            String hostName = sourceHost + ":" + sourcePort;
             String offsetName = hostName + "-offset";
             String runidName = hostName + "-runid";
             String versionName = hostName + "-version";

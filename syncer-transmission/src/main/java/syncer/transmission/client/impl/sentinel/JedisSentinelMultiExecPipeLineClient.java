@@ -200,7 +200,7 @@ public class JedisSentinelMultiExecPipeLineClient implements RedisClient {
     void addCheckPoint(){
         //checkpoint
         Map<String,String>chekpoint=new HashMap<>();
-        String hostName=sourceHost+":"+sourceHost;
+        String hostName=sourceHost+":"+sourcePort;
         chekpoint.put(hostName+"-offset", String.valueOf(lastOffset));
         chekpoint.put(hostName+"-runid", lastReplid);
         chekpoint.put(hostName+"-version", CHECKPOINT_VERSION);
