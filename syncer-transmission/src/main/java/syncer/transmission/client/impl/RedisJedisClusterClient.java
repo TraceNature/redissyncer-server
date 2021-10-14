@@ -43,7 +43,6 @@ public class RedisJedisClusterClient implements RedisClient {
     public RedisJedisClusterClient(String host, String password, String taskId) {
         this.host = host;
         this.taskId = taskId;
-
         try {
             pool=new SyncJedisClusterClient( host,password,10,5000,5000,5000);
             redisClient=pool.jedisCluster();
