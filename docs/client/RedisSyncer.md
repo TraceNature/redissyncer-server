@@ -1,4 +1,4 @@
-### RedisSyncer的设计与实现
+### RedisSyncer引擎的设计与实现
 RedisSyncer一款通过replication协议模拟slave来获取源Redis节点数据并写入目标Redis从而实现数据同步的Redis同步工具
 ### 同步基本流程如下
 ![avatar](..//images/flow_path.png)
@@ -196,4 +196,79 @@ v2 checkpoint检查点结构：
   ![avatar](../images/write/retry3.png)
 
 #### 命令的链式处理
+RedisSyncer中采用链式策略处理同步数据，任何一个策略返回失败，该key都将不会被同步。链式策略流程如图所示
+
+  ![avatar](../images/write/retry4.png)
+
+
+  每一个key在RedisSyncer都会经过一个策略链进行处理，只要有一个策略未通过则这个key将不会同步到目标Redis，比如key过期时间的计算策略如果计算出全量阶段key已过期，则将会自动抛弃该key。
+  
+  
+  
+#### 命令的链式处理
+
+* 命令过滤
+  
+* key过滤
     
+#### 多任务管理
+
+* 任务启动流程
+  * 任务启动前校验流程
+  ![avatar](../images/write/startTask.png)
+* 任务停止及清理流程
+    
+* 任务状态监控
+* 任务异常及处理机制
+
+#### rdb跨版本同步实现
+    rdb文件存在向前兼容问题，即高版本的rdb文件无法导入低rdb版本的Redis
+
+* 跨版本迁移实现机制
+    1. REDIS跨版本间存在的问题：由于REDIS是向下兼容(低版本无法兼容高版本RDB)，在其RDB文件协议中存在一个vesion版本号标识,REDIS在RDB导入或者全量同步执行<font color=red size=2>rdbLoad</font>时会先检测<font color=red size=2>RDB VERSION</font>是否符合向下兼容，如果不符合则会抛出 <font color=red size=2>Can’t handle RDB format version</font>   错误。
+    2. syncer跨版本实现机制
+       对于全量同步RDB数据部分syncer将其分命令为两类进行处理
+
+        1. 对于可能存在大key的结构比如：SET,ZSET,LIST,HASH等结构:
+            1. 对于对数据成员没有顺序性要求的命令如：SET,ZSET,HASH命令解析器将其解析成一个或多个sadd,zadd,hmset等命令进行处理
+            2. 对于对数据成员有顺序性要求的命令如:List等命令，若被命令解析器判断为大key并将其拆分为多个子命令，此时必须保证按顺序发送至目标REDIS节点
+        2. 对于其他命令如：String等结构：
+            1. 为保证其命令幂等性，命令解析器会根据目标REDIS节点的RDB版本进行序列化(实现<font color=red size=2>DUMP</font>)，传输模块会使用<font color=red size=2>REPLACE</font>反序列化到目标节点。（其中在redis3.0以下版本<font color=red size=2>REPLACE</font>命令不支持[<font color=red size=2>REPLACE</font>]）
+
+RDB文件协议中关于 RDB VERSION部分
+ 
+           #REDIS RDB文件结构开头部分示例
+            ----------------------------# RDB is a binary format. There are no new lines or spaces in the file.
+            52 45 44 49 53              # Magic String "REDIS"
+            30 30 30 37                 # 4 digit ASCCII RDB Version Number. In this case, version = "0007" = 7   RDB VERSION字段
+            ----------------------------
+            FE 00                       # FE = code that indicates database selector. db number = 00
+
+  关于 RDB VERSION检查部分伪代码
+
+            def rdbLoad(filename):
+                rio =  rioInitWithFile(filename);
+                # 设置标记：
+                # a. 服务器状态：rdb_loading = 1
+                # b. 载入时间：loading_start_time = now_time
+                # c. 载入大小：loading_total_bytes = filename.size
+                startLoading(rio)
+                # 1.检查该文件是否为RDB文件（即文件开头前5个字符是否为"REDIS"）
+                if !checkRDBHeader(rio):
+                    redislog("error, Wrong signature trying to load DB from file") 
+                    return
+                # 2.检查当前RDB文件版本是否兼容（向下兼容）
+                if !checkRDBVersion(rio): 
+                    redislog("error, Can't handle RDB format version")
+                    return
+             .........
+
+                //Redis中关于RDB_VERSION检查的代码
+                rdbver = atoi(buf+5);
+                if (rdbver < 1 || rdbver > RDB_VERSION) {
+                    rdbCheckError("Can't handle RDB format version %d",rdbver);
+                    goto err;
+                }
+     
+
+#### aof mix导入机制
