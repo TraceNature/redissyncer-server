@@ -218,8 +218,10 @@ RedisSyncer中采用链式策略处理同步数据，任何一个策略返回失
   ![avatar](../images/write/startTask.png)
 * 任务停止及清理流程
     
-* 任务状态监控
-* 任务异常及处理机制
+* 任务状态
+    详见任务状态列表
+  
+* 任务异常处理原则
 
 #### rdb跨版本同步实现
     rdb文件存在向前兼容问题，即高版本的rdb文件无法导入低rdb版本的Redis
@@ -271,4 +273,121 @@ RDB文件协议中关于 RDB VERSION部分
                 }
      
 
-#### aof mix导入机制
+
+#### Redis RDB协议
+https://github.com/sripathikrishnan/redis-rdb-tools/wiki/Redis-RDB-Dump-File-Format    
+
+    ----------------------------# RDB is a binary format. There are no new lines or spaces in the file.
+    52 45 44 49 53              # Magic String "REDIS"
+    30 30 30 37                 # 4 digit ASCCII RDB Version Number. In this case, version = "0007" = 7
+    ----------------------------
+    FE 00                       # FE = code that indicates database selector. db number = 00
+    ----------------------------# Key-Value pair starts
+    FD $unsigned int            # FD indicates "expiry time in seconds". After that, expiry time is read as a 4 byte unsigned int
+    $value-type                 # 1 byte flag indicating the type of value - set, map, sorted set etc.
+    $string-encoded-key         # The key, encoded as a redis string
+    $encoded-value              # The value. Encoding depends on $value-type
+    ----------------------------
+    FC $unsigned long           # FC indicates "expiry time in ms". After that, expiry time is read as a 8 byte unsigned long
+    $value-type                 # 1 byte flag indicating the type of value - set, map, sorted set etc.
+    $string-encoded-key         # The key, encoded as a redis string
+    $encoded-value              # The value. Encoding depends on $value-type
+    ----------------------------
+    $value-type                 # This key value pair doesn't have an expiry. $value_type guaranteed != to FD, FC, FE and FF
+    $string-encoded-key
+    $encoded-value
+    ----------------------------
+    FE $length-encoding         # Previous db ends, next db starts. Database number read using length encoding.
+    ----------------------------
+    ...                         # Key value pairs for this database, additonal database
+    
+    FF                          ## End of RDB file indicator
+    8 byte checksum             ## CRC 64 checksum of the entire file.
+
+    RDB文件以魔术字符串“REDIS”开头。
+    52 45 44 49 53 # "REDIS"
+
+    RDB 版本号
+    接下来的 4 个字节存储 rdb 格式的版本号。这 4 个字节被解释为 ascii 字符，然后使用字符串到整数转换转换为整数。
+    00 00 00 03 # Version = 3
+
+    Database Selector
+    一个Redis实例可以有多个数据库。
+    单个字节0xFE标记数据库选择器的开始。在该字节之后，一个可变长度字段指示数据库编号。请参阅“长度编码”部分以了解如何读取此数据库编号。
+
+    键值对
+    在数据库选择器之后，该文件包含一系列键值对。
+    
+    每个键值对有 4 个部分 -
+    
+    1.密钥到期时间戳。
+    2.指示值类型的一字节标志
+    3.密钥，编码为 Redis 字符串。请参阅“Redis 字符串编码”
+    4.根据值类型编码的值。参见“Redis 值编码”
+
+#### Redis RESP协议(https://redis.io/topics/protocol#resp-simple-strings)
+RESP 协议是在 Redis 1.2 中引入的，但它成为了 Redis 2.0 中与 Redis 服务器通信的标准方式。是应该在 Redis 客户端中实现的协议。
+RESP 实际上是一种序列化协议，它支持以下数据类型：简单字符串、错误、整数、批量字符串和数组。
+
+RESP 在 Redis 中用作请求-响应协议的方式如下：
+
+* 客户端将命令作为批量字符串的 RESP 数组发送到 Redis 服务器。
+* 服务器根据命令实现以其中一种 RESP 类型进行回复。
+
+在 RESP 中，某些数据的类型取决于第一个字节：
+
+* 对于简单字符串，回复的第一个字节是“+”
+* 对于错误，回复的第一个字节是“-”
+* 对于整数，回复的第一个字节是“：”
+* 对于批量字符串，回复的第一个字节是“$”
+* 对于数组，回复的第一个字节是“ *”
+* RESP 能够使用稍后指定的批量字符串或数组的特殊变体来表示 Null 值。
+* 在 RESP 中，协议的不同部分总是以“\r\n”（CRLF）终止。
+
+
+    RESP Simple Strings
+    + 字符开头，后跟不能包含 CR 或 LF 字符（不允许换行）的字符串，以 CRLF 结尾（即“\r\n”）。如:
+    
+      "+OK\r\n"
+
+    Errors
+      
+        "-Error message\r\n"   
+    如:
+       -ERR unknown command 'foobar'
+       -WRONGTYPE Operation against a key holding the wrong kind of value
+    Integers
+        Integers只是一个 CRLF 终止的字符串，代表一个整数，以“:”字节为前缀。
+        例如 
+            ":0\r\n" 
+            ":1000\r\n"
+
+    Bulk Strings
+        用于表示长度最大为 512 MB 的单个二进制安全字符串。批量字符串按以下方式编码：
+        
+            * “$”字节后跟组成字符串的字节数（前缀长度），以 CRLF 结尾。
+            * 实际的字符串数据。
+            * 最后的 CRLF。
+
+        “foobar”的编码如下：
+
+             "$6\r\nfoobar\r\n"
+        空字符串
+            "$0\r\n\r\n"
+        NULL 
+            "$-1\r\n"
+    Arrays
+        格式：
+            * 一个*字符作为第一个字节，然后是数组中元素的数量作为十进制数，然后是 CRLF。
+            * Array 的每个元素的附加 RESP 类型。
+        空数组：
+            "*0\r\n"
+        “foo”和“bar”的数组
+            "*2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"
+        ["foo",nil,"bar"] （Null elements in Arrays）
+            *3\r\n
+            $3\r\n
+            foo\r\n
+            $-1\r\n
+            $3\r\n
+            bar\r\n
