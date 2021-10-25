@@ -222,6 +222,7 @@ RedisSyncer中采用链式策略处理同步数据，任何一个策略返回失
     
   ![avatar](../images/write/startTask.png)
 * 任务停止及清理流程
+  
     任务主动停止时,RedisSyncer会先停止源Redis端的数据写入然后进入数据保护状态,确保可能还处在RedisSyncer中未写入目标的少部分数据能够完整的写入目标端，并且正确的记录写入的最后一条数据的offset并持久化，保证断点续传时RedisSyncer能够提供正确的offset。
     
 * 任务状态
