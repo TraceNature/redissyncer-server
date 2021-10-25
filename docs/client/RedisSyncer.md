@@ -201,28 +201,47 @@ RedisSyncer中采用链式策略处理同步数据，任何一个策略返回失
   ![avatar](../images/write/retry4.png)
 
 
+
   每一个key在RedisSyncer都会经过一个策略链进行处理，只要有一个策略未通过则这个key将不会同步到目标Redis，比如key过期时间的计算策略如果计算出全量阶段key已过期，则将会自动抛弃该key。
   
-  
-  
-#### 命令的链式处理
+  策略链中的策略包括
 
-* 命令过滤
-  
-* key过滤
-    
+| 类型                     | 描述    | 
+|  ---                    | --------------|
+|DataAnalysisStrategy     | 命令统计分析策略 |
+|KeyFilterStrategy        |命令过滤策略     |
+|DbMappingStrategy        |Db映射策略      |
+|TimeCalculationStrategy  |过期时间计算策略  |
+|RdbCommandSendStrategy   |全量数据写入策略  |
+|AofCommandSendStrategy   |增量数据写入策略  |
+|  .....               |    .....      | 
+
 #### 多任务管理
 
 * 任务启动流程
-  * 任务启动前校验流程
+    
   ![avatar](../images/write/startTask.png)
 * 任务停止及清理流程
+    任务主动停止时,RedisSyncer会先停止源Redis端的数据写入然后进入数据保护状态,确保可能还处在RedisSyncer中未写入目标的少部分数据能够完整的写入目标端，并且正确的记录写入的最后一条数据的offset并持久化，保证断点续传时RedisSyncer能够提供正确的offset。
     
 * 任务状态
-    详见任务状态列表
-  
-* 任务异常处理原则
 
+| TYPE | code | description| status |
+| ---| ---|---|---|
+|STOP     |0|任务停止| 已使用 |
+|CREATING |1|创建中 |  已使用 |
+|CREATED  |2|创建完成| 已使用 |
+|RUN      |3|运行状态| 已使用 |
+|BROKEN   |5|任务异常| 已使用 |
+|RDBRUNING|6|全量RDB同步过程中| 已使用 |
+|COMMANDRUNING|7|增量同步中| 已使用 |
+|FINISH    |8|完成状态| 已使用(用于文件导入) |
+
+    
+* 任务异常处理原则
+  
+    在RedisSycner任务中如果遇到可能会导致数据不一致的错误，RedisSyncer都会宕掉任务，等待人工干预。
+  
 #### rdb跨版本同步实现
     rdb文件存在向前兼容问题，即高版本的rdb文件无法导入低rdb版本的Redis
 
@@ -326,7 +345,7 @@ https://github.com/sripathikrishnan/redis-rdb-tools/wiki/Redis-RDB-Dump-File-For
     4.根据值类型编码的值。参见“Redis 值编码”
 
 #### Redis RESP协议(https://redis.io/topics/protocol#resp-simple-strings)
-RESP 协议是在 Redis 1.2 中引入的，但它成为了 Redis 2.0 中与 Redis 服务器通信的标准方式。是应该在 Redis 客户端中实现的协议。
+RESP 协议是在 Redis 1.2 中引入的，但它成为了 Redis 2.0 中与 Redis 服务器通信的标准方式。是在Redis 客户端中实现的协议。
 RESP 实际上是一种序列化协议，它支持以下数据类型：简单字符串、错误、整数、批量字符串和数组。
 
 RESP 在 Redis 中用作请求-响应协议的方式如下：
