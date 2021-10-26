@@ -300,7 +300,7 @@ def rdbLoad(filename):
 
 ### RDB 同步过程中的大 Key 拆分
 
-RedisSyncer在全量同步阶段在遇到LIST、SET、ZSET、HASH等结构等时候，当数据大小超过阀值后RedisSyncer会通过迭代器的形式将key拆分成多个自命令写入目标库。防止部分超大key一次性读入内存导致程序产生oom并提高同步的速度。而对于不存在大key的命令同步工具会通过序列化逆序列化的形式写入目标。
+RedisSyncer在全量同步阶段在遇到LIST、SET、ZSET、HASH等结构等时候，当数据大小超过阀值后RedisSyncer会通过迭代器的形式将key拆分成多个子命令写入目标库。防止部分超大key一次性读入内存导致程序产生oom并提高同步的速度。而对于不存在大key的命令同步工具会通过序列化逆序列化的形式写入目标。
 
 ### 附录一  Redis RDB协议
 
