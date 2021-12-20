@@ -178,7 +178,8 @@ RedisSyncer的断点续传机制是基于Redis的replid和offset来实现的，R
 
 在Redis的事务机制中虽然不支持回滚，并且如果事务中间命令执行出错后但是事务还是被执行完成，但是除特殊情况外能够保证一致性。
 在v2的机制中，为了防止'写放大'会在目标redis的每一个逻辑库中写入一个checkpoint，因此在执行断点续传操作的时候，同步工具会先扫描目标各个逻辑库中的checkpoint并选出里面最大offset的checkpoint作为断点续传的参数。
- ![avatar](../images/write/dataC.png)
+ 
+![avatar](../images/write/dataC.png)
 
 ## 数据补偿机制
 
@@ -189,6 +190,7 @@ RedisSyncer的断点续传机制是基于Redis的replid和offset来实现的，R
 ## 断线重连机制
 
   由于网络抖动等原因可能会导致同步工具源端与目标端连接在同步过程中断开,因此需要断线重试机制来保证在任务同步的过程中如果出现异常断开的问题。断线重连机制存在于与源Redis节点和RedisSyncer、RedisSyncer与目标Redis节点的连接之间，两者分别有各自的处理机制。
+
   ![avatar](../images/write/retry.png)
 
 * 源Redis与RedisSyncer的断线重连机制是通过记录的offset来实现的，当因网络异常等原因断开了连接时，RedisSyncer会重新尝试与源Redis节点建立连接，并通过当前任务记录的runid、offset等信息去拉取断开之前的增量数据，连接重新建立成功后RedisSyncer的同步任务将会无感知继续同步。 当断线重连超过指定重试阀值或者因为offset刷过导致没有办法续传数据时，RedisSyncer会宕掉当前当同步任务，等待人工干预。

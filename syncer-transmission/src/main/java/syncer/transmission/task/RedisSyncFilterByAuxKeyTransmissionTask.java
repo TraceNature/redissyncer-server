@@ -68,7 +68,6 @@ public class RedisSyncFilterByAuxKeyTransmissionTask implements Runnable {
         client = RedisClientFactory.createRedisClient(RedisType.CLUSTER, taskModel.getTargetRedisAddress(),
                 taskModel.getTargetPort(), taskModel.getTargetPassword(), "", 0, 0, taskModel.getErrorCount(),
                 taskModel.getTaskId(), null, null);
-
         this.db = -1;
         this.redisVersionUtil = new RedisVersionUtil();
     }
@@ -96,7 +95,6 @@ public class RedisSyncFilterByAuxKeyTransmissionTask implements Runnable {
             //任务进度管理
             SingleTaskDataManagerUtils.getAliveThreadHashMap().get(taskModel.getTaskId())
                     .setReplication(replicationHandler);
-
             //事件监听
             replicationHandler.addEventListener(new EventListener() {
                 @Override

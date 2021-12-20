@@ -83,7 +83,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         }
         TaskDataEntity dataEntity = null;
         if (taskModel.getSyncType().equals(SyncType.SYNC.getCode()) || taskModel.getSyncType().equals(SyncType.COMMANDDUMPUP.getCode())) {
-
             if (RedisType.SENTINEL.getCode().equals(taskModel.getSourceRedisType())) {
                 dataEntity = TaskDataEntity.builder()
                         .taskModel(taskModel)
@@ -97,7 +96,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
                         .offSetEntity(OffSetEntity.builder().replId(data[1]).build())
                         .build();
                 dataEntity.getOffSetEntity().getReplOffset().set(taskModel.getOffset());
-
             }
         } else {
             dataEntity = TaskDataEntity.builder()
@@ -113,7 +111,6 @@ public class SingleTaskServiceImpl implements ISingleTaskService {
         try {
             //校验
             TaskCheckStrategyGroupSelecter.select(RedisTaskStrategyGroupType.NODISTINCT, null, taskModel).run(null, taskModel);
-
         } catch (Exception e) {
             SingleTaskDataManagerUtils.brokenTask(taskModel.getId());
             throw e;
