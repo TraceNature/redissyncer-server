@@ -2,8 +2,7 @@ package syncer.replica.register;
 
 
 import syncer.replica.datatype.command.CommandName;
-import syncer.replica.parser.command.common.PingCommandParser;
-import syncer.replica.parser.command.common.ReplConfParser;
+import syncer.replica.parser.command.common.*;
 import syncer.replica.parser.command.defaults.DefaultCommandParser;
 import syncer.replica.parser.command.jimdb.JimDbDefaultCommandParser;
 import syncer.replica.parser.command.set.SetCommandParser;
@@ -13,6 +12,7 @@ import syncer.replica.replication.Replication;
 public class TikvCommandRegister {
     public synchronized static Replication addCommandParser(Replication replication) {
         addStringCommandParser(replication);
+
 //        addTransactionsCommandParser(replication);
 //        addListsCommandParser(replication);
 //        addSetsCommandParser(replication);
@@ -21,7 +21,7 @@ public class TikvCommandRegister {
 //        addStreamCommandParser(replication);
 //        addGeoCommandParser(replication);
 //        addHyperLogLogCommandParser(replication);
-//        addKeysCommandParser(replication);
+        addKeysCommandParser(replication);
 //        addPubSubCommandParser(replication);
 //        addLuaCommandParser(replication);
 //        addSysCommandParser(replication);
@@ -186,10 +186,20 @@ public class TikvCommandRegister {
      * @param replication
      */
     static void addKeysCommandParser(Replication replication){
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.COPY), new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.DEL), new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.EXPIRE), new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.EXPIREAT), new DefaultCommandParser());
+        replication.addCommandParser(CommandName.name(DefaultCommandNames.COPY), new CopyCommandParser());
+        replication.addCommandParser(CommandName.name(DefaultCommandNames.DEL), new DelCommandParser());
+        replication.addCommandParser(CommandName.name(DefaultCommandNames.EXPIRE), new ExpireCommandParser());
+        replication.addCommandParser(CommandName.name(DefaultCommandNames.EXPIREAT), new ExpireAtCommandParser());
+        replication.addCommandParser(CommandName.name(DefaultCommandNames.PING),new PingCommandParser());
+        replication.addCommandParser(CommandName.name(DefaultCommandNames.SELECT),new SelectCommandParser());
+        replication.addCommandParser(CommandName.name(DefaultCommandNames.FLUSHDB),new FlushDBCommandParser());
+        replication.addCommandParser(CommandName.name(DefaultCommandNames.FLUSHALL),new FlushAllCommandParser());
+        replication.addCommandParser(CommandName.name(DefaultCommandNames.REPLCONF),new ReplConfParser());
+
+        /**
+         * TODO
+         * 实现响应parser
+         */
         replication.addCommandParser(CommandName.name(DefaultCommandNames.MOVE), new DefaultCommandParser());
         replication.addCommandParser(CommandName.name(DefaultCommandNames.PERSIST), new DefaultCommandParser());
         replication.addCommandParser(CommandName.name(DefaultCommandNames.PEXPIRE), new DefaultCommandParser());
@@ -198,11 +208,6 @@ public class TikvCommandRegister {
         replication.addCommandParser(CommandName.name(DefaultCommandNames.RENAMENX), new DefaultCommandParser());
         replication.addCommandParser(CommandName.name(DefaultCommandNames.RESTORE), new DefaultCommandParser());
         replication.addCommandParser(CommandName.name(DefaultCommandNames.UNLINK), new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.FLUSHDB),new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.FLUSHALL),new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.SELECT),new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.PING),new PingCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.REPLCONF),new ReplConfParser());
         replication.addCommandParser(CommandName.name(DefaultCommandNames.XSETID), new DefaultCommandParser());
     }
 

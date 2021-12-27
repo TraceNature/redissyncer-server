@@ -1,13 +1,14 @@
-package syncer.transmission.tikv;
+package syncer.transmission.tikv.parser;
 
 import syncer.replica.exception.TikvKeyErrorException;
 import syncer.replica.util.strings.Strings;
+import syncer.transmission.tikv.TikvKey;
+import syncer.transmission.tikv.TikvKeyType;
 
 public class TikvKeyNameParser {
     private final static String START="*";
     private final static String splicN="_";
-    private final static Integer spN=4;
-    public TikvKey parser(byte[]key,TikvKeyType tikvType) throws TikvKeyErrorException {
+    public TikvKey parser(byte[]key, TikvKeyType tikvType) throws TikvKeyErrorException {
         String stringKey= Strings.toString(key);
         if(!stringKey.startsWith(START)){
             throw new TikvKeyErrorException("key error");
@@ -22,7 +23,7 @@ public class TikvKeyNameParser {
     }
 
     /**
-     * *{instId}_{dbNum}_{commandType}_{keyName}_{index}
+     * *{instId}_{dbNum}_{commandType}_{keyName}
      * @param key
      * @return
      * @throws TikvKeyErrorException

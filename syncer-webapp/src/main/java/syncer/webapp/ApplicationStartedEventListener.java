@@ -41,7 +41,6 @@ public class ApplicationStartedEventListener implements ApplicationListener, Ord
             System.setProperty("logLevel", somePropLevel);
             System.setProperty("logFileName", logfileNameProp);
             System.setProperty("Log4jContextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
-
         }
     }
 }
