@@ -64,7 +64,7 @@ public class DefaultRedis2TikvProcessor implements IRedis2TikvProcessor{
 
     @Override
     public void postRdbSyncEventHandler(PostRdbSyncEvent event) {
-        log.info("[{}][TASKID {}]增量同步开始..",instId,taskId);
+        log.info("[{}][TASKID {}]全量同步结束..",instId,taskId);
     }
 
     /**
@@ -152,8 +152,6 @@ public class DefaultRedis2TikvProcessor implements IRedis2TikvProcessor{
             log.error("[{}][TASKID {}]写入tikv key[{}]失败",instId,taskId,key);
         }
 
-//
-//        System.out.println("写入tikv key ["+key+"] value ["+Strings.byteToString(event.getValue())+"]");
 //        String value=kvClient.get(ByteString.copyFromUtf8(key)).toStringUtf8();
 //        System.out.println("读出tikv key ["+key+"] value ["+value+"]");
 
