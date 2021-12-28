@@ -32,8 +32,7 @@ import java.util.Objects;
  */
 @Slf4j
 public class RedisToTikvTask{
-    private Replication replication = null;
-
+    private Replication replication;
     private String instId;
     private String redisHost;
     private Integer port;
