@@ -55,7 +55,6 @@ public class RedisToTikvTask{
             RedisURI suri = new RedisURI(sourceRedisUri);
             replication = new RedisReplication(suri, true);
             replication.getConfig().setTaskId(TemplateUtils.uuid());
-            RawKVClient kvClient=tikvRawClient(tikvUri);
             IRedis2TikvProcessor redis2TikvProcessor=new DefaultRedis2TikvProcessor();
             redis2TikvProcessor.load(replication.getConfig().getTaskId(),instId,tikvUri);
             /**
@@ -134,9 +133,7 @@ public class RedisToTikvTask{
                 });
 
             }finally {
-                if(Objects.nonNull(kvClient)){
-                    kvClient.close();
-                }
+                redis2TikvProcessor.close();
             }
             replication.open();
         }catch (Exception e){
@@ -159,19 +156,5 @@ public class RedisToTikvTask{
             }
         }
         return uri.toString();
-    }
-
-     RawKVClient tikvRawClient(String address){
-        TiConfiguration conf = TiConfiguration.createRawDefault(address);
-        TiSession session = TiSession.create(conf);
-        RawKVClient client = session.createRawClient();
-        return client;
-    }
-
-     TxnKVClient tikvTxnClient(String address){
-        TiConfiguration conf = TiConfiguration.createRawDefault(address);
-        TiSession session = TiSession.create(conf);
-        TxnKVClient client = session.createTxnClient();
-        return client;
     }
 }
