@@ -11,6 +11,7 @@ import org.tikv.txn.TxnKVClient;
 import syncer.replica.datatype.command.ExistType;
 import syncer.replica.datatype.command.common.PingCommand;
 import syncer.replica.datatype.command.common.SelectCommand;
+import syncer.replica.datatype.command.set.SAddCommand;
 import syncer.replica.datatype.command.set.SetCommand;
 import syncer.replica.datatype.command.set.XATType;
 import syncer.replica.event.KeyStringValueSetEvent;
@@ -25,10 +26,7 @@ import syncer.replica.util.type.ExpiredType;
 import syncer.transmission.tikv.TikvKeyType;
 import syncer.transmission.tikv.parser.TikvKeyNameParser;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -228,6 +226,19 @@ public class DefaultRedis2TikvProcessor implements IRedis2TikvProcessor{
     @Override
     public void pingCommandHandler(PingCommand event) {
 
+    }
+
+    @Override
+    public void sAddCommandHandler(SAddCommand event) {
+        Map<ByteString,ByteString> data=new HashMap<>();
+        List<String> logs= Lists.newArrayList();
+        for (int index=0;index<event.getMembers().length;index++){
+            String key=tikvKeyNameParser.getSetKey(instId,dbNum.get(), TikvKeyType.SET,event.getKey(),event.getMembers()[index]);
+            logs.add(key);
+            data.put(ByteString.copyFromUtf8(key),ByteString.copyFromUtf8(""));
+        }
+        kvClient.batchPutAtomic(data);
+        log.info("[{}][TASKID {}] redisKey[{}]写入tikv size[{}] [{}]",instId,taskId, Strings.byteToString(event.getKey()),event.getMembers().length,logs);
     }
 
 

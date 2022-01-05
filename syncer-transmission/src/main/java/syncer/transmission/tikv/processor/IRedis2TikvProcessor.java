@@ -2,6 +2,7 @@ package syncer.transmission.tikv.processor;
 
 import syncer.replica.datatype.command.common.PingCommand;
 import syncer.replica.datatype.command.common.SelectCommand;
+import syncer.replica.datatype.command.set.SAddCommand;
 import syncer.replica.datatype.command.set.SetCommand;
 import syncer.replica.event.KeyStringValueSetEvent;
 import syncer.replica.event.KeyStringValueStringEvent;
@@ -81,4 +82,10 @@ public interface IRedis2TikvProcessor {
      */
     void pingCommandHandler(PingCommand event);
 
+
+    /**
+     * SADD key member [member ...]
+     * @param event
+     */
+    void sAddCommandHandler(SAddCommand event);
 }

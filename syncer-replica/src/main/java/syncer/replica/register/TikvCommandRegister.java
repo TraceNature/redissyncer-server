@@ -5,6 +5,7 @@ import syncer.replica.datatype.command.CommandName;
 import syncer.replica.parser.command.common.*;
 import syncer.replica.parser.command.defaults.DefaultCommandParser;
 import syncer.replica.parser.command.jimdb.JimDbDefaultCommandParser;
+import syncer.replica.parser.command.set.SAddCommandParser;
 import syncer.replica.parser.command.set.SetCommandParser;
 import syncer.replica.parser.command.string.AppendCommandParser;
 import syncer.replica.replication.Replication;
@@ -22,6 +23,7 @@ public class TikvCommandRegister {
 //        addGeoCommandParser(replication);
 //        addHyperLogLogCommandParser(replication);
         addKeysCommandParser(replication);
+        addSetsCommandParser(replication);
 //        addPubSubCommandParser(replication);
 //        addLuaCommandParser(replication);
 //        addSysCommandParser(replication);
@@ -100,13 +102,13 @@ public class TikvCommandRegister {
      * @param replication
      */
     static void addSetsCommandParser(Replication replication){
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.SADD), new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.SDIFFSTORE), new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.SINTERSTORE), new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.SMOVE), new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.SPOP), new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.SREM), new DefaultCommandParser());
-        replication.addCommandParser(CommandName.name(DefaultCommandNames.SUNIONSTORE), new DefaultCommandParser());
+        replication.addCommandParser(CommandName.name(DefaultCommandNames.SADD), new SAddCommandParser());
+//        replication.addCommandParser(CommandName.name(DefaultCommandNames.SDIFFSTORE), new DefaultCommandParser());
+//        replication.addCommandParser(CommandName.name(DefaultCommandNames.SINTERSTORE), new DefaultCommandParser());
+//        replication.addCommandParser(CommandName.name(DefaultCommandNames.SMOVE), new DefaultCommandParser());
+//        replication.addCommandParser(CommandName.name(DefaultCommandNames.SPOP), new DefaultCommandParser());
+//        replication.addCommandParser(CommandName.name(DefaultCommandNames.SREM), new DefaultCommandParser());
+//        replication.addCommandParser(CommandName.name(DefaultCommandNames.SUNIONSTORE), new DefaultCommandParser());
     }
 
     /**

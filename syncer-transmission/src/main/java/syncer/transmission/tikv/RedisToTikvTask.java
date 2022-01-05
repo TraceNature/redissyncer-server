@@ -10,6 +10,7 @@ import syncer.common.util.TemplateUtils;
 import syncer.replica.config.RedisURI;
 import syncer.replica.datatype.command.common.PingCommand;
 import syncer.replica.datatype.command.common.SelectCommand;
+import syncer.replica.datatype.command.set.SAddCommand;
 import syncer.replica.datatype.command.set.SetCommand;
 import syncer.replica.event.*;
 import syncer.replica.event.end.PostCommandSyncEvent;
@@ -126,6 +127,10 @@ public class RedisToTikvTask{
                             return;
                         }
 
+                        if (event instanceof SAddCommand){
+                            redis2TikvProcessor.sAddCommandHandler((SAddCommand) event);
+                            return;
+                        }
 
                         log.info("no matching parser [{}]",event.getClass());
                     }
