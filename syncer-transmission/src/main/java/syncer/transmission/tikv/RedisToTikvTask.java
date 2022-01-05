@@ -11,10 +11,7 @@ import syncer.replica.config.RedisURI;
 import syncer.replica.datatype.command.common.PingCommand;
 import syncer.replica.datatype.command.common.SelectCommand;
 import syncer.replica.datatype.command.set.SetCommand;
-import syncer.replica.event.AuxField;
-import syncer.replica.event.Event;
-import syncer.replica.event.KeyStringValueListEvent;
-import syncer.replica.event.KeyStringValueStringEvent;
+import syncer.replica.event.*;
 import syncer.replica.event.end.PostCommandSyncEvent;
 import syncer.replica.event.end.PostRdbSyncEvent;
 import syncer.replica.event.start.PreCommandSyncEvent;
@@ -91,6 +88,14 @@ public class RedisToTikvTask{
                         if(event instanceof KeyStringValueListEvent) {
                             KeyStringValueListEvent stringValueListEvent = (KeyStringValueListEvent) event;
 
+                        }
+
+
+                        //Set
+                        if(event instanceof KeyStringValueSetEvent) {
+                            KeyStringValueSetEvent setEvent = (KeyStringValueSetEvent) event;
+                            redis2TikvProcessor.rdbSetHandler(setEvent);
+                            return;
                         }
 
                         //增量开始

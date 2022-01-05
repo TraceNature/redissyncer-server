@@ -1,5 +1,6 @@
 package syncer.transmission.tikv.processor;
 
+import com.google.common.collect.Lists;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.tikv.common.TiConfiguration;
@@ -12,6 +13,7 @@ import syncer.replica.datatype.command.common.PingCommand;
 import syncer.replica.datatype.command.common.SelectCommand;
 import syncer.replica.datatype.command.set.SetCommand;
 import syncer.replica.datatype.command.set.XATType;
+import syncer.replica.event.KeyStringValueSetEvent;
 import syncer.replica.event.KeyStringValueStringEvent;
 import syncer.replica.event.end.PostCommandSyncEvent;
 import syncer.replica.event.end.PostRdbSyncEvent;
@@ -23,6 +25,9 @@ import syncer.replica.util.type.ExpiredType;
 import syncer.transmission.tikv.TikvKeyType;
 import syncer.transmission.tikv.parser.TikvKeyNameParser;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -81,12 +86,36 @@ public class DefaultRedis2TikvProcessor implements IRedis2TikvProcessor{
             kvClient.put(ByteString.copyFromUtf8(key),ByteString.copyFrom(event.getValue()),event.getExpiredSeconds());
         }
         log.info("[{}][TASKID {}]写入tikv key [{}] value [{}]",instId,taskId,key, Strings.byteToString(event.getValue()));
-        String value=kvClient.get(ByteString.copyFromUtf8(key)).toStringUtf8();
-        try {
-            log.info("[{}][TASKID {}]读出tikv key [{}] value [{}]",instId,taskId,tikvKeyNameParser.parser(key.getBytes(),TikvKeyType.STRING),value);
-        } catch (TikvKeyErrorException e) {
-            log.error(e.getMessage());
+//        String value=kvClient.get(ByteString.copyFromUtf8(key)).toStringUtf8();
+//        try {
+//            log.info("[{}][TASKID {}]读出tikv key [{}] value [{}]",instId,taskId,tikvKeyNameParser.parser(key.getBytes(),TikvKeyType.STRING),value);
+//        } catch (TikvKeyErrorException e) {
+//            log.error(e.getMessage());
+//        }
+    }
+
+    /**
+     * rdb set处理器
+     * @param event
+     */
+    @Override
+    public void rdbSetHandler(KeyStringValueSetEvent event) {
+        changeDb(event.getDb().getCurrentDbNumber());
+        Map<ByteString,ByteString> data=new HashMap<>();
+        List<String> logs= Lists.newArrayList();
+        event.getValue().stream().forEach(item->{
+            String key=tikvKeyNameParser.getSetKey(instId,dbNum.get(), TikvKeyType.SET,event.getKey(),item);
+            logs.add(key);
+            data.put(ByteString.copyFromUtf8(key),ByteString.copyFromUtf8(""));
+        });
+        if(event.getExpiredType().equals(ExpiredType.NONE)){
+            kvClient.batchPutAtomic(data);
+        }else {
+            kvClient.batchPutAtomic(data,event.getExpiredSeconds());
         }
+
+        log.info("[{}][TASKID {}] redisKey[{}]写入tikv size[{}] [{}]",instId,taskId, Strings.byteToString(event.getKey()),event.getValue().size(),logs);
+
     }
 
     @Override

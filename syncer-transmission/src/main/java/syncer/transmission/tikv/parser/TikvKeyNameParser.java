@@ -41,7 +41,7 @@ public class TikvKeyNameParser {
                 }else if (index==1){
                     tikvKey.setCurrentDbNumber(Long.valueOf(aloneKey.toString()));
                 }else if (index==2){
-                    tikvKey.setKeyType(TikvKeyType.getTikvKeyTypeByCode(Integer.valueOf(aloneKey.toString())));
+                    tikvKey.setKeyType(TikvKeyType.getTikvKeyTypeByCode(aloneKey.toString()));
                     String lastKey = stringKey.substring(i+1, stringKey.length());
                     tikvKey.setStringKey(lastKey);
                     tikvKey.setKey(lastKey.getBytes());
@@ -77,11 +77,44 @@ public class TikvKeyNameParser {
                 }else if (index==1){
                     tikvKey.setCurrentDbNumber(Long.valueOf(aloneKey.toString()));
                 }else if (index==2){
-                    tikvKey.setKeyType(TikvKeyType.getTikvKeyTypeByCode(Integer.valueOf(aloneKey.toString())));
+                    tikvKey.setKeyType(TikvKeyType.getTikvKeyTypeByCode(aloneKey.toString()));
                     String lastKey = stringKey.substring(i+1,stringKey.lastIndexOf(splicN));
                     tikvKey.setStringKey(lastKey);
                     tikvKey.setKey(lastKey.getBytes());
                     tikvKey.setIndex(Integer.valueOf(stringKey.substring(stringKey.lastIndexOf(splicN)+1,stringKey.length())));
+                }else{
+                    break;
+                }
+                index++;
+                aloneKey.delete(0,aloneKey.length());
+                continue;
+            }
+            aloneKey.append(stringKeys[i]);
+        }
+
+        return tikvKey;
+    }
+
+
+
+    TikvKey parserSet(byte[]key){
+        String stringKey= Strings.toString(key);
+        String[] stringKeys=stringKey.split("");
+        StringBuilder aloneKey=new StringBuilder();
+        TikvKey tikvKey=TikvKey.builder().build();
+        int index=0;
+        for (int i=1;i<stringKeys.length;i++){
+            if(splicN.equals(stringKeys[i])){
+                if(index==0){
+                    tikvKey.setInstId(aloneKey.toString());
+                }else if (index==1){
+                    tikvKey.setCurrentDbNumber(Long.valueOf(aloneKey.toString()));
+                }else if (index==2){
+                    tikvKey.setKeyType(TikvKeyType.getTikvKeyTypeByCode(aloneKey.toString()));
+                    String lastKey = stringKey.substring(i+1,stringKey.lastIndexOf(splicN));
+                    tikvKey.setStringKey(lastKey);
+                    tikvKey.setKey(lastKey.getBytes());
+                    tikvKey.setSetValue(stringKey.substring(stringKey.lastIndexOf(splicN)+1,stringKey.length()));
                 }else{
                     break;
                 }
@@ -145,6 +178,22 @@ public class TikvKeyNameParser {
                 .append(Strings.byteToString(key))
                 .append(splicN)
                 .append(index);
+        return stringKey.toString();
+    }
+
+
+    public String getSetKey(String instId,long currentDbNumber,TikvKeyType keyType,byte[]key,byte[]value){
+        StringBuilder stringKey=new StringBuilder(START);
+        stringKey.append(instId)
+                .append(splicN)
+                .append(currentDbNumber)
+                .append(splicN)
+                .append(keyType.getCode())
+                .append(splicN)
+                .append(Strings.byteToString(key))
+                .append(splicN)
+                .append(Strings.byteToString(value));
+
         return stringKey.toString();
     }
 

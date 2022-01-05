@@ -1,18 +1,21 @@
 package syncer.transmission.tikv;
 
 public enum TikvKeyType {
-    STRING(0,"STRING"),
-    LIST(1,"LIST")
+    STRING("w","STRING"),
+    LIST("l","LIST"),
+    SET("s","SET"),
+    ZSET("z","ZSET"),
+    HASH("h","HASH"),
     ;
-    TikvKeyType(int code, String des) {
+    TikvKeyType(String code, String des) {
         this.code = code;
         this.des = des;
     }
 
-    private int code;
+    private String code;
     private String des;
 
-    public int getCode() {
+    public String getCode() {
         return code;
     }
 
@@ -20,10 +23,10 @@ public enum TikvKeyType {
         return des;
     }
 
-    public static TikvKeyType getTikvKeyTypeByCode(int code){
+    public static TikvKeyType getTikvKeyTypeByCode(String code){
         TikvKeyType[]data=TikvKeyType.values();
         for (int i=0;i<data.length;i++){
-            if(data[i].getCode()==code){
+            if(data[i].getCode().equals(code)){
                 return data[i];
             }
         }

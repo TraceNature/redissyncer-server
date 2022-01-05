@@ -16,4 +16,5 @@ public class TikvKey {
     private byte[] key;
     private TikvKeyType keyType;
     private Integer index;
+    private String setValue;
 }

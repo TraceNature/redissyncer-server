@@ -3,6 +3,7 @@ package syncer.transmission.tikv.processor;
 import syncer.replica.datatype.command.common.PingCommand;
 import syncer.replica.datatype.command.common.SelectCommand;
 import syncer.replica.datatype.command.set.SetCommand;
+import syncer.replica.event.KeyStringValueSetEvent;
 import syncer.replica.event.KeyStringValueStringEvent;
 import syncer.replica.event.end.PostCommandSyncEvent;
 import syncer.replica.event.end.PostRdbSyncEvent;
@@ -40,6 +41,14 @@ public interface IRedis2TikvProcessor {
      * @param event
      */
      void rdbStringHandler(KeyStringValueStringEvent event);
+
+
+
+    /**
+     * rdb set 结构
+     * @param event
+     */
+    void rdbSetHandler(KeyStringValueSetEvent event);
 
     /**
      * 增量开始
