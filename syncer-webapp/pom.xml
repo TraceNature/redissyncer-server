@@ -68,48 +68,7 @@
         </dependency>
 
 
-
-        <!--添加此依赖，可以通过在编译时创建候选对象的静态列表来提高大型应用程序的启动性能 -->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework</groupId>-->
-<!--            <artifactId>spring-context-indexer</artifactId>-->
-<!--        </dependency>-->
-
-<!--        &lt;!&ndash;Graalvm-native 依赖 &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.experimental</groupId>-->
-<!--            <artifactId>spring-graalvm-native</artifactId>-->
-<!--            <version>0.8.3</version>-->
-<!--        </dependency>-->
-
     </dependencies>
-
-<!--    <build>-->
-<!--        <plugins>-->
-<!--            <plugin>-->
-<!--                <groupId>org.springframework.boot</groupId>-->
-<!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
-<!--            </plugin>-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-compiler-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    <source>8</source>-->
-<!--                    <target>8</target>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
-<!--            <plugin>-->
-<!--                &lt;!&ndash;热部署配置&ndash;&gt;-->
-<!--                <groupId>org.springframework.boot</groupId>-->
-<!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    &lt;!&ndash;fork:如果没有该项配置,整个devtools不会起作用&ndash;&gt;-->
-<!--                    <fork>true</fork>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
-<!--        </plugins>-->
-<!--    </build>-->
-
 
     <build>
         <plugins>
