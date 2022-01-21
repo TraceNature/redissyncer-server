@@ -13,7 +13,6 @@ package syncer.transmission.client.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import syncer.jedis.JedisCluster;
-import syncer.jedis.exceptions.JedisConnectionException;
 import syncer.jedis.params.SetParams;
 import syncer.replica.datatype.rdb.zset.ZSetEntry;
 import syncer.replica.util.strings.Strings;
@@ -25,7 +24,6 @@ import syncer.transmission.util.object.ObjectUtils;
 import syncer.transmission.util.strings.StringUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
-import java.net.SocketTimeoutException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;

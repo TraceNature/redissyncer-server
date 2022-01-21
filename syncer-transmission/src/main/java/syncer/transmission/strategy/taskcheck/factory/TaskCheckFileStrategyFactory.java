@@ -17,7 +17,6 @@ import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.strategy.taskcheck.ITaskCheckStrategy;
 import syncer.transmission.strategy.taskcheck.ITaskCheckStrategyFactory;
-import syncer.transmission.strategy.taskcheck.impl.TaskCheckRedisTypeStrategy;
 import syncer.transmission.strategy.taskcheck.impl.TaskDistinctStrategy;
 import syncer.transmission.strategy.taskcheck.impl.TaskTargetTaskNameCheckStrategy;
 

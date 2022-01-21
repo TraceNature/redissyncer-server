@@ -15,6 +15,7 @@
     <module>syncer-transmission</module>
     <module>syncer-webapp</module>
       <module>syncer-replica</module>
+      <module>syncer-transmissions</module>
   </modules>
 
   <name>redissyncer-server</name>

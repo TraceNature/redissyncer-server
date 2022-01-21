@@ -14,7 +14,6 @@ import syncer.transmission.mq.kafka.KafkaProducerClient;
 import syncer.transmission.strategy.taskcheck.ITaskCheckStrategy;
 import syncer.transmission.util.code.CodeUtils;
 import syncer.transmission.util.redis.RedisUrlCheck;
-import syncer.transmission.util.redis.RedisVersionUtil;
 import syncer.transmission.util.strings.StringUtils;
 
 import java.util.Objects;

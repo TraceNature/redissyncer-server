@@ -3,7 +3,6 @@ package syncer.transmission.heartbeat;
 import com.alibaba.fastjson.JSON;
 
 import lombok.extern.slf4j.Slf4j;
-import syncer.common.config.EtcdAuthConfig;
 import syncer.common.config.EtcdServerConfig;
 import syncer.transmission.constants.EtcdKeyCmd;
 import syncer.transmission.entity.etcd.NodeHeartbeat;

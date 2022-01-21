@@ -13,13 +13,9 @@ package syncer.transmission.strategy.commandprocessing.factory.impl;
 
 import com.google.common.collect.Lists;
 import lombok.Builder;
-import syncer.common.config.BreakPointConfig;
-import syncer.common.constant.BreakpointContinuationType;
-import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.mq.kafka.KafkaProducerClient;
 import syncer.transmission.strategy.commandprocessing.CommonProcessingStrategy;
-import syncer.transmission.strategy.commandprocessing.factory.CommonProcessingStrategyListFactory;
 import syncer.transmission.strategy.commandprocessing.factory.KafkaCommonProcessingStrategyListFactory;
 import syncer.transmission.strategy.commandprocessing.impl.*;
 import syncer.transmission.strategy.commandprocessing.kafka.CommandProcessingKafkaRdbCommandSendStrategy;

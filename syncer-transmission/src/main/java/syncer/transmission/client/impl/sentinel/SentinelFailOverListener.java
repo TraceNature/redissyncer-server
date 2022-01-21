@@ -1,7 +1,6 @@
 package syncer.transmission.client.impl.sentinel;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import syncer.jedis.*;
 import syncer.jedis.exceptions.JedisConnectionException;
 import syncer.jedis.exceptions.JedisException;
@@ -11,7 +10,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class SentinelFailOverListener {

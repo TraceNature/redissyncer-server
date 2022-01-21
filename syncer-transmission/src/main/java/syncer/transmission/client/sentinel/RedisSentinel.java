@@ -2,15 +2,12 @@ package syncer.transmission.client.sentinel;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
-import syncer.common.config.BreakPointConfig;
 import syncer.common.constant.BreakpointContinuationType;
 import syncer.jedis.HostAndPort;
 import syncer.jedis.Jedis;
 import syncer.jedis.JedisPubSub;
 import syncer.jedis.exceptions.JedisException;
 import syncer.replica.sentinel.Sentinel;
-import syncer.replica.sentinel.SentinelListener;
-import syncer.replica.sentinel.SyncerRedisSentinel;
 import syncer.replica.util.strings.Strings;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.client.impl.JedisMultiExecPipeLineClient;
@@ -19,7 +16,6 @@ import syncer.transmission.client.impl.JedisPipeLineClient;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 

@@ -14,7 +14,6 @@ package syncer.transmission.strategy.commandprocessing.factory.impl;
 import com.google.common.collect.Lists;
 import lombok.Builder;
 import syncer.common.config.BreakPointConfig;
-import syncer.common.config.EtcdServerConfig;
 import syncer.common.constant.BreakpointContinuationType;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.model.TaskModel;

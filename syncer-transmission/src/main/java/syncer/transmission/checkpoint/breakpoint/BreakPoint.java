@@ -8,15 +8,12 @@ import syncer.common.constant.BreakpointContinuationType;
 import syncer.common.util.RegexUtil;
 import syncer.jedis.Jedis;
 import syncer.replica.constant.RedisType;
-import syncer.transmission.client.impl.JedisMultiExecPipeLineClient;
 import syncer.transmission.entity.OffSetEntity;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 

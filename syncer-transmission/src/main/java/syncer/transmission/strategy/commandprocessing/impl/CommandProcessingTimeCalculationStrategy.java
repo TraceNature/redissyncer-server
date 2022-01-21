@@ -19,7 +19,6 @@ import syncer.replica.event.Event;
 import syncer.replica.event.iter.datatype.*;
 import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
-import syncer.replica.util.strings.Strings;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.exception.KeyWeed0utException;
 import syncer.transmission.exception.StartegyNodeException;

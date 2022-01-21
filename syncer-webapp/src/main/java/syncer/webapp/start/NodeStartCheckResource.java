@@ -13,7 +13,6 @@ import syncer.transmission.entity.etcd.NodeHeartbeat;
 import syncer.transmission.etcd.IEtcdOpCenter;
 import syncer.transmission.etcd.client.JEtcdClient;
 import syncer.transmission.lock.EtcdLockCommandRunner;
-import syncer.transmission.mapper.etcd.EtcdTaskMapper;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.util.sql.SqlOPUtils;
 

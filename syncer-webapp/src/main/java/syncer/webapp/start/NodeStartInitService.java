@@ -7,7 +7,6 @@ import syncer.common.util.TemplateUtils;
 import syncer.transmission.constants.EtcdKeyCmd;
 import syncer.transmission.etcd.client.JEtcdClient;
 import syncer.transmission.lock.EtcdLockCommandRunner;
-import syncer.transmission.mapper.UserMapper;
 import syncer.transmission.mapper.etcd.EtcdID;
 import syncer.transmission.model.RdbVersionModel;
 import syncer.transmission.model.UserModel;

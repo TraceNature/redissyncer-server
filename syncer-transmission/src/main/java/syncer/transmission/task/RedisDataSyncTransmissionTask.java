@@ -11,7 +11,6 @@
 
 package syncer.transmission.task;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

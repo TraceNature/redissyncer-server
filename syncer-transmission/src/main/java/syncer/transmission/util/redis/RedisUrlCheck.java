@@ -11,23 +11,19 @@
 
 package syncer.transmission.util.redis;
 
-import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import syncer.common.exception.TaskMsgException;
-import syncer.common.exception.TaskRestoreException;
 import syncer.jedis.Jedis;
 import syncer.jedis.exceptions.JedisDataException;
 import syncer.replica.cmd.CMD;
 import syncer.replica.config.RedisURI;
 import syncer.replica.config.ReplicConfig;
-import syncer.replica.constant.RedisType;
 import syncer.transmission.constants.TaskMsgConstant;
 import syncer.transmission.util.code.CodeUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Objects;
 
 /**
  * @author zhanenqiang

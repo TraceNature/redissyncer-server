@@ -19,7 +19,6 @@ import syncer.replica.event.Event;
 import syncer.replica.event.iter.datatype.BatchedKeyValuePairEvent;
 import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
-import syncer.transmission.client.RedisClient;
 import syncer.transmission.exception.KeyWeed0utException;
 import syncer.transmission.exception.StartegyNodeException;
 import syncer.transmission.model.TaskModel;
@@ -27,7 +26,6 @@ import syncer.transmission.mq.kafka.KafkaProducerClient;
 import syncer.transmission.po.entity.KeyValueEventEntity;
 import syncer.transmission.strategy.commandprocessing.CommonProcessingStrategy;
 
-import java.util.Date;
 import java.util.Objects;
 
 /**

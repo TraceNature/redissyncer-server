@@ -1,8 +1,6 @@
 package syncer.transmission.strategy.commandprocessing.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Sets;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

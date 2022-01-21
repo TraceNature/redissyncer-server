@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import syncer.transmission.constants.EtcdKeyCmd;
 import syncer.transmission.entity.etcd.EtcdAbandonGroup;
-import syncer.transmission.entity.etcd.EtcdCompensationGroup;
 import syncer.transmission.etcd.client.JEtcdClient;
 import syncer.transmission.mapper.AbandonCommandMapper;
 import syncer.transmission.model.AbandonCommandModel;

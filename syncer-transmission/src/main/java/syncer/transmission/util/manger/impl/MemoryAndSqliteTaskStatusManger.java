@@ -16,7 +16,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.exception.TaskMsgException;
-import syncer.common.util.spring.SpringUtil;
 import syncer.replica.status.Status;
 import syncer.replica.status.TaskStatus;
 import syncer.transmission.constants.TaskMsgConstant;

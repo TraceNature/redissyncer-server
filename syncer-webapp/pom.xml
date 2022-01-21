@@ -25,6 +25,13 @@
             <version>3.1</version>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>syncer</groupId>
+            <artifactId>syncer-transmissions</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
         <dependency>
             <groupId>syncer</groupId>
             <artifactId>syncer-common</artifactId>
@@ -59,6 +66,8 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
+
+
 
         <!--添加此依赖，可以通过在编译时创建候选对象的静态列表来提高大型应用程序的启动性能 -->
 <!--        <dependency>-->

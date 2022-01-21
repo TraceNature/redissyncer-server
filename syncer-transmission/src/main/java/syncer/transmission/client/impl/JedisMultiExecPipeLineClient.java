@@ -23,7 +23,6 @@ import syncer.replica.cmd.CMD;
 import syncer.replica.datatype.rdb.zset.ZSetEntry;
 import syncer.replica.replication.Replication;
 import syncer.replica.util.strings.Strings;
-import syncer.transmission.client.MultiRedisClient;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.cmd.JedisProtocolCommand;
 import syncer.transmission.compensator.PipeLineCompensatorEnum;

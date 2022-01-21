@@ -21,7 +21,6 @@ import syncer.transmission.strategy.commandprocessing.CommonProcessingStrategy;
 import syncer.transmission.strategy.commandprocessing.factory.CommonProcessingStrategyListFactory;
 import syncer.transmission.strategy.commandprocessing.impl.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

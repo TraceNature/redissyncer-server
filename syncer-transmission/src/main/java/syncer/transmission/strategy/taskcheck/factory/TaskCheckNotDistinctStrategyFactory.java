@@ -19,7 +19,6 @@ import syncer.transmission.strategy.taskcheck.ITaskCheckStrategy;
 import syncer.transmission.strategy.taskcheck.ITaskCheckStrategyFactory;
 import syncer.transmission.strategy.taskcheck.impl.TaskCheckRedisUrlStrategy;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

@@ -20,8 +20,6 @@ import syncer.replica.event.iter.datatype.BatchedKeyValuePairEvent;
 import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
 import syncer.replica.util.strings.Strings;
-import syncer.transmission.client.RedisClient;
-import syncer.transmission.compensator.ISyncerCompensator;
 import syncer.transmission.constants.RedisCommandTypeEnum;
 import syncer.transmission.model.AbandonCommandModel;
 import syncer.transmission.model.TaskModel;

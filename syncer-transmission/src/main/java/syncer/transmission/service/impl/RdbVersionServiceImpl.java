@@ -12,11 +12,9 @@
 package syncer.transmission.service.impl;
 
 import com.github.pagehelper.PageHelper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import syncer.common.bean.PageBean;
 import syncer.transmission.exception.TaskErrorException;
-import syncer.transmission.mapper.RdbVersionMapper;
 import syncer.transmission.model.RdbVersionModel;
 import syncer.transmission.service.IRdbVersionService;
 import syncer.transmission.util.sql.SqlOPUtils;

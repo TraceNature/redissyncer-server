@@ -11,20 +11,18 @@
 
 package syncer.transmission.client.impl.sentinel;
 
-import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import syncer.jedis.*;
 import syncer.jedis.params.SetParams;
 import syncer.replica.datatype.rdb.zset.ZSetEntry;
 import syncer.replica.util.strings.Strings;
 import syncer.transmission.client.RedisClient;
-import syncer.transmission.client.jedis.impl.SyncJedisClusterClient;
 import syncer.transmission.cmd.ClusterProtocolCommand;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.util.object.ObjectUtils;
 import syncer.transmission.util.strings.StringUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
-import java.text.ParseException;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;

@@ -1,7 +1,6 @@
 package syncer.transmission.client.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.util.StringUtils;
 import syncer.jedis.HostAndPort;
 import syncer.jedis.Jedis;

@@ -25,8 +25,6 @@ import syncer.replica.replication.Replication;
 import syncer.replica.util.strings.Strings;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.client.impl.ConnectErrorRetry;
-import syncer.transmission.client.impl.JedisPipeLineMultiRetryRunner;
-import syncer.transmission.client.impl.JedisPipelineSubmitMultiCommandRetryRunner;
 import syncer.transmission.cmd.JedisProtocolCommand;
 import syncer.transmission.compensator.PipeLineCompensatorEnum;
 import syncer.transmission.entity.*;

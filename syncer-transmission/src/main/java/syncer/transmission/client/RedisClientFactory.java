@@ -19,7 +19,6 @@ import syncer.transmission.client.impl.JedisMultiExecPipeLineClient;
 import syncer.transmission.client.impl.JedisPipeLineClient;
 import syncer.transmission.client.impl.RedisJedisClusterClient;
 import syncer.transmission.client.impl.sentinel.FastRedisSentinelClient;
-import syncer.transmission.client.impl.sentinel.RedisJedisSentinelClient;
 
 /**
  * @author zhanenqiang

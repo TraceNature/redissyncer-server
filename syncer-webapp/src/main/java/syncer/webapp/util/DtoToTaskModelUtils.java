@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.springframework.util.StringUtils;
-import syncer.common.constant.ResultCodeAndMessage;
 import syncer.common.exception.TaskMsgException;
 import syncer.common.util.MD5Utils;
 import syncer.common.util.TemplateUtils;

@@ -49,7 +49,7 @@ import syncer.webapp.start.NodeStartCheckResource;
 import syncer.webapp.start.NodeStartInitService;
 
 @SpringBootApplication
-@ComponentScan(basePackages={"syncer","syncer.transmission.mapper"})
+@ComponentScan(basePackages={"syncer", "syncer.transmission.mapper", "syncer.transmissions.mapper"})
 @MapperScan("syncer.transmission.mapper")
 @EnableScheduling
 @EnableCaching  //开启缓存

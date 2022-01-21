@@ -22,7 +22,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.util.TimeUtils;
 import syncer.replica.status.TaskStatus;
-import syncer.transmission.constants.CommandKeyFilterType;
 import syncer.transmission.constants.EtcdKeyCmd;
 import syncer.transmission.entity.TaskDataEntity;
 import syncer.transmission.entity.etcd.EtcdMd5Entity;
@@ -35,7 +34,6 @@ import syncer.transmission.lock.EtcdLockCommandRunner;
 import syncer.transmission.mapper.TaskMapper;
 import syncer.transmission.model.LastKeyTimeModel;
 import syncer.transmission.model.TaskModel;
-import syncer.transmission.util.strings.StringUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 /**

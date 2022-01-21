@@ -22,7 +22,6 @@ import syncer.replica.event.start.PreCommandSyncEvent;
 import syncer.replica.replication.Replication;
 import syncer.replica.type.FileType;
 import syncer.replica.util.strings.Strings;
-import syncer.transmission.client.RedisClient;
 import syncer.transmission.exception.StartegyNodeException;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.mq.kafka.KafkaProducerClient;

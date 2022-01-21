@@ -37,7 +37,6 @@ import syncer.transmission.util.RedisCommandTypeUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 import java.util.Date;
-import java.util.Objects;
 
 /**
  * 断点续传2.0

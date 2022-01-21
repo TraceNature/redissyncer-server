@@ -1,11 +1,6 @@
 package syncer.transmission.mapper.etcd;
 
 import com.alibaba.fastjson.JSON;
-import com.google.protobuf.ByteString;
-import com.ibm.etcd.api.DeleteRangeRequest;
-import com.ibm.etcd.api.PutRequest;
-import com.ibm.etcd.api.RequestOp;
-import com.ibm.etcd.api.TxnRequest;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +8,6 @@ import syncer.transmission.constants.EtcdKeyCmd;
 import syncer.transmission.entity.EtcdIDEntity;
 import syncer.transmission.etcd.client.JEtcdClient;
 import syncer.transmission.lock.EtcdLockCommandRunner;
-import syncer.transmission.model.TaskModel;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;

@@ -11,7 +11,6 @@ import syncer.transmission.constants.EtcdKeyCmd;
 import syncer.transmission.entity.etcd.EtcdCompensationGroup;
 import syncer.transmission.etcd.client.JEtcdClient;
 import syncer.transmission.mapper.DataCompensationMapper;
-import syncer.transmission.model.AbandonCommandModel;
 import syncer.transmission.model.DataCompensationModel;
 import java.util.List;
 import java.util.Objects;
