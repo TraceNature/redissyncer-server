@@ -1,7 +1,6 @@
 package syncer.transmission.task;
 
 import java.io.IOException;
-
 import lombok.extern.slf4j.Slf4j;
 import syncer.jedis.Protocol;
 import syncer.replica.config.RedisURI;
@@ -21,6 +20,7 @@ import syncer.replica.replication.Replication;
 import syncer.replica.util.SyncTypeUtils;
 import syncer.replica.util.TaskRunTypeEnum;
 import syncer.replica.util.strings.Strings;
+import syncer.replica.util.type.ExpiredType;
 import syncer.transmission.checkpoint.breakpoint.BreakPoint;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.client.RedisClientFactory;
@@ -208,11 +208,25 @@ public class RedisSyncFilterByAuxKeyTransmissionTask implements Runnable {
                     //全量命令 RESTORE
                     if (event instanceof DumpKeyValuePairEvent) {
                         DumpKeyValuePairEvent valueDump = (DumpKeyValuePairEvent) event;
-                        Long ms = valueDump.getExpiredMs();
                         RedisDB vdb = valueDump.getDb();
                         Long dbNum = vdb.getCurrentDbNumber();
                         db = dbNum.intValue();
-                        long ttl = (ms == null || ms < 0) ? 0 : ms;
+                        long ttlMs = 0;
+
+                        // expiryTime 是到期时间，不是剩余过期时间
+                        if (!ExpiredType.NONE.equals(valueDump.getExpiredType())) {
+                            long expiryTimeMs = 0L;
+                            if (ExpiredType.SECOND.equals(valueDump.getExpiredType())) {
+                                expiryTimeMs = valueDump.getExpiredSeconds() * 1000L;
+                            } else if (ExpiredType.MS.equals(valueDump.getExpiredType())) {
+                                expiryTimeMs = valueDump.getExpiredMs();
+                            }
+                            ttlMs = expiryTimeMs - System.currentTimeMillis();
+                            if (ttlMs <= 0) {
+                                log.debug("restore... ignore expired key [{}]", Strings.byteToString(valueDump.getKey()));
+                                return;
+                            }
+                        }
                         String rdbDumpMd5 = circle.getRdbDumpMd5(valueDump, sourceRedisName, 3.0);
                         String dumpKey = Strings.byteToString(valueDump.getKey());
                         String[] data = new String[] { rdbDumpMd5, "1", "1" };
@@ -224,7 +238,7 @@ public class RedisSyncFilterByAuxKeyTransmissionTask implements Runnable {
                             log.error("restore key:[" + dumpKey + "] fail", e);
                             e.printStackTrace();
                         }
-                        client.restoreReplace(dbNum, valueDump.getKey(), ttl, valueDump.getValue(), true);
+                        client.restoreReplace(dbNum, valueDump.getKey(),  ttlMs, valueDump.getValue(), true);
                     }
 
                     // 更新offset
