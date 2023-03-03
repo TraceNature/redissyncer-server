@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import syncer.common.entity.ResponseResult;
 import syncer.common.montitor.Montitor;
+import syncer.replica.constant.RedisType;
 import syncer.replica.type.FileType;
 import syncer.transmission.entity.StartTaskEntity;
 import syncer.transmission.model.TaskModel;
@@ -57,6 +58,7 @@ public class TaskGroupFileController {
     @RequestMapping(value = "/createtask", method = {RequestMethod.POST}, produces = "application/json;charset=utf-8;")
     @Resubmit(delaySeconds = 10)
     public ResponseResult<List<StartTaskEntity>> createtask(@RequestBody @Validated CreateFileTaskParam param) throws Exception {
+        param.setTargetRedisType(RedisType.FILE);
         List<TaskModel> taskModelList = DtoToTaskModelUtils.getTaskModelList(param, false);
         if (Objects.isNull(taskModelList) || taskModelList.size() == 0) {
             return ResponseResult.<List<StartTaskEntity>>builder().code("1000").msg("任务列表为空，请检查填入任务信息(文件是否存在)").data(null).build();
