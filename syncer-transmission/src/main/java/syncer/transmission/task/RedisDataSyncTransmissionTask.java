@@ -183,6 +183,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                     .filterChain(ProcessingRunStrategyChain.builder().commonFilterList(commonFilterList).build())
                     .replication(replicationHandler)
                     .taskId(taskModel.getTaskId())
+                    .client(client)
                     .taskModel(taskModel)
                     .syncerCompensator(syncerCompensator)
                     .build();
@@ -216,6 +217,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                             .dbMapper(taskModel.getDbMapping())
                             .redisVersion(taskModel.getRedisVersion())
                             .baseOffSet(baseoffset)
+
                             .replId(replicationHandler.getConfig().getReplId())
                             .replOffset(replicationHandler.getConfig().getReplOffset())
                             .taskRunTypeEnum(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType())

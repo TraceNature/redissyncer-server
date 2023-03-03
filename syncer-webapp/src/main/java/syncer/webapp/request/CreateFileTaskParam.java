@@ -114,6 +114,9 @@ public class CreateFileTaskParam {
     private String keyFilter="";
 
     @Builder.Default
+    private Double targetRedisVersion=0.0;
+
+    @Builder.Default
     private CommandKeyFilterType filterType=CommandKeyFilterType.NONE;
 
     public void setSynctype(FileType synctype) {

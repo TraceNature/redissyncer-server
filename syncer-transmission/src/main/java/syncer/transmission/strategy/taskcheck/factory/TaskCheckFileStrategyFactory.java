@@ -18,7 +18,9 @@ import syncer.transmission.model.TaskModel;
 import syncer.transmission.strategy.taskcheck.ITaskCheckStrategy;
 import syncer.transmission.strategy.taskcheck.ITaskCheckStrategyFactory;
 import syncer.transmission.strategy.taskcheck.impl.TaskCheckRedisTypeStrategy;
+import syncer.transmission.strategy.taskcheck.impl.TaskCheckRedisUrlStrategy;
 import syncer.transmission.strategy.taskcheck.impl.TaskDistinctStrategy;
+import syncer.transmission.strategy.taskcheck.impl.TaskSelectVersionStrategy;
 
 import java.util.List;
 
@@ -38,8 +40,11 @@ public class TaskCheckFileStrategyFactory implements ITaskCheckStrategyFactory {
         taskCheckStrategyList.add(TaskDistinctStrategy.builder().client(client).taskModel(taskModel).build());
 
         taskCheckStrategyList.add(TaskDistinctStrategy.builder().client(client).taskModel(taskModel).build());
-        taskCheckStrategyList.add(TaskDistinctStrategy.builder().client(client).taskModel(taskModel).build());
-        taskCheckStrategyList.add(TaskDistinctStrategy.builder().client(client).taskModel(taskModel).build());
+//        taskCheckStrategyList.add(TaskDistinctStrategy.builder().client(client).taskModel(taskModel).build());
+        taskCheckStrategyList.add(TaskCheckRedisUrlStrategy.builder().client(client).taskModel(taskModel).build());
+        taskCheckStrategyList.add(TaskSelectVersionStrategy.builder().client(client).taskModel(taskModel).build());
+
+//        taskCheckStrategyList.add(TaskDistinctStrategy.builder().client(client).taskModel(taskModel).build());
         return taskCheckStrategyList;
     }
 }

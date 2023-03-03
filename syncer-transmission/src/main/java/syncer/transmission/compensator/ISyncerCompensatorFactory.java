@@ -29,9 +29,14 @@ public class ISyncerCompensatorFactory {
         case CLUSTER:
             iSyncerCompensator = new MultiThreadSyncerCompensator(taskId,client);
             break;
+        case FILE:
+            iSyncerCompensator=new PipeLineSyncerCompensator();
+            break;
         case SENTINEL:
             iSyncerCompensator=new PipeLineSyncerCompensator();
             break;
+
+
         default:
             break;
 

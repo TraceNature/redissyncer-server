@@ -46,10 +46,17 @@ public class RedisClientFactory {
             case SENTINEL:
                 redisClient = new JedisPipeLineClient(host,port,password,count,errorCount,taskId);
                 break;
+            case FILE:
+                if(BreakPointConfig.getBreakpointContinuationType().equals(BreakpointContinuationType.v1)){
+                    redisClient = new JedisPipeLineClient(host,port,password,count,errorCount,taskId);
+                }else {
+                    redisClient = new JedisMultiExecPipeLineClient(host,port,password,sourceHost,sourcePort,count,errorCount,taskId);
+                }
 //            case JIMDB:
 //                redisClient = new JimDb2Client(jimUrl,cfsUrl,taskId);
 //                break;
             default:
+
                 break;
         }
         return redisClient;

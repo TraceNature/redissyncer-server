@@ -58,19 +58,24 @@ public class TaskSelectVersionStrategy implements ITaskCheckStrategy {
                 ||taskModel.getSyncType().equals(SyncType.ONLINEMIXED.getCode())){
             String version=redisVersionUtil.selectSyncerVersion(String.valueOf(taskModel.getTargetUri().toArray()[0]));
             log.warn("自动获取redis版本号：{},手动输入版本号：{}",version,taskModel.getRedisVersion());
+
+            if(version.contains(JIMDB_VERSION_HEADER)){
+                taskModel.setRedisVersion(JIMDB_DEFAULT_VERSION);
+            }else {
+                taskModel.setRedisVersion(Double.valueOf(version.split("\\.")[0]));
+            }
+
+
             if(DEFAULT_NO_VERSION.equalsIgnoreCase(version)){
                 if(taskModel.getRedisVersion()==0){
+//                    taskModel.setRedisVersion(Double.parseDouble(version));
                     // targetRedisVersion can not be empty /targetRedisVersion error
                     throw new TaskMsgException(CodeUtils.codeMessages(ResultCodeAndMessage.TASK_MSG_REDIS_MSG_ERROR.getCode(),ResultCodeAndMessage.TASK_MSG_REDIS_MSG_ERROR.getMsg()));
                 }else {
                     version= String.valueOf(taskModel.getRedisVersion());
                 }
             }
-            if(version.contains(JIMDB_VERSION_HEADER)){
-                taskModel.setRedisVersion(JIMDB_DEFAULT_VERSION);
-            }else {
-                taskModel.setRedisVersion(Double.valueOf(version));
-            }
+
             RdbVersionModel rdbVersion= SqlOPUtils.findRdbVersionModelByRedisVersion(version);
             if(Objects.isNull(rdbVersion)){
                 rdbVersion=RdbVersionModel.builder()
