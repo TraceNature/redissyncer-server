@@ -670,17 +670,37 @@ public class JedisPipeLineClient implements RedisClient {
             }
             if (isSetNxWithTime(cmd, args)) {
                 String byte3 = Strings.byteToString(args[3]);
+                String byte4 = Strings.byteToString(args[4]);
+                try {
+                    long setExData=Long.parseLong(byte3);
+                }catch (NumberFormatException e){
+                    byte3="ex";
+                }
 
-                kvPersistence.addKey(EventEntity
-                        .builder()
-                        .key(args[0])
-                        .value(args[1])
-                        .stringKey(Strings.byteToString(args[0]))
-                        .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SET_WITH_TIME)
-                        .dbNum(Long.valueOf(currentDbNum))
-                        .cmd("SET".getBytes())
-                        .ms(Long.parseLong(byte3))
-                        .build());
+                if("ex".equalsIgnoreCase(byte3)||"nx".equalsIgnoreCase(byte3)||"xx".equalsIgnoreCase(byte3)||"px".equalsIgnoreCase(byte3)){
+                    kvPersistence.addKey(EventEntity
+                            .builder()
+                            .key(args[0])
+                            .value(args[1])
+                            .stringKey(Strings.byteToString(args[0]))
+                            .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SET_WITH_TIME)
+                            .dbNum(Long.valueOf(currentDbNum))
+                            .cmd("SET".getBytes())
+                            .ms(Long.parseLong(byte4))
+                            .build());
+                }else {
+                    kvPersistence.addKey(EventEntity
+                            .builder()
+                            .key(args[0])
+                            .value(args[1])
+                            .stringKey(Strings.byteToString(args[0]))
+                            .pipeLineCompensatorEnum(PipeLineCompensatorEnum.SET_WITH_TIME)
+                            .dbNum(Long.valueOf(currentDbNum))
+                            .cmd("SET".getBytes())
+                            .ms(Long.parseLong(byte3))
+                            .build());
+                }
+
                 addCommandNum();
             } else {
                 if (args == null || args.length <= 0) {
