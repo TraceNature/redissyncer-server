@@ -120,6 +120,7 @@ public class CommandProcessingAofCommandSendStrategy implements CommonProcessing
             if(eventEntity.getEvent() instanceof DefaultCommand){
                 DefaultCommand dc = (DefaultCommand) eventEntity.getEvent();
             }
+            log.error("AofCommandSendStrategy error {} {}",e.getMessage(),e.getStackTrace());
             throw new StartegyNodeException(e.getMessage()+"->AofCommandSendStrategy",e.getCause());
         }
     }

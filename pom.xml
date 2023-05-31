@@ -111,12 +111,17 @@
     </dependency>
 
     <!-- SQLite 驱动 -->
+<!--    <dependency>-->
+<!--      <groupId>org.xerial</groupId>-->
+<!--      <artifactId>sqlite-jdbc</artifactId>-->
+<!--      <version>3.21.0.1</version>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>org.xerial</groupId>
       <artifactId>sqlite-jdbc</artifactId>
       <version>3.21.0.1</version>
+      <version>3.39.3.0</version>
     </dependency>
-
     <dependency>
       <groupId>org.mybatis.spring.boot</groupId>
       <artifactId>mybatis-spring-boot-starter</artifactId>
