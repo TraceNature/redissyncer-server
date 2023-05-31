@@ -158,7 +158,25 @@ public class SendCommandWithOutQueue {
                         SingleTaskDataManagerUtils.brokenStatusAndLog("被抛弃key数量到达阈值[" + errorCount + "],exception reason["+e.getMessage()+"]", this.getClass(), taskId);
                     }
                 }
-                log.error("[{}]抛弃key:{} ,class:[{}]:原因[{}]",taskId, keyName,event.getClass().toString(),e.getMessage());
+                String stringCommand=command;
+                if(event instanceof DefaultCommand){
+                    try {
+                        DefaultCommand defaultCommand= (DefaultCommand) event;
+                        command= Strings.byteToString(defaultCommand.getCommand());
+                        String [] args=Strings.byteToString(defaultCommand.getArgs());
+                        StringBuilder commands=new StringBuilder();
+                        commands.append(" ").append(command);
+                        for (int i=0;i<args.length;i++){
+                            String key=args[i];
+                            commands.append(" ").append(key);
+                        }
+                        stringCommand=commands.toString();
+                    }catch (Exception exq){
+                        log.error("error command log error");
+                    }
+
+                }
+                log.error("[{}]抛弃 command:[{}] key:{} ,class:[{}]:原因[{}] ",taskId,stringCommand, keyName,event.getClass().toString(),e.getMessage());
                 DataCleanUtils.cleanData(keyValueEventEntity,event);
                 e.printStackTrace();
             }finally {
