@@ -3,6 +3,7 @@ package syncer.webapp.util;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.util.StringUtils;
 import syncer.common.constant.ResultCodeAndMessage;
 import syncer.common.exception.TaskMsgException;
@@ -131,9 +132,9 @@ public class DtoToTaskModelUtils {
                     .fileAddress("")
                     //Redis 6.0 ACL相关
                     .sourceAcl(param.isSourceAcl())
-//                  .sourceUserName(param.getSourceUserName())
+                    .sourceUserName(param.getSourceUserName())
                     .targetAcl(param.isTargetAcl())
-//                  .targetUserName(param.getTargetUserName())
+                    .targetUserName(param.getTargetUserName())
                     .syncType(SyncTypeUtils.getSyncType(syncerType).getCode())
                     .errorCount(param.getErrorCount())
                     .timeDeviation(param.getTimeDeviation())
@@ -153,6 +154,22 @@ public class DtoToTaskModelUtils {
             }catch (Exception e){
                 throw new TaskMsgException(CodeUtils.codeMessages("100","请确保targetRedisVersion正确(请保留小数点后一位)"));
             }
+
+
+            if(Strings.isEmpty(param.getTargetUserName())){
+                if(param.getTargetPassword().contains(" ")){
+                    taskModel.setTargetUserName(param.getTargetPassword().split(" ")[0]);
+                    taskModel.setTargetPassword(param.getTargetPassword().split(" ")[1]);
+                }
+            }
+
+            if(Strings.isEmpty(param.getSourceUserName())){
+                if(param.getSourcePassword().contains(" ")){
+                    taskModel.setSourceUserName(param.getSourcePassword().split(" ")[0]);
+                    taskModel.setSourcePassword(param.getSourcePassword().split(" ")[1]);
+                }
+            }
+
             if(param.getDbMapper()!=null){
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
             }else {
@@ -382,6 +399,14 @@ public class DtoToTaskModelUtils {
                     .targetUserName(param.getTargetUserName())
                     .errorCount(param.getErrorCount())
                     .build();
+
+            if(Strings.isEmpty(param.getSourceUserName())){
+                if(param.getSourcePassword().contains(" ")){
+                    taskModel.setSourceUserName(param.getSourcePassword().split(" ")[0]);
+                    taskModel.setSourcePassword(param.getSourcePassword().split(" ")[1]);
+                }
+            }
+
             if (param.getDbMapper() != null) {
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
             } else {

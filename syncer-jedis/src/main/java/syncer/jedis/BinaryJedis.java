@@ -2239,6 +2239,14 @@ public class BinaryJedis implements BasicCommands, BinaryJedisCommands, MultiKey
     return client.getStatusCodeReply();
   }
 
+  @Override
+  public String auth(final String user,final String password) {
+    checkIsInMultiOrPipeline();
+    client.auth(user,password);
+    return client.getStatusCodeReply();
+  }
+
+
   public Pipeline pipelined() {
     pipeline = new Pipeline();
     pipeline.setClient(client);

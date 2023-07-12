@@ -59,7 +59,7 @@ public class RedisReplIdCheck {
             ReplicConfig targetConfig = ReplicConfig.valueOf(targetUriplus);
 
             if(!StringUtils.isEmpty(targetConfig.getAuthUser())&&!StringUtils.isEmpty(targetConfig.getAuthPassword())){
-                Object targetAuth = target.auth(targetConfig.getAuthUser()+" "+targetConfig.getAuthPassword());
+                Object targetAuth = target.auth(targetConfig.getAuthUser(),targetConfig.getAuthPassword());
             }else if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
                 Object targetAuth = target.auth(targetConfig.getAuthPassword());
             }

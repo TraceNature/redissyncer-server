@@ -66,7 +66,7 @@ public class RedisSyncFilterByAuxKeyTransmissionTask implements Runnable {
         //TODO 先处理 redis-cluster， 其他的再考虑
         RedisType redisType = SyncTypeUtils.getRedisType(taskModel.getTargetRedisType());
         client = RedisClientFactory.createRedisClient(RedisType.CLUSTER, taskModel.getTargetRedisAddress(),
-                taskModel.getTargetPort(), taskModel.getTargetPassword(), "", 0, 0, taskModel.getErrorCount(),
+                taskModel.getTargetPort(),taskModel.getTargetUserName(), taskModel.getTargetPassword(), "", 0, 0, taskModel.getErrorCount(),
                 taskModel.getTaskId(), null, null);
 
         this.db = -1;

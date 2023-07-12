@@ -82,7 +82,9 @@ public class RedisVersionUtil {
             ReplicConfig targetConfig = ReplicConfig.valueOf(targetUriplus);
 
             //获取password
-            if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
+            if(!StringUtils.isEmpty(targetConfig.getAuthUser())){
+                Object targetAuth = target.auth(targetConfig.getAuthUser(),targetConfig.getAuthPassword());
+            }else if (!StringUtils.isEmpty(targetConfig.getAuthPassword())) {
                 Object targetAuth = target.auth(targetConfig.getAuthPassword());
             }
             String info = target.info();

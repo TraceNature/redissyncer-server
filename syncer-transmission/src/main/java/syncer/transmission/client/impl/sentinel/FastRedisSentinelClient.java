@@ -61,7 +61,7 @@ public class FastRedisSentinelClient extends JedisPipeLineClient {
                     currentHostMaster = master;
                     log.info("Created Sentinel to master at " + master);
                     if(Objects.isNull(pipelined)){
-                        targetClient=createJedis(master.getHost(), master.getPort(),password);
+                        targetClient=createJedis(master.getHost(), master.getPort(),user,password);
                         pipelined = targetClient.pipelined();
                         log.warn("[{}] connected to [{}:{}]",taskId,master.getHost(),master.getPort());
                         currentMaster=master.getHost()+":"+master.getPort();
@@ -74,7 +74,7 @@ public class FastRedisSentinelClient extends JedisPipeLineClient {
                                 submitCommandNumNow();
                                 pipelined.close();
                                 targetClient.close();
-                                targetClient=createJedis(master.getHost(), master.getPort(),password);
+                                targetClient=createJedis(master.getHost(), master.getPort(),user,password);
                                 pipelined = targetClient.pipelined();
                                 host=master.getHost();
                                 port=master.getPort();

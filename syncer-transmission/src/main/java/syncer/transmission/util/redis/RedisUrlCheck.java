@@ -130,7 +130,9 @@ public class RedisUrlCheck {
                     String auth = target.auth(tconfig.getSentinelAuthPassword());
                 }
             }else {
-                if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
+                if(!StringUtils.isEmpty(tconfig.getAuthUser())){
+                    String auth = target.auth(tconfig.getAuthUser(),tconfig.getAuthPassword());
+                }else if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
                     String auth = target.auth(tconfig.getAuthPassword());
                 }
             }

@@ -36,6 +36,7 @@ public class RedisSentinel {
     protected final String channel = "+switch-master";
     protected final ScheduledExecutorService schedule = newSingleThreadScheduledExecutor();
     protected final AtomicInteger hostsPulseSize = new AtomicInteger(0);
+    protected String user=null;
     protected String password=null;
     protected String sentinelPassword=null;
     private  Sentinel sentinel;
@@ -100,9 +101,9 @@ public class RedisSentinel {
 
         }
         if(BreakpointContinuationType.v1.equals(breakpointContinuationType)){
-            client = new JedisPipeLineClient(host.getHost(),host.getPort(),password,count,errorCount,taskId);
+            client = new JedisPipeLineClient(host.getHost(),host.getPort(),user,password,count,errorCount,taskId);
         }else {
-            client = new JedisMultiExecPipeLineClient(host.getHost(),host.getPort(),password,sourceHost,sourcePort,count,errorCount,taskId);
+            client = new JedisMultiExecPipeLineClient(host.getHost(),host.getPort(),user,password,sourceHost,sourcePort,count,errorCount,taskId);
         }
     }
 

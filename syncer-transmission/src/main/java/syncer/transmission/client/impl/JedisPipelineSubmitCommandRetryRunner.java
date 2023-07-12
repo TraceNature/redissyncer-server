@@ -24,7 +24,7 @@ public class JedisPipelineSubmitCommandRetryRunner implements JedisRetryRunner{
     @Override
     public void run()  throws JedisConnectionException {
 
-        client.targetClient=client.createJedis(client.host,client.port,client.password);
+        client.targetClient=client.createJedis(client.host,client.port,client.user,client.password);
         client.pipelined = client.targetClient.pipelined();
 
         List<EventEntity> dataList=new ArrayList<>();

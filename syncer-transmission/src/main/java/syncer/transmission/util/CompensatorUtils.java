@@ -11,12 +11,15 @@
 
 package syncer.transmission.util;
 
+import lombok.extern.slf4j.Slf4j;
 import syncer.replica.util.strings.Strings;
 import syncer.transmission.compensator.PipeLineCompensatorEnum;
 
 /**
  * 补偿机制相关工具
  */
+
+@Slf4j
 public class CompensatorUtils {
 
     /**
@@ -101,7 +104,7 @@ public class CompensatorUtils {
 
         }
         if (data.indexOf("ERROR") >= 0) {
-            System.out.println("String :" + data);
+            log.info("ERROR String :{}", data);
             return false;
         }
 
