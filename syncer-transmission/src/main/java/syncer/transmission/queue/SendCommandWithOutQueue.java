@@ -11,6 +11,7 @@
 
 package syncer.transmission.queue;
 
+import com.alibaba.fastjson.JSON;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
@@ -81,7 +82,7 @@ public class SendCommandWithOutQueue {
                 Event event=keyValueEventEntity.getEvent();
                 String keyName=null;
                 String command=null;
-                String value=null;
+                String value="";
                 int dataType=12;
                 long ttl=-1L;
                 if(event instanceof DefaultCommand){
@@ -89,12 +90,19 @@ public class SendCommandWithOutQueue {
                     command= Strings.byteToString(defaultCommand.getCommand());
                     if(defaultCommand.getArgs().length>0){
                         keyName= Strings.byteToString(((DefaultCommand) event).getCommand())+Strings.byteToString(((DefaultCommand) event).getArgs()[0]);
+                        String []values=Strings.byteToString(((DefaultCommand) event).getArgs());
+                        for (int i=0 ;i<values.length;i++){
+                            value=value+" "+values[i];
+                        }
                     }else{
                         keyName= Strings.byteToString(((DefaultCommand) event).getCommand());
+                        value="";
                     }
+
                 }else if(event instanceof DumpKeyValuePairEvent){
                     DumpKeyValuePairEvent dumpKeyValuePair= (DumpKeyValuePairEvent) event;
                     keyName= Strings.byteToString(dumpKeyValuePair.getKey());
+                    value=Strings.byteToString(dumpKeyValuePair.getValue());
                     command="RestoreReplace";
                     if(dumpKeyValuePair.getExpiredMs()!=null){
                         ttl=dumpKeyValuePair.getExpiredMs();
@@ -103,6 +111,7 @@ public class SendCommandWithOutQueue {
                 }else if(event instanceof BatchedKeyValuePairEvent){
                     BatchedKeyValuePairEvent batchedKeyValuePair= (BatchedKeyValuePairEvent) event;
                     keyName=Strings.toString(batchedKeyValuePair.getKey());
+                    value= BatchedKeyValuePairEvent.class+":"+JSON.toJSONString(batchedKeyValuePair.getValue());
                     RedisCommandTypeEnum typeEnum= RedisCommandTypeUtils.getRedisCommandTypeEnum(batchedKeyValuePair.getValueRdbType());
                     command=typeEnum.name();
                     if(batchedKeyValuePair.getExpiredMs()!=null){
@@ -176,7 +185,7 @@ public class SendCommandWithOutQueue {
                     }
 
                 }
-                log.error("[{}]抛弃 command:[{}] key:{} ,class:[{}]:原因[{}] ",taskId,stringCommand, keyName,event.getClass().toString(),e.getMessage());
+                log.error("[{}]抛弃 command:[{}] key:{} value [{}] ,class:[{}]:原因[{}] ",taskId,stringCommand, keyName,value,event.getClass().toString(),e.getMessage());
                 DataCleanUtils.cleanData(keyValueEventEntity,event);
                 e.printStackTrace();
             }finally {

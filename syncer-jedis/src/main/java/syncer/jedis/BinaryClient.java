@@ -593,8 +593,18 @@ public class BinaryClient extends Connection {
 
   public void auth(final String password) {
     setPassword(password);
-    sendCommand(AUTH, password);
+    if(password.contains(" ")){
+      auth(password.split(" ")[0],password.split(" ")[1]);
+    }else{
+      sendCommand(AUTH, password);
+    }
   }
+
+  public void auth(final String user,final String password) {
+    setPassword(user+" "+password);
+    sendCommand(AUTH, user,password);
+  }
+
 
   public void subscribe(final byte[]... channels) {
     sendCommand(SUBSCRIBE, channels);

@@ -26,14 +26,14 @@ import syncer.transmission.client.impl.RedisJedisClusterClient;
  */
 @Slf4j
 public class RedisClientFactory {
-    public static RedisClient createRedisClient(RedisType redisType, String host, Integer port, String password, String sourceHost, Integer sourcePort, int count, long errorCount, String taskId, String jimUrl, String cfsUrl) {
+    public static RedisClient createRedisClient(RedisType redisType, String host, Integer port,String user, String password, String sourceHost, Integer sourcePort, int count, long errorCount, String taskId, String jimUrl, String cfsUrl) {
         RedisClient redisClient = null;
         switch (redisType) {
             case SINGLE:
                 if(BreakPointConfig.getBreakpointContinuationType().equals(BreakpointContinuationType.v1)){
-                    redisClient = new JedisPipeLineClient(host,port,password,count,errorCount,taskId);
+                    redisClient = new JedisPipeLineClient(host,port,user,password,count,errorCount,taskId);
                 }else {
-                    redisClient = new JedisMultiExecPipeLineClient(host,port,password,sourceHost,sourcePort,count,errorCount,taskId);
+                    redisClient = new JedisMultiExecPipeLineClient(host,port,user,password,sourceHost,sourcePort,count,errorCount,taskId);
                 }
 
                 log.info("host[{}],port[{}] , {} client init success",host,port,BreakPointConfig.getBreakpointContinuationType());
@@ -44,13 +44,13 @@ public class RedisClientFactory {
                 redisClient = new RedisJedisClusterClient(host,password,taskId);
                 break;
             case SENTINEL:
-                redisClient = new JedisPipeLineClient(host,port,password,count,errorCount,taskId);
+                redisClient = new JedisPipeLineClient(host,port,user,password,count,errorCount,taskId);
                 break;
             case FILE:
                 if(BreakPointConfig.getBreakpointContinuationType().equals(BreakpointContinuationType.v1)){
-                    redisClient = new JedisPipeLineClient(host,port,password,count,errorCount,taskId);
+                    redisClient = new JedisPipeLineClient(host,port,user,password,count,errorCount,taskId);
                 }else {
-                    redisClient = new JedisMultiExecPipeLineClient(host,port,password,sourceHost,sourcePort,count,errorCount,taskId);
+                    redisClient = new JedisMultiExecPipeLineClient(host,port,user,password,sourceHost,sourcePort,count,errorCount,taskId);
                 }
 //            case JIMDB:
 //                redisClient = new JimDb2Client(jimUrl,cfsUrl,taskId);

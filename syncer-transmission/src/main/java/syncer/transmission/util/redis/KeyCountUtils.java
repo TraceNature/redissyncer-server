@@ -41,7 +41,9 @@ public class KeyCountUtils {
 
             target = new Jedis(suri.getHost(), suri.getPort());
             //获取password
-            if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
+            if(!StringUtils.isEmpty(tconfig.getAuthUser())&&!StringUtils.isEmpty(tconfig.getAuthPassword())){
+                Object auth = target.auth(tconfig.getAuthUser(),tconfig.getAuthPassword());
+            }else if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
                 Object auth = target.auth( tconfig.getAuthPassword());
             }
 

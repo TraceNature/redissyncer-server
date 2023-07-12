@@ -385,15 +385,15 @@ public class TaskModel {
     }
 
     public String getSourceUri(){
-        return getUri(getSourceRedisAddress(),getSourcePassword(),sourceRedisMasterName,sourceSentinelAuthPassword);
+        return getUri(getSourceRedisAddress(),getSourceUserName(),getSourcePassword(),sourceRedisMasterName,sourceSentinelAuthPassword);
     }
 
     public Set<String> getTargetUri(){
-        return getUrlList(getTargetRedisAddress(),getTargetPassword(),targetRedisMasterName,targetSentinelAuthPassword);
+        return getUrlList(getTargetRedisAddress(),getTargetUserName(),getTargetPassword(),targetRedisMasterName,targetSentinelAuthPassword);
     }
 
 
-    private   Set<String> getUrlList(String sourceUrls, String password,String redisMasterName,String sentinelAuthPassword) {
+    private   Set<String> getUrlList(String sourceUrls,String authUser, String password,String redisMasterName,String sentinelAuthPassword) {
         Set<String> urlList = new HashSet<>();
         if (StringUtils.isEmpty(sourceUrls)){
             return new HashSet<>();
@@ -401,7 +401,7 @@ public class TaskModel {
         String[] sourceUrlsList = sourceUrls.split(";");
         //循环遍历所有的url
         for (String url : sourceUrlsList) {
-            String uri=getUri(url,password,redisMasterName,sentinelAuthPassword);
+            String uri=getUri(url,authUser,password,redisMasterName,sentinelAuthPassword);
             if(!StringUtils.isEmpty(uri)) {
                 urlList.add(uri);
             }
@@ -409,7 +409,7 @@ public class TaskModel {
         return urlList;
     }
 
-    public  String getUri(String address,String password,String masterName,String sentinelPassword){
+    public  String getUri(String address,String authUser,String password,String masterName,String sentinelPassword){
         StringBuilder stringHead = new StringBuilder("redis://");
         int index=0;
         //如果截取出空字符串直接跳过
@@ -420,6 +420,18 @@ public class TaskModel {
                 index++;
                 stringHead.append("?authPassword=");
                 stringHead.append(password);
+            }
+
+            if(authUser!=null&&authUser.length()>0){
+                if(index>0){
+                    stringHead.append("&authUser=");
+                    stringHead.append(authUser);
+                    index++;
+                }else{
+                    stringHead.append("?authUser=");
+                    stringHead.append(authUser);
+                    index++;
+                }
             }
 
             if(masterName!=null&&masterName.length()>0){
@@ -458,7 +470,7 @@ public class TaskModel {
     public String[] getSourceHostUris(){
         String[]host=sourceHost.split(";");
         for (int i = 0; i < host.length; i++) {
-            host[i]=getUri(host[i],sourcePassword,sourceRedisMasterName,sourceSentinelAuthPassword);
+            host[i]=getUri(host[i],sourceUserName,sourcePassword,sourceRedisMasterName,sourceSentinelAuthPassword);
         }
         return host;
     }
@@ -470,7 +482,7 @@ public class TaskModel {
     public String[] getTargetHostUris(){
         String[]host=targetHost.split(";");
         for (int i = 0; i < host.length; i++) {
-            host[i]=getUri(host[i],targetPassword,targetRedisMasterName,targetSentinelAuthPassword);
+            host[i]=getUri(host[i],targetUserName,targetPassword,targetRedisMasterName,targetSentinelAuthPassword);
         }
         return host;
     }

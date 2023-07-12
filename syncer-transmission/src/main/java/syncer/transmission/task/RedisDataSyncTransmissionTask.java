@@ -175,7 +175,7 @@ public class RedisDataSyncTransmissionTask implements Runnable{
             }
             **/
             RedisType branchType=SyncTypeUtils.getRedisType(taskModel.getTargetRedisType());
-            RedisClient client = RedisClientFactory.createRedisClient(branchType, taskModel.getTargetHost(), taskModel.getTargetPort(), taskModel.getTargetPassword(),taskModel.getSourceHost(), taskModel.getSourcePort(), taskModel.getBatchSize(),taskModel.getErrorCount(), taskModel.getId(),null,null);
+            RedisClient client = RedisClientFactory.createRedisClient(branchType, taskModel.getTargetHost(), taskModel.getTargetPort(), taskModel.getTargetUserName(),taskModel.getTargetPassword(),taskModel.getSourceHost(), taskModel.getSourcePort(), taskModel.getBatchSize(),taskModel.getErrorCount(), taskModel.getId(),null,null);
             //根据type生成相对节点List [List顺序即为filter节点执行顺序]
             List<CommonProcessingStrategy> commonFilterList = ProcessingRunStrategyListSelecter.getStrategyList(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType(),taskModel,client);
             ISyncerCompensator syncerCompensator= ISyncerCompensatorFactory.createRedisClient(branchType,taskModel.getId(),client);

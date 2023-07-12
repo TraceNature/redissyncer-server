@@ -28,7 +28,6 @@ import syncer.common.constant.StoreType;
 import syncer.common.util.ThreadPoolUtils;
 import syncer.common.util.file.FileUtils;
 import syncer.common.util.spring.SpringUtil;
-import syncer.jedis.HostAndPort;
 import syncer.replica.config.ReplicConfig;
 import syncer.replica.datatype.command.DefaultCommand;
 import syncer.replica.datatype.command.pubsub.PublishCommand;

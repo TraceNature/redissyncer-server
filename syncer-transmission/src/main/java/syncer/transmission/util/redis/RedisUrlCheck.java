@@ -117,7 +117,6 @@ public class RedisUrlCheck {
         Jedis target = null;
         try {
 
-
             turi = new RedisURI(url);
             target = new Jedis(turi.getHost(), turi.getPort());
             ReplicConfig tconfig = ReplicConfig.valueOf(turi);
@@ -127,7 +126,9 @@ public class RedisUrlCheck {
                     String auth = target.auth(tconfig.getSentinelAuthPassword());
                 }
             }else {
-                if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
+                if(!StringUtils.isEmpty(tconfig.getAuthUser())){
+                    String auth = target.auth(tconfig.getAuthUser(),tconfig.getAuthPassword());
+                }else if (!StringUtils.isEmpty(tconfig.getAuthPassword())) {
                     String auth = target.auth(tconfig.getAuthPassword());
                 }
             }

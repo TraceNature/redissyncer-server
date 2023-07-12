@@ -48,6 +48,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class JedisPipeLineClient implements RedisClient {
     protected String host;
     protected Integer port;
+    protected String user;
     protected String password;
     protected Jedis targetClient;
     protected Pipeline pipelined;
@@ -87,12 +88,13 @@ public class JedisPipeLineClient implements RedisClient {
 
     //断线重试机制
     private ConnectErrorRetry retry=new ConnectErrorRetry(taskId);
-    public JedisPipeLineClient(String host, Integer port, String password, int count, long errorCount, String taskId) {
+    public JedisPipeLineClient(String host, Integer port,String user, String password, int count, long errorCount, String taskId) {
 
         this.host = host;
         this.port = port;
         this.taskId = taskId;
         this.password=password;
+        this.user=user;
         if (count != 0) {
             this.count = count;
         }
@@ -101,7 +103,7 @@ public class JedisPipeLineClient implements RedisClient {
             this.errorCount = errorCount;
         }
 
-        targetClient=createJedis(this.host,this.port,password);
+        targetClient=createJedis(this.host,this.port,user,password);
 
         pipelined = targetClient.pipelined();
         retry=new ConnectErrorRetry(taskId);
@@ -860,11 +862,14 @@ public class JedisPipeLineClient implements RedisClient {
      * @param password
      * @return
      */
-    protected Jedis createJedis(String host,int port,String password){
+    protected Jedis createJedis(String host,int port,String user,String password){
         Jedis jedis=new Jedis(host,port);
-        if (!StringUtils.isEmpty(password)) {
+        if(!StringUtils.isEmpty(user)){
+            jedis.auth(user,password);
+        }else if (!StringUtils.isEmpty(password)) {
             jedis.auth(password);
         }
+
         if(CMD.PONG.equalsIgnoreCase(jedis.ping())){
             return jedis;
         }
@@ -1025,7 +1030,7 @@ public class JedisPipeLineClient implements RedisClient {
         try {
             Jedis client = null;
             try {
-                client = createJedis(this.host,this.port,password);
+                client = createJedis(this.host,this.port,user,password);
                 Object result = null;
                 String command = null;
                 String key = null;
@@ -1188,7 +1193,7 @@ public class JedisPipeLineClient implements RedisClient {
                 if (appendMap.containsKey(eventEntity.getStringKey())) {
                     appendMap.get(eventEntity.getStringKey()).getValue().append(Strings.byteToString(eventEntity.getValue()));
                 } else {
-                    client = createJedis(host,port,password);
+                    client = createJedis(host,port,user,password);
                     String oldValue = client.get(eventEntity.getStringKey());
                     StringBuilder stringBuilder = new StringBuilder();
                     if (org.springframework.util.StringUtils.isEmpty(oldValue)) {
@@ -1208,7 +1213,7 @@ public class JedisPipeLineClient implements RedisClient {
 
             } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.INCR)) {
                 submitCommandNumNow();
-                client = createJedis(host,port,password);
+                client = createJedis(host,port,user,password);
                 String oldValue = client.get(eventEntity.getStringKey());
                 Integer newValue = 0;
                 if (org.springframework.util.StringUtils.isEmpty(oldValue) || oldValue.equalsIgnoreCase("null")) {
@@ -1220,7 +1225,7 @@ public class JedisPipeLineClient implements RedisClient {
                 incrMap.get(eventEntity.getStringKey());
             } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.INCRBY)) {
                 submitCommandNumNow();
-                client = createJedis(host,port,password);
+                client = createJedis(host,port,user,password);
                 String oldValue = client.get(eventEntity.getStringKey());
                 int newValue = 0;
                 String numData = Strings.byteToString(eventEntity.getValueList()[1]);
@@ -1235,7 +1240,7 @@ public class JedisPipeLineClient implements RedisClient {
 
             } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.INCRBYFLOAT)) {
                 submitCommandNumNow();
-                client = createJedis(host,port,password);
+                client = createJedis(host,port,user,password);
                 String oldValue = client.get(eventEntity.getStringKey());
                 float newValue = 0;
                 if (org.springframework.util.StringUtils.isEmpty(oldValue) || oldValue.equalsIgnoreCase("null")) {
@@ -1246,7 +1251,7 @@ public class JedisPipeLineClient implements RedisClient {
                 incrDoubleMap.put(eventEntity.getStringKey(), newValue);
             } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.DECR)) {
                 submitCommandNumNow();
-                client = createJedis(host,port,password);
+                client = createJedis(host,port,user,password);
                 String oldValue = client.get(eventEntity.getStringKey());
                 Integer newValue = 0;
                 if (org.springframework.util.StringUtils.isEmpty(oldValue)) {
@@ -1259,7 +1264,7 @@ public class JedisPipeLineClient implements RedisClient {
 
             } else if (eventEntity.getPipeLineCompensatorEnum().equals(PipeLineCompensatorEnum.DECRBY)) {
                 submitCommandNumNow();
-                client =createJedis(host,port,password);
+                client =createJedis(host,port,user,password);
                 String oldValue = client.get(eventEntity.getStringKey());
                 Integer newValue = 0;
                 if (org.springframework.util.StringUtils.isEmpty(oldValue)) {
