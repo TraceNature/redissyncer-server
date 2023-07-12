@@ -311,6 +311,7 @@ public class DtoToTaskModelUtils {
                     .filterType(commandKeyFilterType)
                     .build();
 
+
             if(param.getDbMapper()!=null){
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
             }else {
@@ -381,6 +382,13 @@ public class DtoToTaskModelUtils {
                     .targetUserName(param.getTargetUserName())
                     .errorCount(param.getErrorCount())
                     .build();
+
+            if(Strings.isEmpty(param.getSourceUserName())){
+                if(param.getSourcePassword().contains(" ")){
+                    taskModel.setSourceUserName(param.getSourcePassword().split(" ")[0]);
+                    taskModel.setSourcePassword(param.getSourcePassword().split(" ")[1]);
+                }
+            }
             if(param.getDbMapper()!=null){
                 taskModel.setDbMapper(JSON.toJSONString(param.getDbMapper()));
             }else {
