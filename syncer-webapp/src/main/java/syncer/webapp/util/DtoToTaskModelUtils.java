@@ -155,20 +155,6 @@ public class DtoToTaskModelUtils {
 
 
             if(Strings.isEmpty(param.getTargetUserName())){
-                if(param.getTargetPassword().contains("-")){
-                    taskModel.setTargetUserName(param.getTargetPassword().split("-")[0]);
-                    taskModel.setTargetPassword(param.getTargetPassword().split("-")[1]);
-                }
-            }
-
-            if(Strings.isEmpty(param.getSourceUserName())){
-                if(param.getSourcePassword().contains("-")){
-                    taskModel.setSourceUserName(param.getSourcePassword().split("-")[0]);
-                    taskModel.setSourcePassword(param.getSourcePassword().split("-")[1]);
-                }
-            }
-
-            if(Strings.isEmpty(param.getTargetUserName())){
                 if(param.getTargetPassword().contains(" ")){
                     taskModel.setTargetUserName(param.getTargetPassword().split(" ")[0]);
                     taskModel.setTargetPassword(param.getTargetPassword().split(" ")[1]);
