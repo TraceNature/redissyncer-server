@@ -9,7 +9,7 @@
     </parent>
     <groupId>syncer</groupId>
     <artifactId>syncer-webapp</artifactId>
-    <version>3.3.3</version>
+    <version>3.3.3.2</version>
     <name>redissyncer-server</name>
     <description>Demo project for Spring Boot</description>
 
