@@ -125,7 +125,7 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
                     dataEntity.getAllKeyCount().incrementAndGet();
                 }
                 //计算分片数量
-                if (batchedKeyValuePair.getBatch() == 0) {
+                if (batchedKeyValuePair.getBatch() == 0&&!batchedKeyValuePair.isLast()) {
 
                     if (!StringUtils.isEmpty(batchedKeyValuePair.getKey())) {
                         try {
@@ -147,7 +147,8 @@ public class CommandProcessingDataAnalysisStrategy implements CommonProcessingSt
                         } catch (Exception e) {
                             log.error("大key统计入库失败：[{}]", Strings.toString(batchedKeyValuePair.getKey()));
                         }
-                        log.warn("大key统计：[{}],db: [{}]", Strings.toString(batchedKeyValuePair.getKey()), batchedKeyValuePair.getDb().getCurrentDbNumber());
+                        log.warn("大key统计：key: [{}],db: [{}]", Strings.toString(batchedKeyValuePair.getKey()), batchedKeyValuePair.getDb().getCurrentDbNumber());
+
                     }
 
                     addAnalysisMap(KvDataType.FRAGMENTATION);

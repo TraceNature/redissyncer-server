@@ -5,6 +5,7 @@ package syncer.replica.parser.syncer;
 import syncer.replica.context.ContextKeyValue;
 import syncer.replica.datatype.rdb.zset.ZSetEntry;
 import syncer.replica.event.Event;
+import syncer.replica.event.KeyStringValueStringEvent;
 import syncer.replica.event.iter.KeyStringValueByteArrayIteratorEvent;
 import syncer.replica.event.iter.KeyStringValueMapEntryIteratorEvent;
 import syncer.replica.event.iter.KeyStringValueZSetEntryIteratorEvent;
@@ -13,6 +14,7 @@ import syncer.replica.kv.KeyValuePairEvent;
 import syncer.replica.parser.BaseRdbParser;
 import syncer.replica.parser.DefaultRedisRdbParser;
 import syncer.replica.parser.IRdbValueParser;
+import syncer.replica.parser.rdb.ByteParser;
 import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.replication.Replication;
 import syncer.replica.util.strings.Strings;
@@ -215,7 +217,13 @@ public class ValueDumpIterableRdbParser extends DefaultRedisRdbParser {
 
 
     /**
-     * 基于dump序列化方式
+     * 基于dump序列化方式(存在bug ----> string为数字时转化成了 int 导致restore 数据不对，现在更改为set形式)
+     * 由 DumpKeyValuePairEvent->KeyStringValueStringEvent
+     * dump算法 https://github.com/redis/redis/blob/cf6ed3feeb95059817d7fa8685aa04a8a33a1f92/src/functions.c#L692
+     *
+     * github issue https://github.com/TraceNature/redissyncer-server/issues/93
+     *
+     *
      * @param in
      * @param version
      * @param context
@@ -225,11 +233,16 @@ public class ValueDumpIterableRdbParser extends DefaultRedisRdbParser {
     @Override
     public Event parseString(RedisInputStream in, int version, ContextKeyValue context) throws IOException {
         BaseRdbParser parser = new BaseRdbParser(in);
-        KeyValuePairEvent<byte[], byte[]> o0 = new DumpKeyValuePairEvent();
+//        KeyValuePairEvent<byte[], byte[]> o0 = new DumpKeyValuePairEvent();
+        KeyValuePairEvent<byte[], byte[]> o0 = new KeyStringValueStringEvent();
+
         byte[] key = parser.rdbLoadEncodedStringObject().first();
         o0.setValueRdbType(RDB_TYPE_STRING);
-        byte[]val=rdbValueParser.parseString(in, version);
+        byte[] val = parser.rdbLoadEncodedStringObject().first();
+//        String value=Strings.byteToString(val);
+//        byte[]val=rdbValueParser.parseString(in, version);
         o0.setKey(key);
+//        o0.setValue(ByteParser.toBytes(value));
         o0.setValue(val);
         o0.setDataType(KvDataType.STRING);
         return context.valueOf(o0);
@@ -278,4 +291,6 @@ public class ValueDumpIterableRdbParser extends DefaultRedisRdbParser {
         //  o15.setSize(parser.rdbLoadLen().len);
         return context.valueOf(o15);
     }
+
+
 }

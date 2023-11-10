@@ -61,8 +61,10 @@ public class IterableEventListener implements EventListener {
         // Before every it.next() MUST check precondition it.hasNext()
         int batch = 0;
         final int type = kv.getValueRdbType();
+
         //String
         if (kv instanceof KeyStringValueStringEvent) {
+            System.out.println("------");
             KeyStringValueStringEvent ksvs = (KeyStringValueStringEvent) kv;
             listener.onEvent(replication, KeyValuePairs.string(ksvs, ksvs.getValue(), batch, true));
         } else if (kv instanceof KeyStringValueByteArrayIteratorEvent) {

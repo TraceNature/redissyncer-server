@@ -881,6 +881,7 @@ public class JedisPipeLineClient implements RedisClient {
         if (SingleTaskDataManagerUtils.isTaskClose(taskId) && taskId != null) {
             return;
         }
+
         commitLock.lock();
         try {
             int num = commandNums.get();
@@ -899,6 +900,7 @@ public class JedisPipeLineClient implements RedisClient {
                 //补偿入口
                 commitCompensator(resultList);
             } else if (num >= 0 && time > 1000) {
+
                 List<Object> resultList = pipelined.syncAndReturnAll();
                 //补偿入口
                 commitCompensator(resultList);
@@ -923,11 +925,10 @@ public class JedisPipeLineClient implements RedisClient {
         boolean staus=false;
 
         try {
-
+            date=new Date();
             int num = commandNums.incrementAndGet();
             if (num >= count) {
                 List<Object> resultList = pipelined.syncAndReturnAll();
-
                 //补偿入口
                 commitCompensator(resultList);
             }
@@ -962,6 +963,7 @@ public class JedisPipeLineClient implements RedisClient {
      * @param resultList
      */
     void commitCompensator(List<Object> resultList) {
+
         //更新时间
         updateTaskLastCommitTime(taskId, resultList);
         try {
@@ -1386,24 +1388,24 @@ public class JedisPipeLineClient implements RedisClient {
         public void run() {
             Thread.currentThread().setName(taskId + ": " + Thread.currentThread().getName());
             while (true) {
-                compensatorLock.lock();
                 try {
                     submitCommandNum();
                     if (SingleTaskDataManagerUtils.isTaskClose(taskId) && taskId != null) {
+//                        submitCommandNumNow();
                         log.warn("task[{}]数据传输模块进入关闭保护状态,不再接收新数据", taskId);
                         Date time = new Date(date.getTime());
                         if (status) {
                             while (System.currentTimeMillis() - time.getTime() < 1000 * 60 * 1) {
-                                submitCommandNum();
+                                submitCommandNumNow();
                                 try {
                                     Thread.sleep(1000);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
                             }
-                            Thread.currentThread().interrupt();
                             status = false;
                             addCommandNum();
+                            Thread.currentThread().interrupt();
                             log.warn("task[{}]数据传输模保护状态退出,任务停止", taskId);
                             try {
                                 targetClient.close();
@@ -1415,10 +1417,10 @@ public class JedisPipeLineClient implements RedisClient {
                     }
 
                 }finally {
-                    compensatorLock.unlock();
+
                 }
                 try {
-                    Thread.sleep(3000);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
 
                 }

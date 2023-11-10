@@ -80,7 +80,7 @@ syncer:
 info:
   app:
     name: redis syncer
-    version: 3.3.3.2
+    version: 3.3.3.3
     description: redis数据同步服务
 
 spring:

@@ -1,5 +1,6 @@
 package syncer.transmission.strategy.taskcheck.impl;
 
+import com.alibaba.fastjson.JSON;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import syncer.common.constant.ResultCodeAndMessage;
@@ -57,12 +58,17 @@ public class TaskSelectVersionStrategy implements ITaskCheckStrategy {
                 ||taskModel.getSyncType().equals(SyncType.ONLINEAOF.getCode())
                 ||taskModel.getSyncType().equals(SyncType.ONLINEMIXED.getCode())){
             String version=redisVersionUtil.selectSyncerVersion(String.valueOf(taskModel.getTargetUri().toArray()[0]));
-            log.warn("自动获取redis版本号：{},手动输入版本号：{}",version,taskModel.getRedisVersion());
+
+//            log.warn("自动获取redis版本号：{},手动输入版本号：{}",version,taskModel.getRedisVersion());
+
+            log.warn("自动获取redis版本号：{} ,对应rdb版本号：{},手动输入版本号：{}，对应rdb版本号：{}",version,RedisVersionUtil.getRdbVersion(version),taskModel.getRedisVersion(),RedisVersionUtil.getRdbVersion(String.valueOf(taskModel.getRedisVersion())));
 
             if(version.contains(JIMDB_VERSION_HEADER)){
                 taskModel.setRedisVersion(JIMDB_DEFAULT_VERSION);
             }else {
-                taskModel.setRedisVersion(Double.valueOf(version.split("\\.")[0]));
+                String [] versions=version.split("\\.");
+                String targetVersion=(versions.length>=2&&!versions[1].equalsIgnoreCase("0"))?versions[0]+"."+versions[1]:versions[0];
+                taskModel.setRedisVersion(Double.valueOf(targetVersion));
             }
 
 
@@ -75,7 +81,6 @@ public class TaskSelectVersionStrategy implements ITaskCheckStrategy {
                     version= String.valueOf(taskModel.getRedisVersion());
                 }
             }
-
             RdbVersionModel rdbVersion= SqlOPUtils.findRdbVersionModelByRedisVersion(version);
             if(Objects.isNull(rdbVersion)){
                 rdbVersion=RdbVersionModel.builder()

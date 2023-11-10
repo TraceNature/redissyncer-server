@@ -63,6 +63,8 @@ public class ValueDumpIterableEventListener implements EventListener{
         if (kv instanceof KeyStringValueStringEvent) {
             KeyStringValueStringEvent ksvs = (KeyStringValueStringEvent) kv;
             listener.onEvent(replication, KeyValuePairs.string(ksvs, ksvs.getValue(), batch, true));
+//            listener.onEvent(replication,ksvs);
+
         } else if (kv instanceof KeyStringValueByteArrayIteratorEvent) {
             if (type == RDB_TYPE_SET || type == RDB_TYPE_SET_INTSET) {
                 KeyStringValueByteArrayIteratorEvent skv = (KeyStringValueByteArrayIteratorEvent) kv;

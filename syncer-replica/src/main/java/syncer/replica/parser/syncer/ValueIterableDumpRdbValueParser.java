@@ -549,10 +549,20 @@ public class ValueIterableDumpRdbValueParser extends DefaultRedisRdbValueParser 
 
     @Override
     public <T> T parseString(RedisInputStream in, int version) throws IOException {
+//        DefaultRawByteListener listener = new DefaultRawByteListener((byte) RDB_TYPE_STRING, version);
+//        replication.addRawByteListener(listener);
+//        new SkipRdbParser(in).rdbLoadEncodedStringObject();
+//        replication.removeRawByteListener(listener);
+//        return (T) listener.getBytes();
+
+
         DefaultRawByteListener listener = new DefaultRawByteListener((byte) RDB_TYPE_STRING, version);
         replication.addRawByteListener(listener);
-        new SkipRdbParser(in).rdbLoadEncodedStringObject();
-        replication.removeRawByteListener(listener);
+        try {
+            new SkipRdbParser(in).rdbLoadEncodedStringObject();
+        } finally {
+            replication.removeRawByteListener(listener);
+        }
         return (T) listener.getBytes();
     }
 

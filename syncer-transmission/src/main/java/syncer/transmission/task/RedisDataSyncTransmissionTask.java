@@ -189,11 +189,9 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                     .build();
 
             final  OffSetEntity baseoffset=offset;
-
             replicationHandler.addEventListener(new ValueDumpIterableEventListener(taskModel.getBatchSize(), new EventListener() {
                 @Override
                 public void onEvent(Replication replicator, Event event) {
-
 
                     if (SingleTaskDataManagerUtils.isTaskClose(taskModel.getId())) {
                         //判断任务是否关闭
@@ -211,7 +209,6 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                         return;
                     }
 
-
                     KeyValueEventEntity node = KeyValueEventEntity.builder()
                             .event(event)
                             .dbMapper(taskModel.getDbMapping())
@@ -223,7 +220,6 @@ public class RedisDataSyncTransmissionTask implements Runnable{
                             .taskRunTypeEnum(SyncTypeUtils.getTaskType(taskModel.getTasktype()).getType())
                             .fileType(SyncTypeUtils.getSyncType(taskModel.getSyncType()).getFileType())
                             .build();
-
 
                     //更新offset
                     updateOffset(taskModel.getId(),replicationHandler,node);
