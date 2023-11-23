@@ -176,7 +176,7 @@ curl -X POST \
 
 ### 使用客户端
 
-[客户端使用手册](https://github.com/TraceNature/redissyncer-cli/blob/master/docs/quickstart.md)
+[客户端使用手册](https://github.com/TraceNature/redissyncer-cli-rs/blob/3.3.3/README_cn.md)
 
 ###  注意事项
 
