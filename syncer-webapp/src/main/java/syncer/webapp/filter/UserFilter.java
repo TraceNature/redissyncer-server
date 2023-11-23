@@ -53,7 +53,25 @@ public class UserFilter implements HandlerInterceptor {
          * 心跳检测放行
          */
         String url=request.getRequestURI();
+
+
         if("/health".equalsIgnoreCase(url)){
+            return true;
+        }
+
+        if(url.startsWith("/static/")){
+            return true;
+        }
+        if(url.equalsIgnoreCase("/index.html")){
+            return true;
+        }
+        if(url.equalsIgnoreCase("/")){
+            return true;
+        }
+        if(url.equalsIgnoreCase("/favicon.ico")){
+            return true;
+        }
+        if(url.equalsIgnoreCase("/logo.png")){
             return true;
         }
 
