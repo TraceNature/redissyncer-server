@@ -129,13 +129,38 @@ public class CommandProcessingRdbMultiCommandSendStrategy implements CommonProce
                 //String类型
                 if(typeEnum.equals(RedisCommandTypeEnum.STRING)){
                     BatchedKeyStringValueStringEvent valueString = (BatchedKeyStringValueStringEvent) event;
+                    client.updateLastReplidAndOffset(replication.getConfig().getReplId(),replication.getConfig().getReplOffset());
+                    String stringKey=new String(valueString.getKey());
                     if (ms == null || ms <= 0L) {
-                        client.updateLastReplidAndOffset(replication.getConfig().getReplId(),replication.getConfig().getReplOffset());
-                        Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
-                        iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+                        if(valueString.getBatch()==0){
+                            String res=client.set(duNum,valueString.getKey(), valueString.getValue());
+                            iSyncerCompensator.set(duNum,valueString.getKey(), valueString.getValue(),res);
+                            log.info("string set  key 2 set  key:{}",stringKey);
+
+                        }else {
+                           Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
+                           iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+                            log.info("string append key 2 set key:{}",stringKey);
+                        }
+//                        Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
+//                        iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+//                        String res=client.set(duNum,valueString.getKey(), valueString.getValue());
+//                        iSyncerCompensator.set(duNum,valueString.getKey(), valueString.getValue(),res);
+
                     }else {
-                        Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
-                        iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+                        if(valueString.getBatch()==0){
+                            String res=client.set(duNum,valueString.getKey(), valueString.getValue(),ms);
+                            iSyncerCompensator.set(duNum,valueString.getKey(), valueString.getValue(),res);
+//                            log.info("string set  key 2 set  {} {}",valueString.getKey(),valueString.getValue());
+                            log.info("string set  key 2 set   key: {} ms:{}",stringKey,ms);
+                        }else {
+                            Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
+                            iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+                            log.info("string append key 2 set ms  key: {} ms:{}",stringKey,ms);
+                        }
+
+//                        Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
+//                        iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
                     }
                 }else if(typeEnum.equals(RedisCommandTypeEnum.LIST)){
                     client.updateLastReplidAndOffset(replication.getConfig().getReplId(),replication.getConfig().getReplOffset());

@@ -181,6 +181,7 @@ public class CommandCompensatorUtils {
 
 
         comanndResponseTypeMap.put("DEL", ComanndResponseType.builder().type(2).command("DEL").commandResponse("LONG").build());
+        comanndResponseTypeMap.put("UNLINK", ComanndResponseType.builder().type(2).command("UNLINK").commandResponse("LONG").build());
         comanndResponseTypeMap.put("EXPIRE", ComanndResponseType.builder().type(2).command("EXPIRE").commandResponse("LONG").build());
         comanndResponseTypeMap.put("EXPIREAT", ComanndResponseType.builder().type(2).command("EXPIREAT").commandResponse("LONG").build());
         comanndResponseTypeMap.put("MIGRATE", ComanndResponseType.builder().type(1).command("MIGRATE").commandResponse("OK").build());
@@ -253,8 +254,6 @@ public class CommandCompensatorUtils {
             } else if (responseType.getType() == 9) {
                 return true;
             }
-
-
         } else {
             log.warn("[{}]command->type[{}]未被定义", stringCmd, cmd);
             return true;

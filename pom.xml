@@ -109,8 +109,8 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-devtools</artifactId>
+      <scope>runtime</scope>
       <optional>true</optional>
-      <scope>true</scope>
     </dependency>
 
     <!-- SQLite 驱动 -->
@@ -181,10 +181,18 @@
       <version>4.13.1</version>
     </dependency>
 
+<!--    <dependency>-->
+<!--      <groupId>org.projectlombok</groupId>-->
+<!--      <artifactId>lombok</artifactId>-->
+<!--&lt;!&ndash;      <version>1.18.20.0</version>&ndash;&gt;-->
+<!--      <optional>true</optional>-->
+<!--    </dependency>-->
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <optional>true</optional>
+      <version>1.18.20</version>
+      <scope>provided</scope>
     </dependency>
 
 
@@ -226,11 +234,7 @@
       <version>29.0-jre</version>
     </dependency>
 
-    <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-bean-validators</artifactId>
-      <version>3.0.0</version>
-    </dependency>
+
     <dependency>
       <groupId>javax.validation</groupId>
       <artifactId>validation-api</artifactId>

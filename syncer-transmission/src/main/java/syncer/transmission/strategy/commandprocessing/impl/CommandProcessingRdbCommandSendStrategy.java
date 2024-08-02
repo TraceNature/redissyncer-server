@@ -129,15 +129,45 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
 
                 //String类型
                 if(typeEnum.equals(RedisCommandTypeEnum.STRING)){
-
                     BatchedKeyStringValueStringEvent valueString = (BatchedKeyStringValueStringEvent) event;
+                    String stringKey=new String(valueString.getKey());
                     if (ms == null || ms <= 0L) {
-                        Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
-                        iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+//                        Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
+//                        iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+
+                        if(valueString.getBatch()==0){
+                            String res=client.set(duNum,valueString.getKey(), valueString.getValue());
+                            iSyncerCompensator.set(duNum,valueString.getKey(), valueString.getValue(),res);
+                            log.info("string set  key 2 set  key: {} ",stringKey);
+
+                        }else {
+                            Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
+                            iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+                            log.info("string append key 2 set key: {}",stringKey);
+                        }
+
+
                     }else {
-                        Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
-                        iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+//                        Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
+//                        iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+
+                        if(valueString.getBatch()==0){
+                            String res=client.set(duNum,valueString.getKey(), valueString.getValue(),ms);
+                            iSyncerCompensator.set(duNum,valueString.getKey(), valueString.getValue(),res);
+                            log.info("string set  key 2 set  key: {} ms:{}",stringKey,ms);
+
+                        }else {
+                            Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
+                            iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);
+                            log.info("string append key 2 set key: {} ms:{}",stringKey,ms);
+                        }
+
                     }
+
+
+
+
+
                 }else if(typeEnum.equals(RedisCommandTypeEnum.LIST)){
                     //list类型
                     BatchedKeyStringValueListEvent valueList = (BatchedKeyStringValueListEvent) event;

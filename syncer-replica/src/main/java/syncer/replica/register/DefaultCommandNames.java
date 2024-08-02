@@ -21,6 +21,7 @@ public class DefaultCommandNames {
     public static final String INCR="INCR";
     public static final String INCRBY="INCRBY";
     public static final String INCRBYFLOAT="INCRBYFLOAT";
+
     /**
      * MSET key value [key value ...]
      *Available since 1.0.1.
