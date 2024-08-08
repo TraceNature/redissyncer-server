@@ -11,7 +11,6 @@
 
 package syncer.transmission.task;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,6 @@ import syncer.replica.listener.EventListener;
 import syncer.replica.listener.TaskStatusListener;
 import syncer.replica.listener.ValueDumpIterableEventListener;
 import syncer.replica.parser.syncer.ValueDumpIterableRdbParser;
-import syncer.replica.parser.syncer.datatype.DumpKeyValuePairEvent;
 import syncer.replica.register.DefaultCommandRegister;
 import syncer.replica.replication.RedisReplication;
 import syncer.replica.replication.Replication;
@@ -36,7 +34,6 @@ import syncer.replica.status.TaskStatus;
 import syncer.replica.type.SyncType;
 import syncer.replica.util.SyncTypeUtils;
 import syncer.replica.util.TaskRunTypeEnum;
-import syncer.replica.util.strings.Strings;
 import syncer.transmission.checkpoint.breakpoint.BreakPoint;
 import syncer.transmission.client.RedisClient;
 import syncer.transmission.client.RedisClientFactory;
@@ -56,7 +53,6 @@ import syncer.transmission.util.sql.SqlOPUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 

@@ -135,7 +135,6 @@ public class CommandProcessingRdbMultiCommandSendStrategy implements CommonProce
                         if(valueString.getBatch()==0){
                             String res=client.set(duNum,valueString.getKey(), valueString.getValue());
                             iSyncerCompensator.set(duNum,valueString.getKey(), valueString.getValue(),res);
-                            log.info("string set  key 2 set  key:{}",stringKey);
 
                         }else {
                            Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
@@ -152,7 +151,6 @@ public class CommandProcessingRdbMultiCommandSendStrategy implements CommonProce
                             String res=client.set(duNum,valueString.getKey(), valueString.getValue(),ms);
                             iSyncerCompensator.set(duNum,valueString.getKey(), valueString.getValue(),res);
 //                            log.info("string set  key 2 set  {} {}",valueString.getKey(),valueString.getValue());
-                            log.info("string set  key 2 set   key: {} ms:{}",stringKey,ms);
                         }else {
                             Long res=client.append(duNum,valueString.getKey(), valueString.getValue());
                             iSyncerCompensator.append(duNum,valueString.getKey(), valueString.getValue(),res);

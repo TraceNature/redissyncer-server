@@ -138,7 +138,6 @@ public class CommandProcessingRdbCommandSendStrategy implements CommonProcessing
                         if(valueString.getBatch()==0){
                             String res=client.set(duNum,valueString.getKey(), valueString.getValue());
                             iSyncerCompensator.set(duNum,valueString.getKey(), valueString.getValue(),res);
-                            log.info("string set  key 2 set  key: {} ",stringKey);
 
                         }else {
                             Long res=client.append(duNum,valueString.getKey(), valueString.getValue());

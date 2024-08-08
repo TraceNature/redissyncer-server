@@ -109,7 +109,9 @@ public class SocketReplicationRetrier extends AbstractReplicationRetrier{
                 CommandName name = CommandName.name(Strings.toString(raws[0]));
                 final CommandParser<? extends Command> parser;
                 if(Objects.isNull(parser=socketReplication.getCommandParser(name))){
-                    log.warn("[TASKID {}] command [{}] not register. raw command:{}",config.getTaskId(),name,Strings.format(raws));
+                    if(!"opinfo".equalsIgnoreCase(name.name)){
+                        log.warn("[TASKID {}] command [{}] not register. raw command:{}",config.getTaskId(),name,Strings.format(raws));
+                    }
                     config.addOffset(offset[0]);
                     offset[0] = 0L;
                     continue;

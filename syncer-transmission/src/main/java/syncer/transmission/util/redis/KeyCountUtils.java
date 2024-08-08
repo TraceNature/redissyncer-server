@@ -20,7 +20,6 @@ import syncer.replica.config.ReplicConfig;
 import syncer.transmission.util.sql.SqlOPUtils;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 

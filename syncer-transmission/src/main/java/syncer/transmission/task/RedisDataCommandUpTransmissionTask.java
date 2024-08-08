@@ -13,7 +13,6 @@ package syncer.transmission.task;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
-import syncer.common.util.TemplateUtils;
 import syncer.common.util.ThreadPoolUtils;
 import syncer.common.util.file.FileUtils;
 import syncer.replica.config.RedisURI;
@@ -31,7 +30,6 @@ import syncer.replica.util.strings.Strings;
 import syncer.transmission.model.TaskModel;
 import syncer.transmission.util.manger.DefaultSyncerStatusManger;
 import syncer.transmission.util.redis.RedisReplIdCheck;
-import syncer.transmission.util.redis.RedisUrlCheck;
 import syncer.transmission.util.taskStatus.SingleTaskDataManagerUtils;
 
 import java.io.*;

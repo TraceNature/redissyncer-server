@@ -175,7 +175,9 @@ public class AofReplication extends AbstractReplication{
                     CommandName name = CommandName.name(Strings.toString(raw[0]));
                     final CommandParser<? extends Command> parser;
                     if ((parser = commands.get(name)) == null) {
-                        log.warn("command [{}] not register. raw command:{}", name, Strings.format(raw));
+                        if(!"opinfo".equalsIgnoreCase(name.name)){
+                            log.warn("command [{}] not register. raw command:{}", name, Strings.format(raw));
+                        }
                         config.addOffset(offset[0]);
                         offset[0] = 0L;
                         continue;

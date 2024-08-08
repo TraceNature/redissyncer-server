@@ -5,7 +5,6 @@ import lombok.Getter;
 import syncer.replica.type.FileType;
 import syncer.replica.util.strings.Strings;
 
-
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -157,15 +156,25 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
             }
         }
 
+
+        String authPassword="";
+        if(uri.contains("authPassword=")){
+             authPassword=uri.substring(uri.indexOf("authPassword=")+13);
+            if(authPassword.contains("&")){
+                authPassword=authPassword.substring(0,authPassword.indexOf("&"));
+            }
+        }
         if (this.userInfo != null) {
             int idx = this.userInfo.indexOf(':');
             if (idx < 0) {
                 this.user = this.userInfo;
             } else if (idx == 0) {
-                this.password = this.userInfo.substring(idx + 1);
+//                this.password = this.userInfo.substring(idx + 1);
+                this.password =authPassword;
             } else /*（idx > 0）*/{
                 this.user = this.userInfo.substring(0, idx);
-                String password = this.userInfo.substring(idx + 1);
+//                String password = this.userInfo.substring(idx + 1);
+                String password =authPassword;
                 if (password != null && password.length() != 0) {
                     this.password = password;
                 }
@@ -200,6 +209,9 @@ public final class RedisURI implements Comparable<RedisURI>, Serializable {
         }
         if (key.length() > 0 && value.length() > 0) {
             parameters.put(decode(key.toString()), decode(value.toString()));
+        }
+        if(!"".equals(authPassword)) {
+            parameters.put("authPassword", authPassword);
         }
     }
 
